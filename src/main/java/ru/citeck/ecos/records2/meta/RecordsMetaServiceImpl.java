@@ -15,7 +15,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
 
-import javax.annotation.PostConstruct;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -36,11 +35,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     private RecordsMetaGql graphQLService;
 
     public RecordsMetaServiceImpl(RecordsMetaGql graphQLService) {
-        this.graphQLService = graphQLService;
-    }
 
-    @PostConstruct
-    public void init() {
+        this.graphQLService = graphQLService;
+
         Arrays.asList(
                 new ScalarField<>(String.class, "str"),
                 new ScalarField<>(Boolean.class, "bool"),
@@ -153,6 +150,10 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     }
 
     private AttributesSchema createSchema(Map<String, String> attributes, boolean generateKeys) {
+
+        if (attributes.isEmpty()) {
+            return new AttributesSchema("", Collections.emptyMap());
+        }
 
         StringBuilder schema = new StringBuilder();
         ObjectKeyGenerator keys = new ObjectKeyGenerator();

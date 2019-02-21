@@ -70,6 +70,7 @@ public class RecordsMetaGql {
         String query = String.format(META_QUERY_TEMPLATE, schema);
         GqlContext context = contextSupplier.get();
 
+        context.setMetaValues(metaValues);
         ExecutionResult result = executeImpl(query, context);
 
         return convertMeta(result, metaValues);

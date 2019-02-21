@@ -28,9 +28,14 @@ public class RecordsResult<T> extends DebugResult {
         }
     }
 
+    public <K> RecordsResult(List<K> records, Function<K, T> mapper) {
+        setRecords(records.stream().map(mapper).collect(Collectors.toList()));
+    }
+
     public RecordsResult(List<T> records) {
         setRecords(records);
     }
+
 
     public void merge(RecordsResult<T> other) {
         super.merge(other);

@@ -183,6 +183,10 @@ public class RecordsServiceImpl implements RecordsService {
     public <T> RecordsResult<T> getMeta(List<RecordRef> records, Class<T> metaClass) {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        if (attributes.isEmpty()) {
+            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+        }
+
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
 
         return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
@@ -255,6 +259,10 @@ public class RecordsServiceImpl implements RecordsService {
     @Override
     public RecordsResult<RecordMeta> getAttributes(List<RecordRef> records,
                                                    Map<String, String> attributes) {
+
+        if (attributes.isEmpty()) {
+            return new RecordsResult<>(records, RecordMeta::new);
+        }
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
         RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());

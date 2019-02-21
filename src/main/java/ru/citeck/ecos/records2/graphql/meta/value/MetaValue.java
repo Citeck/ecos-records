@@ -16,8 +16,7 @@ public interface MetaValue {
     /**
      * Initialize value with context before execute other methods
      */
-    default <T extends GqlContext> MetaValue init(T context) {
-        return this;
+    default <T extends GqlContext> void init(T context) {
     }
 
     /**

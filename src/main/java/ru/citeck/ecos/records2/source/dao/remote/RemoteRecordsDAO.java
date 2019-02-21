@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.source.dao.remote;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.request.body.QueryBody;
+import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaResult;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.typed.RecordsRefsQueryResult;

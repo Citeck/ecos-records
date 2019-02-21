@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.request.body;
+package ru.citeck.ecos.records2.request.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ru.citeck.ecos.records2.RecordRef;
@@ -11,6 +11,10 @@ public class QueryBody {
 
     private List<RecordRef> records;
     private RecordsQuery query;
+
+    /**
+     * List<String> or Map<String, String>
+     */
     private JsonNode attributes;
     private String schema;
 

@@ -366,6 +366,11 @@ public class RecordsServiceImpl implements RecordsService {
     @Override
     public void register(RecordsDAO recordsSource) {
 
+        String id = recordsSource.getId();
+        if (id == null) {
+            throw new IllegalArgumentException("id is a mandatory parameter for RecordsDAO");
+        }
+
         if (recordsSource instanceof RecordsMetaDAO) {
             metaDAO.put(recordsSource.getId(), (RecordsMetaDAO) recordsSource);
         }
@@ -382,6 +387,9 @@ public class RecordsServiceImpl implements RecordsService {
             definitionDAO.put(recordsSource.getId(), (RecordsDefinitionDAO) recordsSource);
         }
 
+        if (recordsSource instanceof RecordsServiceAware) {
+            ((RecordsServiceAware) recordsSource).setRecordsService(this);
+        }
         if (recordsSource instanceof RecordsMetaServiceAware) {
             ((RecordsMetaServiceAware) recordsSource).setRecordsMetaService(recordsMetaService);
         }

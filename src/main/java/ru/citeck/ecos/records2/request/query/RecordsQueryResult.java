@@ -2,7 +2,6 @@ package ru.citeck.ecos.records2.request.query;
 
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -10,8 +9,6 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
 
     private boolean hasMore = false;
     private long totalCount = 0;
-
-    private boolean defaultTotal = true;
 
     public RecordsQueryResult() {
     }
@@ -42,29 +39,17 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
         this.hasMore = hasMore;
     }
 
+    /**
+     * Get total records count
+     *
+     * @return >= getRecords().size()
+     */
     public long getTotalCount() {
-        return totalCount;
+        return Math.max(totalCount, getRecords().size());
     }
 
     public void setTotalCount(long totalCount) {
         this.totalCount = totalCount;
-        defaultTotal = false;
-    }
-
-    @Override
-    public void setRecords(List<T> records) {
-        super.setRecords(records);
-        if (defaultTotal) {
-            totalCount = getRecords().size();
-        }
-    }
-
-    @Override
-    public void addRecord(T record) {
-        super.addRecord(record);
-        if (defaultTotal) {
-            totalCount = getRecords().size();
-        }
     }
 
     @Override

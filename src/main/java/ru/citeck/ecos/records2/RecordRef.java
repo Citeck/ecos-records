@@ -11,34 +11,58 @@ public class RecordRef {
     public static final RecordRef EMPTY = new RecordRef();
 
     public static final String SOURCE_DELIMITER = "@";
+    public static final String APP_NAME_DELIMITER = "/";
     private static final String DEFAULT_SOURCE_ID = "";
 
+    private final String appName;
     private final String sourceId;
     private final String id;
 
     private RecordRef() {
-        id = "";
+        appName = "";
         sourceId = "";
+        id = "";
     }
 
     public RecordRef(String sourceId, String id) {
         this.sourceId = sourceId;
         this.id = id != null ? id : "";
+        this.appName = "";
     }
 
     public RecordRef(String sourceId, RecordRef id) {
         this.sourceId = sourceId;
         this.id = id.toString();
+        this.appName = "";
+    }
+
+    public RecordRef(String appName, String sourceId, String id) {
+        this.id = StringUtils.isNotBlank(id) ? id : "";
+        this.appName = StringUtils.isNotBlank(appName) ? appName : "";
+        this.sourceId = StringUtils.isNotBlank(sourceId) ? sourceId : "";
     }
 
     public RecordRef(String id) {
+
         int sourceDelimIdx = id.indexOf(SOURCE_DELIMITER);
+
         if (sourceDelimIdx != -1) {
-            sourceId = id.substring(0, sourceDelimIdx);
+
             this.id = id.substring(sourceDelimIdx + 1);
+
+            String source = id.substring(0, sourceDelimIdx);
+            int appNameDelimIdx = source.indexOf(APP_NAME_DELIMITER);
+            if (appNameDelimIdx > -1) {
+                appName = source.substring(0, appNameDelimIdx);
+                sourceId = source.substring(appNameDelimIdx + 1);
+            } else {
+                appName = "";
+                sourceId = source;
+            }
         } else {
             this.sourceId = DEFAULT_SOURCE_ID;
             this.id = id;
+            this.appName = "";
         }
     }
 
@@ -62,6 +86,14 @@ public class RecordRef {
         return id;
     }
 
+    public String getAppName() {
+        return appName;
+    }
+
+    public boolean isRemote() {
+        return !appName.isEmpty();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -71,7 +103,8 @@ public class RecordRef {
             return false;
         }
         RecordRef that = (RecordRef) o;
-        return Objects.equals(sourceId, that.sourceId)
+        return Objects.equals(appName, that.appName)
+            && Objects.equals(sourceId, that.sourceId)
             && Objects.equals(id, that.id);
     }
 
@@ -79,6 +112,7 @@ public class RecordRef {
     public int hashCode() {
         int result = Objects.hashCode(sourceId);
         result = 31 * result + Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(appName);
         return result;
     }
 
@@ -88,10 +122,12 @@ public class RecordRef {
         if (this == EMPTY) {
             return "";
         }
-        if (StringUtils.isBlank(sourceId)) {
-            return id;
-        } else {
+        if (appName.length() > 0) {
+            return appName + APP_NAME_DELIMITER + sourceId + SOURCE_DELIMITER + id;
+        }
+        if (sourceId.length() > 0) {
             return sourceId + SOURCE_DELIMITER + id;
         }
+        return id;
     }
 }

@@ -34,7 +34,6 @@ public class RecordsMetaQueryTest {
         assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){str}}", attributes.get("someatt"));
     }
 
-
     public static class SimplePojo {
 
         @MetaAtt(".att(n:'aaa'){atts(n:'bbb')}")

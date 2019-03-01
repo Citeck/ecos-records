@@ -1,12 +1,15 @@
 package ru.citeck.ecos.records2.request.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class QueryBody {
 
     private List<RecordRef> records;
@@ -17,7 +20,6 @@ public class QueryBody {
      */
     private JsonNode attributes;
     private String schema;
-
     private boolean isSingleRecord = false;
 
     @Override
@@ -65,6 +67,7 @@ public class QueryBody {
         this.schema = schema;
     }
 
+    @JsonIgnore
     public boolean isSingleRecord() {
         return isSingleRecord;
     }

@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class RecordsMetaServiceImpl implements RecordsMetaService {
@@ -29,6 +31,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
     private Map<Class<?>, Map<String, String>> attributesCache = new ConcurrentHashMap<>();
+
+    private Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -208,7 +212,14 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 isMultiple = true;
             }
 
-            String attributeSchema = getAttributeSchema(metaClass, writeMethod, descriptor.getName(), isMultiple);
+            ScalarField<?> scalarField = scalars.get(propType);
+
+            String attributeSchema = getAttributeSchema(metaClass,
+                                                        writeMethod,
+                                                        descriptor.getName(),
+                                                        isMultiple,
+                                                        scalarField);
+
             attributeSchema = attributeSchema.replaceAll("'", "\"");
 
             schema.setLength(0);
@@ -221,7 +232,6 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
             schema.append(attributeSchema).append("{");
 
-            ScalarField<?> scalarField = scalars.get(propType);
             if (scalarField == null) {
 
                 Map<String, String> propSchema = getAttributes(propType);
@@ -248,7 +258,11 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         return attributes;
     }
 
-    private String getAttributeSchema(Class<?> scope, Method writeMethod, String fieldName, boolean multiple) {
+    private String getAttributeSchema(Class<?> scope,
+                                      Method writeMethod,
+                                      String fieldName,
+                                      boolean multiple,
+                                      ScalarField<?> scalarField) {
 
         MetaAtt attInfo = writeMethod.getAnnotation(MetaAtt.class);
 
@@ -272,7 +286,18 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 schema = ".att(n:'" + fieldName + "')";
             }
         } else {
-            schema = convertAttDefinition(attInfo.value(), null, multiple);
+            String att = attInfo.value();
+            if (att.startsWith(".")) {
+
+                Matcher matcher = ATT_WITHOUT_SCALAR.matcher(att);
+                if (matcher.matches()) {
+                    schema = matcher.group(1) + '{' + scalarField.getSchema() + '}' + matcher.group(2);
+                } else {
+                    schema = att;
+                }
+            } else {
+                schema = convertAttDefinition(att, null, multiple);
+            }
         }
         return schema.replaceAll("'", "\"");
     }

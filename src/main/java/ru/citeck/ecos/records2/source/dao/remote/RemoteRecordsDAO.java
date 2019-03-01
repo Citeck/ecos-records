@@ -74,6 +74,10 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
         return nodesResult;
     }
 
+    public void setRecordsMethod(String recordsMethod) {
+        this.recordsMethod = recordsMethod;
+    }
+
     public void setRemoteSourceId(String remoteSourceId) {
         this.remoteSourceId = remoteSourceId;
     }

@@ -15,7 +15,8 @@ class RecordRefTest {
     @CsvSource({"1,2,3",
                 "alfresco,,workspace://SpacesStore/123213-123123-123123-123",
                 ",tax-rep,workspace://SpacesStore/123213-21321-312321-213",
-                "alfresco,tax-rep,workspace://SpacesStore/123213-21321-312321-213"})
+                "alfresco,tax-rep,workspace://SpacesStore/123213-21321-312321-213",
+                ",,workspace://SpacesStore/..."})
     void test(String appName, String sourceId, String id) throws IOException {
 
         RecordRef recordRef = new RecordRef(appName, sourceId, id);

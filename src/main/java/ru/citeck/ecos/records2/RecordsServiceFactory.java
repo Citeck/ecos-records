@@ -19,7 +19,7 @@ public class RecordsServiceFactory {
         return new RecordsServiceImpl(createRecordsMetaService());
     }
 
-    protected RecordsMetaService createRecordsMetaService() {
+    public RecordsMetaService createRecordsMetaService() {
         return new RecordsMetaServiceImpl(createRecordsMetaGraphQL());
     }
 

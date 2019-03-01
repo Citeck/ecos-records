@@ -148,7 +148,7 @@ public class RecordsServiceImpl implements RecordsService {
 
                 if (logger.isDebugEnabled()) {
                     int found = recordRefs.getRecords().size();
-                    logger.debug("Stop records query. Found: " + found + "Duration: " + recordsTime);
+                    logger.debug("Stop records query. Found: " + found + " Duration: " + recordsTime);
                     logger.debug("Start meta query: " + schema);
                 }
 

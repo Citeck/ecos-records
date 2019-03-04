@@ -421,14 +421,14 @@ public class RecordsServiceImpl implements RecordsService {
         return attributesMap;
     }
 
-    private <T extends RecordsDAO> Optional<T> getRecordsDAO(String sourceId, Map<String, T> registry) {
+    protected  <T extends RecordsDAO> Optional<T> getRecordsDAO(String sourceId, Map<String, T> registry) {
         if (sourceId == null) {
             sourceId = "";
         }
         return Optional.ofNullable(registry.get(sourceId));
     }
 
-    private <T extends RecordsDAO> T needRecordsDAO(String sourceId, Class<T> type, Map<String, T> registry) {
+    protected <T extends RecordsDAO> T needRecordsDAO(String sourceId, Class<T> type, Map<String, T> registry) {
         Optional<T> source = getRecordsDAO(sourceId, registry);
         if (!source.isPresent()) {
             throw new IllegalArgumentException("RecordsDAO is not found! Class: " + type + " Id: " + sourceId);

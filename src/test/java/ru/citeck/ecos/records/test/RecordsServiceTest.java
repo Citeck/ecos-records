@@ -69,8 +69,20 @@ public class RecordsServiceTest extends LocalRecordsDAO
     }
 
     @Override
-    public RecordsQueryResult<Object> getMetaValues(RecordsQuery query) {
-        return null;
+    public RecordsQueryResult<Object> getMetaValues(RecordsQuery recordsQuery) {
+
+        ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
+
+        RecordsQueryResult<Object> result = new RecordsQueryResult<>();
+        result.setRecords(getMetaValues(query.getIds()
+                                             .stream()
+                                             .map(RecordRef::new)
+                                             .collect(Collectors.toList())));
+
+        result.setHasMore(false);
+        result.setTotalCount(query.getIds().size());
+
+        return result;
     }
 
     @Test
@@ -174,6 +186,64 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         assertEquals(fieldMap.get("date"), actualFieldMap.getDate());
         assertEquals(fieldMap.get("str"), actualFieldMap.getStr());
+    }
+
+    @Test
+    void testInnerPojo() {
+
+        RecordsQuery query = new RecordsQuery();
+
+        ExactIdsQuery exactIdsQuery = new ExactIdsQuery();
+        exactIdsQuery.setIds(Collections.singletonList("list"));
+        query.setQuery(exactIdsQuery);
+        query.setSourceId(SOURCE_ID);
+
+        RecordsQueryResult<JournalListInfo> records = recordsService.getRecords(query, JournalListInfo.class);
+        assertEquals(1, records.getTotalCount());
+
+        List<JournalInfo> journals = records.getRecords().get(0).getJournals();
+        assertEquals(2, journals.size());
+
+        assertEquals("FirstName", journals.get(0).getName());
+        assertEquals("FirstTitle", journals.get(0).getTitle());
+
+        assertEquals("SecondName", journals.get(1).getName());
+        assertEquals("SecondTitle", journals.get(1).getTitle());
+    }
+
+    public static class JournalInfo {
+
+        private String name;
+        private String title;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+    }
+
+    public static class JournalListInfo {
+
+        private List<JournalInfo> journals;
+
+        public List<JournalInfo> getJournals() {
+            return journals;
+        }
+
+        public void setJournals(List<JournalInfo> journals) {
+            this.journals = journals;
+        }
     }
 
     public static class PojoMetaInnerTest {
@@ -304,6 +374,8 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         private Map<String, Object> fieldMap;
 
+        private List<Map<String, String>> journals;
+
         public PojoMeta(String id) {
 
             this.id = id;
@@ -318,6 +390,22 @@ public class RecordsServiceTest extends LocalRecordsDAO
             fieldMap.put(INNER_MAP_STR_FIELD, "TestInnerStrField");
 
             fieldDate = DATE_TEST_VALUE;
+
+
+            journals = new ArrayList<>();
+            Map<String, String> attributes = new HashMap<>();
+            attributes.put("name", "FirstName");
+            attributes.put("title", "FirstTitle");
+            journals.add(attributes);
+
+            attributes = new HashMap<>();
+            attributes.put("name", "SecondName");
+            attributes.put("title", "SecondTitle");
+            journals.add(attributes);
+        }
+
+        public List<Map<String, String>> getJournals() {
+            return journals;
         }
 
         public Date getFieldDate() {

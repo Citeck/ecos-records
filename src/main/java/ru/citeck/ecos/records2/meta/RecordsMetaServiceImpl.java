@@ -288,7 +288,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             if ("id".equals(fieldName)) {
                 schema = ".id";
             } else {
-                schema = ".att(n:'" + fieldName + "')";
+                schema = ".att" + (multiple ? "s" : "") + "(n:'" + fieldName + "')";
             }
         } else {
             String att = attInfo.value();

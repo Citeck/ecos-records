@@ -116,15 +116,20 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             RecordsQueryWithMetaLocalDAO withMeta = (RecordsQueryWithMetaLocalDAO) this;
             RecordsQueryResult<?> values = withMeta.getMetaValues(query);
 
-            queryResult.setTotalCount(values.getTotalCount());
-            queryResult.setHasMore(values.getHasMore());
+            if (values != null) {
 
-            for (Object record : values.getRecords()) {
-                if (record instanceof RecordRef) {
-                    recordRefs.add((RecordRef) record);
-                } else {
-                    rawMetaValues.add(record);
+                queryResult.setTotalCount(values.getTotalCount());
+                queryResult.setHasMore(values.getHasMore());
+
+                for (Object record : values.getRecords()) {
+                    if (record instanceof RecordRef) {
+                        recordRefs.add((RecordRef) record);
+                    } else {
+                        rawMetaValues.add(record);
+                    }
                 }
+            } else {
+                logger.warn("[" + getId() + "] getMetaValues(query) return null");
             }
 
         } else if (this instanceof RecordsQueryDAO) {

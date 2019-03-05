@@ -21,7 +21,7 @@ public class RecordsRefsQueryResult extends RecordsQueryResult<RecordRef> {
     public RecordsRefsQueryResult addSourceId(String sourceId) {
         List<RecordRef> records = new ArrayList<>();
         for (RecordRef ref : getRecords()) {
-            records.add(new RecordRef(sourceId, ref.toString()));
+            records.add(RecordRef.create(sourceId, ref.toString()));
         }
         setRecords(records);
         return this;

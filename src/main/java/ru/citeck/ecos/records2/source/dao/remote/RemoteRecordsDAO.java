@@ -70,7 +70,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
             request.setQuery(new RecordsQuery(query));
             request.getQuery().setSourceId(remoteSourceId);
             if (afterId != RecordRef.EMPTY) {
-                request.getQuery().setAfterId(new RecordRef(afterId.getId()));
+                request.getQuery().setAfterId(RecordRef.valueOf(afterId.getId()));
             }
             request.setSchema(metaSchema);
 

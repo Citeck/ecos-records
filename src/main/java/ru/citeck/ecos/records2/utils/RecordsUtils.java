@@ -54,27 +54,27 @@ public class RecordsUtils {
             return records;
         }
         return records.stream()
-                      .map(n -> new RecordMeta(new RecordRef(sourceId, n.getId()), n.getAttributes()))
+                      .map(n -> new RecordMeta(RecordRef.create(sourceId, n.getId()), n.getAttributes()))
                       .collect(Collectors.toList());
     }
 
     public static RecordsResult<RecordRef> toScoped(String sourceId, RecordsResult<RecordRef> result) {
-        return new RecordsResult<>(result, r -> new RecordRef(sourceId, r));
+        return new RecordsResult<>(result, r -> RecordRef.create(sourceId, r));
     }
 
     public static RecordsQueryResult<RecordRef> toScoped(String sourceId, RecordsQueryResult<RecordRef> result) {
-        return new RecordsQueryResult<>(result, r -> new RecordRef(sourceId, r));
+        return new RecordsQueryResult<>(result, r -> RecordRef.create(sourceId, r));
     }
 
     public static List<RecordRef> toScopedRecords(String sourceId, List<RecordRef> records) {
         return records.stream()
-                      .map(r -> new RecordRef(sourceId, r))
+                      .map(r -> RecordRef.create(sourceId, r))
                       .collect(Collectors.toList());
     }
 
     public static List<RecordRef> strToRecords(String sourceId, List<String> records) {
         return records.stream()
-                      .map(r -> new RecordRef(sourceId, r))
+                      .map(r -> RecordRef.create(sourceId, r))
                       .collect(Collectors.toList());
     }
 

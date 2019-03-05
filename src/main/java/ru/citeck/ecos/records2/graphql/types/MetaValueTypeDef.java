@@ -7,7 +7,6 @@ import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * @author Pavel Simonov
  */
+@SuppressWarnings("unchecked")
 public class MetaValueTypeDef implements GqlTypeDefinition {
 
     private static final Log logger = LogFactory.getLog(MetaValueTypeDef.class);

@@ -102,7 +102,10 @@ public class RecordMeta {
             value = orElse;
         }
 
-        return (T) value;
+        @SuppressWarnings("unchecked")
+        T resultValue = (T) value;
+
+        return resultValue;
     }
 
     public void set(String name, String value) {

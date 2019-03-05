@@ -31,7 +31,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
                                            RecordsMetaLocalDAO<Object> {
 
     private static final String SOURCE_ID = "test-source-id";
-    private static final RecordRef TEST_REF = new RecordRef(SOURCE_ID, "TEST_REC_ID");
+    private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
 
     private RecordsService recordsService;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -76,7 +76,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         RecordsQueryResult<Object> result = new RecordsQueryResult<>();
         result.setRecords(getMetaValues(query.getIds()
                                              .stream()
-                                             .map(RecordRef::new)
+                                             .map(RecordRef::valueOf)
                                              .collect(Collectors.toList())));
 
         result.setHasMore(false);

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
  *
  * @author Pavel Simonov
  */
+@SuppressWarnings("unchecked")
 public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware {
 
     private static final Log logger = LogFactory.getLog(LocalRecordsDAO.class);
@@ -93,7 +94,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
             RecordsQueryResult<RecordRef> localRecords = recordsQueryLocalDAO.getLocalRecords(query);
             if (addSourceId) {
-                return new RecordsQueryResult<>(localRecords, r -> new RecordRef(getId(), r));
+                return new RecordsQueryResult<>(localRecords, r -> RecordRef.create(getId(), r));
             }
             return localRecords;
 

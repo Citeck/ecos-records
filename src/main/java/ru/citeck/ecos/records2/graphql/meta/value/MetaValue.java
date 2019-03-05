@@ -38,6 +38,10 @@ public interface MetaValue {
         return Collections.emptyList();
     }
 
+    default MetaEdge getEdge(String name) {
+        return new SimpleMetaEdge(name, this);
+    }
+
     default boolean has(String name) throws Exception {
         return false;
     }

@@ -1,23 +1,34 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import java.util.List;
-import java.util.function.Supplier;
 
-public class MetaEdge {
+public interface MetaEdge {
 
-    private final String name;
-    private final Supplier<List<MetaValue>> valueSupplier;
-
-    public MetaEdge(String name, Supplier<List<MetaValue>>  valueSupplier) {
-        this.name = name;
-        this.valueSupplier = valueSupplier;
+    default boolean isProtected() {
+        return false;
     }
 
-    public String getName() {
-        return name;
+    default boolean isMultiple() {
+        return true;
     }
 
-    public List<MetaValue> getValues() {
-        return valueSupplier.get();
+    default List<EdgeOption> getOptions() {
+        return null;
     }
+
+    default Class<?> getJavaClass() {
+        return Object.class;
+    }
+
+    default String getTitle() {
+        return getName();
+    }
+
+    default String getDescription() {
+        return "";
+    }
+
+    String getName();
+
+    Object getValue() throws Exception;
 }

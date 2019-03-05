@@ -17,10 +17,31 @@ class RecordRefTest {
                 "alfresco,,workspace://SpacesStore/123213-123123-123123-123",
                 ",tax-rep,workspace://SpacesStore/123213-21321-312321-213",
                 "alfresco,tax-rep,workspace://SpacesStore/123213-21321-312321-213",
-                ",,workspace://SpacesStore/..."})
+                ",,workspace://SpacesStore/...",
+                ",123,"})
     void test(String appName, String sourceId, String id) throws IOException {
 
+        ObjectMapper mapper = new ObjectMapper();
+
         RecordRef recordRef = RecordRef.create(appName, sourceId, id);
+
+        String recordStr = "";
+        if (appName != null) {
+            recordStr = appName + "/";
+        }
+        if (sourceId != null) {
+            recordStr += sourceId;
+        }
+        if (!recordStr.isEmpty()) {
+            recordStr += "@";
+        }
+        recordStr += id != null ? id : "";
+
+        RecordRef refFromStr = RecordRef.valueOf(recordStr);
+        assertEquals(recordRef, refFromStr);
+
+        RecordsObj recordsObj = mapper.readValue("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
+        assertEquals(recordRef, recordsObj.list.get(0));
 
         if (appName == null) {
             appName = "";
@@ -48,7 +69,6 @@ class RecordRefTest {
         RecordRef otherRef = RecordRef.create(appName + "0", sourceId, id);
         assertNotEquals(otherRef, recordRef);
 
-        ObjectMapper mapper = new ObjectMapper();
         String otherRefStr = mapper.writeValueAsString(otherRef);
         assertEquals("\"" + otherRef.toString() + "\"", otherRefStr);
 
@@ -62,5 +82,17 @@ class RecordRefTest {
     }
 
     static class RecordsList extends ArrayList<RecordRef> {
+    }
+
+    static class RecordsObj {
+
+        public List<RecordRef> list;
+
+        public void setRecord(RecordRef record) {
+            if (list == null) {
+                list = new ArrayList<>();
+            }
+            list.add(record);
+        }
     }
 }

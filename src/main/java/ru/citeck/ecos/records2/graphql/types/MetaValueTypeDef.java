@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 
@@ -231,13 +232,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     private MetaEdge getEdge(DataFetchingEnvironment env) {
         String name = env.getArgument("n");
         MetaValue value = env.getSource();
-        return new MetaEdge(name, () -> {
-            try {
-                return getAsMetaValues(value.getAttribute(name), env.getContext());
-            } catch (Exception e) {
-                throw new RuntimeException("Error with edge " + name, e);
-            }
-        });
+        return value.getEdge(name);
     }
 
     private Object getJson(DataFetchingEnvironment env) {

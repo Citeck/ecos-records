@@ -318,11 +318,22 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             fieldName = fieldName.substring(0, questionIdx);
         }
 
-        String result = (multiple ? ".atts" : ".att") + "(n:\"" + fieldName + "\")";
-        if (scalarField != null) {
-            return result + "{" + scalarField + "}";
+        if (fieldName.startsWith("#")) {
+
+            if (scalarField == null) {
+                throw new IllegalArgumentException("Illegal attribute: '" + def + "'");
+            }
+
+            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + "}";
+
         } else {
-            return result;
+
+            String result = (multiple ? ".atts" : ".att") + "(n:\"" + fieldName + "\")";
+            if (scalarField != null) {
+                return result + "{" + scalarField + "}";
+            } else {
+                return result;
+            }
         }
     }
 

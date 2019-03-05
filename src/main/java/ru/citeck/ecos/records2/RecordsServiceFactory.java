@@ -40,7 +40,7 @@ public class RecordsServiceFactory {
         gqlMetaQueryDef.setMetaValueTypeDef(metaValueTypeDef);
 
         types.add(gqlMetaQueryDef);
-        types.add(new MetaEdgeTypeDef());
+        types.add(new MetaEdgeTypeDef(metaValueTypeDef));
 
         return types;
     }

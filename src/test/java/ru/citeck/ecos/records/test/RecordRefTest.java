@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import ru.citeck.ecos.records2.RecordRef;
 
 import java.io.IOException;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +20,7 @@ class RecordRefTest {
                 ",,workspace://SpacesStore/..."})
     void test(String appName, String sourceId, String id) throws IOException {
 
-        RecordRef recordRef = new RecordRef(appName, sourceId, id);
+        RecordRef recordRef = RecordRef.create(appName, sourceId, id);
 
         if (appName == null) {
             appName = "";
@@ -42,9 +43,9 @@ class RecordRefTest {
             assertEquals(id, recordRef.toString());
         }
 
-        assertEquals(recordRef, new RecordRef(recordRef.toString()));
+        assertEquals(recordRef, RecordRef.valueOf(recordRef.toString()));
 
-        RecordRef otherRef = new RecordRef(appName + "0", sourceId, id);
+        RecordRef otherRef = RecordRef.create(appName + "0", sourceId, id);
         assertNotEquals(otherRef, recordRef);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -53,5 +54,13 @@ class RecordRefTest {
 
         RecordRef remappedOtherRef = mapper.readValue(otherRefStr, RecordRef.class);
         assertEquals(otherRef, remappedOtherRef);
+
+        RecordsList list = mapper.readValue("[\"\", \"\"]", RecordsList.class);
+        assertEquals(2, list.size());
+        assertSame(list.get(0), RecordRef.EMPTY);
+        assertSame(list.get(1), RecordRef.EMPTY);
+    }
+
+    static class RecordsList extends ArrayList<RecordRef> {
     }
 }

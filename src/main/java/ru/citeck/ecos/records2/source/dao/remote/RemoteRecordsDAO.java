@@ -44,7 +44,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
             request.setQuery(new RecordsQuery(query));
             request.getQuery().setSourceId(remoteSourceId);
             if (afterId != RecordRef.EMPTY) {
-                request.getQuery().setAfterId(new RecordRef(afterId.getId()));
+                request.getQuery().setAfterId(RecordRef.valueOf(afterId.getId()));
             }
 
             RecordsRefsQueryResult result = restConnection.jsonPost(recordsMethod,
@@ -91,7 +91,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
 
         List<RecordRef> recordsRefs = records.stream()
                                              .map(RecordRef::getId)
-                                             .map(RecordRef::new)
+                                             .map(RecordRef::valueOf)
                                              .collect(Collectors.toList());
 
         QueryBody request = new QueryBody();

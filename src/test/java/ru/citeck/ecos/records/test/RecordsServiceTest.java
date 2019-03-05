@@ -59,7 +59,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
         result.setRecords(query.getIds()
                                .stream()
-                               .map(RecordRef::new)
+                               .map(RecordRef::valueOf)
                                .collect(Collectors.toList()));
 
         result.setHasMore(false);

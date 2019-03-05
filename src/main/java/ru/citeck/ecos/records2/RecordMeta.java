@@ -23,7 +23,7 @@ public class RecordMeta {
     }
 
     public RecordMeta(String id) {
-        this.id = new RecordRef(id);
+        this.id = RecordRef.valueOf(id);
     }
 
     public RecordMeta(RecordRef id) {

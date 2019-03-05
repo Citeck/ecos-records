@@ -24,12 +24,12 @@ public class RecordsUtils {
     public static RecordRef getRecordId(ObjectNode recordMeta) {
         JsonNode idNode = recordMeta.get("id");
         String id = idNode != null && idNode.isTextual() ? idNode.asText() : null;
-        return id != null ? new RecordRef(id) : null;
+        return id != null ? RecordRef.valueOf(id) : null;
     }
 
     public static List<RecordRef> toLocalRecords(Collection<RecordRef> records) {
         return records.stream()
-                      .map(r -> new RecordRef(r.getId()))
+                      .map(r -> RecordRef.valueOf(r.getId()))
                       .collect(Collectors.toList());
     }
 
@@ -88,13 +88,13 @@ public class RecordsUtils {
 
     public static <V> Map<RecordRef, V> convertToRefs(Map<String, V> data) {
         Map<RecordRef, V> result = new HashMap<>();
-        data.forEach((id, recMeta) -> result.put(new RecordRef(id), recMeta));
+        data.forEach((id, recMeta) -> result.put(RecordRef.valueOf(id), recMeta));
         return result;
     }
 
     public static <V> Map<RecordRef, V> convertToRefs(String sourceId, Map<String, V> data) {
         Map<RecordRef, V> result = new HashMap<>();
-        data.forEach((id, recMeta) -> result.put(new RecordRef(sourceId, id), recMeta));
+        data.forEach((id, recMeta) -> result.put(RecordRef.create(sourceId, id), recMeta));
         return result;
     }
 
@@ -116,6 +116,6 @@ public class RecordsUtils {
     }
 
     public static List<RecordRef> toRecords(Collection<String> strRecords) {
-        return strRecords.stream().map(RecordRef::new).collect(Collectors.toList());
+        return strRecords.stream().map(RecordRef::valueOf).collect(Collectors.toList());
     }
 }

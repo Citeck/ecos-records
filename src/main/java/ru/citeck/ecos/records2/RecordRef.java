@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
@@ -24,24 +25,37 @@ public class RecordRef {
         id = "";
     }
 
+    /**
+     * @deprecated use RecordRef.create instead
+     */
+    @Deprecated
     public RecordRef(String sourceId, String id) {
         this.sourceId = sourceId;
         this.id = id != null ? id : "";
         this.appName = "";
     }
 
+    /**
+     * @deprecated use RecordRef.create instead
+     */
+    @Deprecated
     public RecordRef(String sourceId, RecordRef id) {
         this.sourceId = sourceId;
         this.id = id.toString();
         this.appName = "";
     }
 
-    public RecordRef(String appName, String sourceId, String id) {
+    private RecordRef(String appName, String sourceId, String id) {
         this.id = StringUtils.isNotBlank(id) ? id : "";
         this.appName = StringUtils.isNotBlank(appName) ? appName : "";
         this.sourceId = StringUtils.isNotBlank(sourceId) ? sourceId : "";
     }
 
+    /**
+     * @deprecated use RecordRef.valueOf instead
+     */
+    @Deprecated
+    @JsonIgnore
     public RecordRef(String id) {
 
         int sourceDelimIdx = id.indexOf(SOURCE_DELIMITER);
@@ -64,6 +78,18 @@ public class RecordRef {
             this.id = id;
             this.appName = "";
         }
+    }
+
+    public static RecordRef create(String sourceId, String id) {
+        return new RecordRef(sourceId, id);
+    }
+
+    public static RecordRef create(String sourceId, RecordRef id) {
+        return new RecordRef(sourceId, id);
+    }
+
+    public static RecordRef create(String appName, String sourceId, String id) {
+        return new RecordRef(appName, sourceId, id);
     }
 
     @JsonCreator

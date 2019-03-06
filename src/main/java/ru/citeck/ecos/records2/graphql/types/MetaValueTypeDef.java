@@ -85,6 +85,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::getStr)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("disp")
+                        .description("Display name")
+                        .dataFetcher(this::getDisp)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("num")
                         .description("Number representation")
                         .dataFetcher(this::getNum)
@@ -222,6 +227,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     private String getStr(DataFetchingEnvironment env) {
         MetaValue value = env.getSource();
         return value.getString();
+    }
+
+    private String getDisp(DataFetchingEnvironment env) {
+        MetaValue value = env.getSource();
+        return value.getDisplayName();
     }
 
     private Double getNum(DataFetchingEnvironment env) {

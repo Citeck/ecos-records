@@ -24,6 +24,10 @@ public interface MetaValue {
      */
     String getString();
 
+    default String getDisplayName() {
+        return getString();
+    }
+
     /**
      * Value identifier
      */

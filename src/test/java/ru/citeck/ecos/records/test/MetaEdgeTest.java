@@ -1,0 +1,131 @@
+package ru.citeck.ecos.records.test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class MetaEdgeTest extends LocalRecordsDAO
+                           implements RecordsMetaLocalDAO<Object> {
+
+    private static final String SOURCE_ID = "test-source";
+    private static final String EDGE_FIELD_NAME = "test00";
+
+    private RecordsService recordsService;
+
+    @Override
+    public List<Object> getMetaValues(List<RecordRef> records) {
+        return Collections.singletonList(new MetaTestVal());
+    }
+
+    @BeforeAll
+    void init() {
+
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        recordsService = factory.createRecordsService();
+
+        setId(SOURCE_ID);
+        recordsService.register(this);
+    }
+
+    @Test
+    void test() {
+
+        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass}";
+        List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
+        RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
+
+        RecordMeta meta = result.getRecords().get(0);
+        assertEquals(EDGE_FIELD_NAME, meta.get("edge").path("name").asText());
+
+        List<String> distinctVars = new ArrayList<>();
+        for (JsonNode value : meta.get("edge").get("distinct")) {
+            distinctVars.add(value.get("str").asText());
+        }
+        assertEquals(MetaTestEdge.distinctVariants, distinctVars);
+
+        List<String> optionsVars = new ArrayList<>();
+        for (JsonNode value : meta.get("edge").get("options")) {
+            optionsVars.add(value.get("str").asText());
+        }
+        assertEquals(MetaTestEdge.optionsVariants, optionsVars);
+
+        assertEquals(String.class.getName(), meta.get("edge").get("javaClass").asText());
+    }
+
+    public static class MetaTestVal implements MetaValue {
+
+        @Override
+        public String getString() {
+            return null;
+        }
+
+        @Override
+        public MetaEdge getEdge(String name) {
+            return new MetaTestEdge(name);
+        }
+    }
+
+    public static class MetaTestEdge implements MetaEdge {
+
+        static List<?> distinctVariants = Arrays.asList(
+            "first",
+            "second",
+            "third"
+        );
+
+        static List<?> optionsVariants = Arrays.asList(
+            "opt_first",
+            "opt_second",
+            "opt_third"
+        );
+
+        private String name;
+
+        MetaTestEdge(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public Object getValue() {
+            return new MetaTestVal();
+        }
+
+        @Override
+        public List<?> getDistinct() {
+            return distinctVariants;
+        }
+
+        @Override
+        public List<?> getOptions() {
+            return optionsVariants;
+        }
+
+        @Override
+        public Class<?> getJavaClass() {
+            return String.class;
+        }
+    }
+}

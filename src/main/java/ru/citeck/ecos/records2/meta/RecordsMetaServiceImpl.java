@@ -19,6 +19,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -213,7 +214,15 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
             if (List.class.isAssignableFrom(propType) || Set.class.isAssignableFrom(propType)) {
                 ParameterizedType parameterType = (ParameterizedType) writeMethod.getGenericParameterTypes()[0];
-                propType = (Class<?>) parameterType.getActualTypeArguments()[0];
+
+                Type type = parameterType.getActualTypeArguments()[0];
+
+                if (type instanceof Class) {
+                    propType = (Class<?>) parameterType.getActualTypeArguments()[0];
+                } else if (type instanceof ParameterizedType) {
+                    propType = (Class<?>) ((ParameterizedType) type).getRawType();
+                }
+
                 isMultiple = true;
             }
 
@@ -324,7 +333,14 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 throw new IllegalArgumentException("Illegal attribute: '" + def + "'");
             }
 
-            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + "}";
+            String inner = "";
+            switch (scalarField) {
+                case "options":
+                case "distinct":
+                    inner = "{title:disp,value:str}";
+            }
+
+            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + inner + "}";
 
         } else {
 

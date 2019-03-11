@@ -12,7 +12,11 @@ public interface MetaEdge {
         return true;
     }
 
-    default List<EdgeOption> getOptions() {
+    default List<?> getOptions() {
+        return null;
+    }
+
+    default List<?> getDistinct() {
         return null;
     }
 

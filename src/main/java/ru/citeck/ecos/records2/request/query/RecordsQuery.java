@@ -14,10 +14,7 @@ import ru.citeck.ecos.records2.request.query.page.SkipPage;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class RecordsQuery {
@@ -27,6 +24,8 @@ public class RecordsQuery {
     private String sourceId = "";
 
     private List<SortBy> sortBy = Collections.emptyList();
+    private List<String> groupBy = Collections.emptyList();
+
     private QueryPage page = new SkipPage();
 
     private QueryConsistency consistency = QueryConsistency.DEFAULT;
@@ -45,6 +44,7 @@ public class RecordsQuery {
         this.sourceId = other.sourceId;
         this.consistency = other.consistency;
         this.sortBy = new ArrayList<>(other.sortBy);
+        this.groupBy = new ArrayList<>(other.groupBy);
     }
 
     public String getSourceId() {
@@ -135,6 +135,8 @@ public class RecordsQuery {
         this.page = page != null ? page : new SkipPage();
     }
 
+
+
     @JsonIgnore
     public AfterPage getAfterPage() {
         if (page instanceof AfterPage) {
@@ -158,10 +160,6 @@ public class RecordsQuery {
         return page instanceof AfterPage;
     }
 
-    public List<SortBy> getSortBy() {
-        return sortBy;
-    }
-
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
@@ -170,8 +168,20 @@ public class RecordsQuery {
         return debug;
     }
 
+    public List<SortBy> getSortBy() {
+        return sortBy;
+    }
+
     public void setSortBy(List<SortBy> sortBy) {
         this.sortBy = sortBy != null ? sortBy : Collections.emptyList();
+    }
+
+    public List<String> getGroupBy() {
+        return groupBy;
+    }
+
+    public void setGroupBy(List<String> groupBy) {
+        this.groupBy = groupBy != null ? groupBy : Collections.emptyList();
     }
 
     public QueryConsistency getConsistency() {

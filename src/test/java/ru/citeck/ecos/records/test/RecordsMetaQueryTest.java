@@ -29,10 +29,11 @@ public class RecordsMetaQueryTest {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(SimplePojo.class);
 
-        assertEquals(2, attributes.size());
+        assertEquals(3, attributes.size());
 
         assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){str}}", attributes.get("someatt"));
         assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
+        assertEquals(".edge(n:\"cm:field\"){options{title:disp,value:str}}", attributes.get("options"));
     }
 
     public static class SimplePojo {
@@ -42,6 +43,17 @@ public class RecordsMetaQueryTest {
 
         @MetaAtt("#cm:title?multiple")
         private boolean edge;
+
+        @MetaAtt("#cm:field?options")
+        private List<Map<String, String>> options;
+
+        public List<Map<String, String>> getOptions() {
+            return options;
+        }
+
+        public void setOptions(List<Map<String, String>> options) {
+            this.options = options;
+        }
 
         public boolean isEdge() {
             return edge;

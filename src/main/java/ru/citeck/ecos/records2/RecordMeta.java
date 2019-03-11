@@ -55,6 +55,10 @@ public class RecordMeta {
         return attributes;
     }
 
+    public JsonNode get(String name) {
+        return getAttribute(name);
+    }
+
     public JsonNode getAttribute(String name) {
         return attributes.path(name);
     }
@@ -131,8 +135,8 @@ public class RecordMeta {
     @Override
     public String toString() {
         return "{" +
-                "\"id\":" + id +
-                ", \"attributes\":" + attributes +
+                "\"id\":\"" + id +
+                "\", \"attributes\":" + attributes +
                 '}';
     }
 }

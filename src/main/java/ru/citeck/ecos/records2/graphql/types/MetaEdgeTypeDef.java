@@ -2,8 +2,6 @@ package ru.citeck.ecos.records2.graphql.types;
 
 import graphql.Scalars;
 import graphql.schema.*;
-import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
-import ru.citeck.ecos.records2.graphql.meta.value.EdgeOption;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
@@ -60,12 +58,26 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("options")
                         .dataFetcher(this::getOptions)
-                        .type(CustomGqlScalars.JSON_NODE))
+                        .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("javaClass")
                         .dataFetcher(this::getJavaClass)
                         .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("distinct")
+                        .dataFetcher(this::getDistinct)
+                        .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
                 .build();
+    }
+
+    private List<MetaValue> getDistinct(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return metaValueTypeDef.getAsMetaValues(edge.getDistinct(), env.getContext());
+    }
+
+    private List<MetaValue> getOptions(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return metaValueTypeDef.getAsMetaValues(edge.getOptions(), env.getContext());
     }
 
     private String getName(DataFetchingEnvironment env) {
@@ -90,11 +102,6 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
     private String getJavaClass(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         return edge.getJavaClass().getName();
-    }
-    
-    private List<EdgeOption> getOptions(DataFetchingEnvironment env) {
-        MetaEdge edge = env.getSource();
-        return edge.getOptions();
     }
 
     private boolean isProtected(DataFetchingEnvironment env) {

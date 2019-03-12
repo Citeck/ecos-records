@@ -29,10 +29,11 @@ public class StdJsonConverter extends StdDeserializer<Predicate> implements Json
     public StdJsonConverter() {
         super(Predicate.class);
 
+        register(OrPredicate.class);
+        register(AndPredicate.class);
         register(NotPredicate.class);
         register(ValuePredicate.class);
         register(EmptyPredicate.class);
-        register(ComposedPredicate.class);
 
         register(new StartsEndsResolver());
 

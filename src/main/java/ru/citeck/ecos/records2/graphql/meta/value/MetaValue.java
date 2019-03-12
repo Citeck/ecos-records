@@ -42,8 +42,19 @@ public interface MetaValue {
         return Collections.emptyList();
     }
 
+    /**
+     * Get value attribute
+     */
+    default Object getAttribute(String name, MetaField field) throws Exception {
+        return getAttribute(name);
+    }
+
     default MetaEdge getEdge(String name) {
         return new SimpleMetaEdge(name, this);
+    }
+
+    default MetaEdge getEdge(String name, MetaField field) {
+        return getEdge(name);
     }
 
     default boolean has(String name) throws Exception {

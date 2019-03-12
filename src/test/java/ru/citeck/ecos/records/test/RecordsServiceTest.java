@@ -39,6 +39,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @BeforeAll
     void init() {
 
+        System.out.println("TEST INPUT");
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.createRecordsService();
 

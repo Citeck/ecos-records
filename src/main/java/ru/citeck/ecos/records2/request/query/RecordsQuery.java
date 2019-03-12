@@ -135,8 +135,6 @@ public class RecordsQuery {
         this.page = page != null ? page : new SkipPage();
     }
 
-
-
     @JsonIgnore
     public AfterPage getAfterPage() {
         if (page instanceof AfterPage) {

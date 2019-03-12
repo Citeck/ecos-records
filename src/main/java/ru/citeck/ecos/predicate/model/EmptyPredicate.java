@@ -7,7 +7,7 @@ import java.util.List;
 
 public class EmptyPredicate extends AttributePredicate {
 
-    public static final String TYPE = "empty";
+    private static final String TYPE = "empty";
 
     @JsonProperty("t")
     public String getType() {

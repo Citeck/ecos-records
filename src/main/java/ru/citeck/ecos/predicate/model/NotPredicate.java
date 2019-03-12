@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class NotPredicate implements Predicate {
 
-    public static final String TYPE = "not";
+    private static final String TYPE = "not";
 
     @JsonProperty("val")
     private Predicate predicate;

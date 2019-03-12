@@ -21,7 +21,7 @@ class PredicateTest {
         valuePredicate.setValue(12312);
         valuePredicate.setAttribute("TestAtt");
 
-        ObjectNode jsonNode = predicateService.toJson(valuePredicate);
+        ObjectNode jsonNode = predicateService.writeJson(valuePredicate);
 
         assertEquals(valuePredicate.getValue(), jsonNode.get("val").asInt());
         assertEquals(valuePredicate.getType().asString(), jsonNode.get("t").asText());
@@ -80,8 +80,8 @@ class PredicateTest {
             "   ]\n" +
             "}";
 
-        Predicate predicate = predicateService.fromJson(pred);
-        Predicate predicate2 = predicateService.fromJson(predicateService.toJson(predicate));
+        Predicate predicate = predicateService.readJson(pred);
+        Predicate predicate2 = predicateService.readJson(predicateService.writeJson(predicate));
 
         assertEquals(predicate, predicate2);
     }

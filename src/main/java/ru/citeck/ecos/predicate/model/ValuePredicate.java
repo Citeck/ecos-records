@@ -56,4 +56,12 @@ public class ValuePredicate extends AttributePredicate {
                      .map(Type::asString)
                      .collect(Collectors.toList());
     }
+
+    public static ValuePredicate equal(String attribute, Object value) {
+        ValuePredicate valuePredicate = new ValuePredicate();
+        valuePredicate.setType(Type.EQ);
+        valuePredicate.setAttribute(attribute);
+        valuePredicate.setValue(value);
+        return valuePredicate;
+    }
 }

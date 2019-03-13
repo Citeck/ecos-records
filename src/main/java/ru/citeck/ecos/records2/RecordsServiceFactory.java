@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2;
 
+import ru.citeck.ecos.predicate.PredicateService;
+import ru.citeck.ecos.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
@@ -16,11 +18,16 @@ import java.util.List;
 public class RecordsServiceFactory {
 
     public RecordsService createRecordsService() {
-        return new RecordsServiceImpl(createRecordsMetaService());
+        return new RecordsServiceImpl(createRecordsMetaService(),
+                                      createPredicateService());
     }
 
     public RecordsMetaService createRecordsMetaService() {
         return new RecordsMetaServiceImpl(createRecordsMetaGraphQL());
+    }
+
+    public PredicateService createPredicateService() {
+        return new PredicateServiceImpl();
     }
 
     protected RecordsMetaGql createRecordsMetaGraphQL() {
@@ -49,6 +56,7 @@ public class RecordsServiceFactory {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
+        metaValueFactories.add(new RecordMetaValueFactory());
         metaValueFactories.add(new BeanValueFactory());
         metaValueFactories.add(new BooleanValueFactory());
         metaValueFactories.add(new DateValueFactory());

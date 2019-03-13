@@ -7,6 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 
@@ -213,7 +215,8 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         String name = getParameter(env, "n");
 
         try {
-            return getAsMetaValues(metaValue.getAttribute(name), env.getContext());
+            MetaField metaField = new MetaFieldImpl(env.getField());
+            return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -242,7 +245,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     private MetaEdge getEdge(DataFetchingEnvironment env) {
         String name = env.getArgument("n");
         MetaValue value = env.getSource();
-        return value.getEdge(name);
+        return value.getEdge(name, new MetaFieldImpl(env.getField()));
     }
 
     private Object getJson(DataFetchingEnvironment env) {

@@ -32,6 +32,8 @@ import java.util.Optional;
  */
 public interface RecordsService {
 
+    String LANGUAGE_PREDICATE = "predicate";
+
     /**
      * Query records from default RecordsDAO
      * @return list of RecordRef and page info
@@ -147,12 +149,14 @@ public interface RecordsService {
      */
     Iterable<RecordRef> getIterableRecords(RecordsQuery query);
 
+    List<MetaAttributeDef> getAttributesDef(String sourceId, Collection<String> names);
+
+    Optional<MetaAttributeDef> getAttributeDef(String sourceId, String name);
+
     /**
      * Register new RecordsDAO. It must return valid id from method "getId()" to call this method.
      */
     void register(RecordsDAO recordsSource);
 
-    List<MetaAttributeDef> getAttributesDef(String sourceId, Collection<String> names);
-
-    Optional<MetaAttributeDef> getAttributeDef(String sourceId, String name);
+    void register(QueryLangConverter converter, String fromLang, String toLang);
 }

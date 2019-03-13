@@ -44,7 +44,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         this.graphQLService = graphQLService;
 
         Arrays.asList(
-                new ScalarField<>(String.class, "str"),
+                new ScalarField<>(String.class, "disp"),
                 new ScalarField<>(Boolean.class, "bool"),
                 new ScalarField<>(boolean.class, "bool"),
                 new ScalarField<>(Double.class, "num"),
@@ -178,7 +178,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             schema.append(key).append(":");
 
             if (path.charAt(0) != '.') {
-                path = convertAttDefinition(path, "str", false);
+                path = convertAttDefinition(path, "disp", false);
             }
 
             schema.append(path, 1, path.length());

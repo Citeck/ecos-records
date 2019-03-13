@@ -31,7 +31,7 @@ public class RecordsMetaQueryTest {
 
         assertEquals(3, attributes.size());
 
-        assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){str}}", attributes.get("someatt"));
+        assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){disp}}", attributes.get("someatt"));
         assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
         assertEquals(".edge(n:\"cm:field\"){options{title:disp,value:str}}", attributes.get("options"));
     }

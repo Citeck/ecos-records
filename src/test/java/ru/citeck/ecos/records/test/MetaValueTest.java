@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -17,6 +18,7 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,10 +29,11 @@ public class MetaValueTest extends LocalRecordsDAO
     private static final String SOURCE_ID = "test-source";
 
     private RecordsService recordsService;
+    private String innerSchema;
 
     @Override
     public List<Object> getMetaValues(List<RecordRef> records) {
-        return Collections.singletonList(new MetaVal());
+        return Collections.singletonList(new MetaVal(s -> innerSchema = s));
     }
 
     @BeforeAll
@@ -46,7 +49,9 @@ public class MetaValueTest extends LocalRecordsDAO
     @Test
     void test() {
 
-        String schema = "str,disp,id,has(n:\"One\"),num,bool,json";
+        String testInnerSchema = "a:att(n:\"test\"){str},b:att(n:\"number\"){num}";
+
+        String schema = "str,disp,id,has(n:\"One\"),num,bool,json,schema:att(n:\"schema\"){" + testInnerSchema + "}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
@@ -59,6 +64,8 @@ public class MetaValueTest extends LocalRecordsDAO
         assertEquals(true, meta.getAttribute("has", false));
         assertEquals(MetaVal.JSON_VALUE, meta.getAttribute("json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
+
+        assertEquals(testInnerSchema, innerSchema);
     }
 
     public static class MetaVal implements MetaValue {
@@ -70,6 +77,12 @@ public class MetaValueTest extends LocalRecordsDAO
         static Boolean BOOL_VALUE = true;
         static JsonNode JSON_VALUE = JsonNodeFactory.instance.objectNode().with("Test").put("prop", "value");
         static String ID_VALUE = "SOME_ID";
+
+        private Consumer<String> schemaConsumer;
+
+        public MetaVal(Consumer<String> schemaConsumer) {
+            this.schemaConsumer = schemaConsumer;
+        }
 
         @Override
         public String getString() {
@@ -104,6 +117,14 @@ public class MetaValueTest extends LocalRecordsDAO
         @Override
         public Object getJson() {
             return JSON_VALUE;
+        }
+
+        @Override
+        public Object getAttribute(String name, MetaField field) {
+            if (name.equals("schema")) {
+                schemaConsumer.accept(field.getInnerSchema());
+            }
+            return null;
         }
     }
 }

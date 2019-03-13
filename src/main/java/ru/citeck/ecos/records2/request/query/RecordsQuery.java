@@ -57,7 +57,10 @@ public class RecordsQuery {
 
     public <T> T getQuery(Class<T> type) {
         try {
-            if (query.isTextual() && !String.class.equals(type)) {
+            if (query.isTextual()) {
+                if (String.class.equals(type)) {
+                    return type.cast(query.asText());
+                }
                 return objectMapper.readValue(query.textValue(), type);
             } else {
                 return objectMapper.treeToValue(query, type);

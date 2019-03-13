@@ -63,8 +63,8 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
         String debugStr = getDebug() != null ? ",\n  \"debug\": " + getDebug() : "";
         return "{\n" +
                 "  \"records\": [" + recordsStr +
-                "],\n  \"hasMore\": " + hasMore +
-                ",\n  \"totalCount\": " + totalCount +
+                "],\n  \"hasMore\": " + getHasMore() +
+                ",\n  \"totalCount\": " + getTotalCount() +
                 debugStr +
                 "\n}";
     }

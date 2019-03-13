@@ -2,9 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import graphql.language.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MetaFieldImpl implements MetaField {
 
@@ -16,14 +14,42 @@ public class MetaFieldImpl implements MetaField {
 
     @Override
     public String getInnerSchema() {
+        return getFieldSchema(field);
+    }
+
+    @Override
+    public String getAlias() {
+        return field.getAlias();
+    }
+
+    @Override
+    public String getName() {
+        return field.getName();
+    }
+
+    @Override
+    public String getAttributeSchema(String fieldName) {
+        return getFieldSchema(getInnerAttFields().get(fieldName));
+    }
+
+    private String getFieldSchema(Field field) {
+        if (field == null) {
+            return null;
+        }
         StringBuilder sb = new StringBuilder();
-        fillInnerSchema(field, sb);
+        fillFieldsSchema(getInnerFields(field), sb);
         return sb.toString();
     }
 
-    private void fillInnerSchema(Field field, StringBuilder sb) {
+    private void fillFieldsSchema(List<Field> fields, StringBuilder sb) {
 
-        for (Field innerField : getInnerFields(field)) {
+        for (int i = 0; i < fields.size(); i++) {
+
+            Field innerField = fields.get(i);
+
+            if (innerField.getAlias() != null) {
+                sb.append(innerField.getAlias()).append(":");
+            }
 
             sb.append(innerField.getName());
 
@@ -51,33 +77,36 @@ public class MetaFieldImpl implements MetaField {
             List<Field> innerInnerFields = getInnerFields(innerField);
 
             if (innerInnerFields.size() > 0) {
-
                 sb.append("{");
-
-                for (Field innerInnerfield : innerInnerFields) {
-                    fillInnerSchema(innerInnerfield, sb);
-                }
-
+                fillFieldsSchema(innerInnerFields, sb);
                 sb.append("}");
+            }
+
+            if (i < fields.size() - 1) {
+                sb.append(",");
             }
         }
     }
 
     @Override
     public List<String> getInnerAttributes() {
+        return new ArrayList<>(getInnerAttFields().keySet());
+    }
 
-        List<String> attributes = new ArrayList<>();
+    private Map<String, Field> getInnerAttFields() {
+
+        Map<String, Field> attributes = new HashMap<>();
 
         for (Field field : getInnerFields(field)) {
 
             if (field.getName().startsWith("att")) {
 
                 field.getArguments()
-                     .stream()
-                     .findFirst()
-                     .filter(a -> a.getValue() instanceof StringValue)
-                     .map(a -> ((StringValue) a.getValue()).getValue())
-                     .ifPresent(attributes::add);
+                    .stream()
+                    .findFirst()
+                    .filter(a -> a.getValue() instanceof StringValue)
+                    .map(a -> ((StringValue) a.getValue()).getValue())
+                    .ifPresent(name -> attributes.put(name, field));
             }
         }
 

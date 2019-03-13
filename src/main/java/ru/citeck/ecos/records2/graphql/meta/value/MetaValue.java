@@ -22,7 +22,9 @@ public interface MetaValue {
     /**
      * String representation
      */
-    String getString();
+    default String getString() {
+        return toString();
+    }
 
     default String getDisplayName() {
         return getString();
@@ -62,11 +64,13 @@ public interface MetaValue {
     }
 
     default Double getDouble() {
-        return Double.parseDouble(getString());
+        String str = getString();
+        return str != null ? Double.parseDouble(str) : null;
     }
 
     default Boolean getBool() {
-        return Boolean.parseBoolean(getString());
+        String str = getString();
+        return str != null ? Boolean.parseBoolean(getString()) : null;
     }
 
     default Object getJson() {

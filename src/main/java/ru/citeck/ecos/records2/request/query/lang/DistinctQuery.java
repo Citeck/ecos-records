@@ -41,4 +41,13 @@ public class DistinctQuery {
         result.setAttribute(attribute);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DistinctQuery{" +
+            "attribute='" + attribute + '\'' +
+            ", query=" + query +
+            ", language='" + language + '\'' +
+            '}';
+    }
 }

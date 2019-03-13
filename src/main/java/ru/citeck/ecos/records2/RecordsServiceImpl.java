@@ -47,6 +47,8 @@ public class RecordsServiceImpl implements RecordsService {
     private RecordsMetaService recordsMetaService;
     private PredicateService predicateService;
 
+    private Map<LangConvPair, QueryLangConverter> languageConverters = new ConcurrentHashMap<>();
+
     public RecordsServiceImpl(RecordsMetaService recordsMetaService, PredicateService predicateService) {
         this.recordsMetaService = recordsMetaService;
         this.predicateService = predicateService;
@@ -110,8 +112,28 @@ public class RecordsServiceImpl implements RecordsService {
     @Override
     public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String schema) {
 
-        if (!query.getGroupBy().isEmpty() && PredicateService.LANGUAGE.equals(query.getLanguage())) {
-            return getRecordsGroups(query, schema);
+        if (!query.getGroupBy().isEmpty()) {
+
+            QueryLangConverter toPredicate;
+            QueryLangConverter fromPredicate;
+
+            if (query.getLanguage().equals(LANGUAGE_PREDICATE)) {
+
+                toPredicate = q -> q;
+                fromPredicate = q -> q;
+
+            } else {
+
+                toPredicate = languageConverters.get(new LangConvPair(query.getLanguage(), LANGUAGE_PREDICATE));
+                fromPredicate = languageConverters.get(new LangConvPair(LANGUAGE_PREDICATE, query.getLanguage()));
+            }
+
+            if (toPredicate != null && fromPredicate != null) {
+                return getRecordsGroups(query, schema, toPredicate, fromPredicate);
+            } else {
+                logger.warn("GroupBy is not supported. Query: " + query);
+                return new RecordsQueryResult<>();
+            }
         }
 
         return getRecordsImpl(query, schema);
@@ -195,7 +217,10 @@ public class RecordsServiceImpl implements RecordsService {
         return records;
     }
 
-    private RecordsQueryResult<RecordMeta> getRecordsGroups(RecordsQuery query, String schema) {
+    private RecordsQueryResult<RecordMeta> getRecordsGroups(RecordsQuery query,
+                                                            String schema,
+                                                            QueryLangConverter toPredicate,
+                                                            QueryLangConverter fromPredicate) {
 
         List<String> groupBy = query.getGroupBy();
 
@@ -224,7 +249,8 @@ public class RecordsServiceImpl implements RecordsService {
             groupsBaseQuery.setGroupBy(newGroupBy);
         }
 
-        Predicate predicate = predicateService.readJson((ObjectNode) groupsBaseQuery.getQuery());
+        JsonNode predicateQuery = toPredicate.convert(groupsBaseQuery.getQuery());
+        Predicate predicate = predicateService.readJson(predicateQuery);
 
         List<RecordsGroup> groups = new ArrayList<>();
 
@@ -232,7 +258,9 @@ public class RecordsServiceImpl implements RecordsService {
 
             Predicate groupPredicate = ValuePredicate.equal(attribute, meta.get("str", ""));
             RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
-            groupQuery.setQuery(AndPredicate.of(predicate, groupPredicate));
+
+            JsonNode groupAndQuery = predicateService.writeJson(AndPredicate.of(predicate, groupPredicate));
+            groupQuery.setQuery(fromPredicate.convert(groupAndQuery));
 
             groups.add(new RecordsGroup(groupQuery, groupPredicate, this));
         }
@@ -306,7 +334,7 @@ public class RecordsServiceImpl implements RecordsService {
 
     @Override
     public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
-        System.out.println("GET _META");
+
         RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
         if (meta.getRecords().size() == 0) {
             throw new IllegalStateException("Can't get record metadata. Result: " + meta);
@@ -450,6 +478,11 @@ public class RecordsServiceImpl implements RecordsService {
         }
     }
 
+    @Override
+    public void register(QueryLangConverter converter, String fromLang, String toLang) {
+        languageConverters.put(new LangConvPair(fromLang, toLang), converter);
+    }
+
     private <T extends RecordsDAO> void register(Map<String, T> map, Class<T> type, RecordsDAO value) {
         if (type.isAssignableFrom(value.getClass())) {
             @SuppressWarnings("unchecked")
@@ -470,6 +503,10 @@ public class RecordsServiceImpl implements RecordsService {
     @Override
     public Optional<MetaAttributeDef> getAttributeDef(String sourceId, String name) {
         return getAttributesDef(sourceId, Collections.singletonList(name)).stream().findFirst();
+    }
+
+    public PredicateService getPredicateService() {
+        return predicateService;
     }
 
     public RecordsMetaService getRecordsMetaService() {
@@ -497,5 +534,34 @@ public class RecordsServiceImpl implements RecordsService {
             throw new IllegalArgumentException("RecordsDAO is not found! Class: " + type + " Id: " + sourceId);
         }
         return source.get();
+    }
+
+    private static class LangConvPair {
+
+        private final String from;
+        private final String to;
+
+        public LangConvPair(String from, String to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            LangConvPair langPair = (LangConvPair) o;
+            return Objects.equals(from, langPair.from) &&
+                   Objects.equals(to, langPair.to);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(from, to);
+        }
     }
 }

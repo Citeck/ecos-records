@@ -145,6 +145,8 @@ public interface RecordsService {
      */
     Iterable<RecordRef> getIterableRecords(RecordsQuery query);
 
+    JsonNode convertQueryLanguage(JsonNode query, String fromLang, String toLang);
+
     /**
      * Register new RecordsDAO. It must return valid id from method "getId()" to call this method.
      */

@@ -28,6 +28,11 @@ public class StartsEndsResolver implements PredicateResolver {
                 node.put("val", "%" + node.get("val").asText());
                 break;
             }
+            case "contains": {
+                node = node.deepCopy();
+                node.put("t", "like");
+                node.put("val", "%" + node.get("val").asText() + "%");
+            }
         }
 
         return mapper.treeToValue(node, Predicate.class);
@@ -35,6 +40,6 @@ public class StartsEndsResolver implements PredicateResolver {
 
     @Override
     public List<String> getTypes() {
-        return Arrays.asList("starts", "ends");
+        return Arrays.asList("starts", "ends", "contains");
     }
 }

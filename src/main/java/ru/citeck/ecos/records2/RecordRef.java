@@ -81,14 +81,23 @@ public class RecordRef {
     }
 
     public static RecordRef create(String sourceId, String id) {
+        if (StringUtils.isBlank(sourceId) && StringUtils.isBlank(id)) {
+            return EMPTY;
+        }
         return new RecordRef(sourceId, id);
     }
 
     public static RecordRef create(String sourceId, RecordRef id) {
+        if (StringUtils.isBlank(sourceId) && id == EMPTY) {
+            return EMPTY;
+        }
         return new RecordRef(sourceId, id);
     }
 
     public static RecordRef create(String appName, String sourceId, String id) {
+        if (StringUtils.isBlank(appName) && StringUtils.isBlank(sourceId) && StringUtils.isBlank(id)) {
+            return EMPTY;
+        }
         return new RecordRef(appName, sourceId, id);
     }
 

@@ -8,7 +8,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -23,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaEdgeTest extends LocalRecordsDAO
-                           implements RecordsMetaLocalDAO<Object> {
+                          implements RecordsMetaLocalDAO<Object> {
 
     private static final String SOURCE_ID = "test-source";
     private static final String EDGE_FIELD_NAME = "test00";
@@ -68,6 +70,35 @@ public class MetaEdgeTest extends LocalRecordsDAO
         assertEquals(MetaTestEdge.optionsVariants, optionsVars);
 
         assertEquals(String.class.getName(), meta.get("edge").get("javaClass").asText());
+
+        RecordsResult<JavaClassDto> classMeta = recordsService.getMeta(records, JavaClassDto.class);
+        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass());
+        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass2());
+    }
+
+    public static class JavaClassDto {
+
+        @MetaAtt(".edge(n:'test'){javaClass}")
+        private Class<?> javaClass;
+
+        @MetaAtt("#test?javaClass")
+        private Class<?> javaClass2;
+
+        public Class<?> getJavaClass2() {
+            return javaClass2;
+        }
+
+        public void setJavaClass2(Class<?> javaClass2) {
+            this.javaClass2 = javaClass2;
+        }
+
+        public Class<?> getJavaClass() {
+            return javaClass;
+        }
+
+        public void setJavaClass(Class<?> javaClass) {
+            this.javaClass = javaClass;
+        }
     }
 
     public static class MetaTestVal implements MetaValue {
@@ -78,7 +109,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
         }
 
         @Override
-        public MetaEdge getEdge(String name) {
+        public MetaEdge getEdge(String name, MetaField field) {
             return new MetaTestEdge(name);
         }
     }
@@ -109,7 +140,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
         }
 
         @Override
-        public Object getValue() {
+        public Object getValue(MetaField field) {
             return new MetaTestVal();
         }
 

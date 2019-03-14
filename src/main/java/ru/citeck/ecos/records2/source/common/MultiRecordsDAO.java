@@ -24,7 +24,7 @@ public class MultiRecordsDAO extends AbstractRecordsDAO
     private Map<String, RecordsQueryDAO> daoBySource = new ConcurrentHashMap<>();
 
     @Override
-    public RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
 
@@ -43,7 +43,7 @@ public class MultiRecordsDAO extends AbstractRecordsDAO
 
             localQuery.setMaxItems(query.getMaxItems() - result.getRecords().size());
             RecordsQueryDAO recordsDAO = recordsDao.get(sourceIdx);
-            RecordsQueryResult<RecordRef> daoRecords = recordsDAO.getRecords(localQuery);
+            RecordsQueryResult<RecordRef> daoRecords = recordsDAO.queryRecords(localQuery);
 
             result.merge(daoRecords);
 

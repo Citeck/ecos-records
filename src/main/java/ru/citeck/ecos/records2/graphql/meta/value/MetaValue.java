@@ -9,14 +9,23 @@ import java.util.Collections;
  * Metadata value. Used to get attributes by schema
  *
  * @author Pavel Simonov
+ *
  * @see MetaValueTypeDef
  */
 public interface MetaValue {
 
     /**
+     * @deprecated implement init(T, MetaField) instead
+     */
+    @Deprecated
+    default <T extends GqlContext> void init(T context) {
+    }
+
+    /**
      * Initialize value with context before execute other methods
      */
-    default <T extends GqlContext> void init(T context) {
+    default <T extends GqlContext> void init(T context, MetaField field) {
+        init(context);
     }
 
     /**
@@ -38,8 +47,9 @@ public interface MetaValue {
     }
 
     /**
-     * Get value attribute
+     * @deprecated implement getAttribute(String, MetaField instead)
      */
+    @Deprecated
     default Object getAttribute(String name) throws Exception {
         return Collections.emptyList();
     }
@@ -51,6 +61,10 @@ public interface MetaValue {
         return getAttribute(name);
     }
 
+    /**
+     * @deprecated implement getEdge(String, MetaField instead)
+     */
+    @Deprecated
     default MetaEdge getEdge(String name) {
         return new SimpleMetaEdge(name, this);
     }

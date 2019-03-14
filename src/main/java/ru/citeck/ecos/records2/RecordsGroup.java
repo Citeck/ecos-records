@@ -45,7 +45,7 @@ public class RecordsGroup implements MetaValue {
             case FIELD_VALUES:
                 if (values == null) {
                     String schema = field.getAttributeSchema("records");
-                    values = new GroupValues(recordsService.getRecords(query, schema));
+                    values = new GroupValues(recordsService.queryRecords(query, schema));
                 }
                 return values;
         }
@@ -53,7 +53,7 @@ public class RecordsGroup implements MetaValue {
         if (name.startsWith(FIELD_SUM)) {
 
             String attribute = name.substring(FIELD_SUM.length() + 1, name.length() - 1) + "?num";
-            RecordsQueryResult<RecordMeta> result = recordsService.getRecords(query, Collections.singleton(attribute));
+            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, Collections.singleton(attribute));
 
             Double sum = 0.0;
             for (RecordMeta record : result.getRecords()) {

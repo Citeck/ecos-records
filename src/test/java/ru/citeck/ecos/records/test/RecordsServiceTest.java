@@ -91,7 +91,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         RecordsQuery query = new RecordsQuery();
         query.setSourceId("unknown-id");
 
-        RecordsQueryResult<RecordRef> records = recordsService.getRecords(query);
+        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
@@ -110,7 +110,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         query.setQuery(objectMapper.writeValueAsString(daoQuery));
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<RecordRef> records = recordsService.getRecords(query);
+        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
         List<RecordRef> recordsRefs = records.getRecords();
 
         assertEquals(ids.size(), recordsRefs.size());
@@ -198,7 +198,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         query.setQuery(exactIdsQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<JournalListInfo> records = recordsService.getRecords(query, JournalListInfo.class);
+        RecordsQueryResult<JournalListInfo> records = recordsService.queryRecords(query, JournalListInfo.class);
         assertEquals(1, records.getTotalCount());
 
         List<JournalInfo> journals = records.getRecords().get(0).getJournals();

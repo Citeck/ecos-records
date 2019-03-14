@@ -141,7 +141,16 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     @Override
     public Map<String, String> getAttributes(Class<?> metaClass) {
-        return attributesCache.computeIfAbsent(metaClass, c -> getAttributes(c, new HashSet<>()));
+        return getAttributes(metaClass, null);
+    }
+
+    private Map<String, String> getAttributes(Class<?> metaClass, Set<Class<?>> visited) {
+        Map<String, String> attributes = attributesCache.get(metaClass);
+        if (attributes == null) {
+            attributes = getAttributesImpl(metaClass, visited != null ? visited : new HashSet<>());
+            attributesCache.putIfAbsent(metaClass, attributes);
+        }
+        return attributes;
     }
 
     @Override
@@ -189,7 +198,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         return new AttributesSchema(schema.toString(), keysMapping);
     }
 
-    private Map<String, String> getAttributes(Class<?> metaClass, Set<Class<?>> visited) {
+    private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
 
         if (!visited.add(metaClass)) {
             throw new IllegalArgumentException("Recursive meta fields is not supported! " +
@@ -248,7 +257,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
             if (scalarField == null) {
 
-                Map<String, String> propSchema = getAttributes(propType);
+                Map<String, String> propSchema = getAttributes(propType, visited);
                 schema.append(createSchema(propSchema, false).getSchema());
 
             } else {

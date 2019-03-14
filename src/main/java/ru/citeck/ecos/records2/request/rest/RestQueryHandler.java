@@ -36,15 +36,15 @@ public class RestQueryHandler {
 
             if (body.getAttributes() != null) {
 
-                recordsResult = recordsService.getRecords(body.getQuery(), getAttributes(body));
+                recordsResult = recordsService.queryRecords(body.getQuery(), getAttributes(body));
 
             } else if (body.getSchema() != null) {
 
-                recordsResult = recordsService.getRecords(body.getQuery(), body.getSchema());
+                recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
 
             } else {
 
-                recordsResult = recordsService.getRecords(body.getQuery());
+                recordsResult = recordsService.queryRecords(body.getQuery());
             }
         } else {
 

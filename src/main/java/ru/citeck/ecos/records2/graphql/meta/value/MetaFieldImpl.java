@@ -102,11 +102,11 @@ public class MetaFieldImpl implements MetaField {
             if (field.getName().startsWith("att")) {
 
                 field.getArguments()
-                    .stream()
-                    .findFirst()
-                    .filter(a -> a.getValue() instanceof StringValue)
-                    .map(a -> ((StringValue) a.getValue()).getValue())
-                    .ifPresent(name -> attributes.put(name, field));
+                     .stream()
+                     .findFirst()
+                     .filter(a -> a.getValue() instanceof StringValue)
+                     .map(a -> ((StringValue) a.getValue()).getValue())
+                     .ifPresent(name -> attributes.put(name, field));
             }
         }
 

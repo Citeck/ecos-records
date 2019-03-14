@@ -34,5 +34,5 @@ public interface MetaEdge {
 
     String getName();
 
-    Object getValue() throws Exception;
+    Object getValue(MetaField field) throws Exception;
 }

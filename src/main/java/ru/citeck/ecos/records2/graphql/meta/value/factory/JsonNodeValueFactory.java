@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class JsonNodeValueFactory implements MetaValueFactory<JsonNode> {
             }
 
             @Override
-            public Object getAttribute(String name) {
+            public Object getAttribute(String name, MetaField field) {
                 return value.get(name);
             }
         };

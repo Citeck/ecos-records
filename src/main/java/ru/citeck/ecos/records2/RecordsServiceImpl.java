@@ -21,7 +21,6 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.MetaAttributeDef;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
@@ -41,8 +40,7 @@ public class RecordsServiceImpl implements RecordsService {
     private Map<String, RecordsMetaDAO> metaDAO = new ConcurrentHashMap<>();
     private Map<String, RecordsQueryDAO> queryDAO = new ConcurrentHashMap<>();
     private Map<String, MutableRecordsDAO> mutableDAO = new ConcurrentHashMap<>();
-    private Map<String, RecordsDefinitionDAO> definitionDAO = new ConcurrentHashMap<>();
-    private Map<String, RecordsQueryWithMetaDAO> withMetaDAO = new ConcurrentHashMap<>();
+    private Map<String, RecordsQueryWithMetaDAO> queryWithMetaDAO = new ConcurrentHashMap<>();
 
     private RecordsMetaService recordsMetaService;
     private PredicateService predicateService;
@@ -55,21 +53,21 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
-    public RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
         Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
         if (recordsQueryDAO.isPresent()) {
 
-            return recordsQueryDAO.get().getRecords(query);
+            return recordsQueryDAO.get().queryRecords(query);
 
         } else {
 
-            Optional<RecordsQueryWithMetaDAO> recordsWithMetaDAO = getRecordsDAO(query.getSourceId(), withMetaDAO);
+            Optional<RecordsQueryWithMetaDAO> recordsWithMetaDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
 
             if (recordsWithMetaDAO.isPresent()) {
 
-                RecordsQueryResult<RecordMeta> records = recordsWithMetaDAO.get().getRecords(query, "");
+                RecordsQueryResult<RecordMeta> records = recordsWithMetaDAO.get().queryRecords(query, "");
                 return new RecordsQueryResult<>(records, RecordMeta::getId);
             }
         }
@@ -81,36 +79,36 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
-    public <T> RecordsQueryResult<T> getRecords(RecordsQuery query, Class<T> metaClass) {
+    public <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass) {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
 
-        RecordsQueryResult<RecordMeta> meta = getRecords(query, attributes);
+        RecordsQueryResult<RecordMeta> meta = queryRecords(query, attributes);
 
         return new RecordsQueryResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, Map<String, String> attributes) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
-        RecordsQueryResult<RecordMeta> records = getRecords(query, schema.getSchema());
+        RecordsQueryResult<RecordMeta> records = queryRecords(query, schema.getSchema());
         records.setRecords(recordsMetaService.convertToFlatMeta(records.getRecords(), schema));
 
         return records;
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query,
-                                                     Collection<String> attributes) {
-        return getRecords(query, toAttributesMap(attributes));
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query,
+                                                       Collection<String> attributes) {
+        return queryRecords(query, toAttributesMap(attributes));
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
 
         if (!query.getGroupBy().isEmpty()) {
 
@@ -141,7 +139,7 @@ public class RecordsServiceImpl implements RecordsService {
 
     private RecordsQueryResult<RecordMeta> getRecordsImpl(RecordsQuery query, String schema) {
 
-        Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), withMetaDAO);
+        Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
         RecordsQueryResult<RecordMeta> records;
 
         if (recordsDAO.isPresent()) {
@@ -151,7 +149,7 @@ public class RecordsServiceImpl implements RecordsService {
             }
 
             long queryStart = System.currentTimeMillis();
-            records = recordsDAO.get().getRecords(query, schema);
+            records = recordsDAO.get().queryRecords(query, schema);
             long queryDuration = System.currentTimeMillis() - queryStart;
 
             if (logger.isDebugEnabled()) {
@@ -181,7 +179,7 @@ public class RecordsServiceImpl implements RecordsService {
                 }
 
                 long recordsQueryStart = System.currentTimeMillis();
-                RecordsQueryResult<RecordRef> recordRefs = recordsQueryDAO.get().getRecords(query);
+                RecordsQueryResult<RecordRef> recordRefs = recordsQueryDAO.get().queryRecords(query);
                 long recordsTime = System.currentTimeMillis() - recordsQueryStart;
 
                 if (logger.isDebugEnabled()) {
@@ -467,8 +465,7 @@ public class RecordsServiceImpl implements RecordsService {
         register(metaDAO, RecordsMetaDAO.class, recordsSource);
         register(queryDAO, RecordsQueryDAO.class, recordsSource);
         register(mutableDAO, MutableRecordsDAO.class, recordsSource);
-        register(definitionDAO, RecordsDefinitionDAO.class, recordsSource);
-        register(withMetaDAO, RecordsQueryWithMetaDAO.class, recordsSource);
+        register(queryWithMetaDAO, RecordsQueryWithMetaDAO.class, recordsSource);
 
         if (recordsSource instanceof RecordsServiceAware) {
             ((RecordsServiceAware) recordsSource).setRecordsService(this);
@@ -489,20 +486,6 @@ public class RecordsServiceImpl implements RecordsService {
             T dao = (T) value;
             map.put(value.getId(), dao);
         }
-    }
-
-    @Override
-    public List<MetaAttributeDef> getAttributesDef(String sourceId, Collection<String> names) {
-        Optional<RecordsDefinitionDAO> recordsDAO = getRecordsDAO(sourceId, definitionDAO);
-        if (recordsDAO.isPresent()) {
-            return recordsDAO.get().getAttributesDef(names);
-        }
-        return Collections.emptyList();
-    }
-
-    @Override
-    public Optional<MetaAttributeDef> getAttributeDef(String sourceId, String name) {
-        return getAttributesDef(sourceId, Collections.singletonList(name)).stream().findFirst();
     }
 
     public PredicateService getPredicateService() {

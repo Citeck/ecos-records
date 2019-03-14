@@ -86,7 +86,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         return new RecordsMutResult();
     }
 
-    public RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
         if (this instanceof RecordsQueryLocalDAO) {
 
@@ -100,12 +100,12 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
         } else {
 
-            RecordsQueryResult<RecordMeta> records = getRecords(query, "id");
+            RecordsQueryResult<RecordMeta> records = queryRecords(query, "id");
             return new RecordsQueryResult<>(records, RecordMeta::getId);
         }
     }
 
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String metaSchema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
 
         RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
@@ -136,7 +136,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         } else if (this instanceof RecordsQueryDAO) {
 
             RecordsQueryDAO recordsQueryDAO = (RecordsQueryDAO) this;
-            RecordsQueryResult<RecordRef> records = recordsQueryDAO.getRecords(query);
+            RecordsQueryResult<RecordRef> records = recordsQueryDAO.queryRecords(query);
             queryResult.merge(records);
             queryResult.setHasMore(records.getHasMore());
             queryResult.setTotalCount(records.getTotalCount());

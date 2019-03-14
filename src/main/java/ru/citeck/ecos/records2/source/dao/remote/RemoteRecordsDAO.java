@@ -34,7 +34,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
     private String remoteSourceId = "";
 
     @Override
-    public RecordsRefsQueryResult getRecords(RecordsQuery query) {
+    public RecordsRefsQueryResult queryRecords(RecordsQuery query) {
 
         QueryBody request = new QueryBody();
 
@@ -60,7 +60,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String metaSchema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
 
         QueryBody request = new QueryBody();
 

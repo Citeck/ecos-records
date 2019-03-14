@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 
@@ -49,7 +50,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public Object getAttribute(String name) throws Exception {
+        public Object getAttribute(String name, MetaField field) throws Exception {
             return PropertyUtils.getProperty(bean, name);
         }
 
@@ -68,7 +69,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public MetaEdge getEdge(String name) {
+        public MetaEdge getEdge(String name, MetaField field) {
             return new BeanEdge(name, this);
         }
     }
@@ -92,6 +93,10 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         public Class<?> getJavaClass() {
 
             PropertyDescriptor descriptor = getDescriptor();
+
+            if (descriptor == null) {
+                return null;
+            }
 
             Class<?> type = descriptor.getPropertyType();
 

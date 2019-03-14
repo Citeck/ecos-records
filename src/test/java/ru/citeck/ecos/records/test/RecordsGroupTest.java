@@ -128,13 +128,13 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         RecordsQuery baseQuery = objectMapper.readValue(objectMapper.writeValueAsString(recordsQuery), RecordsQuery.class);
 
-        assertResults(recordsService.getRecords(recordsQuery, Result.class));
+        assertResults(recordsService.queryRecords(recordsQuery, Result.class));
         assertEquals(baseQuery, recordsQuery);
 
         recordsQuery = new RecordsQuery(baseQuery);
         recordsQuery.setLanguage("fts");
 
-        assertResults(recordsService.getRecords(recordsQuery, Result.class));
+        assertResults(recordsService.queryRecords(recordsQuery, Result.class));
     }
 
     private void assertResults(RecordsQueryResult<Result> records) {

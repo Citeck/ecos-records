@@ -10,23 +10,19 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.MetaAttributeDef;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
-import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Service to work with some abstract "records" from any source
  * It may be alfresco nodes, database records, generated data and so on
- * A record id contains two parts: 'sourceId' and 'id'. String representation: sourceId@id
  *
  * @see MetaValue
  * @see RecordRef
- * @see RecordsQueryDAO
+ * @see RecordMeta
  *
  * @author Pavel Simonov
  */
@@ -38,7 +34,7 @@ public interface RecordsService {
      * Query records from default RecordsDAO
      * @return list of RecordRef and page info
      */
-    RecordsQueryResult<RecordRef> getRecords(RecordsQuery query);
+    RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 
     /**
      * Query records with meta
@@ -46,25 +42,25 @@ public interface RecordsService {
      *                  This class must contain constructor without arguments and have public fields
      *                  Getters/setters is not yet supported
      */
-    <T> RecordsQueryResult<T> getRecords(RecordsQuery query, Class<T> metaClass);
+    <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass);
 
     /**
      * Query records with meta
      * Fields example: {name: 'cm:name', title: 'cm:title'}
      */
-    RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, Map<String, String> attributes);
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
     /**
      * Query records with meta
      * Fields example: {name: 'cm:name', title: 'cm:title'}
      */
-    RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String schema);
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
 
     /**
      * Query records with meta
      * Fields example: ['cm:name', 'cm:title']
      */
-    RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, Collection<String> attributes);
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
 
     /**
      * Get meta
@@ -149,14 +145,52 @@ public interface RecordsService {
      */
     Iterable<RecordRef> getIterableRecords(RecordsQuery query);
 
-    List<MetaAttributeDef> getAttributesDef(String sourceId, Collection<String> names);
-
-    Optional<MetaAttributeDef> getAttributeDef(String sourceId, String name);
-
     /**
      * Register new RecordsDAO. It must return valid id from method "getId()" to call this method.
      */
     void register(RecordsDAO recordsSource);
 
     void register(QueryLangConverter converter, String fromLang, String toLang);
+
+    // Deprecated methods
+
+    /**
+     * @deprecated use queryRecords instead
+     */
+    @Deprecated
+    default RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+        return queryRecords(query);
+    }
+
+    /**
+     * @deprecated use queryRecords instead
+     */
+    @Deprecated
+    default <T> RecordsQueryResult<T> getRecords(RecordsQuery query, Class<T> metaClass) {
+        return queryRecords(query, metaClass);
+    }
+
+    /**
+     * @deprecated use queryRecords instead
+     */
+    @Deprecated
+    default RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, Map<String, String> attributes) {
+        return queryRecords(query, attributes);
+    }
+
+    /**
+     * @deprecated use queryRecords instead
+     */
+    @Deprecated
+    default RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String schema) {
+        return queryRecords(query, schema);
+    }
+
+    /**
+     * @deprecated use queryRecords instead
+     */
+    @Deprecated
+    default RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, Collection<String> attributes) {
+        return queryRecords(query, attributes);
+    }
 }

@@ -15,13 +15,13 @@ public abstract class FilteredRecordsDAO extends AbstractRecordsDAO implements R
     private RecordsQueryDAO targetDAO;
 
     @Override
-    public RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
         RecordsQuery localQuery = new RecordsQuery(query);
         int maxItems = localQuery.getMaxItems();
         localQuery.setMaxItems((int) (1.5f * maxItems));
 
-        RecordsQueryResult<RecordRef> records = targetDAO.getRecords(localQuery);
+        RecordsQueryResult<RecordRef> records = targetDAO.queryRecords(localQuery);
         Function<List<RecordRef>, List<RecordRef>> filter = getFilter(query);
 
         List<RecordRef> filtered = filter.apply(records.getRecords());

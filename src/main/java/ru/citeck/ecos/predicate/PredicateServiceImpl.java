@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.json.JsonConverter;
 import ru.citeck.ecos.predicate.json.std.StdJsonConverter;
+import ru.citeck.ecos.predicate.model.Predicate;
 
 import java.io.IOException;
 
 public class PredicateServiceImpl implements PredicateService {
 
-    private JsonConverter jsonConverter;
+    private volatile JsonConverter jsonConverter;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -50,20 +50,19 @@ public class PredicateServiceImpl implements PredicateService {
     }
 
     private JsonConverter getJsonConverter() {
-        JsonConverter converter = this.jsonConverter;
-        if (converter == null) {
+        if (jsonConverter == null) {
             synchronized (this) {
-                converter = this.jsonConverter;
-                if (converter == null) {
-                    converter = new StdJsonConverter();
-                    this.jsonConverter = converter;
+                if (jsonConverter == null) {
+                    jsonConverter = new StdJsonConverter();
                 }
             }
         }
-        return converter;
+        return jsonConverter;
     }
 
     public void setJsonConverter(JsonConverter jsonConverter) {
-        this.jsonConverter = jsonConverter;
+        synchronized (this) {
+            this.jsonConverter = jsonConverter;
+        }
     }
 }

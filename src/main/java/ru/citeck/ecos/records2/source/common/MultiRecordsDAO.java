@@ -1,7 +1,5 @@
 package ru.citeck.ecos.records2.source.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -13,12 +11,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * RecordsDAO to union multiple sources.
+ *
  * @author Pavel Simonov
  */
 public class MultiRecordsDAO extends AbstractRecordsDAO
                              implements RecordsQueryDAO {
-
-    private static final Log logger = LogFactory.getLog(MultiRecordsDAO.class);
 
     private List<RecordsQueryDAO> recordsDao;
     private Map<String, RecordsQueryDAO> daoBySource = new ConcurrentHashMap<>();

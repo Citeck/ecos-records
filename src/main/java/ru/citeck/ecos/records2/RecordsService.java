@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service to work with some abstract "records" from any source
+ * Service to work with some abstract "records" from any source.
  * It may be alfresco nodes, database records, generated data and so on
  *
  * @see MetaValue
@@ -31,13 +31,13 @@ public interface RecordsService {
     String LANGUAGE_PREDICATE = "predicate";
 
     /**
-     * Query records from default RecordsDAO
+     * Query records from default RecordsDAO.
      * @return list of RecordRef and page info
      */
     RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 
     /**
-     * Query records with meta
+     * Query records with meta.
      * @param metaClass POJO to generate metadata GQL schema and retrieve data
      *                  This class must contain constructor without arguments and have public fields
      *                  Getters/setters is not yet supported
@@ -45,66 +45,66 @@ public interface RecordsService {
     <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass);
 
     /**
-     * Query records with meta
+     * Query records with meta.
      * Fields example: {name: 'cm:name', title: 'cm:title'}
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
     /**
-     * Query records with meta
+     * Query records with meta.
      * Fields example: {name: 'cm:name', title: 'cm:title'}
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
 
     /**
-     * Query records with meta
+     * Query records with meta.
      * Fields example: ['cm:name', 'cm:title']
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
 
     /**
-     * Get meta
+     * Get attribute.
+     */
+    JsonNode getAttribute(RecordRef record, String attribute);
+
+    /**
+     * Get meta.
      * Fields example: ["cm:name", "cm:title"]
      */
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Collection<String> attributes);
 
     /**
-     * Get attribute
-     */
-    JsonNode getAttribute(RecordRef record, String attribute);
-
-    /**
-     * Get ordered meta
+     * Get ordered meta.
      * Fields example: ["cm:name", "cm:title"]
      */
     RecordsResult<RecordMeta> getAttributes(List<RecordRef> records, Collection<String> attributes);
 
     /**
-     * Get meta
+     * Get meta.
      * Fields example: {"name" : "cm:name", "title" : "cm:title"}
      */
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
     /**
-     * Get meta
+     * Get meta.
      * Fields example: {"name" : "cm:name", "title" : "cm:title"}
      */
     RecordMeta getAttributes(RecordRef record, Map<String, String> attributes);
 
     /**
-     * Get meta
+     * Get meta.
      * Fields example: {"name" : "cm:name", "title" : "cm:title"}
      */
     RecordMeta getAttributes(RecordRef record, Collection<String> attributes);
 
     /**
-     * Get ordered meta
+     * Get ordered meta.
      * Fields example: {"name" : "cm:name", "title" : "cm:title"]
      */
     RecordsResult<RecordMeta> getAttributes(List<RecordRef> records, Map<String, String> attributes);
 
     /**
-     * Get ordered meta
+     * Get ordered meta.
      * Fields example: ["cm:name", "cm:title"]
      */
     RecordsResult<RecordMeta> getMeta(List<RecordRef> records, String schema);
@@ -130,12 +130,12 @@ public interface RecordsService {
     <T> T getMeta(RecordRef recordRef, Class<T> metaClass);
 
     /**
-     * Create or change records
+     * Create or change records.
      */
     RecordsMutResult mutate(RecordsMutation mutation);
 
     /**
-     * Delete records
+     * Delete records.
      */
     RecordsDelResult delete(RecordsDeletion deletion);
 
@@ -157,6 +157,8 @@ public interface RecordsService {
     // Deprecated methods
 
     /**
+     * queryRecords.
+     *
      * @deprecated use queryRecords instead
      */
     @Deprecated
@@ -165,6 +167,8 @@ public interface RecordsService {
     }
 
     /**
+     * queryRecords.
+     *
      * @deprecated use queryRecords instead
      */
     @Deprecated
@@ -173,6 +177,8 @@ public interface RecordsService {
     }
 
     /**
+     * queryRecords.
+     *
      * @deprecated use queryRecords instead
      */
     @Deprecated
@@ -181,6 +187,8 @@ public interface RecordsService {
     }
 
     /**
+     * queryRecords.
+     *
      * @deprecated use queryRecords instead
      */
     @Deprecated
@@ -189,6 +197,8 @@ public interface RecordsService {
     }
 
     /**
+     * queryRecords.
+     *
      * @deprecated use queryRecords instead
      */
     @Deprecated

@@ -6,15 +6,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
-import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,10 +22,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Local records DAO
+ * Local records DAO.
  *
- * Extend this DAO if your data located in the same alfresco instance (when you don't want to execute graphql query remotely)
- * Important: This class implement only RecordsDAO. All other interfaces should be implemented in children classes
+ * <p>
+ * Extend this DAO if your data located in the same alfresco instance
+ * (when you don't want to execute graphql query remotely)
+ * Important: This class implement only RecordsDAO.
+ * All other interfaces should be implemented in children classes
+ * </p>
  *
  * @see RecordsQueryDAO
  * @see RecordsMetaDAO
@@ -148,13 +152,13 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             if (this instanceof RecordsMetaLocalDAO) {
                 RecordsMetaLocalDAO metaDao = (RecordsMetaLocalDAO) this;
                 rawMetaValues.addAll(metaDao.getMetaValues(recordRefs));
-            } if (this instanceof RecordsMetaDAO) {
+            } else if (this instanceof RecordsMetaDAO) {
                 RecordsMetaDAO metaDao = (RecordsMetaDAO) this;
                 RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
                 queryResult.merge(meta);
             } else {
-                logger.warn("[" + getId() + "] RecordsDAO implements neither " +
-                            "RecordsMetaLocalDAO nor RecordsMetaDAO. We can't receive metadata");
+                logger.warn("[" + getId() + "] RecordsDAO implements neither "
+                            + "RecordsMetaLocalDAO nor RecordsMetaDAO. We can't receive metadata");
                 recordRefs.stream().map(RecordMeta::new).forEach(queryResult::addRecord);
             }
         }
@@ -177,14 +181,15 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         if (this instanceof RecordsMetaLocalDAO) {
 
             RecordsMetaLocalDAO metaLocalDao = (RecordsMetaLocalDAO) this;
-            List<?> metaValues = metaLocalDao.getMetaValues(addSourceId ?
-                    RecordsUtils.toLocalRecords(records) : records);
+
+            List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
+            List<?> metaValues = metaLocalDao.getMetaValues(localRecords);
             result = recordsMetaService.getMeta(metaValues, metaSchema);
 
         } else {
 
-            logger.warn("[" + getId() + "] RecordsDAO doesn't implement " +
-                        "RecordsMetaLocalDAO. We can't receive metadata");
+            logger.warn("[" + getId() + "] RecordsDAO doesn't implement "
+                        + "RecordsMetaLocalDAO. We can't receive metadata");
 
             result = new RecordsResult<>();
             records.stream().map(RecordMeta::new).forEach(result::addRecord);

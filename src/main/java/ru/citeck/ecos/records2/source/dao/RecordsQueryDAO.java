@@ -7,6 +7,8 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 public interface RecordsQueryDAO extends RecordsQueryBaseDAO {
 
     /**
+     * Query records.
+     *
      * @deprecated implement queryRecords instead
      */
     @Deprecated

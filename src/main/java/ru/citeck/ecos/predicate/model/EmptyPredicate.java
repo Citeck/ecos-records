@@ -28,4 +28,9 @@ public class EmptyPredicate extends AttributePredicate {
         }
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

@@ -26,6 +26,8 @@ public class RecordRef {
     }
 
     /**
+     * Create recordRef.
+     *
      * @deprecated use RecordRef.create instead
      */
     @Deprecated
@@ -36,6 +38,8 @@ public class RecordRef {
     }
 
     /**
+     * Create RecordRef.
+     *
      * @deprecated use RecordRef.create instead
      */
     @Deprecated
@@ -52,6 +56,8 @@ public class RecordRef {
     }
 
     /**
+     * Create RecordRef.
+     *
      * @deprecated use RecordRef.valueOf instead
      */
     @Deprecated

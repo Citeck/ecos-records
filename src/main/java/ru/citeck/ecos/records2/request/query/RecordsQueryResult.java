@@ -40,7 +40,7 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
     }
 
     /**
-     * Get total records count
+     * Get total records count.
      *
      * @return >= getRecords().size()
      */
@@ -61,11 +61,11 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
             recordsStr = "\n    " + recordsStr + "\n  ";
         }
         String debugStr = getDebug() != null ? ",\n  \"debug\": " + getDebug() : "";
-        return "{\n" +
-                "  \"records\": [" + recordsStr +
-                "],\n  \"hasMore\": " + getHasMore() +
-                ",\n  \"totalCount\": " + getTotalCount() +
-                debugStr +
-                "\n}";
+        return "{\n"
+                    + "  \"records\": [" + recordsStr
+                    + "],\n  \"hasMore\": " + getHasMore()
+                    + ",\n  \"totalCount\": " + getTotalCount()
+                    + debugStr
+            + "\n}";
     }
 }

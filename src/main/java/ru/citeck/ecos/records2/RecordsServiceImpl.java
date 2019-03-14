@@ -76,8 +76,8 @@ public class RecordsServiceImpl implements RecordsService {
             }
         }
 
-        logger.warn("RecordsDAO " + query.getSourceId() + " doesn't exists or " +
-                    "doesn't implement RecordsQueryDAO or RecordsQueryWithMetaDAO");
+        logger.warn("RecordsDAO " + query.getSourceId() + " doesn't exists or "
+                    + "doesn't implement RecordsQueryDAO or RecordsQueryWithMetaDAO");
 
         return new RecordsQueryResult<>();
     }
@@ -235,8 +235,8 @@ public class RecordsServiceImpl implements RecordsService {
                 records = new RecordsQueryResult<>();
                 if (query.isDebug()) {
                     records.setDebugInfo(getClass(),
-                        "RecordsDAO",
-                        "Source with id '" + query.getSourceId() + "' is not found or language is not supported");
+                            "RecordsDAO",
+                            "Source with id '" + query.getSourceId() + "' is not found or language is not supported");
                 }
             } else {
 
@@ -341,19 +341,6 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
-    public <T> RecordsResult<T> getMeta(List<RecordRef> records, Class<T> metaClass) {
-
-        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
-        if (attributes.isEmpty()) {
-            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
-        }
-
-        RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
-
-        return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
-    }
-
-    @Override
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Collection<String> attributes) {
 
@@ -385,39 +372,6 @@ public class RecordsServiceImpl implements RecordsService {
         return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
     }
 
-    private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
-
-        if (values.getRecords().isEmpty()) {
-            return new RecordMeta(record);
-        }
-        RecordMeta meta = values.getRecords()
-                                .stream()
-                                .filter(r -> record.equals(r.getId()))
-                                .findFirst()
-                                .orElse(null);
-        if (meta == null) {
-            meta = new RecordMeta(record);
-        }
-        return meta;
-    }
-
-    @Override
-    public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
-
-        RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
-        if (meta.getRecords().size() == 0) {
-            throw new IllegalStateException("Can't get record metadata. Result: " + meta);
-        }
-        return meta.getRecords().get(0);
-    }
-
-    @Override
-    public <T> RecordsResult<T> getMeta(Collection<RecordRef> records,
-                                        Class<T> metaClass) {
-
-        return getMeta(new ArrayList<>(records), metaClass);
-    }
-
     @Override
     public RecordsResult<RecordMeta> getAttributes(List<RecordRef> records,
                                                    Map<String, String> attributes) {
@@ -441,6 +395,36 @@ public class RecordsServiceImpl implements RecordsService {
             return meta.getRecords().get(0).getAttribute(attribute);
         }
         return MissingNode.getInstance();
+    }
+
+    @Override
+    public <T> RecordsResult<T> getMeta(List<RecordRef> records, Class<T> metaClass) {
+
+        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        if (attributes.isEmpty()) {
+            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+        }
+
+        RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
+
+        return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
+    }
+
+    @Override
+    public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
+
+        RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
+        if (meta.getRecords().size() == 0) {
+            throw new IllegalStateException("Can't get record metadata. Result: " + meta);
+        }
+        return meta.getRecords().get(0);
+    }
+
+    @Override
+    public <T> RecordsResult<T> getMeta(Collection<RecordRef> records,
+                                        Class<T> metaClass) {
+
+        return getMeta(new ArrayList<>(records), metaClass);
     }
 
     @Override
@@ -481,9 +465,9 @@ public class RecordsServiceImpl implements RecordsService {
 
                 if (name.charAt(0) != '.') {
 
-                    int qIdx = name.indexOf('?');
-                    if (qIdx > 0) {
-                        name = name.substring(0, qIdx);
+                    int questionIdx = name.indexOf('?');
+                    if (questionIdx > 0) {
+                        name = name.substring(0, questionIdx);
                     }
 
                     attributes.put(name, value);
@@ -559,6 +543,22 @@ public class RecordsServiceImpl implements RecordsService {
         }
     }
 
+    private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
+
+        if (values.getRecords().isEmpty()) {
+            return new RecordMeta(record);
+        }
+        RecordMeta meta = values.getRecords()
+                                .stream()
+                                .filter(r -> record.equals(r.getId()))
+                                .findFirst()
+                                .orElse(null);
+        if (meta == null) {
+            meta = new RecordMeta(record);
+        }
+        return meta;
+    }
+
     public PredicateService getPredicateService() {
         return predicateService;
     }
@@ -609,8 +609,8 @@ public class RecordsServiceImpl implements RecordsService {
                 return false;
             }
             LangConvPair langPair = (LangConvPair) o;
-            return Objects.equals(from, langPair.from) &&
-                   Objects.equals(to, langPair.to);
+            return Objects.equals(from, langPair.from)
+                && Objects.equals(to, langPair.to);
         }
 
         @Override

@@ -93,7 +93,7 @@ public class IterableRecords implements Iterable<RecordRef> {
         @Override
         public RecordRef next() {
             int maxItems = recordsQuery.getMaxItems();
-            if (stopped || (maxItems > 0 && processedCount >= maxItems)) {
+            if (stopped || maxItems > 0 && processedCount >= maxItems) {
                 throw new NoSuchElementException();
             }
             processedCount++;

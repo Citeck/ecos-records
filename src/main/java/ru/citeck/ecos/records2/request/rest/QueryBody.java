@@ -16,7 +16,7 @@ public class QueryBody {
     private RecordsQuery query;
 
     /**
-     * List<String> or Map<String, String>
+     * List&lt;String&gt; or Map&lt;String, String&gt;.
      */
     private JsonNode attributes;
     private String schema;

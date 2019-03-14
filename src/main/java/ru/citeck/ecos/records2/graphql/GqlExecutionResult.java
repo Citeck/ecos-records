@@ -15,6 +15,8 @@ import java.util.Map;
 import static java.util.stream.Collectors.toList;
 
 /**
+ * GraphQL execution result.
+ *
  * @author Pavel Simonov
  */
 public class GqlExecutionResult implements ExecutionResult {

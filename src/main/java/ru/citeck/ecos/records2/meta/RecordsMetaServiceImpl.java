@@ -9,9 +9,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
 
@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 
 public class RecordsMetaServiceImpl implements RecordsMetaService {
 
+    private static final Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
+
     private static final Log logger = LogFactory.getLog(RecordsMetaServiceImpl.class);
 
     private Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
     private Map<Class<?>, Map<String, String>> attributesCache = new ConcurrentHashMap<>();
-
-    private Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -109,7 +109,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             final JsonNode finalNode = node;
 
             node.fieldNames().forEachRemaining(name ->
-                objNode.put(name, toFlatNode(finalNode.get(name)))
+                    objNode.put(name, toFlatNode(finalNode.get(name)))
             );
 
             node = objNode;
@@ -201,8 +201,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
 
         if (!visited.add(metaClass)) {
-            throw new IllegalArgumentException("Recursive meta fields is not supported! " +
-                                               "Class: " + metaClass + " visited: " + visited);
+            throw new IllegalArgumentException("Recursive meta fields is not supported! "
+                                                + "Class: " + metaClass + " visited: " + visited);
         }
 
         PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(metaClass);
@@ -297,7 +297,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                     attInfo = field.getAnnotation(MetaAtt.class);
                 }
             } catch (NoSuchFieldException e) {
-                //do nothing
+                logger.error("Field not found: " + fieldName, e);
             }
         }
 
@@ -342,11 +342,14 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 throw new IllegalArgumentException("Illegal attribute: '" + def + "'");
             }
 
-            String inner = "";
+            String inner;
             switch (scalarField) {
                 case "options":
                 case "distinct":
                     inner = "{title:disp,value:str}";
+                    break;
+                default:
+                    inner = "";
             }
 
             return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + inner + "}";
@@ -362,12 +365,12 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         }
     }
 
-    public static class ScalarField<FieldType> {
+    public static class ScalarField<FieldTypeT> {
 
         private String schema;
-        private Class<FieldType> fieldClass;
+        private Class<FieldTypeT> fieldClass;
 
-        public ScalarField(Class<FieldType> fieldClass, String schema) {
+        public ScalarField(Class<FieldTypeT> fieldClass, String schema) {
             this.schema = schema;
             this.fieldClass = fieldClass;
         }
@@ -376,7 +379,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             return schema;
         }
 
-        public Class<FieldType> getFieldType() {
+        public Class<FieldTypeT> getFieldType() {
             return fieldClass;
         }
     }

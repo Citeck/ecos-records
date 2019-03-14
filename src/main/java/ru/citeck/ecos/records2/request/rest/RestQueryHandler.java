@@ -22,12 +22,12 @@ public class RestQueryHandler {
     public Object queryRecords(QueryBody body) {
 
         if (body.getQuery() != null && body.getRecords() != null) {
-            logger.warn("There must be one of 'records' or 'query' field " +
-                        "but found both. 'records' field will be ignored");
+            logger.warn("There must be one of 'records' or 'query' field "
+                        + "but found both. 'records' field will be ignored");
         }
         if (body.getAttributes() != null && body.getSchema() != null) {
-            logger.warn("There must be one of 'attributes' or 'schema' field " +
-                        "but found both. 'schema' field will be ignored");
+            logger.warn("There must be one of 'attributes' or 'schema' field "
+                        + "but found both. 'schema' field will be ignored");
         }
 
         RecordsResult<?> recordsResult;

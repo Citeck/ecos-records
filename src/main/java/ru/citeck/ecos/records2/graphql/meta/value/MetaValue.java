@@ -6,7 +6,7 @@ import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import java.util.Collections;
 
 /**
- * Metadata value. Used to get attributes by schema
+ * Metadata value. Used to get attributes by schema.
  *
  * @author Pavel Simonov
  *
@@ -15,6 +15,8 @@ import java.util.Collections;
 public interface MetaValue {
 
     /**
+     * Initialize value with context before execute other methods.
+     *
      * @deprecated implement init(T, MetaField) instead
      */
     @Deprecated
@@ -22,14 +24,14 @@ public interface MetaValue {
     }
 
     /**
-     * Initialize value with context before execute other methods
+     * Initialize value with context before execute other methods.
      */
     default <T extends GqlContext> void init(T context, MetaField field) {
         init(context);
     }
 
     /**
-     * String representation
+     * String representation.
      */
     default String getString() {
         return toString();
@@ -40,13 +42,15 @@ public interface MetaValue {
     }
 
     /**
-     * Value identifier
+     * Value identifier.
      */
     default String getId() {
         return null;
     }
 
     /**
+     * Get value attribute.
+     *
      * @deprecated implement getAttribute(String, MetaField instead)
      */
     @Deprecated
@@ -55,13 +59,15 @@ public interface MetaValue {
     }
 
     /**
-     * Get value attribute
+     * Get value attribute.
      */
     default Object getAttribute(String name, MetaField field) throws Exception {
         return getAttribute(name);
     }
 
     /**
+     * Get attribute edge with meta information.
+     *
      * @deprecated implement getEdge(String, MetaField instead)
      */
     @Deprecated
@@ -83,8 +89,7 @@ public interface MetaValue {
     }
 
     default Boolean getBool() {
-        String str = getString();
-        return str != null ? Boolean.parseBoolean(getString()) : null;
+        return Boolean.parseBoolean(getString());
     }
 
     default Object getJson() {

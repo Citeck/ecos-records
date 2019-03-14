@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import ru.citeck.ecos.predicate.model.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.predicate.json.JsonConverter;
+import ru.citeck.ecos.predicate.model.*;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
 import java.io.IOException;
@@ -20,6 +22,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StdJsonConverter extends StdDeserializer<Predicate> implements JsonConverter {
+
+    private static final Log logger = LogFactory.getLog(StdJsonConverter.class);
 
     private Map<String, Class<? extends Predicate>> predicateTypes = new ConcurrentHashMap<>();
     private Map<String, PredicateResolver> predicateResolvers = new ConcurrentHashMap<>();
@@ -109,7 +113,7 @@ public class StdJsonConverter extends StdDeserializer<Predicate> implements Json
         try {
             getTypes = type.getMethod("getTypes");
         } catch (NoSuchMethodException e) {
-            //do nothing
+            logger.error("Method getTypes not found in " + type, e);
         }
 
         if (getTypes == null) {
@@ -122,7 +126,7 @@ public class StdJsonConverter extends StdDeserializer<Predicate> implements Json
             Collection<String> types = (Collection<String>) getTypes.invoke(null);
 
             types.forEach(n ->
-                predicateTypes.put(n, type)
+                    predicateTypes.put(n, type)
             );
 
         } catch (IllegalAccessException | InvocationTargetException e) {

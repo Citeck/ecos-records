@@ -39,8 +39,8 @@ public class SkipPage extends QueryPage {
             return false;
         }
         SkipPage skipPage = (SkipPage) o;
-        return skipCount == skipPage.skipCount &&
-               getMaxItems() == skipPage.getMaxItems();
+        return skipCount == skipPage.skipCount
+            && getMaxItems() == skipPage.getMaxItems();
     }
 
     @Override
@@ -50,9 +50,9 @@ public class SkipPage extends QueryPage {
 
     @Override
     public String toString() {
-        return "SkipPage {\n" +
-                   "\"skipCount\":" + skipCount + ",\n" +
-                   "\"maxItems\":" + getMaxItems() + "\n" +
-               '}';
+        return "SkipPage {\n"
+                + "\"skipCount\":" + skipCount + ",\n"
+                + "\"maxItems\":" + getMaxItems() + "\n"
+            + '}';
     }
 }

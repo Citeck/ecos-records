@@ -7,6 +7,8 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 public interface RecordsQueryWithMetaDAO extends RecordsQueryBaseDAO {
 
     /**
+     * Query Records.
+     *
      * @deprecated implement queryRecords instead
      */
     @Deprecated

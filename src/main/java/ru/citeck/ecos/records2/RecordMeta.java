@@ -1,7 +1,8 @@
 package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
 import java.util.Iterator;
@@ -55,14 +56,6 @@ public class RecordMeta {
         return attributes;
     }
 
-    public JsonNode get(String name) {
-        return getAttribute(name);
-    }
-
-    public JsonNode getAttribute(String name) {
-        return attributes.path(name);
-    }
-
     public boolean has(String name) {
         return hasAttribute(name);
     }
@@ -72,8 +65,16 @@ public class RecordMeta {
         return !isEmpty(att);
     }
 
+    public JsonNode get(String name) {
+        return getAttribute(name);
+    }
+
     public <T> T get(String name, T orElse) {
         return getAttribute(name, orElse);
+    }
+
+    public JsonNode getAttribute(String name) {
+        return attributes.path(name);
     }
 
     public <T> T getAttribute(String name, T orElse) {
@@ -134,9 +135,9 @@ public class RecordMeta {
 
     @Override
     public String toString() {
-        return "{" +
-                "\"id\":\"" + id +
-                "\", \"attributes\":" + attributes +
-                '}';
+        return "{"
+                + "\"id\":\"" + id
+                + "\", \"attributes\":" + attributes
+            + '}';
     }
 }

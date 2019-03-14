@@ -8,7 +8,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class RecordsGroup implements MetaValue {
 
@@ -48,12 +50,15 @@ public class RecordsGroup implements MetaValue {
                     values = new GroupValues(recordsService.queryRecords(query, schema));
                 }
                 return values;
+            default:
+                //nothing
         }
 
         if (name.startsWith(FIELD_SUM)) {
 
             String attribute = name.substring(FIELD_SUM.length() + 1, name.length() - 1) + "?num";
-            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, Collections.singleton(attribute));
+            List<String> attributes = Collections.singletonList(attribute);
+            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attributes);
 
             Double sum = 0.0;
             for (RecordMeta record : result.getRecords()) {
@@ -100,9 +105,9 @@ public class RecordsGroup implements MetaValue {
                     return result.getTotalCount();
                 case "hasMore":
                     return result.getHasMore();
+                default:
+                    return null;
             }
-
-            return null;
         }
     }
 

@@ -53,8 +53,8 @@ public class AfterPage extends QueryPage {
             return false;
         }
         AfterPage afterPage = (AfterPage) o;
-        return Objects.equals(afterId, afterPage.afterId) &&
-               Objects.equals(getMaxItems(), afterPage.getMaxItems());
+        return Objects.equals(afterId, afterPage.afterId)
+            && Objects.equals(getMaxItems(), afterPage.getMaxItems());
     }
 
     @Override
@@ -64,9 +64,9 @@ public class AfterPage extends QueryPage {
 
     @Override
     public String toString() {
-        return "AfterPage {\n" +
-                   "\"afterId\":\"" + afterId + "\",\n" +
-                   "\"maxItems\":" + getMaxItems() + "\n" +
-               '}';
+        return "AfterPage {\n"
+                    + "\"afterId\":\"" + afterId + "\",\n"
+                    + "\"maxItems\":" + getMaxItems() + "\n"
+                + '}';
     }
 }

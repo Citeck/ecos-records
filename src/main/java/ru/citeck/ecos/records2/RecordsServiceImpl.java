@@ -113,36 +113,67 @@ public class RecordsServiceImpl implements RecordsService {
         if (!query.getGroupBy().isEmpty()) {
 
             QueryLangConverter toPredicate;
-            QueryLangConverter fromPredicate;
 
             if (query.getLanguage().equals(LANGUAGE_PREDICATE)) {
 
                 toPredicate = q -> q;
-                fromPredicate = q -> q;
 
             } else {
 
                 toPredicate = languageConverters.get(new LangConvPair(query.getLanguage(), LANGUAGE_PREDICATE));
-                fromPredicate = languageConverters.get(new LangConvPair(LANGUAGE_PREDICATE, query.getLanguage()));
             }
 
-            if (toPredicate != null && fromPredicate != null) {
-                return getRecordsGroups(query, schema, toPredicate, fromPredicate);
+            if (toPredicate != null) {
+                return queryRecordsGroups(query, schema, toPredicate);
             } else {
                 logger.warn("GroupBy is not supported. Query: " + query);
                 return new RecordsQueryResult<>();
             }
+        } else {
+
+            getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
         }
 
-        return getRecordsImpl(query, schema);
+        return queryRecordsImpl(query, schema);
     }
 
-    private RecordsQueryResult<RecordMeta> getRecordsImpl(RecordsQuery query, String schema) {
+    private boolean updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDAO dao) {
+
+        List<String> supportedLanguages = dao.getSupportedLanguages();
+
+        if (supportedLanguages != null && supportedLanguages.size() > 0) {
+
+            if (!supportedLanguages.contains(recordsQuery.getLanguage())) {
+
+                for (String daoLanguage : supportedLanguages) {
+
+                    LangConvPair langConvKey = new LangConvPair(recordsQuery.getLanguage(), daoLanguage);
+                    QueryLangConverter langConv = languageConverters.get(langConvKey);
+                    JsonNode query = langConv != null ? langConv.convert(recordsQuery.getQuery()) : null;
+
+                    if (query != null) {
+
+                        recordsQuery.setQuery(query);
+                        recordsQuery.setLanguage(daoLanguage);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        return true;
+    }
+
+    private RecordsQueryResult<RecordMeta> queryRecordsImpl(RecordsQuery query, String schema) {
 
         Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
         RecordsQueryResult<RecordMeta> records;
 
-        if (recordsDAO.isPresent()) {
+        if (recordsDAO.isPresent() && updateQueryLanguage(query, recordsDAO.get())) {
+
+            updateQueryLanguage(query, recordsDAO.get());
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Start records with meta query: " + query.getQuery() + "\n" + schema);
@@ -164,13 +195,13 @@ public class RecordsServiceImpl implements RecordsService {
 
             Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
-            if (!recordsQueryDAO.isPresent()) {
+            if (!recordsQueryDAO.isPresent() || !updateQueryLanguage(query, recordsQueryDAO.get())) {
 
                 records = new RecordsQueryResult<>();
                 if (query.isDebug()) {
                     records.setDebugInfo(getClass(),
                         "RecordsDAO",
-                        "Source with id '" + query.getSourceId() + "' is not found");
+                        "Source with id '" + query.getSourceId() + "' is not found or language is not supported");
                 }
             } else {
 
@@ -215,10 +246,9 @@ public class RecordsServiceImpl implements RecordsService {
         return records;
     }
 
-    private RecordsQueryResult<RecordMeta> getRecordsGroups(RecordsQuery query,
-                                                            String schema,
-                                                            QueryLangConverter toPredicate,
-                                                            QueryLangConverter fromPredicate) {
+    private RecordsQueryResult<RecordMeta> queryRecordsGroups(RecordsQuery query,
+                                                              String schema,
+                                                              QueryLangConverter toPredicate) {
 
         List<String> groupBy = query.getGroupBy();
 
@@ -230,7 +260,7 @@ public class RecordsServiceImpl implements RecordsService {
         distinctQuery.setQuery(DistinctQuery.create(attribute, query.getQuery(), query.getLanguage()));
         distinctQuery.setLanguage(DistinctQuery.LANGUAGE);
 
-        RecordsQueryResult<RecordMeta> distinctValuesResult = getRecordsImpl(distinctQuery, "str");
+        RecordsQueryResult<RecordMeta> distinctValuesResult = queryRecordsImpl(distinctQuery, "str");
 
         if (distinctValuesResult.getRecords().isEmpty()) {
             return new RecordsQueryResult<>();
@@ -257,8 +287,8 @@ public class RecordsServiceImpl implements RecordsService {
             Predicate groupPredicate = ValuePredicate.equal(attribute, meta.get("str", ""));
             RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
 
-            JsonNode groupAndQuery = predicateService.writeJson(AndPredicate.of(predicate, groupPredicate));
-            groupQuery.setQuery(fromPredicate.convert(groupAndQuery));
+            groupQuery.setQuery(predicateService.writeJson(AndPredicate.of(predicate, groupPredicate)));
+            groupQuery.setLanguage(LANGUAGE_PREDICATE);
 
             groups.add(new RecordsGroup(groupQuery, groupPredicate, this));
         }

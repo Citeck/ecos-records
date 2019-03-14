@@ -141,29 +141,29 @@ public class RecordsServiceImpl implements RecordsService {
 
         List<String> supportedLanguages = dao.getSupportedLanguages();
 
-        if (supportedLanguages != null && supportedLanguages.size() > 0) {
+        if (supportedLanguages == null
+            || supportedLanguages.isEmpty()
+            || supportedLanguages.contains(recordsQuery.getLanguage())) {
 
-            if (!supportedLanguages.contains(recordsQuery.getLanguage())) {
-
-                for (String daoLanguage : supportedLanguages) {
-
-                    LangConvPair langConvKey = new LangConvPair(recordsQuery.getLanguage(), daoLanguage);
-                    QueryLangConverter langConv = languageConverters.get(langConvKey);
-                    JsonNode query = langConv != null ? langConv.convert(recordsQuery.getQuery()) : null;
-
-                    if (query != null) {
-
-                        recordsQuery.setQuery(query);
-                        recordsQuery.setLanguage(daoLanguage);
-
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return true;
         }
-        return true;
+
+        for (String daoLanguage : supportedLanguages) {
+
+            LangConvPair langConvKey = new LangConvPair(recordsQuery.getLanguage(), daoLanguage);
+            QueryLangConverter langConv = languageConverters.get(langConvKey);
+            JsonNode query = langConv != null ? langConv.convert(recordsQuery.getQuery()) : null;
+
+            if (query != null) {
+
+                recordsQuery.setQuery(query);
+                recordsQuery.setLanguage(daoLanguage);
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private RecordsQueryResult<RecordMeta> queryRecordsImpl(RecordsQuery query, String schema) {
@@ -172,8 +172,6 @@ public class RecordsServiceImpl implements RecordsService {
         RecordsQueryResult<RecordMeta> records;
 
         if (recordsDAO.isPresent() && updateQueryLanguage(query, recordsDAO.get())) {
-
-            updateQueryLanguage(query, recordsDAO.get());
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Start records with meta query: " + query.getQuery() + "\n" + schema);

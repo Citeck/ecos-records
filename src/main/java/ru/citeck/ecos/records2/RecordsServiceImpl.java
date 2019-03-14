@@ -418,7 +418,7 @@ public class RecordsServiceImpl implements RecordsService {
 
                 meta = new RecordsResult<>();
                 meta.setRecords(recs.stream().map(RecordMeta::new).collect(Collectors.toList()));
-                logger.error("Records source " + sourceId + " can't return attributes");
+                logger.debug("Records source " + sourceId + " can't return attributes");
             }
 
             results.merge(meta);

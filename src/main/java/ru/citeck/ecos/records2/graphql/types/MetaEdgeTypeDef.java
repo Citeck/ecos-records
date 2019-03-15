@@ -66,10 +66,28 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::getJavaClass)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("editorKey")
+                        .dataFetcher(this::getEditorKey)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("type")
+                        .dataFetcher(this::getType)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("distinct")
                         .dataFetcher(this::getDistinct)
                         .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
                 .build();
+    }
+
+    private String getType(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.getType();
+    }
+
+    private String getEditorKey(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.getEditorKey();
     }
 
     private List<MetaValue> getDistinct(DataFetchingEnvironment env) {

@@ -24,6 +24,17 @@ public interface MetaEdge {
         return Object.class;
     }
 
+    default String getEditorKey() {
+        return null;
+    }
+
+    /**
+     * Type of attribute.
+     */
+    default String getType() {
+        return null;
+    }
+
     default String getTitle() {
         return getName();
     }

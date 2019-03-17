@@ -56,6 +56,8 @@ public class RecordsServiceImpl implements RecordsService {
         this.predicateService = predicateService;
     }
 
+    /* QUERY */
+
     @Override
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
@@ -96,6 +98,11 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes) {
+        return queryRecords(query, toAttributesMap(attributes));
+    }
+
+    @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
@@ -103,12 +110,6 @@ public class RecordsServiceImpl implements RecordsService {
         records.setRecords(recordsMetaService.convertToFlatMeta(records.getRecords(), schema));
 
         return records;
-    }
-
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query,
-                                                       Collection<String> attributes) {
-        return queryRecords(query, toAttributesMap(attributes));
     }
 
     @Override
@@ -257,7 +258,6 @@ public class RecordsServiceImpl implements RecordsService {
                 records = new RecordsQueryResult<>();
                 records.merge(recordRefs);
                 records.setTotalCount(recordRefs.getTotalCount());
-                records.setHasMore(recordRefs.getHasMore());
 
                 long metaQueryStart = System.currentTimeMillis();
                 records.merge(getMeta(recordRefs.getRecords(), schema));
@@ -340,52 +340,7 @@ public class RecordsServiceImpl implements RecordsService {
         return converter != null ? converter.convert(query) : null;
     }
 
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
-                                                   Collection<String> attributes) {
-
-        return getAttributes(new ArrayList<>(records), attributes);
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(List<RecordRef> records,
-                                                   Collection<String> attributes) {
-        return getAttributes(records, toAttributesMap(attributes));
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
-                                                   Map<String, String> attributes) {
-
-        return getAttributes(new ArrayList<>(records), attributes);
-    }
-
-    @Override
-    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(List<RecordRef> records,
-                                                   Map<String, String> attributes) {
-
-        if (attributes.isEmpty()) {
-            return new RecordsResult<>(records, RecordMeta::new);
-        }
-
-        AttributesSchema schema = recordsMetaService.createSchema(attributes);
-        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
-        meta.setRecords(recordsMetaService.convertToFlatMeta(meta.getRecords(), schema));
-
-        return meta;
-    }
+    /* ATTRIBUTES */
 
     @Override
     public JsonNode getAttribute(RecordRef record, String attribute) {
@@ -398,17 +353,40 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
-    public <T> RecordsResult<T> getMeta(List<RecordRef> records, Class<T> metaClass) {
+    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
 
-        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
+    }
+
+    @Override
+    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
+
+        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
+    }
+
+    @Override
+    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+                                                   Collection<String> attributes) {
+
+        return getAttributes(records, toAttributesMap(attributes));
+    }
+
+    @Override
+    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+                                                   Map<String, String> attributes) {
+
         if (attributes.isEmpty()) {
-            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+            return new RecordsResult<>(new ArrayList<>(records), RecordMeta::new);
         }
 
-        RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
+        AttributesSchema schema = recordsMetaService.createSchema(attributes);
+        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
+        meta.setRecords(recordsMetaService.convertToFlatMeta(meta.getRecords(), schema));
 
-        return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
+        return meta;
     }
+
+    /* META */
 
     @Override
     public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
@@ -421,14 +399,20 @@ public class RecordsServiceImpl implements RecordsService {
     }
 
     @Override
-    public <T> RecordsResult<T> getMeta(Collection<RecordRef> records,
-                                        Class<T> metaClass) {
+    public <T> RecordsResult<T> getMeta(Collection<RecordRef> records, Class<T> metaClass) {
 
-        return getMeta(new ArrayList<>(records), metaClass);
+        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        if (attributes.isEmpty()) {
+            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+        }
+
+        RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
+
+        return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
     }
 
     @Override
-    public RecordsResult<RecordMeta> getMeta(List<RecordRef> records, String schema) {
+    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
 
         RecordsResult<RecordMeta> results = new RecordsResult<>();
 
@@ -439,7 +423,7 @@ public class RecordsServiceImpl implements RecordsService {
 
             if (recordsDAO.isPresent()) {
 
-                meta = recordsDAO.get().getMeta(records, schema);
+                meta = recordsDAO.get().getMeta(new ArrayList<>(records), schema);
 
             } else {
 
@@ -453,6 +437,8 @@ public class RecordsServiceImpl implements RecordsService {
 
         return results;
     }
+
+    /* MODIFICATION */
 
     @Override
     public RecordsMutResult mutate(RecordsMutation mutation) {
@@ -503,6 +489,8 @@ public class RecordsServiceImpl implements RecordsService {
 
         return result;
     }
+
+    /* OTHER */
 
     @Override
     public Iterable<RecordRef> getIterableRecords(RecordsQuery query) {
@@ -575,7 +563,7 @@ public class RecordsServiceImpl implements RecordsService {
         return attributesMap;
     }
 
-    protected  <T extends RecordsDAO> Optional<T> getRecordsDAO(String sourceId, Map<String, T> registry) {
+    protected <T extends RecordsDAO> Optional<T> getRecordsDAO(String sourceId, Map<String, T> registry) {
         if (sourceId == null) {
             sourceId = "";
         }
@@ -595,7 +583,7 @@ public class RecordsServiceImpl implements RecordsService {
         private final String from;
         private final String to;
 
-        public LangConvPair(String from, String to) {
+        LangConvPair(String from, String to) {
             this.from = from;
             this.to = to;
         }
@@ -624,16 +612,16 @@ public class RecordsServiceImpl implements RecordsService {
         private final JsonNode query;
         private final String language;
 
-        public QueryWithLang(JsonNode query, String language) {
+        QueryWithLang(JsonNode query, String language) {
             this.query = query;
             this.language = language;
         }
 
-        public JsonNode getQuery() {
+        JsonNode getQuery() {
             return query;
         }
 
-        public String getLanguage() {
+        String getLanguage() {
             return language;
         }
     }

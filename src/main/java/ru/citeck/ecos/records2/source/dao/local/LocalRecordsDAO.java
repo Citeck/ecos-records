@@ -123,8 +123,9 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
             if (values != null) {
 
-                queryResult.setTotalCount(values.getTotalCount());
+                queryResult.merge(values);
                 queryResult.setHasMore(values.getHasMore());
+                queryResult.setTotalCount(values.getTotalCount());
 
                 for (Object record : values.getRecords()) {
                     if (record instanceof RecordRef) {

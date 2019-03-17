@@ -6,17 +6,5 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
 public interface RecordsQueryWithMetaDAO extends RecordsQueryBaseDAO {
 
-    /**
-     * Query Records.
-     *
-     * @deprecated implement queryRecords instead
-     */
-    @Deprecated
-    default RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String metaSchema) {
-        return new RecordsQueryResult<>();
-    }
-
-    default RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
-        return getRecords(query, metaSchema);
-    }
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema);
 }

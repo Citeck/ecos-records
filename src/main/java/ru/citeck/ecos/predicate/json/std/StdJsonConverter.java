@@ -21,6 +21,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Standard converter for predicates based on jackson library.
+ */
 public class StdJsonConverter extends StdDeserializer<Predicate> implements JsonConverter {
 
     private static final Log logger = LogFactory.getLog(StdJsonConverter.class);

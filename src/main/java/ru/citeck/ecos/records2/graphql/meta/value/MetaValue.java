@@ -16,18 +16,8 @@ public interface MetaValue {
 
     /**
      * Initialize value with context before execute other methods.
-     *
-     * @deprecated implement init(T, MetaField) instead
-     */
-    @Deprecated
-    default <T extends GqlContext> void init(T context) {
-    }
-
-    /**
-     * Initialize value with context before execute other methods.
      */
     default <T extends GqlContext> void init(T context, MetaField field) {
-        init(context);
     }
 
     /**
@@ -50,33 +40,13 @@ public interface MetaValue {
 
     /**
      * Get value attribute.
-     *
-     * @deprecated implement getAttribute(String, MetaField instead)
      */
-    @Deprecated
-    default Object getAttribute(String name) throws Exception {
+    default Object getAttribute(String name, MetaField field) throws Exception {
         return Collections.emptyList();
     }
 
-    /**
-     * Get value attribute.
-     */
-    default Object getAttribute(String name, MetaField field) throws Exception {
-        return getAttribute(name);
-    }
-
-    /**
-     * Get attribute edge with meta information.
-     *
-     * @deprecated implement getEdge(String, MetaField instead)
-     */
-    @Deprecated
-    default MetaEdge getEdge(String name) {
-        return new SimpleMetaEdge(name, this);
-    }
-
     default MetaEdge getEdge(String name, MetaField field) {
-        return getEdge(name);
+        return new SimpleMetaEdge(name, this);
     }
 
     default boolean has(String name) throws Exception {

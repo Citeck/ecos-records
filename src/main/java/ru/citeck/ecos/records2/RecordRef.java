@@ -25,25 +25,13 @@ public class RecordRef {
         id = "";
     }
 
-    /**
-     * Create recordRef.
-     *
-     * @deprecated use RecordRef.create instead
-     */
-    @Deprecated
-    public RecordRef(String sourceId, String id) {
+    private RecordRef(String sourceId, String id) {
         this.sourceId = sourceId;
         this.id = id != null ? id : "";
         this.appName = "";
     }
 
-    /**
-     * Create RecordRef.
-     *
-     * @deprecated use RecordRef.create instead
-     */
-    @Deprecated
-    public RecordRef(String sourceId, RecordRef id) {
+    private RecordRef(String sourceId, RecordRef id) {
         this.sourceId = sourceId;
         this.id = id.toString();
         this.appName = "";
@@ -55,14 +43,8 @@ public class RecordRef {
         this.sourceId = StringUtils.isNotBlank(sourceId) ? sourceId : "";
     }
 
-    /**
-     * Create RecordRef.
-     *
-     * @deprecated use RecordRef.valueOf instead
-     */
-    @Deprecated
     @JsonIgnore
-    public RecordRef(String id) {
+    private RecordRef(String id) {
 
         int sourceDelimIdx = id.indexOf(SOURCE_DELIMITER);
 

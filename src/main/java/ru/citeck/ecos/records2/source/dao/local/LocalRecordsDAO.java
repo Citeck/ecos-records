@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.predicate.PredicateService;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -39,11 +39,16 @@ import java.util.stream.Collectors;
  * @author Pavel Simonov
  */
 @SuppressWarnings("unchecked")
-public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware {
+public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware,
+                                                                            RecordsServiceAware,
+                                                                            PredicateServiceAware {
 
     private static final Log logger = LogFactory.getLog(LocalRecordsDAO.class);
 
+    protected RecordsService recordsService;
+    protected PredicateService predicateService;
     protected RecordsMetaService recordsMetaService;
+
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     private boolean addSourceId = true;
@@ -203,7 +208,18 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         return result;
     }
 
+    @Override
     public void setRecordsMetaService(RecordsMetaService recordsMetaService) {
         this.recordsMetaService = recordsMetaService;
+    }
+
+    @Override
+    public void setRecordsService(RecordsService recordsService) {
+        this.recordsService = recordsService;
+    }
+
+    @Override
+    public void setPredicateService(PredicateService predicateService) {
+        this.predicateService = predicateService;
     }
 }

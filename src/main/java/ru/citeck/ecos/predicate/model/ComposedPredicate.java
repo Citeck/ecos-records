@@ -17,7 +17,7 @@ public abstract class ComposedPredicate implements Predicate {
     }
 
     public void setPredicates(List<Predicate> predicates) {
-        this.predicates = predicates;
+        this.predicates = new ArrayList<>(predicates);
     }
 
     public void addPredicate(Predicate predicate) {

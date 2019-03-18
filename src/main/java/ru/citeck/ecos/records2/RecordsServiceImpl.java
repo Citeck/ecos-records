@@ -9,9 +9,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.AndPredicate;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.ValuePredicate;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
@@ -23,6 +20,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
@@ -117,26 +115,14 @@ public class RecordsServiceImpl implements RecordsService {
 
         if (!query.getGroupBy().isEmpty()) {
 
-            QueryLangConverter toPredicate;
-
-            if (query.getLanguage().equals(LANGUAGE_PREDICATE)) {
-
-                toPredicate = q -> q;
-
-            } else {
-
-                toPredicate = languageConverters.get(new LangConvPair(query.getLanguage(), LANGUAGE_PREDICATE));
-            }
-
-            if (toPredicate != null) {
-                return queryRecordsGroups(query, schema, toPredicate);
-            } else {
+            RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID,
+                                                                  RecordsQueryWithMetaDAO.class,
+                                                                  queryWithMetaDAO);
+            if (!updateQueryLanguage(query, groupsSource)) {
                 logger.warn("GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query);
                 return new RecordsQueryResult<>();
             }
-        } else {
-
-            getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
+            return groupsSource.queryRecords(query, schema);
         }
 
         return queryRecordsImpl(query, schema);
@@ -279,59 +265,6 @@ public class RecordsServiceImpl implements RecordsService {
         }
 
         return records;
-    }
-
-    private RecordsQueryResult<RecordMeta> queryRecordsGroups(RecordsQuery query,
-                                                              String schema,
-                                                              QueryLangConverter toPredicate) {
-
-        List<String> groupBy = query.getGroupBy();
-
-        String attribute = groupBy.get(0);
-
-        RecordsQuery distinctQuery = new RecordsQuery(query);
-        distinctQuery.setMaxItems(20);
-        distinctQuery.setGroupBy(null);
-        distinctQuery.setQuery(DistinctQuery.create(attribute, query.getQuery(), query.getLanguage()));
-        distinctQuery.setLanguage(DistinctQuery.LANGUAGE);
-
-        RecordsQueryResult<RecordMeta> distinctValuesResult = queryRecordsImpl(distinctQuery, "str");
-
-        if (distinctValuesResult.getRecords().isEmpty()) {
-            return new RecordsQueryResult<>();
-        }
-
-        RecordsQuery groupsBaseQuery = new RecordsQuery(query);
-        if (groupBy.size() == 1) {
-            groupsBaseQuery.setGroupBy(null);
-        } else {
-            List<String> newGroupBy = new ArrayList<>();
-            for (int i = 1; i < groupBy.size(); i++) {
-                newGroupBy.add(groupBy.get(i));
-            }
-            groupsBaseQuery.setGroupBy(newGroupBy);
-        }
-
-        JsonNode predicateQuery = toPredicate.convert(groupsBaseQuery.getQuery());
-        Predicate predicate = predicateService.readJson(predicateQuery);
-
-        List<RecordsGroup> groups = new ArrayList<>();
-
-        for (RecordMeta meta : distinctValuesResult.getRecords()) {
-
-            Predicate groupPredicate = ValuePredicate.equal(attribute, meta.get("str", ""));
-            RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
-
-            groupQuery.setQuery(predicateService.writeJson(AndPredicate.of(predicate, groupPredicate)));
-            groupQuery.setLanguage(LANGUAGE_PREDICATE);
-
-            groups.add(new RecordsGroup(groupQuery, groupPredicate, this));
-        }
-
-        RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
-        result.merge(recordsMetaService.getMeta(groups, schema));
-
-        return result;
     }
 
     @Override
@@ -515,6 +448,9 @@ public class RecordsServiceImpl implements RecordsService {
         }
         if (recordsSource instanceof RecordsMetaServiceAware) {
             ((RecordsMetaServiceAware) recordsSource).setRecordsMetaService(recordsMetaService);
+        }
+        if (recordsSource instanceof PredicateServiceAware) {
+            ((PredicateServiceAware) recordsSource).setPredicateService(predicateService);
         }
     }
 

@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,10 @@ import java.util.List;
 public class RecordsServiceFactory {
 
     public RecordsService createRecordsService() {
-        return new RecordsServiceImpl(createRecordsMetaService(),
-                                      createPredicateService());
+        RecordsServiceImpl recordsService = new RecordsServiceImpl(createRecordsMetaService(),
+                                                                   createPredicateService());
+        recordsService.register(new RecordsGroupDAO());
+        return recordsService;
     }
 
     public RecordsMetaService createRecordsMetaService() {

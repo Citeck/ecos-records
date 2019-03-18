@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,7 +76,17 @@ public class StdJsonConverter extends StdDeserializer<Predicate> implements Json
 
         if (predicateType != null) {
 
-            predicate = mapper.treeToValue(predicateNode, predicateType);
+            if (AndPredicate.class.equals(predicateType)
+                    || OrPredicate.class.equals(predicateType)) {
+
+                JsonNode children = predicateNode.get("val");
+                if (children instanceof ArrayNode && children.size() == 1) {
+                    predicate = mapper.treeToValue(children.get(0), Predicate.class);
+                }
+            }
+            if (predicate == null) {
+                predicate = mapper.treeToValue(predicateNode, predicateType);
+            }
 
         } else {
 

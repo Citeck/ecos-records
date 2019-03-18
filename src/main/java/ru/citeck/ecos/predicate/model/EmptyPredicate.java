@@ -9,6 +9,13 @@ public class EmptyPredicate extends AttributePredicate {
 
     private static final String TYPE = "empty";
 
+    public EmptyPredicate() {
+    }
+
+    public EmptyPredicate(String attribute) {
+        setAttribute(attribute);
+    }
+
     @JsonProperty("t")
     public String getType() {
         return TYPE;

@@ -23,3 +23,20 @@ public interface RecordsQueryBaseDAO extends RecordsDAO {
         return Collections.emptyList();
     }
 }
+//cm:name&cm:title
+
+/*
+[
+    {
+        att: 'cm:title'
+    },
+    {
+
+        att
+    }
+
+]
+
+
+
+ */

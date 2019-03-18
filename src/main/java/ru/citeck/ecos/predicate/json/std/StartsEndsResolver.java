@@ -28,12 +28,6 @@ public class StartsEndsResolver implements PredicateResolver {
                 node.put("val", "%" + node.get("val").asText());
                 break;
             }
-            case "contains": {
-                node = node.deepCopy();
-                node.put("t", "like");
-                node.put("val", "%" + node.get("val").asText() + "%");
-                break;
-            }
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }
@@ -43,6 +37,6 @@ public class StartsEndsResolver implements PredicateResolver {
 
     @Override
     public List<String> getTypes() {
-        return Arrays.asList("starts", "ends", "contains");
+        return Arrays.asList("starts", "ends");
     }
 }

@@ -12,7 +12,7 @@ public class ValuePredicate extends AttributePredicate {
 
     public enum Type {
 
-        EQ, GT, GE, LT, LE, LIKE, IN, HAS;
+        EQ, GT, GE, LT, LE, LIKE, IN, CONTAINS;
 
         @JsonValue
         public String asString() {

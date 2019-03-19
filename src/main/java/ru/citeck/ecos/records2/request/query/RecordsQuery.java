@@ -207,16 +207,22 @@ public class RecordsQuery {
 
         RecordsQuery that = (RecordsQuery) o;
 
-        return Objects.equals(sourceId, that.sourceId)
+        return Objects.equals(page, that.page)
+            && Objects.equals(query, that.query)
             && Objects.equals(sortBy, that.sortBy)
-            && Objects.equals(page, that.page)
+            && Objects.equals(groupBy, that.groupBy)
+            && Objects.equals(language, that.language)
+            && Objects.equals(sourceId, that.sourceId)
             && Objects.equals(consistency, that.consistency);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(sortBy);
-        result = 31 * result + Objects.hashCode(page);
+        int result = Objects.hashCode(page);
+        result = 31 * result + Objects.hashCode(query);
+        result = 31 * result + Objects.hashCode(sortBy);
+        result = 31 * result + Objects.hashCode(groupBy);
+        result = 31 * result + Objects.hashCode(language);
         result = 31 * result + Objects.hashCode(sourceId);
         result = 31 * result + Objects.hashCode(consistency);
         return result;

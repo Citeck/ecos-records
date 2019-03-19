@@ -64,9 +64,6 @@ public class AfterPage extends QueryPage {
 
     @Override
     public String toString() {
-        return "AfterPage {\n"
-                    + "\"afterId\":\"" + afterId + "\",\n"
-                    + "\"maxItems\":" + getMaxItems() + "\n"
-                + '}';
+        return "{\"afterId\":\"" + afterId + "\", \"maxItems\":" + getMaxItems() + '}';
     }
 }

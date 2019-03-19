@@ -1,8 +1,11 @@
 package ru.citeck.ecos.records2.source.common.group;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ru.citeck.ecos.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
+import ru.citeck.ecos.predicate.model.ValuePredicate;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -17,6 +20,7 @@ import java.util.List;
 public class RecordsGroup implements MetaValue {
 
     public static final String FIELD_PREDICATE = "predicate";
+    public static final String FIELD_PREDICATES = "predicates";
     public static final String FIELD_VALUES = "values";
     public static final String FIELD_SUM = "sum";
 
@@ -31,8 +35,8 @@ public class RecordsGroup implements MetaValue {
                         RecordsService recordsService) {
 
         this.query = query;
-        this.predicate = predicate;
         this.recordsService = recordsService;
+        this.predicate = predicate;
     }
 
     @Override
@@ -46,6 +50,14 @@ public class RecordsGroup implements MetaValue {
         switch (name) {
             case FIELD_PREDICATE:
                 return predicate;
+            case FIELD_PREDICATES:
+
+                if (predicate instanceof ComposedPredicate) {
+                    return ((ComposedPredicate) predicate).getPredicates();
+                }
+
+                return Collections.singletonList(predicate);
+
             case FIELD_VALUES:
                 if (values == null) {
                     String schema = field.getAttributeSchema("records");
@@ -60,7 +72,10 @@ public class RecordsGroup implements MetaValue {
 
             String attribute = name.substring(FIELD_SUM.length() + 1, name.length() - 1) + "?num";
             List<String> attributes = Collections.singletonList(attribute);
-            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attributes);
+
+            RecordsQuery sumQuery = new RecordsQuery(query);
+            sumQuery.setGroupBy(null);
+            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(sumQuery, attributes);
 
             Double sum = 0.0;
             for (RecordMeta record : result.getRecords()) {
@@ -70,6 +85,24 @@ public class RecordsGroup implements MetaValue {
             return sum;
         }
 
+        return findAttribute(predicate, name);
+    }
+
+    private Object findAttribute(Predicate predicate, String attribute) {
+        if (predicate instanceof ComposedPredicate) {
+            List<Predicate> predicates = ((ComposedPredicate) predicate).getPredicates();
+            for (Predicate pred : predicates) {
+                Object value = findAttribute(pred, attribute);
+                if (value != null) {
+                    return value;
+                }
+            }
+        } else if (predicate instanceof ValuePredicate) {
+            ValuePredicate predValue = (ValuePredicate) predicate;
+            if (attribute.equals(predValue.getAttribute())) {
+                return predValue.getValue();
+            }
+        }
         return null;
     }
 
@@ -130,7 +163,18 @@ public class RecordsGroup implements MetaValue {
             }
 
             if (fieldName != null) {
-                return new GroupValue(value.get(fieldName));
+
+                JsonNode node = value.path(fieldName);
+
+                if (node instanceof ArrayNode) {
+                    List<Object> result = new ArrayList<>();
+                    for (JsonNode val : node) {
+                        result.add(new GroupValue(val));
+                    }
+                    return result;
+                } else {
+                    return new GroupValue(node);
+                }
             }
 
             return null;

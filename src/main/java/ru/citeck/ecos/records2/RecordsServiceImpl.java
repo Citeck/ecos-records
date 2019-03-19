@@ -118,11 +118,13 @@ public class RecordsServiceImpl implements RecordsService {
             RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID,
                                                                   RecordsQueryWithMetaDAO.class,
                                                                   queryWithMetaDAO);
-            if (!updateQueryLanguage(query, groupsSource)) {
+            RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
+
+            if (convertedQuery == null) {
                 logger.warn("GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query);
                 return new RecordsQueryResult<>();
             }
-            return groupsSource.queryRecords(query, schema);
+            return groupsSource.queryRecords(convertedQuery, schema);
         }
 
         return queryRecordsImpl(query, schema);
@@ -169,12 +171,16 @@ public class RecordsServiceImpl implements RecordsService {
         return null;
     }
 
-    private boolean updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDAO dao) {
+    private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDAO dao) {
+
+        if (dao == null) {
+            return null;
+        }
 
         List<String> supportedLanguages = dao.getSupportedLanguages();
 
         if (supportedLanguages == null || supportedLanguages.isEmpty()) {
-            return true;
+            return recordsQuery;
         }
 
         QueryWithLang queryWithLang = convertLanguage(recordsQuery.getQuery(),
@@ -182,12 +188,13 @@ public class RecordsServiceImpl implements RecordsService {
                                                       supportedLanguages);
 
         if (queryWithLang != null) {
+            recordsQuery = new RecordsQuery(recordsQuery);
             recordsQuery.setQuery(queryWithLang.getQuery());
             recordsQuery.setLanguage(queryWithLang.getLanguage());
-            return true;
+            return recordsQuery;
         }
 
-        return false;
+        return null;
     }
 
     private RecordsQueryResult<RecordMeta> queryRecordsImpl(RecordsQuery query, String schema) {
@@ -195,14 +202,16 @@ public class RecordsServiceImpl implements RecordsService {
         Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
         RecordsQueryResult<RecordMeta> records;
 
-        if (recordsDAO.isPresent() && updateQueryLanguage(query, recordsDAO.get())) {
+        RecordsQuery convertedQuery = updateQueryLanguage(query, recordsDAO.orElse(null));
+
+        if (convertedQuery != null) {
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Start records with meta query: " + query.getQuery() + "\n" + schema);
+                logger.debug("Start records with meta query: " + convertedQuery.getQuery() + "\n" + schema);
             }
 
             long queryStart = System.currentTimeMillis();
-            records = recordsDAO.get().queryRecords(query, schema);
+            records = recordsDAO.get().queryRecords(convertedQuery, schema);
             long queryDuration = System.currentTimeMillis() - queryStart;
 
             if (logger.isDebugEnabled()) {
@@ -217,22 +226,25 @@ public class RecordsServiceImpl implements RecordsService {
 
             Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
-            if (!recordsQueryDAO.isPresent() || !updateQueryLanguage(query, recordsQueryDAO.get())) {
+            convertedQuery = updateQueryLanguage(query, recordsQueryDAO.orElse(null));
+
+            if (convertedQuery == null) {
 
                 records = new RecordsQueryResult<>();
                 if (query.isDebug()) {
                     records.setDebugInfo(getClass(),
                             "RecordsDAO",
-                            "Source with id '" + query.getSourceId() + "' is not found or language is not supported");
+                            "Source with id '" + query.getSourceId()
+                                    + "' is not found or language is not supported");
                 }
             } else {
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Start records query: " + query.getQuery());
+                    logger.debug("Start records query: " + convertedQuery.getQuery());
                 }
 
                 long recordsQueryStart = System.currentTimeMillis();
-                RecordsQueryResult<RecordRef> recordRefs = recordsQueryDAO.get().queryRecords(query);
+                RecordsQueryResult<RecordRef> recordRefs = recordsQueryDAO.get().queryRecords(convertedQuery);
                 long recordsTime = System.currentTimeMillis() - recordsQueryStart;
 
                 if (logger.isDebugEnabled()) {

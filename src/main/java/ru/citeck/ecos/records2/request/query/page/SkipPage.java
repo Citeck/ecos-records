@@ -50,9 +50,6 @@ public class SkipPage extends QueryPage {
 
     @Override
     public String toString() {
-        return "SkipPage {\n"
-                + "\"skipCount\":" + skipCount + ",\n"
-                + "\"maxItems\":" + getMaxItems() + "\n"
-            + '}';
+        return "{\"skipCount\":" + skipCount + ", \"maxItems\":" + getMaxItems() + '}';
     }
 }

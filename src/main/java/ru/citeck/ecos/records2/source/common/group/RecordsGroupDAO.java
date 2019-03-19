@@ -1,6 +1,9 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import ru.citeck.ecos.predicate.model.*;
+import ru.citeck.ecos.predicate.model.AndPredicate;
+import ru.citeck.ecos.predicate.model.OrPredicate;
+import ru.citeck.ecos.predicate.model.Predicate;
+import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -29,16 +32,6 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
             return new RecordsQueryResult();
         }
 
-        String attribute = groupBy.get(0);
-        int max = query.getMaxItems() > 0 ? query.getMaxItems() : MAX_ITEMS_DEFAULT;
-
-        Predicate predicate = predicateService.readJson(query.getQuery());
-        List<String> distinctValues = getDistinctValues(query.getSourceId(), predicate, attribute, max);
-
-        if (distinctValues.isEmpty()) {
-            return new RecordsQueryResult();
-        }
-
         RecordsQuery groupsBaseQuery = new RecordsQuery(query);
         if (groupBy.size() == 1) {
             groupsBaseQuery.setGroupBy(null);
@@ -50,23 +43,68 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
             groupsBaseQuery.setGroupBy(newGroupBy);
         }
 
-        List<RecordsGroup> groups = new ArrayList<>();
+        String[] groupAtts = groupBy.get(0).split("&");
+        int max = query.getMaxItems() > 0 ? query.getMaxItems() : MAX_ITEMS_DEFAULT;
 
-        for (String value : distinctValues) {
+        Predicate basePredicate = predicateService.readJson(query.getQuery());
+        List<List<String>> distinctValues = new ArrayList<>();
 
-            Predicate groupPredicate = Predicates.equal(attribute, value);
-            RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
+        for (String groupAtt : groupAtts) {
 
-            groupQuery.setQuery(predicateService.writeJson(AndPredicate.of(predicate, groupPredicate)));
-            groupQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+            List<String> values = getDistinctValues(query.getSourceId(), basePredicate, groupAtt, max);
 
-            groups.add(new RecordsGroup(groupQuery, groupPredicate, recordsService));
+            if (values.isEmpty()) {
+                return new RecordsQueryResult();
+            }
+
+            distinctValues.add(values);
         }
 
         RecordsQueryResult<RecordsGroup> result = new RecordsQueryResult<>();
-        result.setRecords(groups);
+        result.setRecords(getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts));
 
         return result;
+    }
+
+    private List<RecordsGroup> getGroups(RecordsQuery groupsBaseQuery,
+                                         List<List<String>> distinctValues,
+                                         Predicate basePredicate,
+                                         String[] attributes) {
+
+        List<RecordsGroup> groups = new ArrayList<>();
+
+        if (distinctValues.size() == 1) {
+
+            for (String value : distinctValues.get(0)) {
+                groups.add(createGroup(groupsBaseQuery, basePredicate, Predicates.equal(attributes[0], value)));
+            }
+        } else {
+
+            for (String value0 : distinctValues.get(0)) {
+
+                for (String value1 : distinctValues.get(1)) {
+
+                    Predicate groupPredicate = Predicates.and(Predicates.equal(attributes[0], value0),
+                                                              Predicates.equal(attributes[1], value1));
+
+                    groups.add(createGroup(groupsBaseQuery, basePredicate, groupPredicate));
+                }
+            }
+        }
+
+        return groups;
+    }
+
+    private RecordsGroup createGroup(RecordsQuery groupsBaseQuery,
+                                     Predicate basePredicate,
+                                     Predicate groupPredicate) {
+
+        RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
+
+        groupQuery.setQuery(predicateService.writeJson(AndPredicate.of(basePredicate, groupPredicate)));
+        groupQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+
+        return new RecordsGroup(groupQuery, groupPredicate, recordsService);
     }
 
     private List<String> getDistinctValues(String sourceId, Predicate predicate, String attribute, int max) {

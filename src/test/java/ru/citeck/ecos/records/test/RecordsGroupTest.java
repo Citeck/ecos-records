@@ -12,17 +12,19 @@ import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecordsGroupTest extends LocalRecordsDAO
@@ -161,7 +163,7 @@ class RecordsGroupTest extends LocalRecordsDAO
             new PojoMeta("one", 3),
             new PojoMeta("one", 4),
             new PojoMeta("1one55", 200),
-            new PojoMeta("1one55", 300),
+            new PojoMeta("1one55", 200),
             new PojoMeta("one", 1000),
             new PojoMeta("1one", 2000),
             new PojoMeta("one12312", 10),
@@ -184,7 +186,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         RecordsQuery recordsQuery = new RecordsQuery();
         recordsQuery.setQuery(Predicates.gt("numKey", 4));
         recordsQuery.setSourceId(SOURCE_ID);
-        recordsQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+        recordsQuery.setLanguage("fts");
         recordsQuery.setGroupBy(Collections.singletonList("str"));
 
         RecordsQuery baseQuery = objectMapper.readValue(objectMapper.writeValueAsString(recordsQuery), RecordsQuery.class);

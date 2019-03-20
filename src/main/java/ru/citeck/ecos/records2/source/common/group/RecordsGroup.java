@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.ValuePredicate;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -13,9 +12,8 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RecordsGroup implements MetaValue {
 
@@ -26,17 +24,21 @@ public class RecordsGroup implements MetaValue {
 
     private Predicate predicate;
     private RecordsQuery query;
-    private GroupValues values;
+    private Map<String, ValueWrapper> attributes;
 
     private RecordsService recordsService;
 
     public RecordsGroup(RecordsQuery query,
+                        Map<String, DistinctValue> attributes,
                         Predicate predicate,
                         RecordsService recordsService) {
 
         this.query = query;
-        this.recordsService = recordsService;
         this.predicate = predicate;
+        this.recordsService = recordsService;
+
+        this.attributes = new HashMap<>();
+        attributes.forEach((n, v) -> this.attributes.put(n, new ValueWrapper(v)));
     }
 
     @Override
@@ -59,11 +61,15 @@ public class RecordsGroup implements MetaValue {
                 return Collections.singletonList(predicate);
 
             case FIELD_VALUES:
-                if (values == null) {
-                    String schema = field.getAttributeSchema("records");
-                    values = new GroupValues(recordsService.queryRecords(query, schema));
-                }
-                return values;
+
+                String schema = field.getInnerSchema();
+                RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, schema);
+
+                return records.getRecords().stream().map(r -> {
+                    ObjectNode atts = r.getAttributes();
+                    atts.put("id", r.getId().toString());
+                    return new GroupValue(atts);
+                }).collect(Collectors.toList());
             default:
                 //nothing
         }
@@ -85,64 +91,30 @@ public class RecordsGroup implements MetaValue {
             return sum;
         }
 
-        return findAttribute(predicate, name);
+        return attributes.get(name);
     }
 
-    private Object findAttribute(Predicate predicate, String attribute) {
-        if (predicate instanceof ComposedPredicate) {
-            List<Predicate> predicates = ((ComposedPredicate) predicate).getPredicates();
-            for (Predicate pred : predicates) {
-                Object value = findAttribute(pred, attribute);
-                if (value != null) {
-                    return value;
-                }
-            }
-        } else if (predicate instanceof ValuePredicate) {
-            ValuePredicate predValue = (ValuePredicate) predicate;
-            if (attribute.equals(predValue.getAttribute())) {
-                return predValue.getValue();
-            }
-        }
-        return null;
-    }
+    private static class ValueWrapper implements MetaValue {
 
+        private DistinctValue value;
 
-    public static class GroupValues implements MetaValue {
-
-        private final RecordsQueryResult<RecordMeta> result;
-
-        public GroupValues(RecordsQueryResult<RecordMeta> result) {
-            this.result = result;
+        ValueWrapper(DistinctValue value) {
+            this.value = value;
         }
 
         @Override
         public String getString() {
-            return null;
+            return value.getValue();
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public String getDisplayName() {
+            return value.getDisplayName();
+        }
 
-            switch (name) {
-                case "records":
-
-                    List<GroupValue> values = new ArrayList<>();
-
-                    for (RecordMeta meta : result.getRecords()) {
-                        ObjectNode attributes = meta.getAttributes();
-                        attributes.put("id", meta.getId().toString());
-                        values.add(new GroupValue(attributes));
-                    }
-
-                    return values;
-
-                case "totalCount":
-                    return result.getTotalCount();
-                case "hasMore":
-                    return result.getHasMore();
-                default:
-                    return null;
-            }
+        @Override
+        public String getId() {
+            return value.getId();
         }
     }
 

@@ -86,6 +86,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         while (fields.hasNext()) {
             String key = fields.next();
             String resultKey = keysMapping.get(key);
+            if (resultKey == null) {
+                continue;
+            }
             if ("id".equals(resultKey)) {
                 flatAttributes.put(resultKey, meta.getId().toString());
             } else {

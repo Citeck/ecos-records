@@ -207,9 +207,9 @@ class RecordsGroupTest extends LocalRecordsDAO
         assertEquals(7, results.size());
 
         for (Result result : results) {
-            Result.Pred predicate = result.getPredicate();
+            String value = result.getStr();
 
-            switch (predicate.value) {
+            switch (value) {
                 case "1one55":
                     assertEquals(12.0, result.getSum());
                     assertEquals(2,  result.getValues().size());
@@ -247,10 +247,19 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         @MetaAtt("sum(number)")
         private Double sum;
-        private Pred predicate;
 
-        @MetaAtt(".att(n:'values'){atts(n:'records'){str: att(n:'str'){str}, number:att(n:'number'){num}}}")
+        @MetaAtt(".atts(n:'values'){str: att(n:'str'){str}, number:att(n:'number'){num}}")
         private List<Val> values;
+
+        private String str;
+
+        public String getStr() {
+            return str;
+        }
+
+        public void setStr(String str) {
+            this.str = str;
+        }
 
         public Double getSum() {
             return sum;
@@ -258,14 +267,6 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         public void setSum(Double sum) {
             this.sum = sum;
-        }
-
-        public Pred getPredicate() {
-            return predicate;
-        }
-
-        public void setPredicate(Pred predicate) {
-            this.predicate = predicate;
         }
 
         public List<Val> getValues() {
@@ -280,7 +281,6 @@ class RecordsGroupTest extends LocalRecordsDAO
         public String toString() {
             return "Result{" +
                 "sum=" + sum +
-                ", predicate=" + predicate +
                 ", values=" + values +
                 '}';
         }

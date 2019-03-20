@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -139,5 +140,23 @@ public class RecordMeta {
                 + "\"id\":\"" + id
                 + "\", \"attributes\":" + attributes
             + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RecordMeta that = (RecordMeta) o;
+        return Objects.equals(id, that.id)
+            && Objects.equals(attributes, that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, attributes);
     }
 }

@@ -1,14 +1,16 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.predicate.PredicateService;
+import ru.citeck.ecos.predicate.model.AndPredicate;
+import ru.citeck.ecos.predicate.model.OrPredicate;
+import ru.citeck.ecos.predicate.model.Predicate;
+import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
@@ -46,8 +48,6 @@ public class RecordsServiceImpl implements RecordsService {
     private PredicateService predicateService;
 
     private Map<LangConvPair, QueryLangConverter> languageConverters = new ConcurrentHashMap<>();
-
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     public RecordsServiceImpl(RecordsMetaService recordsMetaService, PredicateService predicateService) {
         this.recordsMetaService = recordsMetaService;
@@ -122,38 +122,93 @@ public class RecordsServiceImpl implements RecordsService {
 
             if (convertedQuery == null) {
                 logger.warn("GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query);
-                return new RecordsQueryResult<>();
+                return queryRecordsImpl(query, schema);
             }
             return groupsSource.queryRecords(convertedQuery, schema);
+        }
+
+        if (DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
+
+            Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
+            Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
+
+            List<String> languages = recordsDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
+                                               .orElse(recordsQueryDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
+                                                                      .orElse(Collections.emptyList()));
+
+            if (!languages.contains(DistinctQuery.LANGUAGE)) {
+
+                DistinctQuery distinctQuery = query.getQuery(DistinctQuery.class);
+                RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
+
+                List<JsonNode> values = getDistinctValues(query.getSourceId(),
+                                                          distinctQuery,
+                                                          query.getMaxItems(),
+                                                          schema);
+                result.setRecords(values.stream().map(v -> {
+                    RecordRef ref = RecordRef.valueOf(v.path("id").asText());
+                    return new RecordMeta(ref, (ObjectNode) v);
+                }).collect(Collectors.toList()));
+
+                return result;
+            }
         }
 
         return queryRecordsImpl(query, schema);
     }
 
+
+    private List<JsonNode> getDistinctValues(String sourceId, DistinctQuery distinctQuery, int max, String schema) {
+
+        RecordsQuery recordsQuery = new RecordsQuery();
+        recordsQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+        recordsQuery.setSourceId(sourceId);
+        recordsQuery.setMaxItems(max);
+
+        QueryWithLang queryWithLang = convertLanguage(distinctQuery.getQuery(),
+                                                      distinctQuery.getLanguage(),
+                                                      Collections.singletonList(RecordsService.LANGUAGE_PREDICATE));
+
+        if (queryWithLang == null) {
+            logger.error("Language " + distinctQuery.getLanguage() + " is not supported by Distinct Query");
+            return Collections.emptyList();
+        }
+
+        Predicate predicate = predicateService.readJson(queryWithLang.getQuery());
+
+        OrPredicate distinctPredicate = Predicates.or(Predicates.empty(distinctQuery.getAttribute()));
+        AndPredicate fullPredicate = Predicates.and(predicate, Predicates.not(distinctPredicate));
+
+        Set<JsonNode> values = new HashSet<>();
+
+        int found;
+        int requests = 0;
+
+        String attSchema = "att(n:\"" + distinctQuery.getAttribute() + "\"){value:str, " + schema + "}";
+
+        do {
+
+            recordsQuery.setQuery(predicateService.writeJson(fullPredicate));
+            RecordsQueryResult<RecordMeta> queryResult = queryRecords(recordsQuery, attSchema);
+            found = queryResult.getRecords().size();
+
+            for (RecordMeta value : queryResult.getRecords()) {
+
+                distinctPredicate.addPredicate(
+                        Predicates.equal(distinctQuery.getAttribute(),
+                                        value.get("att").path("value").asText()));
+            }
+
+            queryResult.getRecords().forEach(r -> values.add(r.get("att")));
+
+        } while (found > 0 && values.size() <= max && ++requests <= max);
+
+        return new ArrayList<>(values);
+    }
+
     private QueryWithLang convertLanguage(JsonNode query, String language, List<String> required) {
 
         if (required.contains(language)) {
-
-            if (language.equals(DistinctQuery.LANGUAGE)) {
-
-                try {
-                    DistinctQuery distQuery = objectMapper.treeToValue(query, DistinctQuery.class);
-                    QueryWithLang converted = convertLanguage(distQuery.getQuery(), distQuery.getLanguage(), required);
-
-                    if (converted == null) {
-                        return null;
-                    }
-
-                    distQuery.setLanguage(converted.getLanguage());
-                    distQuery.setQuery(converted.getQuery());
-
-                    return new QueryWithLang(objectMapper.valueToTree(distQuery), DistinctQuery.LANGUAGE);
-
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
             return new QueryWithLang(query, language);
         }
 
@@ -200,6 +255,8 @@ public class RecordsServiceImpl implements RecordsService {
     private RecordsQueryResult<RecordMeta> queryRecordsImpl(RecordsQuery query, String schema) {
 
         Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(query.getSourceId(), queryWithMetaDAO);
+        Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
+
         RecordsQueryResult<RecordMeta> records;
 
         RecordsQuery convertedQuery = updateQueryLanguage(query, recordsDAO.orElse(null));
@@ -223,8 +280,6 @@ public class RecordsServiceImpl implements RecordsService {
             }
 
         } else  {
-
-            Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
             convertedQuery = updateQueryLanguage(query, recordsQueryDAO.orElse(null));
 

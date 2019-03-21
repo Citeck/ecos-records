@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.request.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ru.citeck.ecos.records2.RecordRef;
@@ -57,6 +58,7 @@ public class QueryBody {
         return attributes;
     }
 
+    @JsonSetter
     public void setAttributes(JsonNode attributes) {
 
         Map<String, String> result = new HashMap<>();
@@ -77,13 +79,11 @@ public class QueryBody {
         this.attributes = result;
     }
 
-    @JsonIgnore
     public void setAttributes(List<String> attributes) {
         this.attributes = new HashMap<>();
         attributes.forEach(a -> this.attributes.put(a, a));
     }
 
-    @JsonIgnore
     public void setAttributes(Map<String, String> attributes) {
         this.attributes = attributes;
     }

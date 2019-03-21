@@ -19,6 +19,8 @@ class QueryBodyTest {
         QueryBody body1 = objectMapper.readValue("{\"attributes\":[\"att0\",\"att1\"]}", QueryBody.class);
 
         assertEquals(body0, body1);
+        assertEquals("att0", body0.getAttributes().get("att0"));
+        assertEquals("att0", body1.getAttributes().get("att0"));
 
         QueryBody body2 = objectMapper.readValue("{\"attribute\":\"test\"}", QueryBody.class);
         assertEquals(1, body2.getAttributes().size());

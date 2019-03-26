@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -15,6 +17,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class BeanValueFactory implements MetaValueFactory<Object> {
+
+    private static final Log logger = LogFactory.getLog(BeanValueFactory.class);
 
     @Override
     public MetaValue getValue(Object value) {
@@ -51,12 +55,22 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
         @Override
         public Object getAttribute(String name, MetaField field) throws Exception {
-            return PropertyUtils.getProperty(bean, name);
+            try {
+                return PropertyUtils.getProperty(bean, name);
+            } catch (NoSuchMethodException e) {
+                logger.debug("Property not found", e);
+            }
+            return null;
         }
 
         @Override
         public boolean has(String name) throws Exception {
-            return PropertyUtils.getPropertyDescriptor(bean, name) != null;
+            try {
+                return PropertyUtils.getPropertyDescriptor(bean, name) != null;
+            } catch (NoSuchMethodException e) {
+                logger.debug("Property not found", e);
+            }
+            return false;
         }
 
         @Override
@@ -118,7 +132,9 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             if (descriptor == null) {
                 try {
                     descriptor = PropertyUtils.getPropertyDescriptor(bean, getName());
-                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                } catch (NoSuchMethodException e) {
+                    logger.debug("Descriptor not found", e);
+                } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }

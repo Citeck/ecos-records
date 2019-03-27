@@ -33,7 +33,7 @@ public class RecordsMetaQueryTest {
 
         assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){disp}}", attributes.get("someatt"));
         assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
-        assertEquals(".edge(n:\"cm:field\"){options{title:disp,value:str}}", attributes.get("options"));
+        assertEquals(".edge(n:\"cm:field\"){options{title:disp,label:disp,value:str}}", attributes.get("options"));
     }
 
     public static class SimplePojo {

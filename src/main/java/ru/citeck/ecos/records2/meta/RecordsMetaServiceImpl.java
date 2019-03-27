@@ -349,7 +349,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             switch (scalarField) {
                 case "options":
                 case "distinct":
-                    inner = "{title:disp,value:str}";
+                    inner = "{title:disp,label:disp,value:str}";
                     break;
                 default:
                     inner = "";

@@ -118,7 +118,23 @@ public class RecordMeta {
         setAttribute(name, value);
     }
 
+    public void set(String name, Boolean value) {
+        setAttribute(name, value);
+    }
+
+    public void set(String name, JsonNode value) {
+        setAttribute(name, value);
+    }
+
     public void setAttribute(String name, String value) {
+        attributes.put(name, value);
+    }
+
+    public void setAttribute(String name, Boolean value) {
+        attributes.put(name, value);
+    }
+
+    public void setAttribute(String name, JsonNode value) {
         attributes.put(name, value);
     }
 

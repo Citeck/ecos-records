@@ -25,9 +25,12 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class RecordsServiceImpl implements RecordsService {
@@ -36,6 +39,8 @@ public class RecordsServiceImpl implements RecordsService {
     private static final String DEBUG_RECORDS_QUERY_TIME = "recordsQueryTimeMs";
     private static final String DEBUG_META_QUERY_TIME = "metaQueryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
+
+    private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\(n:\"([^\"]+)\"\\).+");
 
     private static final Log logger = LogFactory.getLog(RecordsServiceImpl.class);
 
@@ -457,6 +462,16 @@ public class RecordsServiceImpl implements RecordsService {
                     }
 
                     attributes.put(name, value);
+
+                } else {
+
+                    Matcher matcher = ATT_PATTERN.matcher(name);
+                    if (matcher.matches()) {
+                        String attName = matcher.group(1);
+                        if (StringUtils.isNotBlank(attName)) {
+                            attributes.put(attName, value);
+                        }
+                    }
                 }
             });
 

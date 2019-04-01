@@ -76,7 +76,7 @@ public class RecordsUtils {
             Object propValue = PropertyUtils.getProperty(value, "id");
             return propValue != null ? propValue.toString() : null;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            logger.error(e);
+            logger.debug(e);
         }
         return null;
     }

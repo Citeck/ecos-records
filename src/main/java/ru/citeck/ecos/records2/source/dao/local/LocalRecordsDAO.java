@@ -90,7 +90,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             return mutableDao.save(values);
         }
 
-        logger.warn("[" + getId() + "] RecordsDAO doesn't implement MutableRecordsLocalDAO");
+        writeWarn("RecordsDAO doesn't implement MutableRecordsLocalDAO");
 
         return new RecordsMutResult();
     }
@@ -107,11 +107,16 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             }
             return localRecords;
 
-        } else {
+        } else if (this instanceof RecordsQueryWithMetaLocalDAO) {
 
             RecordsQueryResult<RecordMeta> records = queryRecords(query, "id");
             return new RecordsQueryResult<>(records, RecordMeta::getId);
         }
+
+        writeWarn("RecordsDAO doesn't implement neither "
+                  + "RecordsQueryLocalDAO nor RecordsQueryWithMetaLocalDAO");
+
+        return new RecordsQueryResult<>();
     }
 
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
@@ -140,7 +145,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
                     }
                 }
             } else {
-                logger.warn("[" + getId() + "] getMetaValues(query) return null");
+                writeWarn("getMetaValues(query) return null");
             }
 
         } else if (this instanceof RecordsQueryDAO) {
@@ -163,8 +168,8 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
                 RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
                 queryResult.merge(meta);
             } else {
-                logger.warn("[" + getId() + "] RecordsDAO implements neither "
-                            + "RecordsMetaLocalDAO nor RecordsMetaDAO. We can't receive metadata");
+                writeWarn("RecordsDAO implements neither RecordsMetaLocalDAO "
+                          + "nor RecordsMetaDAO. We can't receive metadata");
                 recordRefs.stream().map(RecordMeta::new).forEach(queryResult::addRecord);
             }
         }
@@ -194,8 +199,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
         } else {
 
-            logger.warn("[" + getId() + "] RecordsDAO doesn't implement "
-                        + "RecordsMetaLocalDAO. We can't receive metadata");
+            writeWarn("RecordsDAO doesn't implement RecordsMetaLocalDAO. We can't receive metadata");
 
             result = new RecordsResult<>();
             records.stream().map(RecordMeta::new).forEach(result::addRecord);
@@ -206,6 +210,10 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         }
 
         return result;
+    }
+
+    protected void writeWarn(String msg) {
+        logger.warn(toString() + ": " + msg);
     }
 
     @Override
@@ -221,5 +229,10 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
     @Override
     public void setPredicateService(PredicateService predicateService) {
         this.predicateService = predicateService;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + getId() + "](" + getClass().getName() + "@" + Integer.toHexString(hashCode()) + ")";
     }
 }

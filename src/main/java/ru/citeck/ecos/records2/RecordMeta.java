@@ -19,6 +19,11 @@ public class RecordMeta {
     public RecordMeta() {
     }
 
+    public RecordMeta(RecordMeta other, RecordRef id) {
+        setId(id);
+        setAttributes(other.getAttributes());
+    }
+
     public RecordMeta(RecordMeta other, Function<RecordRef, RecordRef> idMapper) {
         setId(idMapper.apply(other.getId()));
         setAttributes(other.getAttributes());

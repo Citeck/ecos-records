@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
+import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -65,6 +66,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     @Override
     public RecordsResult<RecordMeta> getMeta(List<?> records, String schema) {
+        if (StringUtils.isBlank(schema)) {
+            schema = "id";
+        }
         return new RecordsResult<>(graphQLService.getMeta(records, schema));
     }
 

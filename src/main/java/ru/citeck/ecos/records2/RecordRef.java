@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
@@ -13,7 +12,6 @@ public class RecordRef {
 
     public static final String SOURCE_DELIMITER = "@";
     public static final String APP_NAME_DELIMITER = "/";
-    private static final String DEFAULT_SOURCE_ID = "";
 
     private final String appName;
     private final String sourceId;
@@ -25,34 +23,49 @@ public class RecordRef {
         id = "";
     }
 
-    private RecordRef(String sourceId, String id) {
-        this.sourceId = sourceId;
-        this.id = id != null ? id : "";
-        this.appName = "";
-    }
-
-    private RecordRef(String sourceId, RecordRef id) {
-        this.sourceId = sourceId;
-        this.id = id.toString();
-        this.appName = "";
-    }
-
     private RecordRef(String appName, String sourceId, String id) {
         this.id = StringUtils.isNotBlank(id) ? id : "";
         this.appName = StringUtils.isNotBlank(appName) ? appName : "";
         this.sourceId = StringUtils.isNotBlank(sourceId) ? sourceId : "";
     }
 
-    @JsonIgnore
-    private RecordRef(String id) {
+    public static RecordRef create(String sourceId, RecordRef id) {
+        return create(sourceId, id.toString());
+    }
 
-        int sourceDelimIdx = id.indexOf(SOURCE_DELIMITER);
+    public static RecordRef create(String sourceId, String id) {
+        return create("", sourceId, id);
+    }
+
+    public static RecordRef create(String appName, String sourceId, String id) {
+        if (StringUtils.isBlank(appName) && StringUtils.isBlank(sourceId) && isBlankId(id)) {
+            return EMPTY;
+        }
+        return new RecordRef(
+                appName != null ? appName : "",
+                sourceId != null ? sourceId : "",
+                isBlankId(id) ? "" : id
+        );
+    }
+
+    @JsonCreator
+    public static RecordRef valueOf(String recordRefStr) {
+
+        if (isBlankId(recordRefStr)) {
+            return EMPTY;
+        }
+
+        String id;
+        String appName;
+        String sourceId;
+
+        int sourceDelimIdx = recordRefStr.indexOf(SOURCE_DELIMITER);
 
         if (sourceDelimIdx != -1) {
 
-            this.id = id.substring(sourceDelimIdx + 1);
+            id = recordRefStr.substring(sourceDelimIdx + 1);
 
-            String source = id.substring(0, sourceDelimIdx);
+            String source = recordRefStr.substring(0, sourceDelimIdx);
             int appNameDelimIdx = source.indexOf(APP_NAME_DELIMITER);
             if (appNameDelimIdx > -1) {
                 appName = source.substring(0, appNameDelimIdx);
@@ -62,39 +75,12 @@ public class RecordRef {
                 sourceId = source;
             }
         } else {
-            this.sourceId = DEFAULT_SOURCE_ID;
-            this.id = id;
-            this.appName = "";
+            id = recordRefStr;
+            sourceId = "";
+            appName = "";
         }
-    }
 
-    public static RecordRef create(String sourceId, String id) {
-        if (StringUtils.isBlank(sourceId) && StringUtils.isBlank(id)) {
-            return EMPTY;
-        }
-        return new RecordRef(sourceId, id);
-    }
-
-    public static RecordRef create(String sourceId, RecordRef id) {
-        if (StringUtils.isBlank(sourceId) && id == EMPTY) {
-            return EMPTY;
-        }
-        return new RecordRef(sourceId, id);
-    }
-
-    public static RecordRef create(String appName, String sourceId, String id) {
-        if (StringUtils.isBlank(appName) && StringUtils.isBlank(sourceId) && StringUtils.isBlank(id)) {
-            return EMPTY;
-        }
-        return new RecordRef(appName, sourceId, id);
-    }
-
-    @JsonCreator
-    public static RecordRef valueOf(String id) {
-        if (StringUtils.isBlank(id)) {
-            return EMPTY;
-        }
-        return new RecordRef(id);
+        return create(appName, sourceId, id);
     }
 
     public static RecordRef valueOf(RecordRef ref) {
@@ -115,6 +101,10 @@ public class RecordRef {
 
     public boolean isRemote() {
         return !appName.isEmpty();
+    }
+
+    private static boolean isBlankId(String id) {
+        return StringUtils.isBlank(id) || StringUtils.containsOnly(id, '@');
     }
 
     @Override

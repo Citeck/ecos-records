@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import ru.citeck.ecos.records2.RecordRef;
@@ -81,12 +82,30 @@ class RecordRefTest {
         assertSame(list.get(1), RecordRef.EMPTY);
     }
 
-    static class RecordsList extends ArrayList<RecordRef> {
+    @Test
+    void defaultSourceTest() {
+
+        String sourceId = "source-id";
+        RecordRef ref0 = RecordRef.valueOf(sourceId + "@@");
+        RecordRef ref1 = RecordRef.valueOf(sourceId + "@@@@@");
+
+        assertEquals(ref0, ref1);
+        assertEquals(sourceId, ref0.getSourceId());
+        assertEquals(sourceId, ref1.getSourceId());
+
+        assertEquals(ref0, RecordRef.create(null, sourceId, "@@@@"));
+        assertEquals(ref0, RecordRef.create(null, sourceId, "@"));
+        assertEquals(ref0, RecordRef.create(null, sourceId, null));
+        assertEquals(RecordRef.valueOf("some-app/" + sourceId + "@"),
+                     RecordRef.create("some-app", sourceId, null));
+    }
+
+    private static class RecordsList extends ArrayList<RecordRef> {
     }
 
     static class RecordsObj {
 
-        public List<RecordRef> list;
+        List<RecordRef> list;
 
         public void setRecord(RecordRef record) {
             if (list == null) {

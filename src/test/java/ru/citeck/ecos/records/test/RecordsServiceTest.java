@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -211,6 +212,14 @@ public class RecordsServiceTest extends LocalRecordsDAO
         assertEquals("SecondTitle", journals.get(1).getTitle());
     }
 
+    @Test
+    void testDisplayName() {
+
+        JsonNode dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
+
+        assertEquals(TextNode.valueOf(PojoMeta.DISPLAY_NAME), dispValue);
+    }
+
     public static class JournalInfo {
 
         private String name;
@@ -358,6 +367,8 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
     public static class PojoMeta {
 
+        static final String DISPLAY_NAME = "DISP_NAME_TEST";
+
         public static String STR_FIELD_0_POSTFIX = "str0";
         public static String STR_FIELD_1_POSTFIX = "str1";
 
@@ -402,6 +413,11 @@ public class RecordsServiceTest extends LocalRecordsDAO
             attributes.put("name", "SecondName");
             attributes.put("title", "SecondTitle");
             journals.add(attributes);
+        }
+
+        @DisplayName
+        public String getDisplay() {
+            return DISPLAY_NAME;
         }
 
         public List<Map<String, String>> getJournals() {

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -10,6 +11,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -33,6 +35,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
     static class Value implements MetaValue {
 
         private final Object bean;
+        private String displayName;
 
         Value(Object bean) {
             this.bean = bean;
@@ -46,6 +49,47 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 return null;
             }
+        }
+
+        @Override
+        public String getDisplayName() {
+
+            if (displayName != null) {
+                return displayName;
+            }
+
+            PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(bean);
+
+            for (PropertyDescriptor descriptor : descriptors) {
+
+                Method readMethod = descriptor.getReadMethod();
+                if (readMethod != null) {
+                    DisplayName annotation = readMethod.getAnnotation(DisplayName.class);
+                    if (annotation != null) {
+                        try {
+                            if (!String.class.equals(readMethod.getReturnType())) {
+                                throw new IllegalStateException("DisplayName getter should return "
+                                                                + "String value. bean: "  + bean);
+                            }
+                            if (readMethod.getParameters().length != 0) {
+                                throw new IllegalStateException("DisplayName getter should not "
+                                                                + "receive any parameters. bean: " + bean);
+                            }
+                            displayName = (String) readMethod.invoke(bean);
+                            break;
+                        } catch (Exception e) {
+                            logger.error("Can't get DisplayName", e);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (displayName == null) {
+                displayName = getString();
+            }
+
+            return displayName;
         }
 
         @Override

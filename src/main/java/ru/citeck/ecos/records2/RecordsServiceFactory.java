@@ -33,7 +33,7 @@ public class RecordsServiceFactory {
         return new PredicateServiceImpl();
     }
 
-    protected RecordsMetaGql createRecordsMetaGraphQL() {
+    public RecordsMetaGql createRecordsMetaGraphQL() {
         return new RecordsMetaGql(getGqlTypes(), GqlContext::new);
     }
 

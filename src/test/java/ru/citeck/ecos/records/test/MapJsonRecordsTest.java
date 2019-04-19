@@ -1,0 +1,59 @@
+package ru.citeck.ecos.records.test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class MapJsonRecordsTest extends LocalRecordsDAO
+                                implements RecordsMetaLocalDAO<Object> {
+
+    private static final String SOURCE_ID = "test-source-id";
+    private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
+
+    private RecordsService recordsService;
+
+    @BeforeAll
+    void init() {
+
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        recordsService = factory.createRecordsService();
+
+        setId(SOURCE_ID);
+        recordsService.register(this);
+    }
+
+    @Override
+    public List<Object> getMetaValues(List<RecordRef> records) {
+        return records.stream().map(r -> {
+            Map<String, Object> result = new HashMap<>();
+            ObjectNode var = JsonNodeFactory.instance.objectNode();
+            var.with("key1").with("key2").put("field", "Value0");
+            result.put("key0", var);
+            return result;
+        }).collect(Collectors.toList());
+    }
+
+    @Test
+    void testSingleStrAttribute() {
+
+        JsonNode value = recordsService.getAttribute(TEST_REF,
+            ".att(n:\"key0\"){att(n:\"key1\"){att(n:\"key2\"){att(n:\"field\"){str}}}}");
+
+        assertEquals(TextNode.valueOf("Value0"), value);
+    }
+}

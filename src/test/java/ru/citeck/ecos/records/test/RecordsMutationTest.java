@@ -1,10 +1,5 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,13 +7,10 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.*;
 
 import java.util.*;
@@ -85,7 +77,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
     @Override
     public List<TestDto> getValuesToMutate(List<RecordRef> records) {
         return records.stream().map(r -> {
-            TestDto testDto = valuesToMutate.get(r);
+            TestDto testDto = valuesToMutate.get(RecordRef.create(getId(), r));
             if (testDto == null) {
                 return Optional.<TestDto>empty();
             }
@@ -105,7 +97,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
             TestDto testDto = valuesToMutate.get(v.getRef());
             if (testDto != null) {
                 testDto.set(v);
-                records.add(new RecordMeta(v.getRef()));
+                records.add(new RecordMeta(v.getRef().getId()));
             }
         });
 
@@ -174,8 +166,6 @@ public class RecordsMutationTest extends LocalRecordsDAO
         public String getField1() {
             return field1;
         }
-
-
 
         public void setField1(String field1) {
             this.field1 = field1;

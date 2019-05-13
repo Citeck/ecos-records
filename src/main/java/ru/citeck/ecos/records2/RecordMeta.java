@@ -1,10 +1,14 @@
 package ru.citeck.ecos.records2;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -30,15 +34,15 @@ public class RecordMeta {
     }
 
     public RecordMeta(String id) {
-        this.id = RecordRef.valueOf(id);
+        setId(id);
     }
 
     public RecordMeta(RecordRef id) {
-        this.id = id;
+        setId(id);
     }
 
     public RecordMeta(RecordRef id, ObjectNode attributes) {
-        this.id = id;
+        setId(id);
         setAttributes(attributes);
     }
 
@@ -46,8 +50,13 @@ public class RecordMeta {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = RecordRef.valueOf(id);
+    }
+
+    @JsonIgnore
     public void setId(RecordRef id) {
-        this.id = id != null ? id : RecordRef.EMPTY;
+        this.id = RecordRef.valueOf(id);
     }
 
     public void forEach(BiConsumer<String, JsonNode> consumer) {
@@ -67,8 +76,28 @@ public class RecordMeta {
     }
 
     public boolean hasAttribute(String name) {
-        JsonNode att = attributes.path(name);
-        return !isEmpty(att);
+        return !isEmpty(attributes.path(name));
+    }
+
+    public String fmtDate(String name, String format) {
+        return fmtDate(name, format, "");
+    }
+
+    public String fmtDate(String name, String format, String orElse) {
+        Date date = getDateOrNull(name);
+        if (date != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+            return dateFormat.format(date);
+        }
+        return orElse;
+    }
+
+    public Date getDateOrNull(String name) {
+        String value = getAttribute(name, "");
+        if (!value.isEmpty()) {
+            return ISO8601Utils.parse(value);
+        }
+        return null;
     }
 
     public JsonNode get(String name) {
@@ -88,7 +117,12 @@ public class RecordMeta {
         MandatoryParam.checkString("name", name);
         MandatoryParam.check("orElse", orElse);
 
-        JsonNode att = attributes.get(name);
+        JsonNode att;
+        if (name.charAt(0) == '/') {
+            att = attributes.at(name);
+        } else {
+            att = attributes.get(name);
+        }
         if (isEmpty(att)) {
             return orElse;
         }
@@ -119,6 +153,10 @@ public class RecordMeta {
         return resultValue;
     }
 
+    public void set(String name, Date value) {
+        setAttribute(name, value);
+    }
+
     public void set(String name, String value) {
         setAttribute(name, value);
     }
@@ -129,6 +167,10 @@ public class RecordMeta {
 
     public void set(String name, JsonNode value) {
         setAttribute(name, value);
+    }
+
+    public void setAttribute(String name, Date value) {
+        setAttribute(name, ISO8601Utils.format(value));
     }
 
     public void setAttribute(String name, String value) {

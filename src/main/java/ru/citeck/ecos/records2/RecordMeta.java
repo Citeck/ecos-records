@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -50,11 +50,11 @@ public class RecordMeta {
         return id;
     }
 
+    @JsonProperty
     public void setId(String id) {
         this.id = RecordRef.valueOf(id);
     }
 
-    @JsonIgnore
     public void setId(RecordRef id) {
         this.id = RecordRef.valueOf(id);
     }

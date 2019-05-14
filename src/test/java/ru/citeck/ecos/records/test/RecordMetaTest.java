@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordMeta;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,8 +19,8 @@ class RecordMetaTest {
 
         RecordMeta meta = new RecordMeta();
         meta.setId("someId");
-        meta.setAttribute("TestAtt", "TestAtt2");
-        meta.setAttribute("TestAtt1", IntNode.valueOf(5));
+        meta.setAttribute("stringValue", "TestAtt2");
+        meta.setAttribute("intValue", IntNode.valueOf(5));
         meta.setAttribute("TestAtt2", true);
         meta.setAttribute("TestAtt3", new Date());
 
@@ -33,5 +34,9 @@ class RecordMetaTest {
         }
 
         assertEquals(meta, meta2);
+
+        assertEquals(meta.get("intValue", new BigDecimal(10)), new BigDecimal(5));
+        assertEquals(meta.get("stringValue", new BigDecimal(10)), new BigDecimal(10));
+        assertEquals(meta.get("MISSING", new BigDecimal(10)), new BigDecimal(10));
     }
 }

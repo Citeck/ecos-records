@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -139,6 +140,8 @@ public class RecordMeta {
             value = att.asDouble((Double) orElse);
         } else if (orElse instanceof Float) {
             value = (float) att.asDouble((Float) orElse);
+        } else if (orElse instanceof BigDecimal) {
+            value = new BigDecimal(att.asDouble(((BigDecimal) orElse).doubleValue()));
         } else if (orElse instanceof Boolean) {
             value = att.asBoolean((Boolean) orElse);
         } else if (orElse instanceof JsonNode) {

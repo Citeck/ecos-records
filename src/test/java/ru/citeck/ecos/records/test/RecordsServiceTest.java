@@ -3,6 +3,7 @@ package ru.citeck.ecos.records.test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.junit.jupiter.api.*;
@@ -220,6 +221,15 @@ public class RecordsServiceTest extends LocalRecordsDAO
         assertEquals(TextNode.valueOf(PojoMeta.DISPLAY_NAME), dispValue);
     }
 
+    @Test
+    void testRootJsonAttribute() {
+
+        JsonNode value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
+        JsonNode test = objectMapper.convertValue(new PojoMeta("test"), ObjectNode.class);
+
+        assertEquals(test, value);
+    }
+
     public static class JournalInfo {
 
         private String name;
@@ -387,6 +397,8 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         private List<Map<String, String>> journals;
 
+        private SimpleObj simpleObjField = new SimpleObj();
+
         public PojoMeta(String id) {
 
             this.id = id;
@@ -418,6 +430,10 @@ public class RecordsServiceTest extends LocalRecordsDAO
         @DisplayName
         public String getDisplay() {
             return DISPLAY_NAME;
+        }
+
+        public SimpleObj getSimpleObjField() {
+            return simpleObjField;
         }
 
         public List<Map<String, String>> getJournals() {
@@ -459,6 +475,10 @@ public class RecordsServiceTest extends LocalRecordsDAO
         public void setFieldMap(Map<String, Object> fieldMap) {
             this.fieldMap = fieldMap;
         }
+    }
+
+    public static class SimpleObj {
+        public String field = "String";
     }
 
     public static class ExactIdsQuery {

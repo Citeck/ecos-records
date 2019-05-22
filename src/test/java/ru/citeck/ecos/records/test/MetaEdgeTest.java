@@ -50,7 +50,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
     @Test
     void test() {
 
-        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type}";
+        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json}}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
@@ -60,6 +60,10 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
+        assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
+
+        CreateVariant variant = objectMapper.treeToValue(edgeNode.at("/createVariants/0/json"), CreateVariant.class);
+        assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.path("name").asText());
 
@@ -124,6 +128,15 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         static String EDITOR_KEY = "editor key";
         static String TYPE = "_type_";
+        static boolean IS_ASSOC = true;
+        static CreateVariant CREATE_VARIANT;
+
+        static {
+            CREATE_VARIANT = new CreateVariant(RecordRef.valueOf("1231231@213123"));
+            CREATE_VARIANT.setAttribute("test", "test2");
+            CREATE_VARIANT.setAttribute("test4", "test3");
+            CREATE_VARIANT.setFormKey("SomeFormKey");
+        }
 
         static List<?> distinctVariants = Arrays.asList(
             "first",
@@ -176,6 +189,18 @@ public class MetaEdgeTest extends LocalRecordsDAO
         @Override
         public String getType() {
             return TYPE;
+        }
+
+        @Override
+        public boolean isAssociation() {
+            return IS_ASSOC;
+        }
+
+        @Override
+        public List<CreateVariant> getCreateVariants() {
+            List<CreateVariant> variants = new ArrayList<>();
+            variants.add(CREATE_VARIANT);
+            return variants;
         }
     }
 }

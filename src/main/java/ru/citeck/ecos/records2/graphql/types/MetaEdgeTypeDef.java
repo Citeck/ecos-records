@@ -71,16 +71,29 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("type")
-                        .dataFetcher(this::getType)
+                        .dataFetcher(this::getEdgeType)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("distinct")
                         .dataFetcher(this::getDistinct)
                         .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("createVariants")
+                        .dataFetcher(this::getCreateVariants)
+                        .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("isAssoc")
+                        .dataFetcher(this::isAssociation)
+                        .type(Scalars.GraphQLBoolean))
                 .build();
     }
 
-    private String getType(DataFetchingEnvironment env) {
+    private boolean isAssociation(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.isAssociation();
+    }
+
+    private String getEdgeType(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         return edge.getType();
     }

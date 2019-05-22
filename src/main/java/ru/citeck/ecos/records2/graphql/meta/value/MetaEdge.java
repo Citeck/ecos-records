@@ -28,6 +28,10 @@ public interface MetaEdge {
         return null;
     }
 
+    default boolean isAssociation() {
+        return false;
+    }
+
     /**
      * Type of attribute.
      */

@@ -50,7 +50,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
     @Test
     void test() {
 
-        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type}";
+        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
@@ -60,6 +60,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
+        assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.path("name").asText());
 
@@ -124,6 +125,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         static String EDITOR_KEY = "editor key";
         static String TYPE = "_type_";
+        static boolean IS_ASSOC = true;
 
         static List<?> distinctVariants = Arrays.asList(
             "first",
@@ -176,6 +178,11 @@ public class MetaEdgeTest extends LocalRecordsDAO
         @Override
         public String getType() {
             return TYPE;
+        }
+
+        @Override
+        public boolean isAssociation() {
+            return IS_ASSOC;
         }
     }
 }

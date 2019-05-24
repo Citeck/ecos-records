@@ -1,9 +1,7 @@
 package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.predicate.PredicateService;
@@ -448,48 +446,91 @@ public class RecordsServiceImpl implements RecordsService {
     @Override
     public RecordsMutResult mutate(RecordsMutation mutation) {
 
-        for (RecordMeta record : mutation.getRecords()) {
+        Map<String, RecordRef> aliasToRecordRef = new HashMap<>();
+        RecordsMutResult result = new RecordsMutResult();
+
+        List<RecordMeta> records = mutation.getRecords();
+
+        for (int i = records.size() - 1; i >= 0; i--) {
+
+            RecordMeta record = records.get(i);
 
             ObjectNode attributes = JsonNodeFactory.instance.objectNode();
 
             record.forEach((name, value) -> {
 
+                String simpleName = name;
+
                 if (name.charAt(0) != '.') {
 
-                    int questionIdx = name.indexOf('?');
-                    if (questionIdx > 0) {
-                        name = name.substring(0, questionIdx);
-                    }
+                    int dotIdx = name.indexOf('.', 1);
 
-                    attributes.put(name, value);
+                    if (dotIdx > 0) {
+                        simpleName = name.substring(0, dotIdx);
+                    } else {
+                        int questionIdx = name.indexOf('?');
+                        if (questionIdx > 0) {
+                            simpleName = name.substring(0, questionIdx);
+                        }
+                    }
 
                 } else {
 
                     Matcher matcher = ATT_PATTERN.matcher(name);
                     if (matcher.matches()) {
-                        String attName = matcher.group(1);
-                        if (StringUtils.isNotBlank(attName)) {
-                            attributes.put(attName, value);
-                        }
+                        simpleName = matcher.group(1);
+                    } else {
+                        simpleName = null;
                     }
+                }
+
+                if (StringUtils.isNotBlank(simpleName)) {
+
+                    if (name.endsWith("?assoc") || name.endsWith("{assoc}")) {
+                        value = convertAssocValue(value, aliasToRecordRef);
+                    }
+
+                    attributes.put(simpleName, value);
                 }
             });
 
             record.setAttributes(attributes);
-        }
-
-        RecordsMutResult result = new RecordsMutResult();
-
-        RecordsUtils.groupMetaBySource(mutation.getRecords()).forEach((sourceId, records) -> {
 
             RecordsMutation sourceMut = new RecordsMutation();
             sourceMut.setRecords(records);
+            MutableRecordsDAO dao = needRecordsDAO(record.getId().getSourceId(), MutableRecordsDAO.class, mutableDAO);
+            RecordsMutResult recordMutResult = dao.mutate(sourceMut);
 
-            MutableRecordsDAO dao = needRecordsDAO(sourceId, MutableRecordsDAO.class, mutableDAO);
-            result.merge(dao.mutate(sourceMut));
-        });
+            if (i == 0) {
+                result.merge(recordMutResult);
+            }
+
+            List<RecordMeta> resultRecords = recordMutResult.getRecords();
+            for (RecordMeta resultMeta : resultRecords) {
+                String alias = record.get(RecordConstants.ATT_ALIAS, "");
+                if (StringUtils.isNotBlank(alias)) {
+                    aliasToRecordRef.put(alias, resultMeta.getId());
+                }
+            }
+        }
 
         return result;
+    }
+
+    private JsonNode convertAssocValue(JsonNode value, Map<String, RecordRef> mapping) {
+        if (value.isTextual()) {
+            String textValue = value.asText();
+            if (mapping.containsKey(textValue)) {
+                return TextNode.valueOf(mapping.get(textValue).toString());
+            }
+        } else if (value.isArray()) {
+            ArrayNode convertedValue = JsonNodeFactory.instance.arrayNode();
+            for (JsonNode node : value) {
+                convertedValue.add(convertAssocValue(node, mapping));
+            }
+            return convertedValue;
+        }
+        return value;
     }
 
     @Override

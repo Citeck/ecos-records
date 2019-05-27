@@ -33,7 +33,7 @@ public class RecordsMetaQueryTest {
 
         assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){disp}}", attributes.get("someatt"));
         assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
-        assertEquals(".edge(n:\"cm:field\"){options{title:disp,label:disp,value:str}}", attributes.get("options"));
+        assertEquals(".edge(n:\"cm:field\"){options{label:disp,value:str}}", attributes.get("options"));
         assertEquals(".att(n:\"cm:name\"){disp}", attributes.get("value0"));
         assertEquals(".att(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){disp}}", attributes.get("status"));
         assertEquals(".att(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("status1"));

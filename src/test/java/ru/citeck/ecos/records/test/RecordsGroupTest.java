@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.model.*;
+import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -35,6 +35,7 @@ class RecordsGroupTest extends LocalRecordsDAO
 
     private RecordsServiceImpl recordsService;
     private PredicateService predicateService;
+    private QueryLangService queryLangService;
 
     @BeforeAll
     void init() {
@@ -42,9 +43,10 @@ class RecordsGroupTest extends LocalRecordsDAO
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = (RecordsServiceImpl) factory.createRecordsService();
         predicateService = recordsService.getPredicateService();
+        queryLangService = recordsService.getQueryLangService();
 
-        recordsService.register(q -> q, "fts", RecordsService.LANGUAGE_PREDICATE);
-        recordsService.register(q -> q, RecordsService.LANGUAGE_PREDICATE, "fts");
+        queryLangService.register(q -> q, "fts", PredicateService.LANGUAGE_PREDICATE);
+        queryLangService.register(q -> q, PredicateService.LANGUAGE_PREDICATE, "fts");
 
         setId(SOURCE_ID);
         recordsService.register(this);

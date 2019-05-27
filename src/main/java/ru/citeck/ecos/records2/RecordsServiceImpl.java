@@ -9,6 +9,8 @@ import ru.citeck.ecos.predicate.model.AndPredicate;
 import ru.citeck.ecos.predicate.model.OrPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.model.Predicates;
+import ru.citeck.ecos.querylang.QueryLangService;
+import ru.citeck.ecos.querylang.QueryWithLang;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
@@ -31,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class RecordsServiceImpl implements RecordsService {
+public class RecordsServiceImpl extends AbstractRecordsService {
 
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_RECORDS_QUERY_TIME = "recordsQueryTimeMs";
@@ -49,12 +51,14 @@ public class RecordsServiceImpl implements RecordsService {
 
     private RecordsMetaService recordsMetaService;
     private PredicateService predicateService;
+    private QueryLangService queryLangService;
 
-    private Map<LangConvPair, QueryLangConverter> languageConverters = new ConcurrentHashMap<>();
-
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService, PredicateService predicateService) {
+    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
+                              PredicateService predicateService,
+                              QueryLangService queryLangService) {
         this.recordsMetaService = recordsMetaService;
         this.predicateService = predicateService;
+        this.queryLangService = queryLangService;
     }
 
     /* QUERY */
@@ -164,20 +168,20 @@ public class RecordsServiceImpl implements RecordsService {
     private List<JsonNode> getDistinctValues(String sourceId, DistinctQuery distinctQuery, int max, String schema) {
 
         RecordsQuery recordsQuery = new RecordsQuery();
-        recordsQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+        recordsQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
         recordsQuery.setSourceId(sourceId);
         recordsQuery.setMaxItems(max);
 
-        QueryWithLang queryWithLang = convertLanguage(distinctQuery.getQuery(),
-                                                      distinctQuery.getLanguage(),
-                                                      Collections.singletonList(RecordsService.LANGUAGE_PREDICATE));
+        Optional<JsonNode> query = queryLangService.convertLang(distinctQuery.getQuery(),
+                                                                distinctQuery.getLanguage(),
+                                                                PredicateService.LANGUAGE_PREDICATE);
 
-        if (queryWithLang == null) {
+        if (!query.isPresent()) {
             logger.error("Language " + distinctQuery.getLanguage() + " is not supported by Distinct Query");
             return Collections.emptyList();
         }
 
-        Predicate predicate = predicateService.readJson(queryWithLang.getQuery());
+        Predicate predicate = predicateService.readJson(query.get());
 
         OrPredicate distinctPredicate = Predicates.or(Predicates.empty(distinctQuery.getAttribute()));
         AndPredicate fullPredicate = Predicates.and(predicate, Predicates.not(distinctPredicate));
@@ -209,26 +213,6 @@ public class RecordsServiceImpl implements RecordsService {
         return new ArrayList<>(values);
     }
 
-    private QueryWithLang convertLanguage(JsonNode query, String language, List<String> required) {
-
-        if (required.contains(language)) {
-            return new QueryWithLang(query, language);
-        }
-
-        for (String prefLanguage : required) {
-
-            LangConvPair langConvKey = new LangConvPair(language, prefLanguage);
-            QueryLangConverter langConv = languageConverters.get(langConvKey);
-            JsonNode convertedQuery = langConv != null ? langConv.convert(query) : null;
-
-            if (convertedQuery != null) {
-                return new QueryWithLang(convertedQuery, prefLanguage);
-            }
-        }
-
-        return null;
-    }
-
     private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDAO dao) {
 
         if (dao == null) {
@@ -241,12 +225,13 @@ public class RecordsServiceImpl implements RecordsService {
             return recordsQuery;
         }
 
-        QueryWithLang queryWithLang = convertLanguage(recordsQuery.getQuery(),
-                                                      recordsQuery.getLanguage(),
-                                                      supportedLanguages);
+        Optional<QueryWithLang> queryWithLangOpt = queryLangService.convertLang(recordsQuery.getQuery(),
+                                                                                recordsQuery.getLanguage(),
+                                                                                supportedLanguages);
 
-        if (queryWithLang != null) {
+        if (queryWithLangOpt.isPresent()) {
             recordsQuery = new RecordsQuery(recordsQuery);
+            QueryWithLang queryWithLang = queryWithLangOpt.get();
             recordsQuery.setQuery(queryWithLang.getQuery());
             recordsQuery.setLanguage(queryWithLang.getLanguage());
             return recordsQuery;
@@ -335,12 +320,6 @@ public class RecordsServiceImpl implements RecordsService {
         }
 
         return records;
-    }
-
-    @Override
-    public JsonNode convertQueryLanguage(JsonNode query, String fromLang, String toLang) {
-        QueryLangConverter converter = languageConverters.get(new LangConvPair(fromLang, toLang));
-        return converter != null ? converter.convert(query) : null;
     }
 
     /* ATTRIBUTES */
@@ -549,11 +528,6 @@ public class RecordsServiceImpl implements RecordsService {
     /* OTHER */
 
     @Override
-    public Iterable<RecordRef> getIterableRecords(RecordsQuery query) {
-        return new IterableRecords(this, query);
-    }
-
-    @Override
     public void register(RecordsDAO recordsSource) {
 
         String id = recordsSource.getId();
@@ -577,10 +551,7 @@ public class RecordsServiceImpl implements RecordsService {
         }
     }
 
-    @Override
-    public void register(QueryLangConverter converter, String fromLang, String toLang) {
-        languageConverters.put(new LangConvPair(fromLang, toLang), converter);
-    }
+
 
     private <T extends RecordsDAO> void register(Map<String, T> map, Class<T> type, RecordsDAO value) {
         if (type.isAssignableFrom(value.getClass())) {
@@ -606,14 +577,6 @@ public class RecordsServiceImpl implements RecordsService {
         return meta;
     }
 
-    public PredicateService getPredicateService() {
-        return predicateService;
-    }
-
-    public RecordsMetaService getRecordsMetaService() {
-        return recordsMetaService;
-    }
-
     private Map<String, String> toAttributesMap(Collection<String> attributes) {
         Map<String, String> attributesMap = new HashMap<>();
         for (String attribute : attributes) {
@@ -637,51 +600,15 @@ public class RecordsServiceImpl implements RecordsService {
         return source.get();
     }
 
-    private static class LangConvPair {
-
-        private final String from;
-        private final String to;
-
-        LangConvPair(String from, String to) {
-            this.from = from;
-            this.to = to;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            LangConvPair langPair = (LangConvPair) o;
-            return Objects.equals(from, langPair.from)
-                && Objects.equals(to, langPair.to);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(from, to);
-        }
+    public PredicateService getPredicateService() {
+        return predicateService;
     }
 
-    private static class QueryWithLang {
+    public RecordsMetaService getRecordsMetaService() {
+        return recordsMetaService;
+    }
 
-        private final JsonNode query;
-        private final String language;
-
-        QueryWithLang(JsonNode query, String language) {
-            this.query = query;
-            this.language = language;
-        }
-
-        JsonNode getQuery() {
-            return query;
-        }
-
-        String getLanguage() {
-            return language;
-        }
+    public QueryLangService getQueryLangService() {
+        return queryLangService;
     }
 }

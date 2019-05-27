@@ -6,6 +6,8 @@ import ru.citeck.ecos.predicate.model.Predicate;
 
 public interface PredicateService {
 
+    String LANGUAGE_PREDICATE = "predicate";
+
     Predicate readJson(JsonNode predicate);
 
     Predicate readJson(String predicate);

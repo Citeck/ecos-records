@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.source.common.group;
 
+import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.model.AndPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.model.Predicates;
-import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
@@ -107,7 +107,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
         attributes.forEach((att, val) -> groupPredicate.addPredicate(Predicates.equal(att, val.getValue())));
 
         groupQuery.setQuery(predicateService.writeJson(groupPredicate));
-        groupQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+        groupQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
         return new RecordsGroup(groupQuery, attributes, groupPredicate, recordsService);
     }
@@ -119,7 +119,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
 
         DistinctQuery distinctQuery = new DistinctQuery();
 
-        distinctQuery.setLanguage(RecordsService.LANGUAGE_PREDICATE);
+        distinctQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
         distinctQuery.setQuery(predicateService.writeJson(predicate));
         distinctQuery.setAttribute(attribute);
 
@@ -133,7 +133,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
 
     @Override
     public List<String> getSupportedLanguages() {
-        return Collections.singletonList(RecordsService.LANGUAGE_PREDICATE);
+        return Collections.singletonList(PredicateService.LANGUAGE_PREDICATE);
     }
 }
 

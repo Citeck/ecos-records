@@ -362,6 +362,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 case "distinct":
                     inner = "{label:disp,value:str}";
                     break;
+                case "createVariants":
+                    inner = "{json}";
+                    break;
                 default:
                     inner = "";
             }

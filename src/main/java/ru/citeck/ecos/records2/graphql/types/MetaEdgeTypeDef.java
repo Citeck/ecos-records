@@ -78,10 +78,21 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::getDistinct)
                         .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("createVariants")
+                        .dataFetcher(this::getCreateVariants)
+                        .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("isAssoc")
                         .dataFetcher(this::isAssociation)
                         .type(Scalars.GraphQLBoolean))
                 .build();
+    }
+
+    private List<MetaValue> getCreateVariants(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return metaValueTypeDef.getAsMetaValues(edge.getCreateVariants(),
+                                                env.getContext(),
+                                                new MetaFieldImpl(env.getField()));
     }
 
     private boolean isAssociation(DataFetchingEnvironment env) {

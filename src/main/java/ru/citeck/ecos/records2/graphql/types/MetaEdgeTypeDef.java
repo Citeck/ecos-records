@@ -88,6 +88,13 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                 .build();
     }
 
+    private List<MetaValue> getCreateVariants(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return metaValueTypeDef.getAsMetaValues(edge.getCreateVariants(),
+                                                env.getContext(),
+                                                new MetaFieldImpl(env.getField()));
+    }
+
     private boolean isAssociation(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         return edge.isAssociation();

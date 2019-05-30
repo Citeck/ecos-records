@@ -18,9 +18,10 @@ import java.util.List;
 
 public class RecordsServiceFactory {
 
+    private RecordsService recordsService;
+
     public RecordsService createRecordsService() {
-        RecordsServiceImpl recordsService = new RecordsServiceImpl(createRecordsMetaService(),
-                                                                   createPredicateService());
+        recordsService = new RecordsServiceImpl(createRecordsMetaService(), createPredicateService());
         recordsService.register(new RecordsGroupDAO());
         return recordsService;
     }
@@ -34,7 +35,7 @@ public class RecordsServiceFactory {
     }
 
     public RecordsMetaGql createRecordsMetaGraphQL() {
-        return new RecordsMetaGql(getGqlTypes(), GqlContext::new);
+        return new RecordsMetaGql(getGqlTypes(), () -> new GqlContext(recordsService));
     }
 
     protected List<GqlTypeDefinition> getGqlTypes() {

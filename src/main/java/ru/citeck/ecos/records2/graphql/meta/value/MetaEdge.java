@@ -20,6 +20,10 @@ public interface MetaEdge {
         return null;
     }
 
+    default List<CreateVariant> getCreateVariants() {
+        return null;
+    }
+
     default Class<?> getJavaClass() {
         return Object.class;
     }

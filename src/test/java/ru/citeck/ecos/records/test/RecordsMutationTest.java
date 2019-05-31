@@ -24,6 +24,8 @@ public class RecordsMutationTest extends LocalRecordsDAO
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
 
+    private static final String ALIAS_VALUE = "ALIAS";
+
     private RecordsService recordsService;
 
     private Map<RecordRef, TestDto> valuesToMutate;
@@ -106,11 +108,11 @@ public class RecordsMutationTest extends LocalRecordsDAO
         RecordRef innerRef = RecordRef.create(SOURCE_ID, "newInner");
 
         RecordMeta newInner = new RecordMeta(innerRef);
-        newInner.set(RecordConstants.ATT_ALIAS, "ALIAS123");
-        newWithInner.set(".att(n:\"assoc0\"){assoc}", "ALIAS123");
-        newWithInner.set(".atts(n:\"assoc1\"){assoc}", "ALIAS123");
+        newInner.set(RecordConstants.ATT_ALIAS, ALIAS_VALUE);
+        newWithInner.set(".att(n:\"assoc0\"){assoc}", ALIAS_VALUE);
+        newWithInner.set(".atts(n:\"assoc1\"){assoc}", ALIAS_VALUE);
         ArrayNode innerArrayNode = JsonNodeFactory.instance.arrayNode();
-        innerArrayNode.add("ALIAS123");
+        innerArrayNode.add(ALIAS_VALUE);
         newWithInner.set("assocArr?assoc", innerArrayNode);
 
         mutation = new RecordsMutation();
@@ -128,6 +130,22 @@ public class RecordsMutationTest extends LocalRecordsDAO
 
         assertEquals(1, withInnerDto.getAssocArr().size());
         assertEquals(newInnerRef, withInnerDto.getAssocArr().get(0));
+    }
+
+    @Override
+    public RecordsMutResult mutate(RecordsMutation mutation) {
+
+        for (RecordMeta meta : mutation.getRecords()) {
+            meta.forEach((name, value) -> {
+                assertFalse(name.startsWith("."));
+                assertFalse(name.contains("?"));
+                if (!RecordConstants.ATT_ALIAS.equals(name)) {
+                    assertNotEquals(ALIAS_VALUE, value.asText());
+                }
+            });
+        }
+
+        return super.mutate(mutation);
     }
 
     @Override

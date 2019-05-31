@@ -497,7 +497,7 @@ public class RecordsServiceImpl implements RecordsService {
             record.setAttributes(attributes);
 
             RecordsMutation sourceMut = new RecordsMutation();
-            sourceMut.setRecords(records);
+            sourceMut.setRecords(Collections.singletonList(record));
             MutableRecordsDAO dao = needRecordsDAO(record.getId().getSourceId(), MutableRecordsDAO.class, mutableDAO);
             RecordsMutResult recordMutResult = dao.mutate(sourceMut);
 

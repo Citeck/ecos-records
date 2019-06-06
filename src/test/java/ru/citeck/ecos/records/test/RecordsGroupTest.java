@@ -42,8 +42,8 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = (RecordsServiceImpl) factory.createRecordsService();
-        predicateService = recordsService.getPredicateService();
-        queryLangService = recordsService.getQueryLangService();
+        predicateService = factory.getPredicateService();
+        queryLangService = factory.getQueryLangService();
 
         queryLangService.register(q -> q, "fts", PredicateService.LANGUAGE_PREDICATE);
         queryLangService.register(q -> q, PredicateService.LANGUAGE_PREDICATE, "fts");

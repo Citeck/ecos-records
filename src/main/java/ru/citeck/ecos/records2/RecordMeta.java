@@ -1,10 +1,12 @@
 package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -15,6 +17,11 @@ public class RecordMeta {
     private ObjectNode attributes = JsonNodeFactory.instance.objectNode();
 
     public RecordMeta() {
+    }
+
+    public RecordMeta(RecordMeta other, RecordRef id) {
+        setId(id);
+        setAttributes(other.getAttributes());
     }
 
     public RecordMeta(RecordMeta other, Function<RecordRef, RecordRef> idMapper) {
@@ -55,14 +62,6 @@ public class RecordMeta {
         return attributes;
     }
 
-    public JsonNode get(String name) {
-        return getAttribute(name);
-    }
-
-    public JsonNode getAttribute(String name) {
-        return attributes.path(name);
-    }
-
     public boolean has(String name) {
         return hasAttribute(name);
     }
@@ -72,8 +71,16 @@ public class RecordMeta {
         return !isEmpty(att);
     }
 
+    public JsonNode get(String name) {
+        return getAttribute(name);
+    }
+
     public <T> T get(String name, T orElse) {
         return getAttribute(name, orElse);
+    }
+
+    public JsonNode getAttribute(String name) {
+        return attributes.path(name);
     }
 
     public <T> T getAttribute(String name, T orElse) {
@@ -116,7 +123,23 @@ public class RecordMeta {
         setAttribute(name, value);
     }
 
+    public void set(String name, Boolean value) {
+        setAttribute(name, value);
+    }
+
+    public void set(String name, JsonNode value) {
+        setAttribute(name, value);
+    }
+
     public void setAttribute(String name, String value) {
+        attributes.put(name, value);
+    }
+
+    public void setAttribute(String name, Boolean value) {
+        attributes.put(name, value);
+    }
+
+    public void setAttribute(String name, JsonNode value) {
         attributes.put(name, value);
     }
 
@@ -134,9 +157,27 @@ public class RecordMeta {
 
     @Override
     public String toString() {
-        return "{" +
-                "\"id\":\"" + id +
-                "\", \"attributes\":" + attributes +
-                '}';
+        return "{"
+                + "\"id\":\"" + id
+                + "\", \"attributes\":" + attributes
+            + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RecordMeta that = (RecordMeta) o;
+        return Objects.equals(id, that.id)
+            && Objects.equals(attributes, that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, attributes);
     }
 }

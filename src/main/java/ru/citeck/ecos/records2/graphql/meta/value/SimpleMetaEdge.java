@@ -16,7 +16,7 @@ public class SimpleMetaEdge implements MetaEdge {
     }
 
     @Override
-    public Object getValue() throws Exception {
-        return scope.getAttribute(getName());
+    public Object getValue(MetaField field) throws Exception {
+        return scope.getAttribute(getName(), field);
     }
 }

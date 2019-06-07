@@ -1,12 +1,17 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -14,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class BeanValueFactory implements MetaValueFactory<Object> {
+
+    private static final Log logger = LogFactory.getLog(BeanValueFactory.class);
 
     @Override
     public MetaValue getValue(Object value) {
@@ -28,6 +35,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
     static class Value implements MetaValue {
 
         private final Object bean;
+        private String displayName;
 
         Value(Object bean) {
             this.bean = bean;
@@ -44,18 +52,69 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
+        public String getDisplayName() {
+
+            if (displayName != null) {
+                return displayName;
+            }
+
+            PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(bean);
+
+            for (PropertyDescriptor descriptor : descriptors) {
+
+                Method readMethod = descriptor.getReadMethod();
+                if (readMethod != null) {
+                    DisplayName annotation = readMethod.getAnnotation(DisplayName.class);
+                    if (annotation != null) {
+                        try {
+                            if (!String.class.equals(readMethod.getReturnType())) {
+                                throw new IllegalStateException("DisplayName getter should return "
+                                                                + "String value. bean: "  + bean);
+                            }
+                            if (readMethod.getParameters().length != 0) {
+                                throw new IllegalStateException("DisplayName getter should not "
+                                                                + "receive any parameters. bean: " + bean);
+                            }
+                            displayName = (String) readMethod.invoke(bean);
+                            break;
+                        } catch (Exception e) {
+                            logger.error("Can't get DisplayName", e);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (displayName == null) {
+                displayName = getString();
+            }
+
+            return displayName;
+        }
+
+        @Override
         public String getString() {
             return bean.toString();
         }
 
         @Override
-        public Object getAttribute(String name) throws Exception {
-            return PropertyUtils.getProperty(bean, name);
+        public Object getAttribute(String name, MetaField field) throws Exception {
+            try {
+                return PropertyUtils.getProperty(bean, name);
+            } catch (NoSuchMethodException e) {
+                logger.debug("Property not found", e);
+            }
+            return null;
         }
 
         @Override
         public boolean has(String name) throws Exception {
-            return PropertyUtils.getPropertyDescriptor(bean, name) != null;
+            try {
+                return PropertyUtils.getPropertyDescriptor(bean, name) != null;
+            } catch (NoSuchMethodException e) {
+                logger.debug("Property not found", e);
+            }
+            return false;
         }
 
         @Override
@@ -68,7 +127,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public MetaEdge getEdge(String name) {
+        public MetaEdge getEdge(String name, MetaField field) {
             return new BeanEdge(name, this);
         }
     }
@@ -93,6 +152,10 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
             PropertyDescriptor descriptor = getDescriptor();
 
+            if (descriptor == null) {
+                return null;
+            }
+
             Class<?> type = descriptor.getPropertyType();
 
             if (Collection.class.isAssignableFrom(type)) {
@@ -113,7 +176,9 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             if (descriptor == null) {
                 try {
                     descriptor = PropertyUtils.getPropertyDescriptor(bean, getName());
-                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                } catch (NoSuchMethodException e) {
+                    logger.debug("Descriptor not found", e);
+                } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }

@@ -44,10 +44,10 @@ public class DistinctQuery {
 
     @Override
     public String toString() {
-        return "DistinctQuery{" +
-            "attribute='" + attribute + '\'' +
-            ", query=" + query +
-            ", language='" + language + '\'' +
-            '}';
+        return "DistinctQuery{"
+            + "attribute='" + attribute + '\''
+            + ", query=" + query
+            + ", language='" + language + '\''
+            + '}';
     }
 }

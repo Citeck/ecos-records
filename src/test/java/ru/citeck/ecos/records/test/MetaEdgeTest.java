@@ -8,7 +8,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -23,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaEdgeTest extends LocalRecordsDAO
-                           implements RecordsMetaLocalDAO<Object> {
+                          implements RecordsMetaLocalDAO<Object> {
 
     private static final String SOURCE_ID = "test-source";
     private static final String EDGE_FIELD_NAME = "test00";
@@ -48,26 +50,61 @@ public class MetaEdgeTest extends LocalRecordsDAO
     @Test
     void test() {
 
-        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass}";
+        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
         RecordMeta meta = result.getRecords().get(0);
-        assertEquals(EDGE_FIELD_NAME, meta.get("edge").path("name").asText());
+
+        JsonNode edgeNode = meta.get("edge");
+
+        assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
+        assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
+
+        assertEquals(EDGE_FIELD_NAME, edgeNode.path("name").asText());
 
         List<String> distinctVars = new ArrayList<>();
-        for (JsonNode value : meta.get("edge").get("distinct")) {
+        for (JsonNode value : edgeNode.get("distinct")) {
             distinctVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.distinctVariants, distinctVars);
 
         List<String> optionsVars = new ArrayList<>();
-        for (JsonNode value : meta.get("edge").get("options")) {
+        for (JsonNode value : edgeNode.get("options")) {
             optionsVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.optionsVariants, optionsVars);
 
-        assertEquals(String.class.getName(), meta.get("edge").get("javaClass").asText());
+        assertEquals(String.class.getName(), edgeNode.get("javaClass").asText());
+
+        RecordsResult<JavaClassDto> classMeta = recordsService.getMeta(records, JavaClassDto.class);
+        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass());
+        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass2());
+    }
+
+    public static class JavaClassDto {
+
+        @MetaAtt(".edge(n:'test'){javaClass}")
+        private Class<?> javaClass;
+
+        @MetaAtt("#test?javaClass")
+        private Class<?> javaClass2;
+
+        public Class<?> getJavaClass2() {
+            return javaClass2;
+        }
+
+        public void setJavaClass2(Class<?> javaClass2) {
+            this.javaClass2 = javaClass2;
+        }
+
+        public Class<?> getJavaClass() {
+            return javaClass;
+        }
+
+        public void setJavaClass(Class<?> javaClass) {
+            this.javaClass = javaClass;
+        }
     }
 
     public static class MetaTestVal implements MetaValue {
@@ -78,12 +115,15 @@ public class MetaEdgeTest extends LocalRecordsDAO
         }
 
         @Override
-        public MetaEdge getEdge(String name) {
+        public MetaEdge getEdge(String name, MetaField field) {
             return new MetaTestEdge(name);
         }
     }
 
     public static class MetaTestEdge implements MetaEdge {
+
+        static String EDITOR_KEY = "editor key";
+        static String TYPE = "_type_";
 
         static List<?> distinctVariants = Arrays.asList(
             "first",
@@ -109,7 +149,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
         }
 
         @Override
-        public Object getValue() {
+        public Object getValue(MetaField field) {
             return new MetaTestVal();
         }
 
@@ -126,6 +166,16 @@ public class MetaEdgeTest extends LocalRecordsDAO
         @Override
         public Class<?> getJavaClass() {
             return String.class;
+        }
+
+        @Override
+        public String getEditorKey() {
+            return EDITOR_KEY;
+        }
+
+        @Override
+        public String getType() {
+            return TYPE;
         }
     }
 }

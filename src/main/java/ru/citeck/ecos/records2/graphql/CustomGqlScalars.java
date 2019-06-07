@@ -13,9 +13,13 @@ import java.util.Map;
 
 public class CustomGqlScalars {
 
-    public static GraphQLScalarType JSON_NODE = new GraphQLScalarType("JsonNode",
-                                                                "Json node scalar",
-                                                                        new Coercing<JsonNode, JsonNode>() {
+    public static final GraphQLScalarType JSON_NODE =  new GraphQLScalarType(
+            "JsonNode",
+            "Json node scalar",
+            new JsonNodeCoercing()
+    );
+
+    private static class JsonNodeCoercing implements Coercing<JsonNode, JsonNode> {
 
         private ObjectMapper mapper = new ObjectMapper();
 
@@ -92,7 +96,7 @@ public class CustomGqlScalars {
                 }
 
                 throw new CoercingParseLiteralException(
-                        "Variable value type is not supported: '" + typeName(value) + "'.");
+                    "Variable value type is not supported: '" + typeName(value) + "'.");
             }
             if (input instanceof ArrayValue) {
                 List<Value> values = ((ArrayValue) input).getValues();
@@ -112,7 +116,7 @@ public class CustomGqlScalars {
 
             throw new CoercingParseLiteralException("Type is not supported: '" + typeName(input) + "'.");
         }
-    });
+    }
 
     private static String typeName(Object input) {
         if (input == null) {

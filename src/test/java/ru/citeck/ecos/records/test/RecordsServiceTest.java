@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -91,7 +92,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         RecordsQuery query = new RecordsQuery();
         query.setSourceId("unknown-id");
 
-        RecordsQueryResult<RecordRef> records = recordsService.getRecords(query);
+        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
@@ -110,7 +111,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         query.setQuery(objectMapper.writeValueAsString(daoQuery));
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<RecordRef> records = recordsService.getRecords(query);
+        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
         List<RecordRef> recordsRefs = records.getRecords();
 
         assertEquals(ids.size(), recordsRefs.size());
@@ -198,7 +199,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         query.setQuery(exactIdsQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<JournalListInfo> records = recordsService.getRecords(query, JournalListInfo.class);
+        RecordsQueryResult<JournalListInfo> records = recordsService.queryRecords(query, JournalListInfo.class);
         assertEquals(1, records.getTotalCount());
 
         List<JournalInfo> journals = records.getRecords().get(0).getJournals();
@@ -209,6 +210,14 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         assertEquals("SecondName", journals.get(1).getName());
         assertEquals("SecondTitle", journals.get(1).getTitle());
+    }
+
+    @Test
+    void testDisplayName() {
+
+        JsonNode dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
+
+        assertEquals(TextNode.valueOf(PojoMeta.DISPLAY_NAME), dispValue);
     }
 
     public static class JournalInfo {
@@ -358,6 +367,8 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
     public static class PojoMeta {
 
+        static final String DISPLAY_NAME = "DISP_NAME_TEST";
+
         public static String STR_FIELD_0_POSTFIX = "str0";
         public static String STR_FIELD_1_POSTFIX = "str1";
 
@@ -402,6 +413,11 @@ public class RecordsServiceTest extends LocalRecordsDAO
             attributes.put("name", "SecondName");
             attributes.put("title", "SecondTitle");
             journals.add(attributes);
+        }
+
+        @DisplayName
+        public String getDisplay() {
+            return DISPLAY_NAME;
         }
 
         public List<Map<String, String>> getJournals() {

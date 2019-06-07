@@ -43,4 +43,9 @@ public class AndPredicate extends ComposedPredicate {
         }
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

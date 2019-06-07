@@ -14,8 +14,8 @@ import ru.citeck.ecos.records2.source.dao.AbstractRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDAO;
-import ru.citeck.ecos.records2.utils.RecordsUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +34,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
     private String remoteSourceId = "";
 
     @Override
-    public RecordsRefsQueryResult getRecords(RecordsQuery query) {
+    public RecordsRefsQueryResult queryRecords(RecordsQuery query) {
 
         QueryBody request = new QueryBody();
 
@@ -60,7 +60,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String metaSchema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
 
         QueryBody request = new QueryBody();
 
@@ -99,7 +99,13 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
         request.setRecords(recordsRefs);
 
         RecordsMetaResult nodesResult = restConnection.jsonPost(recordsMethod, request, RecordsMetaResult.class);
-        List<RecordMeta> meta = RecordsUtils.convertToRefs(getId(), nodesResult.getRecords());
+
+        List<RecordMeta> restResultRecords = nodesResult.getRecords();
+        List<RecordMeta> meta = new ArrayList<>();
+        for (int i = 0; i < records.size(); i++) {
+            meta.add(new RecordMeta(restResultRecords.get(i), records.get(i)));
+        }
+
         nodesResult.setRecords(meta);
 
         return nodesResult;

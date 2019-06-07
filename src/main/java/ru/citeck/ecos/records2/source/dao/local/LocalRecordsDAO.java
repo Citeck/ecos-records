@@ -4,17 +4,17 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
-import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.predicate.PredicateService;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,10 +22,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Local records DAO
+ * Local records DAO.
  *
- * Extend this DAO if your data located in the same alfresco instance (when you don't want to execute graphql query remotely)
- * Important: This class implement only RecordsDAO. All other interfaces should be implemented in children classes
+ * <p>
+ * Extend this DAO if your data located in the same alfresco instance
+ * (when you don't want to execute graphql query remotely)
+ * Important: This class implement only RecordsDAO.
+ * All other interfaces should be implemented in children classes
+ * </p>
  *
  * @see RecordsQueryDAO
  * @see RecordsMetaDAO
@@ -35,11 +39,16 @@ import java.util.stream.Collectors;
  * @author Pavel Simonov
  */
 @SuppressWarnings("unchecked")
-public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware {
+public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware,
+                                                                            RecordsServiceAware,
+                                                                            PredicateServiceAware {
 
     private static final Log logger = LogFactory.getLog(LocalRecordsDAO.class);
 
+    protected RecordsService recordsService;
+    protected PredicateService predicateService;
     protected RecordsMetaService recordsMetaService;
+
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     private boolean addSourceId = true;
@@ -81,12 +90,12 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             return mutableDao.save(values);
         }
 
-        logger.warn("[" + getId() + "] RecordsDAO doesn't implement MutableRecordsLocalDAO");
+        writeWarn("RecordsDAO doesn't implement MutableRecordsLocalDAO");
 
         return new RecordsMutResult();
     }
 
-    public RecordsQueryResult<RecordRef> getRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
         if (this instanceof RecordsQueryLocalDAO) {
 
@@ -98,14 +107,19 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             }
             return localRecords;
 
-        } else {
+        } else if (this instanceof RecordsQueryWithMetaLocalDAO) {
 
-            RecordsQueryResult<RecordMeta> records = getRecords(query, "id");
+            RecordsQueryResult<RecordMeta> records = queryRecords(query, "id");
             return new RecordsQueryResult<>(records, RecordMeta::getId);
         }
+
+        writeWarn("RecordsDAO doesn't implement neither "
+                  + "RecordsQueryLocalDAO nor RecordsQueryWithMetaLocalDAO");
+
+        return new RecordsQueryResult<>();
     }
 
-    public RecordsQueryResult<RecordMeta> getRecords(RecordsQuery query, String metaSchema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
 
         RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
@@ -119,8 +133,9 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
             if (values != null) {
 
-                queryResult.setTotalCount(values.getTotalCount());
+                queryResult.merge(values);
                 queryResult.setHasMore(values.getHasMore());
+                queryResult.setTotalCount(values.getTotalCount());
 
                 for (Object record : values.getRecords()) {
                     if (record instanceof RecordRef) {
@@ -130,13 +145,13 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
                     }
                 }
             } else {
-                logger.warn("[" + getId() + "] getMetaValues(query) return null");
+                writeWarn("getMetaValues(query) return null");
             }
 
         } else if (this instanceof RecordsQueryDAO) {
 
             RecordsQueryDAO recordsQueryDAO = (RecordsQueryDAO) this;
-            RecordsQueryResult<RecordRef> records = recordsQueryDAO.getRecords(query);
+            RecordsQueryResult<RecordRef> records = recordsQueryDAO.queryRecords(query);
             queryResult.merge(records);
             queryResult.setHasMore(records.getHasMore());
             queryResult.setTotalCount(records.getTotalCount());
@@ -148,13 +163,13 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
             if (this instanceof RecordsMetaLocalDAO) {
                 RecordsMetaLocalDAO metaDao = (RecordsMetaLocalDAO) this;
                 rawMetaValues.addAll(metaDao.getMetaValues(recordRefs));
-            } if (this instanceof RecordsMetaDAO) {
+            } else if (this instanceof RecordsMetaDAO) {
                 RecordsMetaDAO metaDao = (RecordsMetaDAO) this;
                 RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
                 queryResult.merge(meta);
             } else {
-                logger.warn("[" + getId() + "] RecordsDAO implements neither " +
-                            "RecordsMetaLocalDAO nor RecordsMetaDAO. We can't receive metadata");
+                writeWarn("RecordsDAO implements neither RecordsMetaLocalDAO "
+                          + "nor RecordsMetaDAO. We can't receive metadata");
                 recordRefs.stream().map(RecordMeta::new).forEach(queryResult::addRecord);
             }
         }
@@ -177,14 +192,14 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         if (this instanceof RecordsMetaLocalDAO) {
 
             RecordsMetaLocalDAO metaLocalDao = (RecordsMetaLocalDAO) this;
-            List<?> metaValues = metaLocalDao.getMetaValues(addSourceId ?
-                    RecordsUtils.toLocalRecords(records) : records);
+
+            List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
+            List<?> metaValues = metaLocalDao.getMetaValues(localRecords);
             result = recordsMetaService.getMeta(metaValues, metaSchema);
 
         } else {
 
-            logger.warn("[" + getId() + "] RecordsDAO doesn't implement " +
-                        "RecordsMetaLocalDAO. We can't receive metadata");
+            writeWarn("RecordsDAO doesn't implement RecordsMetaLocalDAO. We can't receive metadata");
 
             result = new RecordsResult<>();
             records.stream().map(RecordMeta::new).forEach(result::addRecord);
@@ -197,7 +212,27 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
         return result;
     }
 
+    protected void writeWarn(String msg) {
+        logger.warn(toString() + ": " + msg);
+    }
+
+    @Override
     public void setRecordsMetaService(RecordsMetaService recordsMetaService) {
         this.recordsMetaService = recordsMetaService;
+    }
+
+    @Override
+    public void setRecordsService(RecordsService recordsService) {
+        this.recordsService = recordsService;
+    }
+
+    @Override
+    public void setPredicateService(PredicateService predicateService) {
+        this.predicateService = predicateService;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + getId() + "](" + getClass().getName() + "@" + Integer.toHexString(hashCode()) + ")";
     }
 }

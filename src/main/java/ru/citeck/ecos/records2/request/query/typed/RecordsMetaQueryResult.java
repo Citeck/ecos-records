@@ -5,7 +5,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
 /**
- * Used to deserialize query result with RecordRefs
+ * Used to deserialize query result with RecordRefs.
  */
 public class RecordsMetaQueryResult extends RecordsQueryResult<RecordMeta> {
 

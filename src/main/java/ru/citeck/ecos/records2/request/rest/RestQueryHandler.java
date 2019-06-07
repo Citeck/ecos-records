@@ -2,12 +2,9 @@ package ru.citeck.ecos.records2.request.rest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class RestQueryHandler {
 
@@ -22,12 +19,12 @@ public class RestQueryHandler {
     public Object queryRecords(QueryBody body) {
 
         if (body.getQuery() != null && body.getRecords() != null) {
-            logger.warn("There must be one of 'records' or 'query' field " +
-                        "but found both. 'records' field will be ignored");
+            logger.warn("There must be one of 'records' or 'query' field "
+                        + "but found both. 'records' field will be ignored");
         }
         if (body.getAttributes() != null && body.getSchema() != null) {
-            logger.warn("There must be one of 'attributes' or 'schema' field " +
-                        "but found both. 'schema' field will be ignored");
+            logger.warn("There must be one of 'attributes' or 'schema' field "
+                        + "but found both. 'schema' field will be ignored");
         }
 
         RecordsResult<?> recordsResult;
@@ -36,15 +33,15 @@ public class RestQueryHandler {
 
             if (body.getAttributes() != null) {
 
-                recordsResult = recordsService.getRecords(body.getQuery(), getAttributes(body));
+                recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
 
             } else if (body.getSchema() != null) {
 
-                recordsResult = recordsService.getRecords(body.getQuery(), body.getSchema());
+                recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
 
             } else {
 
-                recordsResult = recordsService.getRecords(body.getQuery());
+                recordsResult = recordsService.queryRecords(body.getQuery());
             }
         } else {
 
@@ -61,37 +58,29 @@ public class RestQueryHandler {
 
             } else {
 
-                recordsResult = recordsService.getAttributes(body.getRecords(), getAttributes(body));
+                recordsResult = recordsService.getAttributes(body.getRecords(), body.getAttributes());
             }
         }
 
         if (body.isSingleRecord()) {
-            return recordsResult.getRecords()
-                                .stream()
-                                .findFirst()
-                                .orElseThrow(() -> new IllegalStateException("Records is empty"));
+
+            Object record = recordsResult.getRecords()
+                                         .stream()
+                                         .findFirst()
+                                         .orElseThrow(() -> new IllegalStateException("Records is empty"));
+
+            if (body.isSingleAttribute() && record instanceof RecordMeta) {
+
+                RecordMeta meta = (RecordMeta) record;
+                return meta.get(QueryBody.SINGLE_ATT_KEY);
+
+            } else {
+
+                return record;
+            }
         }
 
         return recordsResult;
     }
 
-    private Map<String, String> getAttributes(QueryBody body) {
-
-        Map<String, String> result = new HashMap<>();
-
-        if (body.getAttributes().isArray()) {
-            for (int i = 0; i < body.getAttributes().size(); i++) {
-                String field = body.getAttributes().get(i).asText();
-                result.put(field, field);
-            }
-        } else {
-            Iterator<String> names = body.getAttributes().fieldNames();
-            while (names.hasNext()) {
-                String fieldKey = names.next();
-                result.put(fieldKey, body.getAttributes().get(fieldKey).asText());
-            }
-        }
-
-        return result;
-    }
 }

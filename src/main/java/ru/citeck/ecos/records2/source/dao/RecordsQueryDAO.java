@@ -4,8 +4,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
-public interface RecordsQueryDAO extends RecordsDAO {
+public interface RecordsQueryDAO extends RecordsQueryBaseDAO {
 
-    RecordsQueryResult<RecordRef> getRecords(RecordsQuery query);
-
+    RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 }

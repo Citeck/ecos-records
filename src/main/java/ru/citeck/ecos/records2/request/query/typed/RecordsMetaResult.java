@@ -4,7 +4,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 /**
- * Used to deserialize records meta result
+ * Used to deserialize records meta result.
  */
 public class RecordsMetaResult extends RecordsResult<RecordMeta> {
 

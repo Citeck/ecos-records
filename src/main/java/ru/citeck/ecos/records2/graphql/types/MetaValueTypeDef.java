@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
+ * MetaValue GraphQL type definition.
+ *
  * @author Pavel Simonov
  */
 @SuppressWarnings("unchecked")
@@ -146,11 +148,14 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         return getAtts(env).stream().findFirst().orElse(null);
     }
 
-    public List<MetaValue> getAsMetaValues(Object rawValue, GqlContext context) {
-        return getAsMetaValues(rawValue, context, false);
+    public List<MetaValue> getAsMetaValues(Object rawValue, GqlContext context, MetaField metaField) {
+        return getAsMetaValues(rawValue, context, metaField, false);
     }
 
-    public List<MetaValue> getAsMetaValues(Object rawValue, GqlContext context, boolean forceInit) {
+    public List<MetaValue> getAsMetaValues(Object rawValue,
+                                           GqlContext context,
+                                           MetaField metaField,
+                                           boolean forceInit) {
 
         List<Object> result;
 
@@ -184,16 +189,19 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         }
 
         return result.stream()
-                     .map(v -> getAsMetaValue(v, context, forceInit))
+                     .map(v -> getAsMetaValue(v, context, metaField, forceInit))
                      .collect(Collectors.toList());
     }
 
-    private MetaValue getAsMetaValue(Object value, GqlContext context, boolean forceInit) {
+    private MetaValue getAsMetaValue(Object value,
+                                     GqlContext context,
+                                     MetaField metaField,
+                                     boolean forceInit) {
 
         if (value instanceof MetaValue) {
             MetaValue metaValue = (MetaValue) value;
             if (forceInit) {
-                metaValue.init(context);
+                metaValue.init(context, metaField);
             }
             return metaValue;
         }
@@ -204,7 +212,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         }
 
         MetaValue metaValue = factory.getValue(value);
-        metaValue.init(context);
+        metaValue.init(context, metaField);
 
         return metaValue;
     }
@@ -216,7 +224,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
 
         try {
             MetaField metaField = new MetaFieldImpl(env.getField());
-            return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext());
+            return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext(), metaField);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

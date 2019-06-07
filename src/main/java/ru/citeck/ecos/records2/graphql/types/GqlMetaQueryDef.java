@@ -5,6 +5,7 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import ru.citeck.ecos.records2.graphql.GqlContext;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.util.List;
@@ -30,7 +31,9 @@ public class GqlMetaQueryDef implements GqlTypeDefinition {
 
     private List<MetaValue> values(DataFetchingEnvironment env) {
         GqlContext context = env.getContext();
-        return metaValueTypeDef.getAsMetaValues(context.getMetaValues(), context, true);
+        return metaValueTypeDef.getAsMetaValues(context.getMetaValues(),
+                                                context,
+                                                new MetaFieldImpl(env.getField()), true);
     }
 
     public void setMetaValueTypeDef(MetaValueTypeDef metaValueTypeDef) {

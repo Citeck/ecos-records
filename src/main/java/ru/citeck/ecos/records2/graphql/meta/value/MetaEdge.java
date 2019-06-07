@@ -24,6 +24,17 @@ public interface MetaEdge {
         return Object.class;
     }
 
+    default String getEditorKey() {
+        return null;
+    }
+
+    /**
+     * Type of attribute.
+     */
+    default String getType() {
+        return null;
+    }
+
     default String getTitle() {
         return getName();
     }
@@ -34,5 +45,5 @@ public interface MetaEdge {
 
     String getName();
 
-    Object getValue() throws Exception;
+    Object getValue(MetaField field) throws Exception;
 }

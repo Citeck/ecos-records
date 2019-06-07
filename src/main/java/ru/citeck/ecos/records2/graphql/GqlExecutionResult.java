@@ -11,10 +11,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static java.util.stream.Collectors.toList;
+import java.util.stream.Collectors;
 
 /**
+ * GraphQL execution result.
+ *
  * @author Pavel Simonov
  */
 public class GqlExecutionResult implements ExecutionResult {
@@ -37,7 +38,7 @@ public class GqlExecutionResult implements ExecutionResult {
             } else {
                 return err;
             }
-        }).collect(toList());
+        }).collect(Collectors.toList());
     }
 
     private ExceptionWhileDataFetching expandInvocationTargetException(ExceptionWhileDataFetching err) {
@@ -102,6 +103,6 @@ public class GqlExecutionResult implements ExecutionResult {
     }
 
     private Object errorsToSpec(List<GraphQLError> errors) {
-        return errors.stream().map(GraphQLError::toSpecification).collect(toList());
+        return errors.stream().map(GraphQLError::toSpecification).collect(Collectors.toList());
     }
 }

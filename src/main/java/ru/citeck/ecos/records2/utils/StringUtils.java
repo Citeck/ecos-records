@@ -43,12 +43,27 @@ public class StringUtils {
      * </pre>
      *
      * @param cs  the CharSequence to check, may be null
-     * @return {@code true} if the CharSequence is
-     *  not empty and not null and not whitespace
+     * @return {@code true} if the CharSequence is not empty and not null and not whitespace
      * @since 2.0
      * @since 3.0 Changed signature from isNotBlank(String) to isNotBlank(CharSequence)
-     */
+    */
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);
+    }
+
+
+    /**
+     * Checks if a CharSequence contains only specified character.
+     */
+    public static boolean containsOnly(final CharSequence cs, char character) {
+        if (cs.length() == 0) {
+            return false;
+        }
+        for (int i = 0; i < cs.length(); i++) {
+            if (cs.charAt(i) != character) {
+                return false;
+            }
+        }
+        return true;
     }
 }

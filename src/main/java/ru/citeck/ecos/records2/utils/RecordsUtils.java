@@ -7,6 +7,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -20,6 +21,37 @@ import java.util.stream.Collectors;
 public class RecordsUtils {
 
     private static final Log logger = LogFactory.getLog(RecordsUtils.class);
+
+    public static Map<String, Class<?>> getAttributesClasses(String sourceId,
+                                                             Collection<String> attributes,
+                                                             Class<?> defaultClass,
+                                                             RecordsService recordsService) {
+
+        Map<String, String> attJavaClasses = new HashMap<>();
+        for (String attribute : attributes) {
+            attJavaClasses.put(attribute, "#" + attribute + "?javaClass");
+        }
+        RecordRef recordRef = RecordRef.create(sourceId, "");
+        RecordMeta javaClasses = recordsService.getAttributes(recordRef, attJavaClasses);
+
+        Map<String, Class<?>> result = new HashMap<>();
+
+        String defaultClassStr = defaultClass != null ? defaultClass.getName() : "";
+
+        for (String attribute : attributes) {
+
+            String javaClassStr = javaClasses.get(attribute, defaultClassStr);
+            if (!javaClassStr.isEmpty()) {
+                try {
+                    result.put(attribute, Class.forName(javaClassStr));
+                } catch (ClassNotFoundException e) {
+                    logger.warn("Attribute class not found: " + javaClassStr, e);
+                }
+            }
+        }
+
+        return result;
+    }
 
     public static RecordRef getRecordId(ObjectNode recordMeta) {
         JsonNode idNode = recordMeta.get("id");
@@ -44,7 +76,7 @@ public class RecordsUtils {
             Object propValue = PropertyUtils.getProperty(value, "id");
             return propValue != null ? propValue.toString() : null;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            logger.error(e);
+            logger.debug(e);
         }
         return null;
     }

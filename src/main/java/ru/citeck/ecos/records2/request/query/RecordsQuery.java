@@ -14,7 +14,10 @@ import ru.citeck.ecos.records2.request.query.page.SkipPage;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class RecordsQuery {
@@ -204,16 +207,22 @@ public class RecordsQuery {
 
         RecordsQuery that = (RecordsQuery) o;
 
-        return Objects.equals(sourceId, that.sourceId) &&
-               Objects.equals(sortBy, that.sortBy) &&
-               Objects.equals(page, that.page) &&
-               Objects.equals(consistency, that.consistency);
+        return Objects.equals(page, that.page)
+            && Objects.equals(query, that.query)
+            && Objects.equals(sortBy, that.sortBy)
+            && Objects.equals(groupBy, that.groupBy)
+            && Objects.equals(language, that.language)
+            && Objects.equals(sourceId, that.sourceId)
+            && Objects.equals(consistency, that.consistency);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(sortBy);
-        result = 31 * result + Objects.hashCode(page);
+        int result = Objects.hashCode(page);
+        result = 31 * result + Objects.hashCode(query);
+        result = 31 * result + Objects.hashCode(sortBy);
+        result = 31 * result + Objects.hashCode(groupBy);
+        result = 31 * result + Objects.hashCode(language);
         result = 31 * result + Objects.hashCode(sourceId);
         result = 31 * result + Objects.hashCode(consistency);
         return result;
@@ -221,13 +230,13 @@ public class RecordsQuery {
 
     @Override
     public String toString() {
-        return "RecordsQuery{" +
-                "\"sourceId\":\"" + sourceId + "\"," +
-                "\"sortBy\":\"" + sortBy + "\"," +
-                "\"consistency\":\"" + consistency + "\"," +
-                "\"language\":\"" + language + '\'' + "\"," +
-                "\"query\":\"" + query + "\"," +
-                "\"page\":\"" + page + "\"" +
-                '}';
+        return "RecordsQuery{"
+                + "\"sourceId\":\"" + sourceId + "\","
+                + "\"sortBy\":\"" + sortBy + "\","
+                + "\"consistency\":\"" + consistency + "\","
+                + "\"language\":\"" + language + '\'' + "\","
+                + "\"query\":\"" + query + "\","
+                + "\"page\":\"" + page + "\""
+            + '}';
     }
 }

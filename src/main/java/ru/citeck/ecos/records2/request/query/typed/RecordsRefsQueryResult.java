@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Used to deserialize query result with RecordRefs
+ * Used to deserialize query result with RecordRefs.
  */
 public class RecordsRefsQueryResult extends RecordsQueryResult<RecordRef> {
 

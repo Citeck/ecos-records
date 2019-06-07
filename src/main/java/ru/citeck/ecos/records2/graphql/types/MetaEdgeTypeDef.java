@@ -3,6 +3,8 @@ package ru.citeck.ecos.records2.graphql.types;
 import graphql.Scalars;
 import graphql.schema.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.util.List;
@@ -64,20 +66,42 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::getJavaClass)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("editorKey")
+                        .dataFetcher(this::getEditorKey)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("type")
+                        .dataFetcher(this::getType)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("distinct")
                         .dataFetcher(this::getDistinct)
                         .type(GraphQLList.list(MetaValueTypeDef.typeRef())))
                 .build();
     }
 
+    private String getType(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.getType();
+    }
+
+    private String getEditorKey(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.getEditorKey();
+    }
+
     private List<MetaValue> getDistinct(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
-        return metaValueTypeDef.getAsMetaValues(edge.getDistinct(), env.getContext());
+        return metaValueTypeDef.getAsMetaValues(edge.getDistinct(),
+                                                env.getContext(),
+                                                new MetaFieldImpl(env.getField()));
     }
 
     private List<MetaValue> getOptions(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
-        return metaValueTypeDef.getAsMetaValues(edge.getOptions(), env.getContext());
+        return metaValueTypeDef.getAsMetaValues(edge.getOptions(),
+                                                env.getContext(),
+                                                new MetaFieldImpl(env.getField()));
     }
 
     private String getName(DataFetchingEnvironment env) {
@@ -91,7 +115,8 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
 
     private List<MetaValue> getValues(DataFetchingEnvironment env) throws Exception {
         MetaEdge edge = env.getSource();
-        return metaValueTypeDef.getAsMetaValues(edge.getValue(), env.getContext());
+        MetaField field = new MetaFieldImpl(env.getField());
+        return metaValueTypeDef.getAsMetaValues(edge.getValue(field), env.getContext(), field);
     }
     
     private boolean isMultiple(DataFetchingEnvironment env) {
@@ -101,7 +126,8 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
     
     private String getJavaClass(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
-        return edge.getJavaClass().getName();
+        Class<?> javaClass = edge.getJavaClass();
+        return javaClass != null ? javaClass.getName() : null;
     }
 
     private boolean isProtected(DataFetchingEnvironment env) {

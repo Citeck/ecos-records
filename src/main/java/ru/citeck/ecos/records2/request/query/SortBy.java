@@ -31,9 +31,9 @@ public class SortBy {
 
     @Override
     public String toString() {
-        return "SortBy{" +
-                "attribute='" + attribute + '\'' +
-                ", ascending=" + ascending +
-                '}';
+        return "SortBy{"
+            + "attribute='" + attribute + '\''
+            + ", ascending=" + ascending
+            + '}';
     }
 }

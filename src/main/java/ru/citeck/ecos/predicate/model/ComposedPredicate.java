@@ -2,6 +2,8 @@ package ru.citeck.ecos.predicate.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,11 +13,18 @@ public abstract class ComposedPredicate implements Predicate {
     private List<Predicate> predicates;
 
     public List<Predicate> getPredicates() {
-        return predicates;
+        return predicates == null ? Collections.emptyList() : predicates;
     }
 
     public void setPredicates(List<Predicate> predicates) {
-        this.predicates = predicates;
+        this.predicates = new ArrayList<>(predicates);
+    }
+
+    public void addPredicate(Predicate predicate) {
+        if (predicates == null) {
+            predicates = new ArrayList<>();
+        }
+        predicates.add(predicate);
     }
 
     @Override

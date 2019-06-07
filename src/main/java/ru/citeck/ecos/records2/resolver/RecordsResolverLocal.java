@@ -65,8 +65,8 @@ public class RecordsResolverLocal implements RecordsResolver,
         if (!query.getGroupBy().isEmpty()) {
 
             RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID,
-                RecordsQueryWithMetaDAO.class,
-                queryWithMetaDAO);
+                    RecordsQueryWithMetaDAO.class,
+                    queryWithMetaDAO);
             RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
 
             if (convertedQuery == null) {
@@ -82,7 +82,7 @@ public class RecordsResolverLocal implements RecordsResolver,
             Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
             List<String> languages = recordsDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
-                .orElse(recordsQueryDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
+                    .orElse(recordsQueryDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
                     .orElse(Collections.emptyList()));
 
             if (!languages.contains(DistinctQuery.LANGUAGE)) {
@@ -91,9 +91,9 @@ public class RecordsResolverLocal implements RecordsResolver,
                 RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
 
                 List<JsonNode> values = getDistinctValues(query.getSourceId(),
-                    distinctQuery,
-                    query.getMaxItems(),
-                    schema);
+                        distinctQuery,
+                        query.getMaxItems(),
+                        schema);
                 result.setRecords(values.stream().map(v -> {
                     RecordRef ref = RecordRef.valueOf(v.path("id").asText());
                     return new RecordMeta(ref, (ObjectNode) v);
@@ -114,8 +114,8 @@ public class RecordsResolverLocal implements RecordsResolver,
         recordsQuery.setMaxItems(max);
 
         Optional<JsonNode> query = queryLangService.convertLang(distinctQuery.getQuery(),
-            distinctQuery.getLanguage(),
-            PredicateService.LANGUAGE_PREDICATE);
+                distinctQuery.getLanguage(),
+                PredicateService.LANGUAGE_PREDICATE);
 
         if (!query.isPresent()) {
             logger.error("Language " + distinctQuery.getLanguage() + " is not supported by Distinct Query");
@@ -142,9 +142,8 @@ public class RecordsResolverLocal implements RecordsResolver,
 
             for (RecordMeta value : queryResult.getRecords()) {
 
-                distinctPredicate.addPredicate(
-                    Predicates.equal(distinctQuery.getAttribute(),
-                        value.get("att").path("value").asText()));
+                distinctPredicate.addPredicate(Predicates.equal(distinctQuery.getAttribute(),
+                                               value.get("att").path("value").asText()));
             }
 
             queryResult.getRecords().forEach(r -> values.add(r.get("att")));
@@ -167,8 +166,8 @@ public class RecordsResolverLocal implements RecordsResolver,
         }
 
         Optional<QueryWithLang> queryWithLangOpt = queryLangService.convertLang(recordsQuery.getQuery(),
-            recordsQuery.getLanguage(),
-            supportedLanguages);
+                recordsQuery.getLanguage(),
+                supportedLanguages);
 
         if (queryWithLangOpt.isPresent()) {
             recordsQuery = new RecordsQuery(recordsQuery);
@@ -191,7 +190,7 @@ public class RecordsResolverLocal implements RecordsResolver,
 
         if (records == null) {
 
-            RecordsQueryResult<RecordRef> recordRefs = queryRecords(query);
+            RecordsQueryResult<RecordRef> recordRefs = queryRecordsWithoutMeta(query);
 
             if (recordRefs != null) {
                 records = new RecordsQueryResult<>();
@@ -242,7 +241,7 @@ public class RecordsResolverLocal implements RecordsResolver,
         return records;
     }
 
-    private RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    private RecordsQueryResult<RecordRef> queryRecordsWithoutMeta(RecordsQuery query) {
 
         Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(query.getSourceId(), queryDAO);
 
@@ -401,8 +400,8 @@ public class RecordsResolverLocal implements RecordsResolver,
 
         Method[] methods = awareClass.getDeclaredMethods();
         if (methods.length == 1
-            && methods[0].getParameterCount() == 1
-            && methods[0].getParameterTypes()[0].isInstance(value)) {
+                && methods[0].getParameterCount() == 1
+                && methods[0].getParameterTypes()[0].isInstance(value)) {
 
             Method method = methods[0];
 

@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class RecordsResolverLocal implements RecordsResolver,
+public class LocalRecordsResolver implements RecordsResolver,
                                              RecordsServiceAware,
                                              RecordsMetaServiceAware,
                                              PredicateServiceAware,
@@ -43,7 +43,7 @@ public class RecordsResolverLocal implements RecordsResolver,
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
 
-    private static final Log logger = LogFactory.getLog(RecordsResolverLocal.class);
+    private static final Log logger = LogFactory.getLog(LocalRecordsResolver.class);
 
     private Map<String, RecordsMetaDAO> metaDAO = new ConcurrentHashMap<>();
     private Map<String, RecordsQueryDAO> queryDAO = new ConcurrentHashMap<>();
@@ -55,7 +55,7 @@ public class RecordsResolverLocal implements RecordsResolver,
     private QueryLangService queryLangService;
     private RecordsMetaService recordsMetaService;
 
-    public RecordsResolverLocal(QueryLangService queryLangService) {
+    public LocalRecordsResolver(QueryLangService queryLangService) {
         this.queryLangService = queryLangService;
     }
 

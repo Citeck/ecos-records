@@ -9,7 +9,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
-import ru.citeck.ecos.records2.request.rest.RestQueryHandler;
+import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
@@ -28,7 +28,7 @@ class RemoteRecordsDAOTest {
     private static final String REMOTE_SOURCE_ID = "remote";
 
     private RecordsService recordsService;
-    private RestQueryHandler queryHandler;
+    private RestHandler queryHandler;
     private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
@@ -37,7 +37,7 @@ class RemoteRecordsDAOTest {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.createRecordsService();
 
-        queryHandler = new RestQueryHandler(recordsService);
+        queryHandler = new RestHandler(recordsService);
 
         RemoteRecordsDAO remoteRecordsDAO = new RemoteRecordsDAO();
         remoteRecordsDAO.setId(REMOTE_SOURCE_ID);

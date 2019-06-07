@@ -4,6 +4,8 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
+import java.util.stream.Collectors;
+
 /**
  * Used to deserialize query result with RecordRefs.
  */
@@ -20,6 +22,13 @@ public class RecordsMetaQueryResult extends RecordsQueryResult<RecordMeta> {
         for (RecordMeta record : getRecords()) {
             record.setId(RecordRef.create(sourceId, record.getId().toString()));
         }
+        return this;
+    }
+
+    public RecordsMetaQueryResult addAppName(String appName) {
+        setRecords(getRecords().stream()
+                               .map(m -> new RecordMeta(m, ref -> ref.addAppName(appName)))
+                               .collect(Collectors.toList()));
         return this;
     }
 }

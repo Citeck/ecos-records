@@ -4,15 +4,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
-public class RestQueryHandler {
+import java.util.List;
 
-    private static final Log logger = LogFactory.getLog(RestQueryHandler.class);
+public class RestHandler {
+
+    private static final Log logger = LogFactory.getLog(RestHandler.class);
 
     private RecordsService recordsService;
 
-    public RestQueryHandler(RecordsService recordsService) {
+    public RestHandler(RecordsService recordsService) {
         this.recordsService = recordsService;
     }
 
@@ -83,4 +86,22 @@ public class RestQueryHandler {
         return recordsResult;
     }
 
+    public Object mutateRecords(MutationBody body) {
+
+        RecordsMutResult result = recordsService.mutate(body);
+
+        if (body.isSingleRecord()) {
+            List<?> records = result.getRecords();
+            if (records.isEmpty()) {
+                throw new IllegalStateException("Records list is empty");
+            }
+            return records.get(0);
+        }
+
+        return result;
+    }
+
+    public Object deleteRecords(DeletionBody body) {
+        return recordsService.delete(body);
+    }
 }

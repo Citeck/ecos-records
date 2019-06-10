@@ -1,24 +1,15 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.*;
 
 import java.util.*;
@@ -33,9 +24,12 @@ public class RecordsMutationTest extends LocalRecordsDAO
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
 
+    private static final String ALIAS_VALUE = "ALIAS";
+
     private RecordsService recordsService;
 
     private Map<RecordRef, TestDto> valuesToMutate;
+    private Map<RecordRef, TestDto> newValues;
 
     @BeforeAll
     void init() {
@@ -47,6 +41,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
         recordsService.register(this);
 
         valuesToMutate = Collections.singletonMap(TEST_REF, new TestDto(TEST_REF));
+        newValues = new HashMap<>();
     }
 
     @Test
@@ -80,19 +75,86 @@ public class RecordsMutationTest extends LocalRecordsDAO
         assertEquals("test0__", valuesToMutate.get(TEST_REF).getField0());
         assertEquals("test1__", valuesToMutate.get(TEST_REF).getField1());
         assertFalse(valuesToMutate.get(TEST_REF).isBool());
+
+        assertEquals(0, newValues.size());
+
+        mutation = new RecordsMutation();
+
+        RecordRef newRef = RecordRef.create(SOURCE_ID, "newRef");
+        meta = new RecordMeta(newRef);
+        meta.set("field", "test");
+        meta.set("field0", "test0");
+        meta.set("field1", "test1");
+        meta.set("bool", true);
+        mutation.setRecords(Collections.singletonList(meta));
+
+        recordsService.mutate(mutation);
+
+        assertEquals(1, newValues.size());
+
+        TestDto newDto = newValues.values().stream().findFirst().get();
+        assertEquals(newRef.toString() + "-new", newDto.getRef().toString());
+        assertEquals("test", newDto.getField());
+        assertEquals("test0", newDto.getField0());
+        assertEquals("test1", newDto.getField1());
+        assertTrue(newDto.isBool());
+
+        newValues.clear();
+
+        RecordRef withInnerRef = RecordRef.create(SOURCE_ID, "newRefWithInner");
+        RecordMeta newWithInner = new RecordMeta(withInnerRef);
+        newWithInner.set("field", "value123");
+
+        RecordRef innerRef = RecordRef.create(SOURCE_ID, "newInner");
+
+        RecordMeta newInner = new RecordMeta(innerRef);
+        newInner.set(RecordConstants.ATT_ALIAS, ALIAS_VALUE);
+        newWithInner.set(".att(n:\"assoc0\"){assoc}", ALIAS_VALUE);
+        newWithInner.set(".atts(n:\"assoc1\"){assoc}", ALIAS_VALUE);
+        ArrayNode innerArrayNode = JsonNodeFactory.instance.arrayNode();
+        innerArrayNode.add(ALIAS_VALUE);
+        newWithInner.set("assocArr?assoc", innerArrayNode);
+
+        mutation = new RecordsMutation();
+        mutation.setRecords(Arrays.asList(newWithInner, newInner));
+
+        recordsService.mutate(mutation);
+
+        assertEquals(2, newValues.size());
+
+        RecordRef newWithInnerRef = RecordRef.valueOf(withInnerRef + "-new");
+        TestDto withInnerDto = newValues.get(newWithInnerRef);
+        String newInnerRef = innerRef.toString() + "-new";
+        assertEquals(newInnerRef, withInnerDto.getAssoc0());
+        assertEquals(newInnerRef, withInnerDto.getAssoc1());
+
+        assertEquals(1, withInnerDto.getAssocArr().size());
+        assertEquals(newInnerRef, withInnerDto.getAssocArr().get(0));
+    }
+
+    @Override
+    public RecordsMutResult mutate(RecordsMutation mutation) {
+
+        for (RecordMeta meta : mutation.getRecords()) {
+            meta.forEach((name, value) -> {
+                assertFalse(name.startsWith("."));
+                assertFalse(name.contains("?"));
+                if (!RecordConstants.ATT_ALIAS.equals(name)) {
+                    assertNotEquals(ALIAS_VALUE, value.asText());
+                }
+            });
+        }
+
+        return super.mutate(mutation);
     }
 
     @Override
     public List<TestDto> getValuesToMutate(List<RecordRef> records) {
         return records.stream().map(r -> {
-            TestDto testDto = valuesToMutate.get(r);
-            if (testDto == null) {
-                return Optional.<TestDto>empty();
-            }
-            return Optional.of(new TestDto(testDto));
-        }).filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+            RecordRef ref = RecordRef.create(getId(), r);
+            TestDto testDto = valuesToMutate.get(ref);
+            return testDto == null ? new TestDto(RecordRef.valueOf(ref + "-new")) : new TestDto(testDto);
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -105,8 +167,10 @@ public class RecordsMutationTest extends LocalRecordsDAO
             TestDto testDto = valuesToMutate.get(v.getRef());
             if (testDto != null) {
                 testDto.set(v);
-                records.add(new RecordMeta(v.getRef()));
+            } else {
+                newValues.put(v.getRef(), v);
             }
+            records.add(new RecordMeta(v.getRef().getId()));
         });
 
         result.setRecords(records);
@@ -126,6 +190,10 @@ public class RecordsMutationTest extends LocalRecordsDAO
         String field0;
         String field1;
         boolean bool;
+
+        String assoc0;
+        String assoc1;
+        List<String> assocArr;
 
         TestDto(RecordRef ref) {
             this.ref = ref;
@@ -175,10 +243,32 @@ public class RecordsMutationTest extends LocalRecordsDAO
             return field1;
         }
 
-
-
         public void setField1(String field1) {
             this.field1 = field1;
+        }
+
+        public String getAssoc0() {
+            return assoc0;
+        }
+
+        public void setAssoc0(String assoc0) {
+            this.assoc0 = assoc0;
+        }
+
+        public String getAssoc1() {
+            return assoc1;
+        }
+
+        public void setAssoc1(String assoc1) {
+            this.assoc1 = assoc1;
+        }
+
+        public List<String> getAssocArr() {
+            return assocArr;
+        }
+
+        public void setAssocArr(List<String> assocArr) {
+            this.assocArr = assocArr;
         }
     }
 }

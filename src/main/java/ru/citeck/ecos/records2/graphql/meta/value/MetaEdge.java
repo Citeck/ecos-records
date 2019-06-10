@@ -20,12 +20,20 @@ public interface MetaEdge {
         return null;
     }
 
+    default List<CreateVariant> getCreateVariants() {
+        return null;
+    }
+
     default Class<?> getJavaClass() {
         return Object.class;
     }
 
     default String getEditorKey() {
         return null;
+    }
+
+    default boolean isAssociation() {
+        return false;
     }
 
     /**

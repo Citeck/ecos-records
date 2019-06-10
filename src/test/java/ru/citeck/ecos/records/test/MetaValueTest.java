@@ -15,8 +15,10 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -51,7 +53,18 @@ public class MetaValueTest extends LocalRecordsDAO
 
         String testInnerSchema = "a:att(n:\"test\"){str},b:att(n:\"number\"){num}";
 
-        String schema = "str,disp,id,has(n:\"One\"),num,bool,json,schema:att(n:\"schema\"){" + testInnerSchema + "}";
+        String schema = "str," +
+                        "disp," +
+                        "id," +
+                        "has(n:\"One\")," +
+                        "num," +
+                        "bool," +
+                        "json," +
+                        "schema:att(n:\"schema\"){" + testInnerSchema + "}," +
+                        "asNum:as(n:\"num\"){num}," +
+                        "asStr:as(n:\"str\"){str}," +
+                        "date:att(n:\"date\"){str}";
+
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
@@ -64,6 +77,14 @@ public class MetaValueTest extends LocalRecordsDAO
         assertEquals(true, meta.getAttribute("has", false));
         assertEquals(MetaVal.JSON_VALUE, meta.getAttribute("json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
+        assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());
+
+        String format = "yyyyy.MMMMM.dd GGG hh:mm aaa";
+        String targetDate = (new SimpleDateFormat(format)).format(MetaVal.DATE_VALUE);
+        assertEquals(targetDate, meta.fmtDate("/date/str", format, "-"));
+        assertEquals(new Date((MetaVal.DATE_VALUE.getTime() / 1000) * 1000), meta.getDateOrNull("/date/str"));
+        assertEquals("--", meta.fmtDate("date1", format, "--"));
 
         assertEquals(testInnerSchema, innerSchema);
     }
@@ -73,10 +94,12 @@ public class MetaValueTest extends LocalRecordsDAO
         static String STRING_VALUE = "STR_VALUE";
         static String DISP_VALUE = "DISP_VALUE";
         static List<String> HAS_VARIANTS = Arrays.asList("One", "Two");
-        static Double DOUBLE_VALUE = 99.0;
+        static double DOUBLE_VALUE = 99.0;
+        static int INT_VALUE = (int) DOUBLE_VALUE;
         static Boolean BOOL_VALUE = true;
         static JsonNode JSON_VALUE = JsonNodeFactory.instance.objectNode().with("Test").put("prop", "value");
         static String ID_VALUE = "SOME_ID";
+        static Date DATE_VALUE = new Date();
 
         private Consumer<String> schemaConsumer;
 
@@ -120,9 +143,23 @@ public class MetaValueTest extends LocalRecordsDAO
         }
 
         @Override
+        public Object getAs(String type) {
+            switch (type) {
+                case "num":
+                    return getDouble();
+                case "str":
+                    return getString();
+            }
+            return null;
+        }
+
+        @Override
         public Object getAttribute(String name, MetaField field) {
             if (name.equals("schema")) {
                 schemaConsumer.accept(field.getInnerSchema());
+            }
+            if (name.equals("date")) {
+                return DATE_VALUE;
             }
             return null;
         }

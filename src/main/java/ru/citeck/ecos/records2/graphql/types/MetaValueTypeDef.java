@@ -79,13 +79,18 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
                         .description("Cast to another type")
                         .dataFetcher(this::getAs)
                         .argument(GraphQLArgument.newArgument()
-                                .name("t")
+                                .name("n")
                                 .type(Scalars.GraphQLString)
                                 .build())
                         .type(typeRef()))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("str")
                         .description("String representation")
+                        .dataFetcher(this::getStr)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("assoc")
+                        .description("Association")
                         .dataFetcher(this::getStr)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
@@ -134,9 +139,13 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     }
 
     private MetaValue getAs(DataFetchingEnvironment env) {
-        MetaValue value = env.getSource();
-        String type = getParameter(env, "t");
-        return value.getAs(type);
+
+        MetaValue source = env.getSource();
+        String type = getParameter(env, "n");
+        Object value = source.getAs(type);
+
+        MetaField metaField = new MetaFieldImpl(env.getField());
+        return getAsMetaValue(value, env.getContext(), metaField, false);
     }
 
     private String getId(DataFetchingEnvironment env) {

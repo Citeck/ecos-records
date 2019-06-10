@@ -66,15 +66,22 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
 
     public RecordsMutResult mutate(RecordsMutation mutation) {
 
-        List<RecordRef> recordRefs = mutation.getRecords()
-                                             .stream()
-                                             .map(RecordMeta::getId)
-                                             .collect(Collectors.toList());
-
         if (this instanceof MutableRecordsLocalDAO) {
 
             MutableRecordsLocalDAO mutableDao = (MutableRecordsLocalDAO) this;
+
+            List<RecordRef> recordRefs = mutation.getRecords()
+                    .stream()
+                    .map(meta -> addSourceId ? RecordRef.valueOf(meta.getId().getId()) : meta.getId())
+                    .collect(Collectors.toList());
+
             List<?> values = mutableDao.getValuesToMutate(recordRefs);
+
+            if (values.size() != recordRefs.size()) {
+                throw new IllegalStateException(this + " getValuesToMutate returned a wrong number of values\n"
+                                                + "recordRefs: " + recordRefs + "\n"
+                                                + "values    : " + values);
+            }
 
             for (int i = 0; i < recordRefs.size(); i++) {
 
@@ -87,7 +94,15 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
                 }
             }
 
-            return mutableDao.save(values);
+            RecordsMutResult result = mutableDao.save(values);
+            if (addSourceId) {
+                result.setRecords(result.getRecords()
+                        .stream()
+                        .map(meta -> new RecordMeta(meta, r -> RecordRef.create(getId(), r)))
+                        .collect(Collectors.toList()));
+            }
+
+            return result;
         }
 
         writeWarn("RecordsDAO doesn't implement MutableRecordsLocalDAO");

@@ -96,7 +96,11 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             if ("id".equals(resultKey)) {
                 flatAttributes.put(resultKey, meta.getId().toString());
             } else {
-                flatAttributes.put(resultKey, toFlatNode(attributes.get(key)));
+                if (resultKey.equals(".json")) {
+                    flatAttributes.put(resultKey, attributes.get(key));
+                } else {
+                    flatAttributes.put(resultKey, toFlatNode(attributes.get(key)));
+                }
             }
         }
 
@@ -250,8 +254,6 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                                                         isMultiple,
                                                         scalarField);
 
-            attributeSchema = attributeSchema.replaceAll("'", "\"");
-
             schema.setLength(0);
             char lastChar = attributeSchema.charAt(attributeSchema.length() - 1);
 
@@ -274,7 +276,12 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
             if (schema.charAt(schema.length() - 1) != '{') {
 
-                schema.append("}");
+                int openBraces = StringUtils.countMatches(schema, "{");
+                int closeBraces = StringUtils.countMatches(schema, "}");
+
+                while (openBraces > closeBraces++) {
+                    schema.append("}");
+                }
                 attributes.put(descriptor.getName(), schema.toString());
 
             } else {
@@ -355,6 +362,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 case "distinct":
                     inner = "{title:disp,label:disp,value:str}";
                     break;
+                case "createVariants":
+                    inner = "{json}";
+                    break;
                 default:
                     inner = "";
             }
@@ -363,12 +373,39 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
         } else {
 
-            String result = (multiple ? ".atts" : ".att") + "(n:\"" + fieldName + "\")";
-            if (scalarField != null) {
-                return result + "{" + scalarField + "}";
-            } else {
-                return result;
+            String[] attsPath = fieldName.split("(?<!\\\\)\\.");
+            if (multiple && !fieldName.contains("[]")) {
+                attsPath[0] = attsPath[0] + "[]";
             }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < attsPath.length; i++) {
+                if (i == 0) {
+                    sb.append(".");
+                } else {
+                    sb.append("{");
+                }
+                sb.append("att");
+
+                String pathElem = attsPath[i];
+                if (pathElem.endsWith("[]")) {
+                    sb.append("s");
+                    pathElem = pathElem.substring(0, pathElem.length() - 2);
+                }
+                if (pathElem.contains("\\.")) {
+                    pathElem = pathElem.replaceAll("\\\\.", ".");
+                }
+                sb.append("(n:\"").append(pathElem).append("\")");
+            }
+
+            if (scalarField != null) {
+                sb.append("{").append(scalarField).append("}");
+                for (int i = 0; i < attsPath.length - 1; i++) {
+                    sb.append("}");
+                }
+            }
+
+            return sb.toString();
         }
     }
 

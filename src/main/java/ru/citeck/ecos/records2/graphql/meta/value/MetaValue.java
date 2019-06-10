@@ -66,7 +66,7 @@ public interface MetaValue {
         return getString();
     }
 
-    default MetaValue getAs(String type) {
+    default Object getAs(String type) {
         return null;
     }
 }

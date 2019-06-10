@@ -184,8 +184,10 @@ public class LocalRecordsResolver implements RecordsResolver,
 
         RecordsQueryResult<RecordMeta> records = null;
 
+        boolean withMetaWasSkipped = true;
         if (StringUtils.isNotBlank(schema)) {
             records = queryRecordsWithMeta(query, schema);
+            withMetaWasSkipped = false;
         }
 
         if (records == null) {
@@ -198,6 +200,10 @@ public class LocalRecordsResolver implements RecordsResolver,
                 records.setTotalCount(recordRefs.getTotalCount());
                 records.merge(getMeta(recordRefs.getRecords(), schema));
             }
+        }
+
+        if (records == null && withMetaWasSkipped) {
+            records = queryRecordsWithMeta(query, schema);
         }
 
         if (records == null) {

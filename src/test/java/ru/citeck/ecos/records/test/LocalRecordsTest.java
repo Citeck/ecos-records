@@ -8,9 +8,11 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +32,7 @@ class LocalRecordsTest {
         recordsService = factory.createRecordsService();
         recordsService.register(new RecordsQueryDAOImpl());
         recordsService.register(new RecordsSource());
+        recordsService.register(new RecordsWithMetaSource());
     }
 
     @Test
@@ -47,6 +50,17 @@ class LocalRecordsTest {
         RecordMeta meta = recordsService.getAttributes(ref, Collections.singleton("localId"));
 
         assertEquals(ref, meta.getId());
+    }
+
+    @Test
+    void testWithMeta() {
+
+        RecordsQuery query = new RecordsQuery();
+        query.setSourceId(RecordsWithMetaSource.ID);
+
+        RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
+
+        assertEquals(1, result.getRecords().size());
     }
 
     static class RecordsQueryDAOImpl extends LocalRecordsDAO implements RecordsQueryDAO {
@@ -98,5 +112,29 @@ class LocalRecordsTest {
                 this.field1 = field1;
             }
         }
+    }
+
+    static class RecordsWithMetaSource extends LocalRecordsDAO
+        implements RecordsQueryWithMetaLocalDAO<RecordsWithMetaSource.Meta> {
+
+        static final String ID = "with-meta";
+
+        RecordsWithMetaSource() {
+            setId(ID);
+        }
+
+        @Override
+        public RecordsQueryResult<Meta> getMetaValues(RecordsQuery query) {
+            RecordsQueryResult<Meta> result = new RecordsQueryResult<>();
+            result.addRecord(new Meta());
+            return result;
+        }
+
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        static class Meta {}
     }
 }

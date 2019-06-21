@@ -51,36 +51,7 @@ public class MetaFieldImpl implements MetaField {
                 sb.append(innerField.getAlias()).append(":");
             }
 
-            sb.append(innerField.getName());
-
-            List<Argument> args = innerField.getArguments();
-
-            if (args.size() > 0) {
-
-                sb.append("(");
-
-                for (Argument arg : args) {
-
-                    sb.append(arg.getName()).append(":");
-
-                    Value value = arg.getValue();
-                    if (value instanceof StringValue) {
-                        sb.append("\"").append(((StringValue) value).getValue()).append("\"");
-                    } else {
-                        throw new IllegalArgumentException("Unknown type: " + value);
-                    }
-                }
-
-                sb.append(")");
-            }
-
-            List<Field> innerInnerFields = getInnerFields(innerField);
-
-            if (innerInnerFields.size() > 0) {
-                sb.append("{");
-                fillFieldsSchema(innerInnerFields, sb);
-                sb.append("}");
-            }
+            fillFieldSchema(innerField, sb);
 
             if (i < fields.size() - 1) {
                 sb.append(",");
@@ -88,9 +59,59 @@ public class MetaFieldImpl implements MetaField {
         }
     }
 
+    private void fillFieldSchema(Field field, StringBuilder sb) {
+
+        sb.append(field.getName());
+
+        List<Argument> args = field.getArguments();
+
+        if (args.size() > 0) {
+
+            sb.append("(");
+
+            for (Argument arg : args) {
+
+                sb.append(arg.getName()).append(":");
+
+                Value value = arg.getValue();
+                if (value instanceof StringValue) {
+                    sb.append("\"").append(((StringValue) value).getValue()).append("\"");
+                } else {
+                    throw new IllegalArgumentException("Unknown type: " + value);
+                }
+            }
+
+            sb.append(")");
+        }
+
+        List<Field> innerInnerFields = getInnerFields(field);
+
+        if (innerInnerFields.size() > 0) {
+            sb.append("{");
+            fillFieldsSchema(innerInnerFields, sb);
+            sb.append("}");
+        }
+    }
+
     @Override
     public List<String> getInnerAttributes() {
         return new ArrayList<>(getInnerAttFields().keySet());
+    }
+
+    @Override
+    public Map<String, String> getInnerAttributesMap() {
+
+        Map<String, String> result = new HashMap<>();
+        Map<String, Field> fields = getInnerAttFields();
+
+        StringBuilder sb = new StringBuilder();
+        fields.forEach((k, field) -> {
+            sb.setLength(0);
+            fillFieldSchema(field, sb);
+            result.put(k, sb.toString());
+        });
+
+        return result;
     }
 
     private Map<String, Field> getInnerAttFields() {

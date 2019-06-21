@@ -10,6 +10,8 @@ import graphql.schema.GraphQLSchema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceAware;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
@@ -28,9 +30,11 @@ public class RecordsMetaGql {
     private Supplier<? extends GqlContext> contextSupplier;
 
     private ObjectMapper objectMapper = new ObjectMapper();
+    private List<GqlTypeDefinition> graphQLTypes;
 
     public RecordsMetaGql(List<GqlTypeDefinition> graphQLTypes, Supplier<? extends GqlContext> contextSupplier) {
 
+        this.graphQLTypes = graphQLTypes;
         this.contextSupplier = contextSupplier;
 
         Map<String, GraphQLObjectType.Builder> types = new HashMap<>();
@@ -143,5 +147,13 @@ public class RecordsMetaGql {
         }
 
         return result;
+    }
+
+    public void setRecordsService(RecordsService recordsService) {
+        graphQLTypes.forEach(t -> {
+            if (t instanceof RecordsServiceAware) {
+                ((RecordsServiceAware) t).setRecordsService(recordsService);
+            }
+        });
     }
 }

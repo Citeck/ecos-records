@@ -108,7 +108,7 @@ public class MetaFieldImpl implements MetaField {
         fields.forEach((k, field) -> {
             sb.setLength(0);
             fillFieldSchema(field, sb);
-            result.put(k, sb.toString());
+            result.put(k, "." + sb.toString());
         });
 
         return result;
@@ -128,6 +128,8 @@ public class MetaFieldImpl implements MetaField {
                      .filter(a -> a.getValue() instanceof StringValue)
                      .map(a -> ((StringValue) a.getValue()).getValue())
                      .ifPresent(name -> attributes.put(name, field));
+            } else {
+                attributes.put("." + field.getName(), field);
             }
         }
 

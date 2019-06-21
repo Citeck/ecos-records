@@ -101,6 +101,21 @@ public class RecordMeta {
         return null;
     }
 
+    public String getStringOrNull(String name) {
+        String value = getAttribute(name, "");
+        return value.isEmpty() ? null : value;
+    }
+
+    public Double getDoubleOrNull(String name) {
+        JsonNode attribute = getAttribute(name);
+        return isEmpty(attribute) ? null : attribute.asDouble();
+    }
+
+    public Boolean getBoolOrNull(String name) {
+        JsonNode attribute = getAttribute(name);
+        return isEmpty(attribute) ? null : attribute.asBoolean();
+    }
+
     public JsonNode get(String name) {
         return getAttribute(name);
     }

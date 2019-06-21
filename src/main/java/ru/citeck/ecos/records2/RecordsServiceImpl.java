@@ -43,6 +43,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (this.recordsResolver instanceof RecordsMetaServiceAware) {
             ((RecordsMetaServiceAware) recordsResolver).setRecordsMetaService(recordsMetaService);
         }
+        if (this.recordsMetaService instanceof RecordsServiceAware) {
+            ((RecordsServiceAware) recordsMetaService).setRecordsService(this);
+        }
     }
 
     /* QUERY */

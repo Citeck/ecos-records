@@ -89,6 +89,7 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new JsonNodeValueFactory());
         metaValueFactories.add(new LongValueFactory());
         metaValueFactories.add(new StringValueFactory());
+        metaValueFactories.add(new RecordRefValueFactory());
 
         return metaValueFactories;
     }

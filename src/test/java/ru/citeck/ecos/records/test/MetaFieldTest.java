@@ -50,10 +50,11 @@ public class MetaFieldTest extends LocalRecordsDAO
                 "field0:att(n:\"one\") {" +
                     "innerOneAlias: att(n:\"innerOne\"){" +
                         "str" +
-                    "}" +
+                    "}," +
                     "innerTwoAlias: atts(n:\"innerTwo\"){" +
                         "att(n:\"innerInnerTest\"){json}" +
-                    "}" +
+                    "}," +
+                    "disp" +
                 "}," +
                 "field1:att(n:\"two\"){num}" +
             "}";
@@ -74,14 +75,16 @@ public class MetaFieldTest extends LocalRecordsDAO
         if ("field0".equals(field.getAlias())) {
 
             Map<String, String> expectedAttsMap = new HashMap<>();
-            expectedAttsMap.put("innerOne", "att(n:\"innerOne\"){str}");
-            expectedAttsMap.put("innerTwo", "atts(n:\"innerTwo\"){att(n:\"innerInnerTest\"){json}}");
+            expectedAttsMap.put("innerOne", ".att(n:\"innerOne\"){str}");
+            expectedAttsMap.put("innerTwo", ".atts(n:\"innerTwo\"){att(n:\"innerInnerTest\"){json}}");
+            expectedAttsMap.put(".disp", ".disp");
 
             assertEquals(expectedAttsMap, new HashMap<>(field.getInnerAttributesMap()));
 
             List<String> expectedAttsList = new ArrayList<>();
             expectedAttsList.add("innerOne");
             expectedAttsList.add("innerTwo");
+            expectedAttsList.add(".disp");
 
             assertEquals(expectedAttsList, new ArrayList<>(field.getInnerAttributes()));
 

@@ -74,8 +74,8 @@ public class MetaFieldTest extends LocalRecordsDAO
         if ("field0".equals(field.getAlias())) {
 
             Map<String, String> expectedAttsMap = new HashMap<>();
-            expectedAttsMap.put("innerOne", "att(n:\"innerOne\"){str}");
-            expectedAttsMap.put("innerTwo", "atts(n:\"innerTwo\"){att(n:\"innerInnerTest\"){json}}");
+            expectedAttsMap.put("innerOne", ".att(n:\"innerOne\"){str}");
+            expectedAttsMap.put("innerTwo", ".atts(n:\"innerTwo\"){att(n:\"innerInnerTest\"){json}}");
 
             assertEquals(expectedAttsMap, new HashMap<>(field.getInnerAttributesMap()));
 

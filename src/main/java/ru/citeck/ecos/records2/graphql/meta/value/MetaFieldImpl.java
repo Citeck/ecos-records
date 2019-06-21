@@ -108,7 +108,7 @@ public class MetaFieldImpl implements MetaField {
         fields.forEach((k, field) -> {
             sb.setLength(0);
             fillFieldSchema(field, sb);
-            result.put(k, sb.toString());
+            result.put(k, "." + sb.toString());
         });
 
         return result;

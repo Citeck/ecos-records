@@ -361,13 +361,32 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Map<String, String> attributes) {
 
+        return getAttributesImpl(records, attributes, true);
+    }
+
+    @Override
+    public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
+        return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
+    }
+
+    @Override
+    public RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes) {
+        return getAttributesImpl(records, attributes, false);
+    }
+
+    private RecordsResult<RecordMeta> getAttributesImpl(Collection<RecordRef> records,
+                                                        Map<String, String> attributes,
+                                                        boolean flatAttributes) {
+
         if (attributes.isEmpty()) {
             return new RecordsResult<>(new ArrayList<>(records), RecordMeta::new);
         }
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
         RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
-        meta.setRecords(recordsMetaService.convertToFlatMeta(meta.getRecords(), schema));
+        if (flatAttributes) {
+            meta.setRecords(recordsMetaService.convertToFlatMeta(meta.getRecords(), schema));
+        }
 
         return meta;
     }

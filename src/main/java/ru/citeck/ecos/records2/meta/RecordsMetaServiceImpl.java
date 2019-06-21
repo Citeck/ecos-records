@@ -10,6 +10,8 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceAware;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -27,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class RecordsMetaServiceImpl implements RecordsMetaService {
+public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServiceAware {
 
     private static final Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
 
@@ -407,6 +409,10 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
             return sb.toString();
         }
+    }
+
+    public void setRecordsService(RecordsService recordsService) {
+        graphQLService.setRecordsService(recordsService);
     }
 
     public static class ScalarField<FieldTypeT> {

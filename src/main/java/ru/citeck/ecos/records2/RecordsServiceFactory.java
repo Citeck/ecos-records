@@ -24,8 +24,8 @@ public class RecordsServiceFactory {
 
     public RecordsService createRecordsService() {
         recordsService = new RecordsServiceImpl(createRecordsMetaService(),
-                                                                   createPredicateService(),
-                                                                   createQueryLangService());
+                                                createPredicateService(),
+                                                createQueryLangService());
         recordsService.register(new RecordsGroupDAO());
         return recordsService;
     }
@@ -77,6 +77,7 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new JsonNodeValueFactory());
         metaValueFactories.add(new LongValueFactory());
         metaValueFactories.add(new StringValueFactory());
+        metaValueFactories.add(new RecordRefValueFactory());
 
         return metaValueFactories;
     }

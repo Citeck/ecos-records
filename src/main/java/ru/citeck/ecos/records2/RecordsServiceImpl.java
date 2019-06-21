@@ -59,6 +59,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         this.recordsMetaService = recordsMetaService;
         this.predicateService = predicateService;
         this.queryLangService = queryLangService;
+
+        if (recordsMetaService instanceof RecordsServiceAware) {
+            ((RecordsServiceAware) recordsMetaService).setRecordsService(this);
+        }
     }
 
     /* QUERY */
@@ -550,8 +554,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             ((PredicateServiceAware) recordsSource).setPredicateService(predicateService);
         }
     }
-
-
 
     private <T extends RecordsDAO> void register(Map<String, T> map, Class<T> type, RecordsDAO value) {
         if (type.isAssignableFrom(value.getClass())) {

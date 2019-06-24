@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service to work with some abstract "records" from any source.
@@ -44,9 +45,37 @@ import java.util.Map;
  */
 public interface RecordsService {
 
-    String LANGUAGE_PREDICATE = "predicate";
+    /* QUERY RECORD */
 
-    /* QUERY */
+    /**
+     * Query single record.
+     *
+     * @see RecordsService#queryRecords(RecordsQuery)
+     */
+    Optional<RecordRef> queryRecord(RecordsQuery query);
+
+    /**
+     * Query single record.
+     *
+     * @see RecordsService#queryRecords(RecordsQuery, Class)
+     */
+    <T> Optional<T> queryRecord(RecordsQuery query, Class<T> metaClass);
+
+    /**
+     * Query single record.
+     *
+     * @see RecordsService#queryRecords(RecordsQuery, Collection)
+     */
+    Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes);
+
+    /**
+     * Query single record.
+     *
+     * @see RecordsService#queryRecords(RecordsQuery, Map)
+     */
+    Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes);
+
+    /* QUERY RECORDS */
 
     /**
      * Query records.
@@ -196,25 +225,7 @@ public interface RecordsService {
     /* OTHER */
 
     /**
-     * Get records which fit the query.
-     * This method can be used to process all records in a system without search limits
-     */
-    Iterable<RecordRef> getIterableRecords(RecordsQuery query);
-
-    /**
-     * Convert query.
-     *
-     * @return a query in the toLang language or null if the conversion is not possible
-     */
-    JsonNode convertQueryLanguage(JsonNode query, String fromLang, String toLang);
-
-    /**
      * Register the RecordsDAO. It must return valid id from method "getId()" to call this method.
      */
     void register(RecordsDAO recordsSource);
-
-    /**
-     * Register query converter.
-     */
-    void register(QueryLangConverter converter, String fromLang, String toLang);
 }

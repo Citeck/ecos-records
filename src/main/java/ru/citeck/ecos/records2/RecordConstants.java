@@ -11,6 +11,8 @@ public final class RecordConstants {
     public static final String ATT_VIEW_FORM_KEY = "_viewFormKey";
     public static final String ATT_FORM_MODE = "_formMode";
     public static final String ATT_ALIAS = "_alias";
+    public static final String ATT_DASHBOARD_KEY = "_dashboardKey";
+    public static final String ATT_MODIFIED = "_modified";
 
     public static final String FORM_MODE_CREATE = "CREATE";
     public static final String FORM_MODE_EDIT = "EDIT";

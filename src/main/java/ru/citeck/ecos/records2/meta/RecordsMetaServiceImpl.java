@@ -360,7 +360,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             switch (scalarField) {
                 case "options":
                 case "distinct":
-                    inner = "{title:disp,label:disp,value:str}";
+                    inner = "{label:disp,value:str}";
                     break;
                 case "createVariants":
                     inner = "{json}";

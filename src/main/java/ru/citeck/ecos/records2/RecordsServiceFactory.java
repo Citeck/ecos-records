@@ -2,6 +2,8 @@ package ru.citeck.ecos.records2;
 
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.PredicateServiceImpl;
+import ru.citeck.ecos.querylang.QueryLangService;
+import ru.citeck.ecos.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
@@ -21,9 +23,15 @@ public class RecordsServiceFactory {
     private RecordsService recordsService;
 
     public RecordsService createRecordsService() {
-        recordsService = new RecordsServiceImpl(createRecordsMetaService(), createPredicateService());
+        recordsService = new RecordsServiceImpl(createRecordsMetaService(),
+                                                                   createPredicateService(),
+                                                                   createQueryLangService());
         recordsService.register(new RecordsGroupDAO());
         return recordsService;
+    }
+
+    public QueryLangService createQueryLangService() {
+        return new QueryLangServiceImpl();
     }
 
     public RecordsMetaService createRecordsMetaService() {

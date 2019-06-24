@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2;
+package ru.citeck.ecos.querylang;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

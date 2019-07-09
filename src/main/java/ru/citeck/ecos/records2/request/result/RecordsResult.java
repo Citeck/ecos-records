@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class RecordsResult<T> extends DebugResult {
 
     private List<T> records = new ArrayList<>();
-    private List<RecordsError> errors;
+    private List<RecordsError> errors = new ArrayList<>();
 
     public RecordsResult() {
     }
@@ -81,9 +81,6 @@ public class RecordsResult<T> extends DebugResult {
     }
 
     public void addError(RecordsError error) {
-        if (this.errors == null) {
-            this.errors = new ArrayList<>();
-        }
         this.errors.add(error);
     }
 

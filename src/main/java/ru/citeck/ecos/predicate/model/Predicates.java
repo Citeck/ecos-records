@@ -22,6 +22,10 @@ public class Predicates {
         return new EmptyPredicate(attribute);
     }
 
+    public static ValuePredicate eq(String attribute, Object value) {
+        return equal(attribute, value);
+    }
+
     public static ValuePredicate equal(String attribute, Object value) {
         return ValuePredicate.equal(attribute, value);
     }

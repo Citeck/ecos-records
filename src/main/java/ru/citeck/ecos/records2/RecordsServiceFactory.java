@@ -15,6 +15,8 @@ import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
+import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
+import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 
 import java.util.ArrayList;
@@ -33,6 +35,15 @@ public class RecordsServiceFactory {
     }
 
     public RecordsResolver createRecordsResolver() {
+        return new LocalRemoteResolver(createLocalRecordsResolver(),
+                                       createRemoteRecordsResolver());
+    }
+
+    private RemoteRecordsResolver createRemoteRecordsResolver() {
+        return null;
+    }
+
+    private LocalRecordsResolver createLocalRecordsResolver() {
         LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());
         resolver.setPredicateService(createPredicateService());
         resolver.register(new RecordsGroupDAO());

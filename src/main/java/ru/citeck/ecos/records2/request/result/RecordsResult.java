@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2.request.result;
 
+import ru.citeck.ecos.records2.request.error.RecordsError;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -8,6 +10,7 @@ import java.util.stream.Collectors;
 public class RecordsResult<T> extends DebugResult {
 
     private List<T> records = new ArrayList<>();
+    private List<RecordsError> errors = new ArrayList<>();
 
     public RecordsResult() {
     }
@@ -40,6 +43,13 @@ public class RecordsResult<T> extends DebugResult {
     public void merge(RecordsResult<T> other) {
         super.merge(other);
 
+        if (this.errors != null) {
+            this.errors = new ArrayList<>(this.errors);
+            this.errors.addAll(other.errors);
+        } else {
+            this.errors = other.errors;
+        }
+
         List<T> records = new ArrayList<>();
         records.addAll(this.records);
         records.addAll(other.getRecords());
@@ -56,6 +66,22 @@ public class RecordsResult<T> extends DebugResult {
         } else {
             this.records = new ArrayList<>();
         }
+    }
+
+    public List<RecordsError> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<RecordsError> errors) {
+        if (errors != null) {
+            this.errors = new ArrayList<>(errors);
+        } else {
+            this.errors = new ArrayList<>();
+        }
+    }
+
+    public void addError(RecordsError error) {
+        this.errors.add(error);
     }
 
     public void addRecord(T record) {

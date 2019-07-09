@@ -128,6 +128,8 @@ public class MetaFieldImpl implements MetaField {
                      .filter(a -> a.getValue() instanceof StringValue)
                      .map(a -> ((StringValue) a.getValue()).getValue())
                      .ifPresent(name -> attributes.put(name, field));
+            } else {
+                attributes.put("." + field.getName(), field);
             }
         }
 

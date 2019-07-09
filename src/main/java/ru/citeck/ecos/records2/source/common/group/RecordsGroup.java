@@ -28,17 +28,25 @@ public class RecordsGroup implements MetaValue {
 
     private RecordsService recordsService;
 
+    private String id;
+
     public RecordsGroup(RecordsQuery query,
                         Map<String, DistinctValue> attributes,
                         Predicate predicate,
                         RecordsService recordsService) {
 
+        this.id = UUID.randomUUID().toString();
         this.query = query;
         this.predicate = predicate;
         this.recordsService = recordsService;
 
         this.attributes = new HashMap<>();
         attributes.forEach((n, v) -> this.attributes.put(n, new ValueWrapper(v)));
+    }
+
+    @Override
+    public String getId() {
+        return id;
     }
 
     @Override

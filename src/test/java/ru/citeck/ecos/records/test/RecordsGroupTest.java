@@ -12,17 +12,15 @@ import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
+import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -33,6 +31,31 @@ class RecordsGroupTest extends LocalRecordsDAO
 
     private static final String SOURCE_ID = "test-source";
 
+    private static final List<PojoMeta> VALUES;
+
+    static {
+        VALUES = Arrays.asList(
+            new PojoMeta("one", 1),
+            new PojoMeta("one", 2),
+            new PojoMeta("one", 3),
+            new PojoMeta("one", 4),
+            new PojoMeta("1one55", 200),
+            new PojoMeta("1one55", 200),
+            new PojoMeta("one", 1000),
+            new PojoMeta("1one", 2000),
+            new PojoMeta("one12312", 10),
+            new PojoMeta("one", 5),
+            new PojoMeta("2one", 199),
+            new PojoMeta("one", 64),
+            new PojoMeta("2one", 21),
+            new PojoMeta("two", 123),
+            new PojoMeta("two", 124),
+            new PojoMeta("two", 6623),
+            new PojoMeta("two123", 6342),
+            new PojoMeta(null, 6342)
+        );
+    }
+
     private RecordsServiceImpl recordsService;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
@@ -42,8 +65,8 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = (RecordsServiceImpl) factory.createRecordsService();
-        predicateService = recordsService.getPredicateService();
-        queryLangService = recordsService.getQueryLangService();
+        predicateService = factory.getPredicateService();
+        queryLangService = factory.getQueryLangService();
 
         queryLangService.register(q -> q, "fts", PredicateService.LANGUAGE_PREDICATE);
         queryLangService.register(q -> q, PredicateService.LANGUAGE_PREDICATE, "fts");
@@ -82,17 +105,17 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         } else if (predicate instanceof EmptyPredicate) {
 
-            pred = m -> m.getStr() == null || m.getStr().isEmpty();
+            pred = m -> m.getStrVal() == null || m.getStrVal().isEmpty();
 
         } else if (predicate instanceof ValuePredicate) {
 
             ValuePredicate valPred = (ValuePredicate) predicate;
 
             switch (valPred.getAttribute()) {
-                case "str":
+                case "strVal":
 
                     String value = (String) valPred.getValue();
-                    pred = m -> Objects.equals(m.getStr(), value);
+                    pred = m -> Objects.equals(m.getStrVal(), value);
 
                     break;
                 case "numKey":
@@ -159,25 +182,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         Predicate predicate = predicateService.readJson(recordsQuery.getQuery());
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
 
-        result.setRecords(Stream.of(
-            new PojoMeta("one", 1),
-            new PojoMeta("one", 2),
-            new PojoMeta("one", 3),
-            new PojoMeta("one", 4),
-            new PojoMeta("1one55", 200),
-            new PojoMeta("1one55", 200),
-            new PojoMeta("one", 1000),
-            new PojoMeta("1one", 2000),
-            new PojoMeta("one12312", 10),
-            new PojoMeta("one", 5),
-            new PojoMeta("2one", 199),
-            new PojoMeta("one", 64),
-            new PojoMeta("2one", 21),
-            new PojoMeta("two", 123),
-            new PojoMeta("two", 124),
-            new PojoMeta("two", 6623),
-            new PojoMeta("two123", 6342)
-        ).filter(pojoPredicate).collect(Collectors.toList()));
+        result.setRecords(VALUES.stream().filter(pojoPredicate).collect(Collectors.toList()));
 
         return result;
     }
@@ -189,7 +194,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         recordsQuery.setQuery(Predicates.gt("numKey", 4));
         recordsQuery.setSourceId(SOURCE_ID);
         recordsQuery.setLanguage("fts");
-        recordsQuery.setGroupBy(Collections.singletonList("str"));
+        recordsQuery.setGroupBy(Collections.singletonList("strVal"));
 
         RecordsQuery baseQuery = objectMapper.readValue(objectMapper.writeValueAsString(recordsQuery), RecordsQuery.class);
 
@@ -202,6 +207,56 @@ class RecordsGroupTest extends LocalRecordsDAO
         assertResults(recordsService.queryRecords(recordsQuery, Result.class));
     }
 
+    @Test
+    void testDistinct() {
+
+        testDistinct(Predicates.gt("numKey", 4), p -> p.keyNum > 4);
+        testDistinct(Predicates.lt("numKey", 4), p -> p.keyNum < 4);
+        testDistinct(Predicates.ge("numKey", 4), p -> p.keyNum >= 4);
+        testDistinct(Predicates.le("numKey", 4), p -> p.keyNum <= 4);
+
+        testDistinct(Predicates.le("numKey", 10), p -> p.keyNum <= 10);
+        testDistinct(Predicates.ge("numKey", 10), p -> p.keyNum >= 10);
+        testDistinct(Predicates.gt("numKey", 10), p -> p.keyNum > 10);
+        testDistinct(Predicates.lt("numKey", 10), p -> p.keyNum < 10);
+        testDistinct(Predicates.eq("numKey", 10), p -> p.keyNum == 10);
+
+        testDistinct(Predicates.gt("numKey", Integer.MAX_VALUE), p -> false);
+
+        testDistinct(Predicates.ge("numKey", 10), p -> false, "unknown");
+    }
+
+    private void testDistinct(Predicate predicate, Function<PojoMeta, Boolean> predicateFunc) {
+        testDistinct(predicate, predicateFunc, "strVal");
+    }
+
+    private void testDistinct(Predicate predicate, Function<PojoMeta, Boolean> predicateFunc, String distinctAtt) {
+
+        RecordsQuery recordsQuery = new RecordsQuery();
+        recordsQuery.setSourceId(SOURCE_ID);
+
+        recordsQuery.setLanguage(DistinctQuery.LANGUAGE);
+        DistinctQuery distinctQuery = new DistinctQuery();
+        distinctQuery.setAttribute(distinctAtt);
+        distinctQuery.setLanguage("predicate");
+        distinctQuery.setQuery(predicateService.writeJson(predicate));
+        recordsQuery.setQuery(distinctQuery);
+
+        RecordsQueryResult<DistinctValue> result = recordsService.queryRecords(recordsQuery, DistinctValue.class);
+
+        Set<String> manualCalculatedDistinct = new HashSet<>();
+        VALUES.forEach(v -> {
+            if (predicateFunc.apply(v) && v.strVal != null) {
+                manualCalculatedDistinct.add(v.strVal);
+            }
+        });
+
+        Set<String> distinctFromQuery = new HashSet<>();
+        result.getRecords().forEach(r -> distinctFromQuery.add(r.value));
+
+        assertEquals(manualCalculatedDistinct, distinctFromQuery);
+    }
+
     private void assertResults(RecordsQueryResult<Result> records) {
 
         List<Result> results = records.getRecords();
@@ -209,7 +264,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         assertEquals(7, results.size());
 
         for (Result result : results) {
-            String value = result.getStr();
+            String value = result.getStrVal();
 
             switch (value) {
                 case "1one55":
@@ -245,22 +300,43 @@ class RecordsGroupTest extends LocalRecordsDAO
         }
     }
 
+    public static class DistinctValue {
+
+        @MetaAtt(".str")
+        private String value;
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return "DistinctValue{" +
+                "value='" + value + '\'' +
+                '}';
+        }
+    }
+
     public static class Result {
 
         @MetaAtt("sum(number)")
         private Double sum;
 
-        @MetaAtt(".atts(n:'values'){str: att(n:'str'){str}, number:att(n:'number'){num}}")
+        @MetaAtt(".atts(n:'values'){strVal: att(n:'strVal'){str}, number:att(n:'number'){num}}")
         private List<Val> values;
 
-        private String str;
+        private String strVal;
 
-        public String getStr() {
-            return str;
+        public String getStrVal() {
+            return strVal;
         }
 
-        public void setStr(String str) {
-            this.str = str;
+        public void setStrVal(String strVal) {
+            this.strVal = strVal;
         }
 
         public Double getSum() {
@@ -289,15 +365,15 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         public static class Val {
 
-            private String str;
+            private String strVal;
             private String number;
 
-            public String getStr() {
-                return str;
+            public String getStrVal() {
+                return strVal;
             }
 
-            public void setStr(String str) {
-                this.str = str;
+            public void setStrVal(String strVal) {
+                this.strVal = strVal;
             }
 
             public String getNumber() {
@@ -311,7 +387,7 @@ class RecordsGroupTest extends LocalRecordsDAO
             @Override
             public String toString() {
                 return "Val{" +
-                    "str='" + str + '\'' +
+                    "str='" + strVal + '\'' +
                     ", number='" + number + '\'' +
                     '}';
             }
@@ -351,13 +427,13 @@ class RecordsGroupTest extends LocalRecordsDAO
     public static class PojoMeta {
 
         private String id;
-        private String str;
+        private String strVal;
         private int keyNum;
 
-        PojoMeta(String str, int keyNum) {
+        PojoMeta(String strVal, int keyNum) {
 
             this.id = UUID.randomUUID().toString();
-            this.str = str;
+            this.strVal = strVal;
             this.keyNum = keyNum;
         }
 
@@ -369,16 +445,16 @@ class RecordsGroupTest extends LocalRecordsDAO
             this.id = id;
         }
 
-        public String getStr() {
-            return str;
+        public String getStrVal() {
+            return strVal;
         }
 
-        public void setStr(String str) {
-            this.str = str;
+        public void setStrVal(String strVal) {
+            this.strVal = strVal;
         }
 
         public Double getNumber() {
-            return (double) str.length();
+            return (double) strVal.length();
         }
 
         public int getKeyNum() {

@@ -48,6 +48,22 @@ public class RecordRef {
         );
     }
 
+    public RecordRef addAppName(String appName) {
+        String current = toString();
+        if (current.contains("@")) {
+            return valueOf(appName + "/" + current);
+        } else {
+            return valueOf(appName + "/@" + current);
+        }
+    }
+
+    public RecordRef removeAppName() {
+        if (appName.isEmpty()) {
+            return this;
+        }
+        return create(sourceId, id);
+    }
+
     @JsonCreator
     public static RecordRef valueOf(String recordRefStr) {
 

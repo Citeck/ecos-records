@@ -13,6 +13,10 @@ import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records2.resolver.RecordsResolver;
+import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
+import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
+import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 
 import java.util.ArrayList;
@@ -21,17 +25,35 @@ import java.util.List;
 public class RecordsServiceFactory {
 
     private RecordsService recordsService;
+    private RecordsResolver recordsResolver;
+    private PredicateService predicateService;
+    private QueryLangService queryLangService;
 
     public RecordsService createRecordsService() {
-        recordsService = new RecordsServiceImpl(createRecordsMetaService(),
-                                                                   createPredicateService(),
-                                                                   createQueryLangService());
-        recordsService.register(new RecordsGroupDAO());
+        recordsService = new RecordsServiceImpl(createRecordsMetaService(), createRecordsResolver());
         return recordsService;
     }
 
+    public RecordsResolver createRecordsResolver() {
+        return new LocalRemoteResolver(createLocalRecordsResolver(),
+                                       createRemoteRecordsResolver());
+    }
+
+    private RemoteRecordsResolver createRemoteRecordsResolver() {
+        return null;
+    }
+
+    private LocalRecordsResolver createLocalRecordsResolver() {
+        LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());
+        resolver.setPredicateService(createPredicateService());
+        resolver.register(new RecordsGroupDAO());
+        this.recordsResolver = resolver;
+        return resolver;
+    }
+
     public QueryLangService createQueryLangService() {
-        return new QueryLangServiceImpl();
+        queryLangService = new QueryLangServiceImpl();
+        return queryLangService;
     }
 
     public RecordsMetaService createRecordsMetaService() {
@@ -39,7 +61,8 @@ public class RecordsServiceFactory {
     }
 
     public PredicateService createPredicateService() {
-        return new PredicateServiceImpl();
+        predicateService = new PredicateServiceImpl();
+        return predicateService;
     }
 
     public RecordsMetaGql createRecordsMetaGraphQL() {
@@ -77,7 +100,24 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new JsonNodeValueFactory());
         metaValueFactories.add(new LongValueFactory());
         metaValueFactories.add(new StringValueFactory());
+        metaValueFactories.add(new RecordRefValueFactory());
 
         return metaValueFactories;
+    }
+
+    public RecordsService getRecordsService() {
+        return recordsService;
+    }
+
+    public RecordsResolver getRecordsResolver() {
+        return recordsResolver;
+    }
+
+    public PredicateService getPredicateService() {
+        return predicateService;
+    }
+
+    public QueryLangService getQueryLangService() {
+        return queryLangService;
     }
 }

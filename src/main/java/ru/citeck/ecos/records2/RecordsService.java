@@ -172,6 +172,22 @@ public interface RecordsService {
      */
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
+    /**
+     * Get raw (not flat) record meta attributes.
+     *
+     * @param attributes map, where a key is a pseudonym for a result value
+     *                   and value is an attribute which value we want to request.
+     */
+    RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes);
+
+    /**
+     * Get raw (not flat) records meta attributes.
+     *
+     * @param attributes map, where a key is a pseudonym for a result value
+     *                   and value is an attribute which value we want to request.
+     */
+    RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes);
+
     /* META */
 
     /**

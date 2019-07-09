@@ -377,7 +377,7 @@ public class LocalRecordsResolver implements RecordsResolver,
             throw new LanguageNotSupportedException(query.getSourceId(), query.getLanguage());
         }
 
-        return new DaoWithConvQuery<>(dao, query);
+        return new DaoWithConvQuery<>(dao, convertedQuery);
     }
 
     public void register(RecordsDAO recordsDao) {

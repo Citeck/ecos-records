@@ -24,10 +24,14 @@ import java.util.List;
 
 public class RecordsServiceFactory {
 
-    private RecordsService recordsService;
-    private RecordsResolver recordsResolver;
-    private PredicateService predicateService;
-    private QueryLangService queryLangService;
+    protected RecordsService recordsService;
+    protected RecordsResolver recordsResolver;
+    protected PredicateService predicateService;
+    protected QueryLangService queryLangService;
+    protected RecordsMetaGql recordsMetaGql;
+    protected RecordsMetaService recordsMetaService;
+
+    private LocalRecordsResolver localRecordsResolver;
 
     public RecordsService createRecordsService() {
         recordsService = new RecordsServiceImpl(createRecordsMetaService(), createRecordsResolver());
@@ -35,8 +39,11 @@ public class RecordsServiceFactory {
     }
 
     public RecordsResolver createRecordsResolver() {
-        return new LocalRemoteResolver(createLocalRecordsResolver(),
-                                       createRemoteRecordsResolver());
+        if (recordsResolver == null) {
+            this.recordsResolver = new LocalRemoteResolver(createLocalRecordsResolver(),
+                                                           createRemoteRecordsResolver());
+        }
+        return recordsResolver;
     }
 
     private RemoteRecordsResolver createRemoteRecordsResolver() {
@@ -44,29 +51,43 @@ public class RecordsServiceFactory {
     }
 
     private LocalRecordsResolver createLocalRecordsResolver() {
-        LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());
-        resolver.setPredicateService(createPredicateService());
-        resolver.register(new RecordsGroupDAO());
-        this.recordsResolver = resolver;
-        return resolver;
+
+        if (localRecordsResolver == null) {
+            LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());
+            resolver.setPredicateService(createPredicateService());
+            resolver.register(new RecordsGroupDAO());
+            localRecordsResolver = resolver;
+        }
+
+        return localRecordsResolver;
     }
 
     public QueryLangService createQueryLangService() {
-        queryLangService = new QueryLangServiceImpl();
+        if (queryLangService == null) {
+            queryLangService = new QueryLangServiceImpl();
+        }
         return queryLangService;
     }
 
     public RecordsMetaService createRecordsMetaService() {
-        return new RecordsMetaServiceImpl(createRecordsMetaGraphQL());
+        if (recordsMetaService == null) {
+            recordsMetaService = new RecordsMetaServiceImpl(createRecordsMetaGraphQL());
+        }
+        return recordsMetaService;
     }
 
     public PredicateService createPredicateService() {
-        predicateService = new PredicateServiceImpl();
+        if (predicateService == null) {
+            predicateService = new PredicateServiceImpl();
+        }
         return predicateService;
     }
 
     public RecordsMetaGql createRecordsMetaGraphQL() {
-        return new RecordsMetaGql(getGqlTypes(), () -> new GqlContext(recordsService));
+        if (recordsMetaGql == null) {
+            recordsMetaGql = new RecordsMetaGql(getGqlTypes(), () -> new GqlContext(recordsService));
+        }
+        return recordsMetaGql;
     }
 
     protected List<GqlTypeDefinition> getGqlTypes() {

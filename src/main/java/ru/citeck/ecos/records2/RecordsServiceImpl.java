@@ -78,7 +78,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
         RecordsQueryResult<RecordMeta> records = queryRecords(query, schema.getSchema());
-        records.setRecords(recordsMetaService.convertToFlatMeta(records.getRecords(), schema));
+        records.setRecords(recordsMetaService.convertMetaResult(records.getRecords(), schema, true));
 
         return records;
     }
@@ -146,9 +146,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         AttributesSchema schema = recordsMetaService.createSchema(attributes);
         RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
-        if (flatAttributes) {
-            meta.setRecords(recordsMetaService.convertToFlatMeta(meta.getRecords(), schema));
-        }
+        meta.setRecords(recordsMetaService.convertMetaResult(meta.getRecords(), schema, flatAttributes));
 
         return meta;
     }

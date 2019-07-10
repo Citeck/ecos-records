@@ -27,17 +27,9 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
                                 implements RecordsMetaLocalDAO<MetaValue>,
                                            RecordsQueryWithMetaLocalDAO<MetaValue> {
 
-    private static final String FIELD_VALUE = "TestValue";
-    private static final String FIELD_REF0 = "ref0Field";
-    private static final String FIELD_REF1 = "ref1Field";
-    private static final String REF1_DISP_NAME = "REF 1 DISP NAME";
-
     private static final String ID = "sourceId";
 
     private RecordsService recordsService;
-
-    private RecordRef ref0 = RecordRef.create(ID, "ref0");
-    private RecordRef ref1 = RecordRef.create(ID, "ref1");
 
     @BeforeAll
     void init() {
@@ -55,71 +47,89 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         query.setSourceId(ID);
 
         Map<String, String> attsToRequest = new HashMap<>();
-        attsToRequest.put("att", FIELD_REF0 + "." + FIELD_REF1 + "?str");
-        attsToRequest.put("disp", FIELD_REF0 + "?disp");
+        attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
+        attsToRequest.put("att2", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.VALUE_FIELD + "?str");
+        attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
 
         RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
 
         assertEquals(1, result.getRecords().size());
         RecordMeta meta = result.getRecords().get(0);
-        assertEquals(FIELD_VALUE, meta.get("att", ""));
-        assertEquals(REF1_DISP_NAME, meta.get("disp", ""));
+        assertEquals(Val.val0.value, meta.get("att0", ""));
+        assertEquals(Val.val2.value, meta.get("att2", ""));
+        assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
     }
 
     @Override
     public RecordsQueryResult<MetaValue> getMetaValues(RecordsQuery query) {
         RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();
-        result.addRecord(new Ref0());
+        result.addRecord(Val.val0);
         return result;
     }
 
     @Override
     public List<MetaValue> getMetaValues(List<RecordRef> records) {
         return records.stream().map(r -> {
-            if (RecordRef.valueOf(ref0.getId()).equals(r)) {
-                return new Ref0();
-            } else if (RecordRef.valueOf(ref1.getId()).equals(r)) {
-                return new Ref1();
+            if (r.equals(RecordRef.valueOf(Val.val0.getId()))) {
+                return Val.val0;
+            } else if (r.equals(RecordRef.valueOf(Val.val1.getId()))) {
+                return Val.val1;
+            } else if (r.equals(RecordRef.valueOf(Val.val2.getId()))) {
+                return Val.val2;
             } else {
                 throw new IllegalStateException("Unknown ref: " + r);
             }
         }).collect(Collectors.toList());
     }
 
-    public class Ref0 implements MetaValue {
+    public static class Val implements MetaValue {
 
-        @Override
-        public String getId() {
-            return ref0.getId();
+        static final String VALUE_FIELD = "value";
+        static final String VAL0_FIELD = "val0";
+        static final String VAL1_FIELD = "val1";
+        static final String VAL2_FIELD = "val2";
+
+        static final Val val0 = new Val(RecordRef.create(ID, "val0"));
+        static final Val val1 = new Val(RecordRef.create(ID, "val1"));
+        static final Val val2 = new Val(RecordRef.create(ID, "val2"));
+
+        final RecordRef ref;
+        final String value;
+
+        public Val(RecordRef ref) {
+            this.ref = ref;
+            this.value = "VALUE OF " + ref;
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
-            if (FIELD_REF0.equals(name)) {
-                return ref1;
-            }
-            return null;
-        }
-    }
-
-    public class Ref1 implements MetaValue {
-
-        @Override
         public String getId() {
-            return ref1.getId();
+            return ref.getId();
         }
 
         @Override
         public String getDisplayName() {
-            return REF1_DISP_NAME;
+            return "DISP OF " + ref;
+        }
+
+        @Override
+        public String getString() {
+            return "STR OF " + ref;
         }
 
         @Override
         public Object getAttribute(String name, MetaField field) {
-            if (FIELD_REF1.equals(name)) {
-                return FIELD_VALUE;
+            switch (name) {
+                case VAL0_FIELD:
+                    return val0.ref;
+                case VAL1_FIELD:
+                    return val1.ref;
+                case VAL2_FIELD:
+                    return val2.ref;
+                case VALUE_FIELD:
+                    return value;
+                default:
+                    return null;
             }
-            return null;
         }
     }
 }

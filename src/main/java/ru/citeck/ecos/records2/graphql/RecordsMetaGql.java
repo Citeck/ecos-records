@@ -28,6 +28,7 @@ public class RecordsMetaGql {
 
     private GraphQL graphQL;
     private Supplier<? extends GqlContext> contextSupplier;
+    private ThreadLocal<GqlContext> currentContext = new ThreadLocal<>();
 
     private ObjectMapper objectMapper = new ObjectMapper();
     private List<GqlTypeDefinition> graphQLTypes;
@@ -72,10 +73,24 @@ public class RecordsMetaGql {
     public List<RecordMeta> getMeta(List<?> metaValues, String schema) {
 
         String query = String.format(META_QUERY_TEMPLATE, schema);
-        GqlContext context = contextSupplier.get();
 
+        GqlContext context = currentContext.get();
+        boolean isContextOwner = false;
+        if (context == null) {
+            context = contextSupplier.get();
+            currentContext.set(context);
+            isContextOwner = true;
+        }
         context.setMetaValues(metaValues);
-        ExecutionResult result = executeImpl(query, context);
+
+        ExecutionResult result;
+        try {
+            result = executeImpl(query, context);
+        } finally {
+            if (isContextOwner) {
+                currentContext.remove();
+            }
+        }
 
         return convertMeta(result, metaValues);
     }

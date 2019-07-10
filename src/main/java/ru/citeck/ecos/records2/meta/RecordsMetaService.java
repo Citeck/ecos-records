@@ -14,8 +14,7 @@ public interface RecordsMetaService {
 
     AttributesSchema createSchema(Map<String, String> attributes);
 
-    List<RecordMeta> convertToFlatMeta(List<RecordMeta> nodes, AttributesSchema schema);
+    List<RecordMeta> convertMetaResult(List<RecordMeta> nodes, AttributesSchema schema, boolean flat);
 
     RecordsResult<RecordMeta> getMeta(List<?> records, String schema);
-
 }

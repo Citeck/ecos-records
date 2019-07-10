@@ -75,16 +75,16 @@ public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServic
     }
 
     @Override
-    public List<RecordMeta> convertToFlatMeta(List<RecordMeta> meta, AttributesSchema schema) {
+    public List<RecordMeta> convertMetaResult(List<RecordMeta> meta, AttributesSchema schema, boolean flat) {
         return meta.stream()
-                   .map(m -> convertToFlatMeta(m, schema))
+                   .map(m -> convertMetaResult(m, schema, flat))
                    .collect(Collectors.toList());
     }
 
-    private RecordMeta convertToFlatMeta(RecordMeta meta, AttributesSchema schema) {
+    private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
 
         ObjectNode attributes = meta.getAttributes();
-        ObjectNode flatAttributes = JsonNodeFactory.instance.objectNode();
+        ObjectNode resultAttributes = JsonNodeFactory.instance.objectNode();
         Map<String, String> keysMapping = schema.getKeysMapping();
 
         Iterator<String> fields = attributes.fieldNames();
@@ -96,18 +96,19 @@ public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServic
                 continue;
             }
             if ("id".equals(resultKey)) {
-                flatAttributes.put(resultKey, meta.getId().toString());
+                resultAttributes.put(resultKey, meta.getId().toString());
             } else {
-                if (resultKey.equals(".json")) {
-                    flatAttributes.put(resultKey, attributes.get(key));
+                JsonNode value = attributes.get(key);
+                if (resultKey.equals(".json") || !flat) {
+                    resultAttributes.put(resultKey, value);
                 } else {
-                    flatAttributes.put(resultKey, toFlatNode(attributes.get(key)));
+                    resultAttributes.put(resultKey, toFlatNode(value));
                 }
             }
         }
 
         RecordMeta recordMeta = new RecordMeta(meta.getId());
-        recordMeta.setAttributes(flatAttributes);
+        recordMeta.setAttributes(resultAttributes);
 
         return recordMeta;
     }

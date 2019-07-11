@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -20,6 +21,7 @@ import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,7 +54,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
-        return new RecordsQueryResult<>(recordsResolver.queryRecords(query, ""), RecordMeta::getId);
+        return handleRecordsQuery(() -> {
+            RecordsQueryResult<RecordMeta> metaResult = recordsResolver.queryRecords(query, "");
+            return new RecordsQueryResult<>(metaResult, RecordMeta::getId);
+        });
     }
 
     @Override
@@ -85,7 +90,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-        return recordsResolver.queryRecords(query, schema);
+        return handleRecordsQuery(() -> recordsResolver.queryRecords(query, schema));
     }
 
     /* ATTRIBUTES */
@@ -178,7 +183,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
-        return recordsResolver.getMeta(records, schema);
+        return handleRecordsRead(() -> recordsResolver.getMeta(records, schema), RecordsResult::new);
     }
 
     /* MODIFICATION */
@@ -278,6 +283,25 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     /* OTHER */
+
+    private <T> RecordsQueryResult<T> handleRecordsQuery(Supplier<RecordsQueryResult<T>> supplier) {
+        return handleRecordsRead(supplier, RecordsQueryResult::new);
+    }
+
+    private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
+
+        T result;
+
+        try {
+            result = impl.get();
+        } catch (Exception e) {
+            logger.error("Records resolving error", e);
+            result = orElse.get();
+            result.addError(ErrorUtils.convertException(e));
+        }
+
+        return result;
+    }
 
     private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
 

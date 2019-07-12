@@ -2,6 +2,9 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,11 @@ public class InnerMetaValue implements MetaValue {
     private final JsonNode value;
 
     public InnerMetaValue(JsonNode value) {
-        this.value = value;
+        if (value == null || value instanceof MissingNode) {
+            this.value = NullNode.getInstance();
+        } else {
+            this.value = value;
+        }
     }
 
     @Override
@@ -42,31 +49,61 @@ public class InnerMetaValue implements MetaValue {
 
     @Override
     public String getDisplayName() {
-        return value.path("disp").asText();
+        return getScalar(value, "disp").asText();
     }
 
     @Override
     public String getString() {
-        return value.path("str").asText();
+        return getScalar(value, "str").asText();
     }
 
     @Override
     public String getId() {
-        return value.path("id").asText();
+        return getScalar(value, "id").asText();
     }
 
     @Override
     public Double getDouble() {
-        return value.path("num").asDouble();
+        return getScalar(value, "num").asDouble();
     }
 
     @Override
     public Boolean getBool() {
-        return value.path("bool").asBoolean();
+        return getScalar(value, "bool").asBoolean();
     }
 
     @Override
     public Object getJson() {
-        return value.get("json");
+        return getScalar(value, "json");
+    }
+
+    private static JsonNode getScalar(JsonNode node, String name) {
+        if (node.isValueNode()) {
+            return node;
+        }
+        if (node.isArray()) {
+            ArrayNode array = JsonNodeFactory.instance.arrayNode();
+            for (int i = 0; i < node.size(); i++) {
+                array.add(getScalar(node.get(i), name));
+            }
+            return array;
+        }
+        if (!node.isObject() || node.size() == 0) {
+            return NullNode.getInstance();
+        }
+        if (node.has(name)) {
+            return node.get(name);
+        }
+        JsonNode att = node.get("att");
+        if (att == null) {
+            att = node.get("atts");
+            if (att == null) {
+                att = node.get(node.fieldNames().next());
+            }
+        }
+        if (att != null) {
+            return getScalar(att, name);
+        }
+        return NullNode.getInstance();
     }
 }

@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class RecordsServiceImpl extends AbstractRecordsService {
 
@@ -313,6 +314,14 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                                 .filter(r -> record.equals(r.getId()))
                                 .findFirst()
                                 .orElse(null);
+
+        if (meta == null && values.getRecords().size() > 0) {
+            logger.warn("Records is not empty but '" + record + "' is not found. Records: "
+                    + values.getRecords()
+                            .stream()
+                            .map(m -> "'" + m.getId() + "'")
+                            .collect(Collectors.joining(", ")));
+        }
         if (meta == null) {
             meta = new RecordMeta(record);
         }

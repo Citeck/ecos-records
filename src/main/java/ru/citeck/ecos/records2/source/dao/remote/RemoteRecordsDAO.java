@@ -31,7 +31,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
     private RecordsRestConnection restConnection;
 
     private String recordsMethod = "/api/ecos/records";
-    private String remoteSourceId = "";
+    private String remoteSourceId = null;
 
     @Override
     public RecordsRefsQueryResult queryRecords(RecordsQuery query) {
@@ -40,12 +40,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
 
         if (enabled) {
 
-            RecordRef afterId = query.getAfterId();
-            request.setQuery(new RecordsQuery(query));
-            request.getQuery().setSourceId(remoteSourceId);
-            if (afterId != RecordRef.EMPTY) {
-                request.getQuery().setAfterId(RecordRef.valueOf(afterId.getId()));
-            }
+            prepareQueryBody(request, query);
 
             RecordsRefsQueryResult result = restConnection.jsonPost(recordsMethod,
                                                                     request,
@@ -66,12 +61,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
 
         if (enabled) {
 
-            RecordRef afterId = query.getAfterId();
-            request.setQuery(new RecordsQuery(query));
-            request.getQuery().setSourceId(remoteSourceId);
-            if (afterId != RecordRef.EMPTY) {
-                request.getQuery().setAfterId(RecordRef.valueOf(afterId.getId()));
-            }
+            prepareQueryBody(request, query);
             request.setSchema(metaSchema);
 
             RecordsMetaQueryResult result = restConnection.jsonPost(recordsMethod,
@@ -84,6 +74,18 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
             }
         }
         return new RecordsMetaQueryResult();
+    }
+
+    private void prepareQueryBody(QueryBody body, RecordsQuery query) {
+        RecordRef afterId = query.getAfterId();
+        RecordsQuery bodyQuery = new RecordsQuery(query);
+        body.setQuery(bodyQuery);
+        if (remoteSourceId != null) {
+            bodyQuery.setSourceId(remoteSourceId);
+        }
+        if (afterId != RecordRef.EMPTY) {
+            bodyQuery.setAfterId(RecordRef.valueOf(afterId.getId()));
+        }
     }
 
     @Override

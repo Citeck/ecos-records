@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records.test;
 
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -29,8 +31,11 @@ public class RecordsMetaQueryTest {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(SimplePojo.class);
 
-        assertEquals(8, attributes.size());
+        assertEquals(11, attributes.size());
 
+        assertEquals(".att(n:\"jsonArrayNode\"){json}", attributes.get("jsonArrayNode"));
+        assertEquals(".att(n:\"jsonObjectNode\"){json}", attributes.get("jsonObjectNode"));
+        assertEquals(".att(n:\"jsonNode\"){json}", attributes.get("jsonNode"));
         assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){disp}}", attributes.get("someatt"));
         assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
         assertEquals(".edge(n:\"cm:field\"){options{label:disp,value:str}}", attributes.get("options"));
@@ -89,6 +94,34 @@ public class RecordsMetaQueryTest {
 
         @MetaAtt("#cm:field?options")
         private List<Map<String, String>> options;
+
+        private JsonNode jsonNode;
+        private ObjectNode jsonObjectNode;
+        private ArrayNode jsonArrayNode;
+
+        public ArrayNode getJsonArrayNode() {
+            return jsonArrayNode;
+        }
+
+        public void setJsonArrayNode(ArrayNode jsonArrayNode) {
+            this.jsonArrayNode = jsonArrayNode;
+        }
+
+        public ObjectNode getJsonObjectNode() {
+            return jsonObjectNode;
+        }
+
+        public void setJsonObjectNode(ObjectNode jsonObjectNode) {
+            this.jsonObjectNode = jsonObjectNode;
+        }
+
+        public JsonNode getJsonNode() {
+            return jsonNode;
+        }
+
+        public void setJsonNode(JsonNode jsonNode) {
+            this.jsonNode = jsonNode;
+        }
 
         public List<String> getStatuses1() {
             return statuses1;

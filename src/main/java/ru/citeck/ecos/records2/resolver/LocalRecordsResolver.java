@@ -80,8 +80,11 @@ public class LocalRecordsResolver implements RecordsResolver,
             RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
 
             if (convertedQuery == null) {
-                logger.warn("GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query);
-                return queryRecordsImpl(query, schema);
+                String errorMsg = "GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query;
+                logger.warn(errorMsg);
+                RecordsQueryResult<RecordMeta> result = queryRecordsImpl(query, schema);
+                result.addError(new RecordsError(errorMsg));
+                return result;
             }
             return groupsSource.queryRecords(convertedQuery, schema);
         }
@@ -370,12 +373,23 @@ public class LocalRecordsResolver implements RecordsResolver,
 
     private <T extends RecordsQueryBaseDAO> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {
 
-        T dao = needRecordsDAO(query.getSourceId(), daoType);
+        String sourceId = query.getSourceId();
+        int sourceDelimIdx = sourceId.indexOf(RecordRef.SOURCE_DELIMITER);
+        String innerSourceId = "";
+        if (sourceDelimIdx > 0) {
+            innerSourceId = sourceId.substring(sourceDelimIdx + 1);
+            sourceId = sourceId.substring(0, sourceDelimIdx);
+        }
+
+        T dao = needRecordsDAO(sourceId, daoType);
         RecordsQuery convertedQuery = updateQueryLanguage(query, dao);
 
         if (convertedQuery == null) {
-            throw new LanguageNotSupportedException(query.getSourceId(), query.getLanguage());
+            throw new LanguageNotSupportedException(sourceId, query.getLanguage());
         }
+
+        convertedQuery = new RecordsQuery(convertedQuery);
+        convertedQuery.setSourceId(innerSourceId);
 
         return new DaoWithConvQuery<>(dao, convertedQuery);
     }

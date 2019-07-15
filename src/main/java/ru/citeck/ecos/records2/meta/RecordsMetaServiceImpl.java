@@ -62,7 +62,10 @@ public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServic
                 new ScalarField<>(short.class, "num"),
                 new ScalarField<>(Byte.class, "num"),
                 new ScalarField<>(byte.class, "num"),
-                new ScalarField<>(Date.class, "str")
+                new ScalarField<>(Date.class, "str"),
+                new ScalarField<>(JsonNode.class, "json"),
+                new ScalarField<>(ObjectNode.class, "json"),
+                new ScalarField<>(ArrayNode.class, "json")
         ).forEach(s -> scalars.put(s.getFieldType(), s));
     }
 

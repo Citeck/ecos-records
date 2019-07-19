@@ -46,11 +46,11 @@ public class RecordsServiceFactory {
         return recordsResolver;
     }
 
-    private RemoteRecordsResolver createRemoteRecordsResolver() {
+    protected RemoteRecordsResolver createRemoteRecordsResolver() {
         return null;
     }
 
-    private LocalRecordsResolver createLocalRecordsResolver() {
+    protected LocalRecordsResolver createLocalRecordsResolver() {
 
         if (localRecordsResolver == null) {
             LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());

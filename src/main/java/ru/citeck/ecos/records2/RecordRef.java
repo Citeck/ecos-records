@@ -7,7 +7,7 @@ import ru.citeck.ecos.records2.utils.StringUtils;
 import java.util.Objects;
 
 /**
- * Unique identifier of a record
+ * Unique identifier of a record.
  */
 public class RecordRef {
 

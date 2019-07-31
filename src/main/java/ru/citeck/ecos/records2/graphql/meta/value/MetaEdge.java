@@ -12,6 +12,14 @@ public interface MetaEdge {
         return true;
     }
 
+    default boolean isAssociation() {
+        return false;
+    }
+
+    default boolean isSearchable() {
+        return true;
+    }
+
     default List<?> getOptions() {
         return null;
     }
@@ -30,10 +38,6 @@ public interface MetaEdge {
 
     default String getEditorKey() {
         return null;
-    }
-
-    default boolean isAssociation() {
-        return false;
     }
 
     /**

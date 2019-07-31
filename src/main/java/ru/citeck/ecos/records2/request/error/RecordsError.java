@@ -1,11 +1,13 @@
 package ru.citeck.ecos.records2.request.error;
 
+import java.util.List;
 import java.util.Objects;
 
 public class RecordsError {
 
     private String type;
     private String msg;
+    private List<String> stackTrace;
 
     public RecordsError() {
     }
@@ -33,6 +35,14 @@ public class RecordsError {
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    public List<String> getStackTrace() {
+        return stackTrace;
+    }
+
+    public void setStackTrace(List<String> stackTrace) {
+        this.stackTrace = stackTrace;
     }
 
     @Override

@@ -1,34 +1,35 @@
 package ru.citeck.ecos.records2.request.error;
 
+import ru.citeck.ecos.records2.utils.MandatoryParam;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class ErrorUtils {
 
     public static RecordsError convertException(Exception exception) {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(exception.getLocalizedMessage());
+        MandatoryParam.check("exception", exception);
 
         Throwable throwable = exception;
 
-        if (throwable.getCause() != null) {
+        while (throwable.getCause() != null) {
             throwable = throwable.getCause();
         }
 
-        if (exception != throwable) {
-            sb.append("\n    Caused by ")
-                .append(throwable.getClass().getSimpleName())
-                .append(": ")
-                .append(throwable.getLocalizedMessage());
-        }
-
+        List<String> errorStackTrace = new ArrayList<>();
         StackTraceElement[] stackTrace = throwable.getStackTrace();
         if (stackTrace != null) {
-            int lines = Math.min(stackTrace.length, 3);
-            for (int i = 0; i < lines; i++) {
-                StackTraceElement element = stackTrace[i];
-                sb.append("\n    ").append(element.toString());
+            for (int i = 0; i < 3 && i < stackTrace.length; i++) {
+                errorStackTrace.add(String.valueOf(stackTrace[i]));
             }
         }
 
-        return new RecordsError(throwable.getClass().getSimpleName(), sb.toString());
+        RecordsError error = new RecordsError();
+        error.setType(throwable.getClass().getSimpleName());
+        error.setMsg(throwable.getLocalizedMessage());
+        error.setStackTrace(errorStackTrace);
+
+        return error;
     }
 }

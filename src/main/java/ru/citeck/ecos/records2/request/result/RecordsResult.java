@@ -2,8 +2,7 @@ package ru.citeck.ecos.records2.request.result;
 
 import ru.citeck.ecos.records2.request.error.RecordsError;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -12,80 +11,94 @@ public class RecordsResult<T> extends DebugResult {
     private List<T> records = new ArrayList<>();
     private List<RecordsError> errors = new ArrayList<>();
 
+    /* ==== constructor ====*/
+
     public RecordsResult() {
     }
 
     public RecordsResult(RecordsResult<T> other) {
         super(other);
-        records = new ArrayList<>(other.getRecords());
+        setErrors(other.getErrors());
+        setRecords(other.getRecords());
     }
 
     public <K> RecordsResult(RecordsResult<K> other, Function<K, T> mapper) {
         super(other);
-        records = new ArrayList<>();
-        for (K record : other.getRecords()) {
-            T mappedRec = mapper.apply(record);
-            if (mappedRec != null) {
-                records.add(mappedRec);
-            }
-        }
+        setErrors(other.getErrors());
+        setRecords(mapNotNull(other.getRecords(), mapper));
     }
 
     public <K> RecordsResult(List<K> records, Function<K, T> mapper) {
-        setRecords(records.stream().map(mapper).collect(Collectors.toList()));
+        setRecords(mapNotNull(records, mapper));
     }
 
     public RecordsResult(List<T> records) {
         setRecords(records);
     }
 
+    /* ==== /constructor ==== */
 
-    public void merge(RecordsResult<T> other) {
-        super.merge(other);
-
-        if (this.errors != null) {
-            this.errors = new ArrayList<>(this.errors);
-            this.errors.addAll(other.errors);
-        } else {
-            this.errors = other.errors;
-        }
-
-        List<T> records = new ArrayList<>();
-        records.addAll(this.records);
-        records.addAll(other.getRecords());
-        this.records = records;
-    }
+    /* ======= records ====== */
 
     public List<T> getRecords() {
         return records;
     }
 
     public void setRecords(List<T> records) {
+        this.records = new ArrayList<>();
+        addRecords(records);
+    }
+
+    public void addRecord(T record) {
+        records.add(record);
+    }
+
+    public void addRecords(Collection<T> records) {
         if (records != null) {
-            this.records = new ArrayList<>(records);
-        } else {
-            this.records = new ArrayList<>();
+            this.records.addAll(records);
         }
     }
+
+    /* ====== /records ====== */
+
+    /* ======= errors ======= */
 
     public List<RecordsError> getErrors() {
         return errors;
     }
 
     public void setErrors(List<RecordsError> errors) {
-        if (errors != null) {
-            this.errors = new ArrayList<>(errors);
-        } else {
-            this.errors = new ArrayList<>();
-        }
+        this.errors = new ArrayList<>();
+        addErrors(errors);
     }
 
     public void addError(RecordsError error) {
-        this.errors.add(error);
+        errors.add(error);
     }
 
-    public void addRecord(T record) {
-        records.add(record);
+    public void addErrors(Collection<RecordsError> errors) {
+        if (errors != null) {
+            this.errors.addAll(errors);
+        }
+    }
+
+    /* ====== /errors ======= */
+
+    private <I, O> List<O> mapNotNull(List<I> input, Function<I, O> mapper) {
+        if (input == null) {
+            return Collections.emptyList();
+        }
+        return input.stream()
+                    .map(r -> Optional.ofNullable(mapper.apply(r)))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toList());
+    }
+
+    public void merge(RecordsResult<T> other) {
+        super.merge(other);
+        addErrors(other.getErrors());
+        addRecords(other.getRecords());
     }
 
     @Override

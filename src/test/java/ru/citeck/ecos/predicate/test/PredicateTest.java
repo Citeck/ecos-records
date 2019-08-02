@@ -4,8 +4,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.PredicateServiceImpl;
+import ru.citeck.ecos.predicate.PredicateUtils;
 import ru.citeck.ecos.predicate.model.Predicate;
+import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.predicate.model.ValuePredicate;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -84,5 +90,56 @@ class PredicateTest {
         Predicate predicate2 = predicateService.readJson(predicateService.writeJson(predicate));
 
         assertEquals(predicate, predicate2);
+    }
+
+    @Test
+    void mappingTest() {
+
+        Predicate pred = Predicates.and(
+            Predicates.or(
+                Predicates.eq("test", "test1"),
+                Predicates.eq("test2", "test2"),
+                Predicates.not(Predicates.eq("test3", "test3")),
+                Predicates.not(Predicates.eq("ATest3", "test323")),
+                Predicates.or(
+                    Predicates.or(
+                        Predicates.eq("Field", "test"),
+                        Predicates.eq("Field1", "test"),
+                        Predicates.eq("Field2", "test"),
+                        Predicates.eq("test", "test")
+                    )
+                ),
+                Predicates.and(
+                    Predicates.and(
+                        Predicates.eq("NotPassed", "value")
+                    )
+                )
+            ),
+            Predicates.eq("Field", "value"),
+            Predicates.eq("Test", "value2")
+        );
+
+        List<Predicate> testedPredicates = new ArrayList<>();
+        Optional<Predicate> filtered = PredicateUtils.filterValuePredicates(pred, p -> {
+            testedPredicates.add(p);
+            return p.getAttribute().startsWith("test");
+        });
+
+        assertEquals(11, testedPredicates.size());
+
+        Predicate expected = Predicates.and(
+            Predicates.or(
+                Predicates.eq("test", "test1"),
+                Predicates.eq("test2", "test2"),
+                Predicates.not(Predicates.eq("test3", "test3")),
+                Predicates.or(
+                    Predicates.or(
+                        Predicates.eq("test", "test")
+                    )
+                )
+            )
+        );
+
+        assertEquals(expected, filtered.get());
     }
 }

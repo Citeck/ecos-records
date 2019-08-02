@@ -1,7 +1,9 @@
 package ru.citeck.ecos.predicate.model;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 public class Predicates {
 
@@ -45,35 +47,51 @@ public class Predicates {
         return ValuePredicate.equal(attribute, value);
     }
 
-    public static ValuePredicate gt(String attribute, int value) {
-        ValuePredicate predicate = new ValuePredicate();
-        predicate.setType(ValuePredicate.Type.GT);
-        predicate.setAttribute(attribute);
-        predicate.setValue(value);
-        return predicate;
+    public static ValuePredicate gt(String attribute, Instant value) {
+        return ValuePredicate.gt(attribute, value);
     }
 
-    public static ValuePredicate ge(String attribute, int value) {
-        ValuePredicate predicate = new ValuePredicate();
-        predicate.setType(ValuePredicate.Type.GE);
-        predicate.setAttribute(attribute);
-        predicate.setValue(value);
-        return predicate;
+    public static ValuePredicate gt(String attribute, Date value) {
+        return ValuePredicate.gt(attribute, value);
     }
 
-    public static ValuePredicate lt(String attribute, int value) {
-        ValuePredicate predicate = new ValuePredicate();
-        predicate.setType(ValuePredicate.Type.LT);
-        predicate.setAttribute(attribute);
-        predicate.setValue(value);
-        return predicate;
+    public static ValuePredicate gt(String attribute, double value) {
+        return ValuePredicate.gt(attribute, value);
     }
 
-    public static ValuePredicate le(String attribute, int value) {
-        ValuePredicate predicate = new ValuePredicate();
-        predicate.setType(ValuePredicate.Type.LE);
-        predicate.setAttribute(attribute);
-        predicate.setValue(value);
-        return predicate;
+    public static ValuePredicate ge(String attribute, Instant value) {
+        return ValuePredicate.ge(attribute, value);
+    }
+
+    public static ValuePredicate ge(String attribute, Date value) {
+        return ValuePredicate.ge(attribute, value);
+    }
+
+    public static ValuePredicate ge(String attribute, double value) {
+        return ValuePredicate.ge(attribute, value);
+    }
+
+    public static ValuePredicate lt(String attribute, Instant value) {
+        return ValuePredicate.lt(attribute, value);
+    }
+
+    public static ValuePredicate lt(String attribute, Date value) {
+        return ValuePredicate.lt(attribute, value);
+    }
+
+    public static ValuePredicate lt(String attribute, double value) {
+        return ValuePredicate.lt(attribute, value);
+    }
+
+    public static ValuePredicate le(String attribute, Instant value) {
+        return ValuePredicate.le(attribute, value);
+    }
+
+    public static ValuePredicate le(String attribute, Date value) {
+        return ValuePredicate.le(attribute, value);
+    }
+
+    public static ValuePredicate le(String attribute, double value) {
+        return ValuePredicate.le(attribute, value);
     }
 }

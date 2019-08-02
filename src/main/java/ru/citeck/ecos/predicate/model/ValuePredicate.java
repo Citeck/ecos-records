@@ -30,6 +30,15 @@ public class ValuePredicate extends AttributePredicate {
     @JsonProperty("t")
     private Type type = Type.EQ;
 
+    public ValuePredicate() {
+    }
+
+    public ValuePredicate(String attribute, Type type, Object value) {
+        this.setAttribute(attribute);
+        this.value = value;
+        this.type = type;
+    }
+
     public Object getValue() {
         return value;
     }
@@ -58,10 +67,36 @@ public class ValuePredicate extends AttributePredicate {
     }
 
     public static ValuePredicate equal(String attribute, Object value) {
-        ValuePredicate valuePredicate = new ValuePredicate();
-        valuePredicate.setType(Type.EQ);
-        valuePredicate.setAttribute(attribute);
-        valuePredicate.setValue(value);
-        return valuePredicate;
+        return new ValuePredicate(attribute, Type.EQ, value);
     }
+
+    public static ValuePredicate eq(String attribute, Object value) {
+        return equal(attribute, value);
+    }
+
+    public static ValuePredicate contains(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.CONTAINS, value);
+    }
+
+    public static ValuePredicate like(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.LIKE, value);
+    }
+
+    public static ValuePredicate gt(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.GT, value);
+    }
+
+    public static ValuePredicate ge(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.GE, value);
+    }
+
+    public static ValuePredicate lt(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.LT, value);
+    }
+
+    public static ValuePredicate le(String attribute, Object value) {
+        return new ValuePredicate(attribute, Type.LE, value);
+    }
+
+
 }

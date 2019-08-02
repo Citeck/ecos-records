@@ -120,7 +120,7 @@ class RecordsGroupTest extends LocalRecordsDAO
                     break;
                 case "numKey":
 
-                    Integer valPredValue = (Integer) valPred.getValue();
+                    double valPredValue = ((Number) valPred.getValue()).doubleValue();
 
                     switch (valPred.getType()) {
 

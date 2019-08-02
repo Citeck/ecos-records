@@ -9,6 +9,18 @@ import java.util.function.Function;
 
 public class PredicateUtils {
 
+    public static List<String> getAllPredicateAttributes(Predicate predicate) {
+
+        List<String> result = new ArrayList<>();
+
+        mapValuePredicatesImpl(predicate, v -> {
+            result.add(v.getAttribute());
+            return v;
+        });
+
+        return result;
+    }
+
     public static Optional<Predicate> filterValuePredicates(Predicate predicate,
                                                             Function<ValuePredicate, Boolean> filter) {
 

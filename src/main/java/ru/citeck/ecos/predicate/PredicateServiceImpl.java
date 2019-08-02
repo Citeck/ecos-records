@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import ru.citeck.ecos.predicate.comparator.DefaultValueComparator;
+import ru.citeck.ecos.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.predicate.json.JsonConverter;
 import ru.citeck.ecos.predicate.json.std.StdJsonConverter;
 import ru.citeck.ecos.predicate.model.*;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +52,89 @@ public class PredicateServiceImpl implements PredicateService {
     @Override
     public ObjectNode writeJson(Predicate predicate) {
         return getJsonConverter().toJson(optimize(predicate));
+    }
+
+    @Override
+    public boolean isMatch(Element element, Predicate predicate) {
+        return isMatch(element, predicate, new DefaultValueComparator());
+    }
+
+    @Override
+    public boolean isMatch(Element element, Predicate predicate, ValueComparator comparator) {
+        List<String> attributes = PredicateUtils.getAllPredicateAttributes(predicate);
+        ElementAttributes elemAttributes = element.getAttributes(attributes);
+        return isMatch(elemAttributes, predicate, comparator);
+    }
+
+    private boolean isMatch(ElementAttributes attributes, Predicate predicate, ValueComparator comparator) {
+
+        if (predicate instanceof ComposedPredicate) {
+
+            List<Predicate> predicates = ((ComposedPredicate) predicate).getPredicates();
+            boolean joinByAnd = predicate instanceof AndPredicate;
+
+            for (Predicate innerPredicate : predicates) {
+                if (isMatch(attributes, innerPredicate, comparator)) {
+                    if (!joinByAnd) {
+                        return true;
+                    }
+                } else {
+                    if (joinByAnd) {
+                        return false;
+                    }
+                }
+            }
+            return joinByAnd;
+
+        } else if (predicate instanceof ValuePredicate) {
+
+            ValuePredicate valuePredicate = (ValuePredicate) predicate;
+            String attribute = valuePredicate.getAttribute();
+            Object value = valuePredicate.getValue();
+            Object elementValue = toJava(attributes.getAttribute(attribute));
+
+            switch (valuePredicate.getType()) {
+                case EQ:
+                    return comparator.isEquals(elementValue, value);
+                case GT:
+                    return comparator.isGreaterThan(elementValue, value, false);
+                case GE:
+                    return comparator.isGreaterThan(elementValue, value, true);
+                case LT:
+                    return comparator.isLessThan(elementValue, value, false);
+                case LE:
+                    return comparator.isLessThan(elementValue, value, true);
+                case LIKE:
+                    return comparator.isLike(elementValue, value);
+                case IN:
+                    return comparator.isIn(elementValue, value);
+                case CONTAINS:
+                    return comparator.isContains(elementValue, value);
+                default:
+                    return false;
+            }
+
+        } else if (predicate instanceof NotPredicate) {
+
+            return !isMatch(attributes, ((NotPredicate) predicate).getPredicate(), comparator);
+
+        } else if (predicate instanceof EmptyPredicate) {
+
+            String attribute = ((EmptyPredicate) predicate).getAttribute();
+            return comparator.isEmpty(toJava(attributes.getAttribute(attribute)));
+        }
+
+        return false;
+    }
+
+    private Object toJava(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof JsonNode) {
+            return JsonUtils.toJava((JsonNode) value);
+        }
+        return value;
     }
 
     private Predicate optimize(Predicate predicate) {

@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class PredicateServiceImpl implements PredicateService {
@@ -52,6 +53,38 @@ public class PredicateServiceImpl implements PredicateService {
     @Override
     public ObjectNode writeJson(Predicate predicate) {
         return getJsonConverter().toJson(optimize(predicate));
+    }
+
+    @Override
+    public <T extends Element> List<T> filter(Elements<T> elements, Predicate predicate) {
+        return filter(elements, predicate, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public <T extends Element> List<T> filter(Elements<T> elements, Predicate predicate, int maxElements) {
+        return filter(elements, predicate, maxElements, new DefaultValueComparator());
+    }
+
+    @Override
+    public <T extends Element> List<T> filter(Elements<T> elements,
+                                              Predicate predicate,
+                                              int maxElements,
+                                              ValueComparator comparator) {
+
+        List<String> attributes = PredicateUtils.getAllPredicateAttributes(predicate);
+        Iterable<T> elementsToCheck = elements.getElements(attributes);
+
+        List<T> result = new ArrayList<>();
+
+        Iterator<T> elementsIterator = elementsToCheck.iterator();
+        while (result.size() < maxElements && elementsIterator.hasNext()) {
+            T elem = elementsIterator.next();
+            if (isMatch(elem.getAttributes(attributes), predicate, comparator)) {
+                result.add(elem);
+            }
+        }
+
+        return result;
     }
 
     @Override

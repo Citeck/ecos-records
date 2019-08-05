@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.predicate.model.Predicate;
 
+import java.util.List;
+
 public interface PredicateService {
 
     String LANGUAGE_PREDICATE = "predicate";
@@ -18,4 +20,13 @@ public interface PredicateService {
     boolean isMatch(Element element, Predicate predicate);
 
     boolean isMatch(Element element, Predicate predicate, ValueComparator comparator);
+
+    <T extends Element> List<T> filter(Elements<T> elements, Predicate predicate);
+
+    <T extends Element> List<T> filter(Elements<T> elements, Predicate predicate, int maxElements);
+
+    <T extends Element> List<T> filter(Elements<T> elements,
+                                       Predicate predicate,
+                                       int maxElements,
+                                       ValueComparator comparator);
 }

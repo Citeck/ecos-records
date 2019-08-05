@@ -6,7 +6,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.GqlContext;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -65,7 +65,7 @@ public class MetaFieldTest extends LocalRecordsDAO
     }
 
     @Override
-    public <T extends GqlContext> void init(T context, MetaField field) {
+    public <T extends QueryContext> void init(T context, MetaField field) {
 
     }
 

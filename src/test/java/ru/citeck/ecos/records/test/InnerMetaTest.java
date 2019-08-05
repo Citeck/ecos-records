@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.GqlContext;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -81,7 +81,7 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
         private RecordMeta attributes;
 
         @Override
-        public <T extends GqlContext> void init(T context, MetaField field) {
+        public <T extends QueryContext> void init(T context, MetaField field) {
             Map<String, String> atts = field.getInnerAttributesMap();
             atts.put("display", "inner?disp");
             atts.put("innerDisp", ".disp");

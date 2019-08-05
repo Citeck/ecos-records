@@ -4,7 +4,6 @@ import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.querylang.QueryLangServiceImpl;
-import ru.citeck.ecos.records2.graphql.GqlContext;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
@@ -85,7 +84,7 @@ public class RecordsServiceFactory {
 
     public RecordsMetaGql createRecordsMetaGraphQL() {
         if (recordsMetaGql == null) {
-            recordsMetaGql = new RecordsMetaGql(getGqlTypes(), () -> new GqlContext(recordsService));
+            recordsMetaGql = new RecordsMetaGql(getGqlTypes());
         }
         return recordsMetaGql;
     }

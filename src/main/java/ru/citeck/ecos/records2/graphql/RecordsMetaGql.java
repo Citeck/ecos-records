@@ -9,6 +9,7 @@ import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceAware;
@@ -17,7 +18,6 @@ import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class RecordsMetaGql {
@@ -27,16 +27,13 @@ public class RecordsMetaGql {
     private static final Log logger = LogFactory.getLog(RecordsMetaGql.class);
 
     private GraphQL graphQL;
-    private Supplier<? extends GqlContext> contextSupplier;
-    private ThreadLocal<GqlContext> currentContext = new ThreadLocal<>();
 
     private ObjectMapper objectMapper = new ObjectMapper();
     private List<GqlTypeDefinition> graphQLTypes;
 
-    public RecordsMetaGql(List<GqlTypeDefinition> graphQLTypes, Supplier<? extends GqlContext> contextSupplier) {
+    public RecordsMetaGql(List<GqlTypeDefinition> graphQLTypes) {
 
         this.graphQLTypes = graphQLTypes;
-        this.contextSupplier = contextSupplier;
 
         Map<String, GraphQLObjectType.Builder> types = new HashMap<>();
         graphQLTypes.forEach(def -> {
@@ -74,23 +71,10 @@ public class RecordsMetaGql {
 
         String query = String.format(META_QUERY_TEMPLATE, schema);
 
-        GqlContext context = currentContext.get();
-        boolean isContextOwner = false;
-        if (context == null) {
-            context = contextSupplier.get();
-            currentContext.set(context);
-            isContextOwner = true;
-        }
+        QueryContext context = QueryContext.getCurrent();
         context.setMetaValues(metaValues);
 
-        ExecutionResult result;
-        try {
-            result = executeImpl(query, context);
-        } finally {
-            if (isContextOwner) {
-                currentContext.remove();
-            }
-        }
+        ExecutionResult result = executeImpl(query, context);
 
         return convertMeta(result, metaValues);
     }

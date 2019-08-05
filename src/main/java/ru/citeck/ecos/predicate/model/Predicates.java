@@ -1,11 +1,16 @@
 package ru.citeck.ecos.predicate.model;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
 public class Predicates {
+
+    public static ValuePredicate contains(String attribute, String substring) {
+        return ValuePredicate.contains(attribute, substring);
+    }
 
     public static AndPredicate and(Predicate... predicates) {
         return AndPredicate.of(predicates);
@@ -51,12 +56,20 @@ public class Predicates {
         return ValuePredicate.gt(attribute, value);
     }
 
+    public static ValuePredicate gt(String attribute, OffsetDateTime value) {
+        return ValuePredicate.gt(attribute, value);
+    }
+
     public static ValuePredicate gt(String attribute, Date value) {
         return ValuePredicate.gt(attribute, value);
     }
 
     public static ValuePredicate gt(String attribute, double value) {
         return ValuePredicate.gt(attribute, value);
+    }
+
+    public static ValuePredicate ge(String attribute, OffsetDateTime value) {
+        return ValuePredicate.ge(attribute, value);
     }
 
     public static ValuePredicate ge(String attribute, Instant value) {
@@ -69,6 +82,10 @@ public class Predicates {
 
     public static ValuePredicate ge(String attribute, double value) {
         return ValuePredicate.ge(attribute, value);
+    }
+
+    public static ValuePredicate lt(String attribute, OffsetDateTime value) {
+        return ValuePredicate.lt(attribute, value);
     }
 
     public static ValuePredicate lt(String attribute, Instant value) {
@@ -84,6 +101,10 @@ public class Predicates {
     }
 
     public static ValuePredicate le(String attribute, Instant value) {
+        return ValuePredicate.le(attribute, value);
+    }
+
+    public static ValuePredicate le(String attribute, OffsetDateTime value) {
         return ValuePredicate.le(attribute, value);
     }
 

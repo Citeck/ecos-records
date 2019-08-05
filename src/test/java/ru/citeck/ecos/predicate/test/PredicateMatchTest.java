@@ -10,6 +10,7 @@ import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +137,27 @@ public class PredicateMatchTest implements Element, ElementAttributes {
 
         pred = Predicates.ge("a", Instant.parse("2019-02-02T00:00:00Z"));
         assertTrue(service.isMatch(this, pred));
+
+        pred = Predicates.ge("a", OffsetDateTime.parse("2019-02-02T05:00:00+07:00"));
+        assertTrue(service.isMatch(this, pred));
+
+        attributes.clear();
+        attributes.put("a", "Some long String");
+
+        pred = Predicates.contains("a", "some");
+        assertTrue(service.isMatch(this, pred));
+
+        pred = Predicates.contains("a", "string");
+        assertTrue(service.isMatch(this, pred));
+
+        pred = Predicates.contains("a", "longg");
+        assertFalse(service.isMatch(this, pred));
+
+        pred = Predicates.eq("a", "Some long String");
+        assertTrue(service.isMatch(this, pred));
+
+        pred = Predicates.eq("a", "Some long string");
+        assertFalse(service.isMatch(this, pred));
     }
 
     @Override

@@ -45,7 +45,9 @@ public class DefaultValueComparator implements ValueComparator {
             return ((Collection) value).contains(subValue);
         }
         if (value instanceof String || subValue instanceof String) {
-            return String.valueOf(value).contains(String.valueOf(subValue));
+            String v0 = String.valueOf(value).toLowerCase();
+            String v1 = String.valueOf(subValue).toLowerCase();
+            return v0.contains(v1);
         }
 
         return false;
@@ -86,8 +88,8 @@ public class DefaultValueComparator implements ValueComparator {
             return false;
         }
 
-        String valueStr = String.valueOf(value);
-        String likeStr = String.valueOf(likeValue);
+        String valueStr = String.valueOf(value).toLowerCase();
+        String likeStr = String.valueOf(likeValue).toLowerCase();
 
         likeStr = likeStr.replace("%", ".*");
         likeStr = likeStr.replace("_", ".");

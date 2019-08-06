@@ -8,6 +8,10 @@ import java.util.Date;
 
 public class Predicates {
 
+    public static ValuePredicate in(String attribute, Collection<String> values) {
+        return new ValuePredicate(attribute, ValuePredicate.Type.IN, new ArrayList<>(values));
+    }
+
     public static ValuePredicate contains(String attribute, String substring) {
         return ValuePredicate.contains(attribute, substring);
     }

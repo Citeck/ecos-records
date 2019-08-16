@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -20,6 +21,7 @@ public class RecordsGroup implements MetaValue {
     public static final String FIELD_PREDICATES = "predicates";
     public static final String FIELD_VALUES = "values";
     public static final String FIELD_SUM = "sum";
+    public static final String FIELD_COUNT = "count";
 
     private Predicate predicate;
     private RecordsQuery query;
@@ -79,6 +81,17 @@ public class RecordsGroup implements MetaValue {
                 }).collect(Collectors.toList());
             default:
                 //nothing
+        }
+
+        if (name.equals(FIELD_COUNT)) {
+
+            RecordsQuery countQuery = new RecordsQuery(query);
+            countQuery.setGroupBy(null);
+            countQuery.setMaxItems(1);
+            countQuery.setSkipCount(0);
+            RecordsQueryResult<RecordRef> records = recordsService.queryRecords(countQuery);
+
+            return records.getTotalCount();
         }
 
         if (name.startsWith(FIELD_SUM)) {

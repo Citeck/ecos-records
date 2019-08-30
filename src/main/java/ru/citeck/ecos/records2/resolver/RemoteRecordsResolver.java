@@ -21,9 +21,10 @@ import java.util.stream.Collectors;
 
 public class RemoteRecordsResolver implements RecordsResolver {
 
-    public static final String QUERY_URL = "/api/records/query";
-    public static final String MUTATE_URL = "/api/records/mutate";
-    public static final String DELETE_URL = "/api/records/delete";
+    public static final String BASE_URL = "/api/records/";
+    public static final String QUERY_URL = BASE_URL + "query";
+    public static final String MUTATE_URL = BASE_URL + "mutate";
+    public static final String DELETE_URL = BASE_URL + "delete";
 
     private RecordsRestConnection restConnection;
     private String defaultAppName = "";

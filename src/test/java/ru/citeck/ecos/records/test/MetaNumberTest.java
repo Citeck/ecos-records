@@ -23,7 +23,7 @@ public class MetaNumberTest extends LocalRecordsDAO
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId("test");
         recordsService.register(this);

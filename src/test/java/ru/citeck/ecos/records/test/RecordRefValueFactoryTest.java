@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecordRefValueFactoryTest extends LocalRecordsDAO
@@ -36,7 +36,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         setId(ID);
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 

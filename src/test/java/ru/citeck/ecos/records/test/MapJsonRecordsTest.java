@@ -13,10 +13,12 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MapJsonRecordsTest extends LocalRecordsDAO
@@ -31,7 +33,7 @@ public class MapJsonRecordsTest extends LocalRecordsDAO
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId(SOURCE_ID);
         recordsService.register(this);

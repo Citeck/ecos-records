@@ -10,104 +10,165 @@ import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
+import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
+import ru.citeck.ecos.records2.meta.DtoMetaResolver;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
-import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
+import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class RecordsServiceFactory {
 
-    protected RecordsService recordsService;
-    protected RecordsResolver recordsResolver;
-    protected PredicateService predicateService;
-    protected QueryLangService queryLangService;
-    protected RecordsMetaGql recordsMetaGql;
-    protected RecordsMetaService recordsMetaService;
-
+    private RecordsMetaGql recordsMetaGql;
+    private RecordsService recordsService;
+    private DtoMetaResolver dtoMetaResolver;
+    private RecordsResolver recordsResolver;
+    private PredicateService predicateService;
+    private QueryLangService queryLangService;
+    private RecordsMetaService recordsMetaService;
+    private List<MetaValueFactory> metaValueFactories;
     private LocalRecordsResolver localRecordsResolver;
+    private RemoteRecordsResolver remoteRecordsResolver;
+    private AttributesMetaResolver attributesMetaResolver;
+    private Supplier<? extends QueryContext> queryContextSupplier;
 
-    public RecordsService createRecordsService() {
-        recordsService = new RecordsServiceImpl(createRecordsMetaService(), createRecordsResolver());
+    private List<GqlTypeDefinition> gqlTypes;
+
+    public final RecordsService getRecordsService() {
+        if (recordsService == null) {
+            recordsService = createRecordsService();
+        }
         return recordsService;
     }
 
-    public RecordsResolver createRecordsResolver() {
+    protected RecordsService createRecordsService() {
+        return new RecordsServiceImpl(this);
+    }
+
+    public final RecordsResolver getRecordsResolver() {
         if (recordsResolver == null) {
-            this.recordsResolver = new LocalRemoteResolver(createLocalRecordsResolver(),
-                                                           createRemoteRecordsResolver());
+            recordsResolver = createRecordsResolver();
         }
         return recordsResolver;
+    }
+
+    protected RecordsResolver createRecordsResolver() {
+        return new LocalRemoteResolver(this);
+    }
+
+    public final RemoteRecordsResolver getRemoteRecordsResolver() {
+        if (remoteRecordsResolver == null) {
+            remoteRecordsResolver = createRemoteRecordsResolver();
+        }
+        return remoteRecordsResolver;
     }
 
     protected RemoteRecordsResolver createRemoteRecordsResolver() {
         return null;
     }
 
-    protected LocalRecordsResolver createLocalRecordsResolver() {
-
+    public final LocalRecordsResolver getLocalRecordsResolver() {
         if (localRecordsResolver == null) {
-            LocalRecordsResolver resolver = new LocalRecordsResolver(createQueryLangService());
-            resolver.setPredicateService(createPredicateService());
-            resolver.register(new RecordsGroupDAO());
-            localRecordsResolver = resolver;
+            localRecordsResolver = createLocalRecordsResolver();
+            createDefaultRecordsDAO().forEach(localRecordsResolver::register);
         }
-
         return localRecordsResolver;
     }
 
-    public QueryLangService createQueryLangService() {
+    protected LocalRecordsResolver createLocalRecordsResolver() {
+        return new LocalRecordsResolver(this);
+    }
+
+    protected List<RecordsDAO> createDefaultRecordsDAO() {
+        return Collections.singletonList(new RecordsGroupDAO());
+    }
+
+    public final QueryLangService getQueryLangService() {
         if (queryLangService == null) {
-            queryLangService = new QueryLangServiceImpl();
+            queryLangService = createQueryLangService();
         }
         return queryLangService;
     }
 
-    public RecordsMetaService createRecordsMetaService() {
+    protected QueryLangService createQueryLangService() {
+        return new QueryLangServiceImpl();
+    }
+
+    public final RecordsMetaService getRecordsMetaService() {
         if (recordsMetaService == null) {
-            recordsMetaService = new RecordsMetaServiceImpl(createRecordsMetaGraphQL());
+            recordsMetaService = createRecordsMetaService();
         }
         return recordsMetaService;
     }
 
-    public PredicateService createPredicateService() {
+    protected RecordsMetaService createRecordsMetaService() {
+        return new RecordsMetaServiceImpl(this);
+    }
+
+    public final PredicateService getPredicateService() {
         if (predicateService == null) {
-            predicateService = new PredicateServiceImpl();
+            predicateService = createPredicateService();
         }
         return predicateService;
     }
 
-    public RecordsMetaGql createRecordsMetaGraphQL() {
+    protected PredicateService createPredicateService() {
+        return new PredicateServiceImpl();
+    }
+
+    public final RecordsMetaGql getRecordsMetaGql() {
         if (recordsMetaGql == null) {
-            recordsMetaGql = new RecordsMetaGql(getGqlTypes());
+            recordsMetaGql = createRecordsMetaGql();
         }
         return recordsMetaGql;
     }
 
-    protected List<GqlTypeDefinition> getGqlTypes() {
+    protected RecordsMetaGql createRecordsMetaGql() {
+        return new RecordsMetaGql(this);
+    }
 
-        List<GqlTypeDefinition> types = new ArrayList<>();
+    public final List<GqlTypeDefinition> getGqlTypes() {
+        if (gqlTypes == null) {
+            gqlTypes = createGqlTypes();
+        }
+        return gqlTypes;
+    }
+
+    protected List<GqlTypeDefinition> createGqlTypes() {
+
+        List<GqlTypeDefinition> gqlTypes = new ArrayList<>();
 
         MetaValueTypeDef metaValueTypeDef = new MetaValueTypeDef();
         metaValueTypeDef.setMetaValueFactories(getMetaValueFactories());
 
-        types.add(metaValueTypeDef);
+        gqlTypes.add(metaValueTypeDef);
 
         GqlMetaQueryDef gqlMetaQueryDef = new GqlMetaQueryDef();
         gqlMetaQueryDef.setMetaValueTypeDef(metaValueTypeDef);
 
-        types.add(gqlMetaQueryDef);
-        types.add(new MetaEdgeTypeDef(metaValueTypeDef));
+        gqlTypes.add(gqlMetaQueryDef);
+        gqlTypes.add(new MetaEdgeTypeDef(metaValueTypeDef));
 
-        return types;
+        return gqlTypes;
     }
 
-    protected List<MetaValueFactory> getMetaValueFactories() {
+    public final List<MetaValueFactory> getMetaValueFactories() {
+        if (metaValueFactories == null) {
+            metaValueFactories = createMetaValueFactories();
+        }
+        return metaValueFactories;
+    }
+
+    protected List<MetaValueFactory> createMetaValueFactories() {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
@@ -120,24 +181,41 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new JsonNodeValueFactory());
         metaValueFactories.add(new LongValueFactory());
         metaValueFactories.add(new StringValueFactory());
-        metaValueFactories.add(new RecordRefValueFactory());
+        metaValueFactories.add(new RecordRefValueFactory(this));
 
         return metaValueFactories;
     }
 
-    public RecordsService getRecordsService() {
-        return recordsService;
+    public final AttributesMetaResolver getAttributesMetaResolver() {
+        if (attributesMetaResolver == null) {
+            attributesMetaResolver = createAttributesMetaResolver();
+        }
+        return attributesMetaResolver;
     }
 
-    public RecordsResolver getRecordsResolver() {
-        return recordsResolver;
+    protected AttributesMetaResolver createAttributesMetaResolver() {
+        return new AttributesMetaResolver();
     }
 
-    public PredicateService getPredicateService() {
-        return predicateService;
+    public final DtoMetaResolver getDtoMetaResolver() {
+        if (dtoMetaResolver == null) {
+            dtoMetaResolver = createDtoMetaResolver();
+        }
+        return dtoMetaResolver;
     }
 
-    public QueryLangService getQueryLangService() {
-        return queryLangService;
+    protected DtoMetaResolver createDtoMetaResolver() {
+        return new DtoMetaResolver(this);
+    }
+
+    public final Supplier<? extends QueryContext> getQueryContextSupplier() {
+        if (queryContextSupplier == null) {
+            queryContextSupplier = createQueryContextSupplier();
+        }
+        return queryContextSupplier;
+    }
+
+    protected Supplier<? extends QueryContext> createQueryContextSupplier() {
+        return () -> new QueryContext(this);
     }
 }

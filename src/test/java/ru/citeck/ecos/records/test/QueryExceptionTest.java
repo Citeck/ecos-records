@@ -28,7 +28,7 @@ public class QueryExceptionTest extends LocalRecordsDAO implements RecordsMetaLo
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId("test");
         recordsService.register(this);

@@ -1,9 +1,8 @@
 package ru.citeck.ecos.records2.resolver;
 
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -19,18 +18,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class LocalRemoteResolver implements RecordsResolver,
-                                            RecordsDAORegistry,
-                                            RecordsServiceAware,
-                                            RecordsMetaServiceAware,
-                                            PredicateServiceAware {
+public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry {
 
     private LocalRecordsResolver local;
     private RecordsResolver remote;
 
-    public LocalRemoteResolver(LocalRecordsResolver local, RecordsResolver remote) {
-        this.remote = remote;
-        this.local = local;
+    public LocalRemoteResolver(RecordsServiceFactory serviceFactory) {
+        this.remote = serviceFactory.getRemoteRecordsResolver();
+        this.local = serviceFactory.getLocalRecordsResolver();
         MandatoryParam.check("local", local);
     }
 
@@ -82,20 +77,5 @@ public class LocalRemoteResolver implements RecordsResolver,
     @Override
     public void register(RecordsDAO recordsDao) {
         local.register(recordsDao);
-    }
-
-    @Override
-    public void setPredicateService(PredicateService predicateService) {
-        local.setPredicateService(predicateService);
-    }
-
-    @Override
-    public void setRecordsService(RecordsService recordsService) {
-        local.setRecordsService(recordsService);
-    }
-
-    @Override
-    public void setRecordsMetaService(RecordsMetaService recordsMetaService) {
-        local.setRecordsMetaService(recordsMetaService);
     }
 }

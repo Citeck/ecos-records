@@ -10,7 +10,8 @@ import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.source.dao.local.*;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDAO;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,7 +36,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId(SOURCE_ID);
         recordsService.register(this);

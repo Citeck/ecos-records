@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaValueTest extends LocalRecordsDAO
@@ -42,7 +42,7 @@ public class MetaValueTest extends LocalRecordsDAO
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId(SOURCE_ID);
         recordsService.register(this);

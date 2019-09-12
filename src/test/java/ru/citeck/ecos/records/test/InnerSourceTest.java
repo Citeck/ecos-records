@@ -24,7 +24,7 @@ class InnerSourceTest extends LocalRecordsDAO implements RecordsQueryLocalDAO {
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
         setId(ID);
         recordsService.register(this);
     }

@@ -2,11 +2,9 @@ package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -17,7 +15,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsDAORegistry;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
-import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
@@ -26,42 +24,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\(n:\"([^\"]+)\"\\).+");
-
-    private static final Log logger = LogFactory.getLog(RecordsServiceImpl.class);
 
     private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
     private Supplier<? extends QueryContext> queryContextSupplier;
 
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
-                              RecordsResolver recordsResolver) {
-        this(recordsMetaService, recordsResolver, null);
-    }
-
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
-                              RecordsResolver recordsResolver,
-                              Supplier<? extends QueryContext> queryContextSupplier) {
-
-        this.recordsResolver = recordsResolver;
-        this.recordsMetaService = recordsMetaService;
-        if (queryContextSupplier != null) {
-            this.queryContextSupplier = queryContextSupplier;
-        } else {
-            this.queryContextSupplier = () -> new QueryContext(this);
-        }
-
-        if (this.recordsResolver instanceof RecordsServiceAware) {
-            ((RecordsServiceAware) recordsResolver).setRecordsService(this);
-        }
-        if (this.recordsResolver instanceof RecordsMetaServiceAware) {
-            ((RecordsMetaServiceAware) recordsResolver).setRecordsMetaService(recordsMetaService);
-        }
-        if (this.recordsMetaService instanceof RecordsServiceAware) {
-            ((RecordsServiceAware) recordsMetaService).setRecordsService(this);
-        }
+    public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
+        this.recordsResolver = serviceFactory.getRecordsResolver();
+        this.recordsMetaService = serviceFactory.getRecordsMetaService();
+        this.queryContextSupplier = serviceFactory.getQueryContextSupplier();
     }
 
     /* QUERY */
@@ -187,7 +162,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
         if (attributes.isEmpty()) {
-            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+            log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
 
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
@@ -317,7 +292,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         try {
             result = impl.get();
         } catch (Exception e) {
-            logger.error("Records resolving error", e);
+            log.error("Records resolving error", e);
             result = orElse.get();
             result.addError(ErrorUtils.convertException(e));
         } finally {
@@ -341,7 +316,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                                 .orElse(null);
 
         if (meta == null && values.getRecords().size() > 0) {
-            logger.warn("Records is not empty but '" + record + "' is not found. Records: "
+            log.warn("Records is not empty but '" + record + "' is not found. Records: "
                     + values.getRecords()
                             .stream()
                             .map(m -> "'" + m.getId() + "'")

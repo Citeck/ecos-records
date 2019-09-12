@@ -1,72 +1,32 @@
 package ru.citeck.ecos.records2.meta;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceAware;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServiceAware {
-
-    private static final Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
-
-    private static final Log logger = LogFactory.getLog(RecordsMetaServiceImpl.class);
-
-    private Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
-    private Map<Class<?>, Map<String, String>> attributesCache = new ConcurrentHashMap<>();
-
-    private ObjectMapper objectMapper = new ObjectMapper();
+@Slf4j
+public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private RecordsMetaGql graphQLService;
+    private AttributesMetaResolver attributesMetaResolver;
+    private DtoMetaResolver dtoMetaResolver;
 
-    public RecordsMetaServiceImpl(RecordsMetaGql graphQLService) {
-
-        this.graphQLService = graphQLService;
-
-        Arrays.asList(
-                new ScalarField<>(String.class, "disp"),
-                new ScalarField<>(Boolean.class, "bool"),
-                new ScalarField<>(boolean.class, "bool"),
-                new ScalarField<>(Double.class, "num"),
-                new ScalarField<>(double.class, "num"),
-                new ScalarField<>(Float.class, "num"),
-                new ScalarField<>(float.class, "num"),
-                new ScalarField<>(Integer.class, "num"),
-                new ScalarField<>(int.class, "num"),
-                new ScalarField<>(Long.class, "num"),
-                new ScalarField<>(long.class, "num"),
-                new ScalarField<>(Short.class, "num"),
-                new ScalarField<>(short.class, "num"),
-                new ScalarField<>(Byte.class, "num"),
-                new ScalarField<>(byte.class, "num"),
-                new ScalarField<>(Date.class, "str"),
-                new ScalarField<>(JsonNode.class, "json"),
-                new ScalarField<>(ObjectNode.class, "json"),
-                new ScalarField<>(ArrayNode.class, "json")
-        ).forEach(s -> scalars.put(s.getFieldType(), s));
+    public RecordsMetaServiceImpl(RecordsServiceFactory serviceFactory) {
+        graphQLService = serviceFactory.getRecordsMetaGql();
+        dtoMetaResolver = serviceFactory.getDtoMetaResolver();
+        attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
     }
 
     @Override
@@ -116,6 +76,21 @@ public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServic
         return recordMeta;
     }
 
+    @Override
+    public Map<String, String> getAttributes(Class<?> metaClass) {
+        return dtoMetaResolver.getAttributes(metaClass);
+    }
+
+    @Override
+    public <T> T instantiateMeta(Class<T> metaClass, RecordMeta flatMeta) {
+        return dtoMetaResolver.instantiateMeta(metaClass, flatMeta.getAttributes());
+    }
+
+    @Override
+    public AttributesSchema createSchema(Map<String, String> attributes) {
+        return attributesMetaResolver.createSchema(attributes);
+    }
+
     private JsonNode toFlatNode(JsonNode input) {
 
         JsonNode node = input;
@@ -154,287 +129,5 @@ public class RecordsMetaServiceImpl implements RecordsMetaService, RecordsServic
         }
 
         return node;
-    }
-
-    @Override
-    public Map<String, String> getAttributes(Class<?> metaClass) {
-        return getAttributes(metaClass, null);
-    }
-
-    private Map<String, String> getAttributes(Class<?> metaClass, Set<Class<?>> visited) {
-        Map<String, String> attributes = attributesCache.get(metaClass);
-        if (attributes == null) {
-            attributes = getAttributesImpl(metaClass, visited != null ? visited : new HashSet<>());
-            attributesCache.putIfAbsent(metaClass, attributes);
-        }
-        return attributes;
-    }
-
-    @Override
-    public <T> T instantiateMeta(Class<T> metaClass, RecordMeta meta) {
-        try {
-            return objectMapper.treeToValue(meta.getAttributes(), metaClass);
-        } catch (JsonProcessingException e) {
-            logger.error("Error while meta instantiating", e);
-            return null;
-        }
-    }
-
-    @Override
-    public AttributesSchema createSchema(Map<String, String> attributes) {
-        return createSchema(attributes, true);
-    }
-
-    private AttributesSchema createSchema(Map<String, String> attributes, boolean generateKeys) {
-
-        if (attributes.isEmpty()) {
-            return new AttributesSchema("", Collections.emptyMap());
-        }
-
-        StringBuilder schema = new StringBuilder();
-        ObjectKeyGenerator keys = new ObjectKeyGenerator();
-
-        Map<String, String> keysMapping = new HashMap<>();
-
-        attributes.forEach((name, path) -> {
-
-            String key = generateKeys ? keys.incrementAndGet() : name;
-
-            keysMapping.put(key, name);
-            schema.append(key).append(":");
-
-            if (path.charAt(0) != '.') {
-                path = convertAttDefinition(path, "disp", false);
-            }
-
-            schema.append(path, 1, path.length());
-            schema.append(",");
-        });
-        schema.setLength(schema.length() - 1);
-
-        return new AttributesSchema(schema.toString(), keysMapping);
-    }
-
-    private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
-
-        if (!visited.add(metaClass)) {
-            throw new IllegalArgumentException("Recursive meta fields is not supported! "
-                                                + "Class: " + metaClass + " visited: " + visited);
-        }
-
-        PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(metaClass);
-        Map<String, String> attributes = new HashMap<>();
-
-        StringBuilder schema = new StringBuilder();
-
-        for (PropertyDescriptor descriptor : descriptors) {
-
-            Method writeMethod = descriptor.getWriteMethod();
-
-            if (writeMethod == null) {
-                continue;
-            }
-
-            Class<?> propType = descriptor.getPropertyType();
-            boolean isMultiple = false;
-
-            if (List.class.isAssignableFrom(propType) || Set.class.isAssignableFrom(propType)) {
-                ParameterizedType parameterType = (ParameterizedType) writeMethod.getGenericParameterTypes()[0];
-
-                Type type = parameterType.getActualTypeArguments()[0];
-
-                if (type instanceof Class) {
-                    propType = (Class<?>) parameterType.getActualTypeArguments()[0];
-                } else if (type instanceof ParameterizedType) {
-                    propType = (Class<?>) ((ParameterizedType) type).getRawType();
-                }
-
-                isMultiple = true;
-            }
-
-            ScalarField<?> scalarField = scalars.get(propType);
-
-            String attributeSchema = getAttributeSchema(metaClass,
-                                                        writeMethod,
-                                                        descriptor.getName(),
-                                                        isMultiple,
-                                                        scalarField);
-
-            schema.setLength(0);
-            char lastChar = attributeSchema.charAt(attributeSchema.length() - 1);
-
-            if (lastChar == '}' || !attributeSchema.startsWith(".att")) {
-                attributes.put(descriptor.getName(), attributeSchema);
-                continue;
-            }
-
-            schema.append(attributeSchema).append("{");
-
-            if (scalarField == null) {
-
-                Map<String, String> propSchema = getAttributes(propType, visited);
-                schema.append(createSchema(propSchema, false).getSchema());
-
-            } else {
-
-                schema.append(scalarField.getSchema());
-            }
-
-            if (schema.charAt(schema.length() - 1) != '{') {
-
-                int openBraces = StringUtils.countMatches(schema, "{");
-                int closeBraces = StringUtils.countMatches(schema, "}");
-
-                while (openBraces > closeBraces++) {
-                    schema.append("}");
-                }
-                attributes.put(descriptor.getName(), schema.toString());
-
-            } else {
-
-                logger.error("Class without attributes: " + propType + " property: " + descriptor.getName());
-            }
-        }
-
-        visited.remove(metaClass);
-
-        return attributes;
-    }
-
-    private String getAttributeSchema(Class<?> scope,
-                                      Method writeMethod,
-                                      String fieldName,
-                                      boolean multiple,
-                                      ScalarField<?> scalarField) {
-
-        MetaAtt attInfo = writeMethod.getAnnotation(MetaAtt.class);
-
-        if (attInfo == null) {
-            Field field;
-            try {
-                field = scope.getDeclaredField(fieldName);
-                if (field != null) {
-                    attInfo = field.getAnnotation(MetaAtt.class);
-                }
-            } catch (NoSuchFieldException e) {
-                logger.error("Field not found: " + fieldName, e);
-            }
-        }
-
-        String schema;
-        if (attInfo == null || attInfo.value().isEmpty()) {
-            if ("id".equals(fieldName)) {
-                schema = ".id";
-            } else {
-                schema = ".att" + (multiple ? "s" : "") + "(n:'" + fieldName + "')";
-            }
-        } else {
-            String att = attInfo.value();
-            if (att.startsWith(".")) {
-
-                Matcher matcher = ATT_WITHOUT_SCALAR.matcher(att);
-                if (matcher.matches()) {
-                    schema = matcher.group(1) + '{' + scalarField.getSchema() + '}' + matcher.group(2);
-                } else {
-                    schema = att;
-                }
-            } else {
-                schema = convertAttDefinition(att, null, multiple);
-            }
-        }
-        return schema.replaceAll("'", "\"");
-    }
-
-    private String convertAttDefinition(String def, String defaultScalar, boolean multiple) {
-
-        String fieldName = def;
-        String scalarField = defaultScalar;
-
-        int questionIdx = fieldName.indexOf('?');
-        if (questionIdx >= 0) {
-            scalarField = fieldName.substring(questionIdx + 1);
-            fieldName = fieldName.substring(0, questionIdx);
-        }
-
-        if (fieldName.startsWith("#")) {
-
-            if (scalarField == null) {
-                throw new IllegalArgumentException("Illegal attribute: '" + def + "'");
-            }
-
-            String inner;
-            switch (scalarField) {
-                case "options":
-                case "distinct":
-                    inner = "{label:disp,value:str}";
-                    break;
-                case "createVariants":
-                    inner = "{json}";
-                    break;
-                default:
-                    inner = "";
-            }
-
-            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + inner + "}";
-
-        } else {
-
-            String[] attsPath = fieldName.split("(?<!\\\\)\\.");
-            if (multiple && !fieldName.contains("[]")) {
-                attsPath[0] = attsPath[0] + "[]";
-            }
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < attsPath.length; i++) {
-                if (i == 0) {
-                    sb.append(".");
-                } else {
-                    sb.append("{");
-                }
-                sb.append("att");
-
-                String pathElem = attsPath[i];
-                if (pathElem.endsWith("[]")) {
-                    sb.append("s");
-                    pathElem = pathElem.substring(0, pathElem.length() - 2);
-                }
-                if (pathElem.contains("\\.")) {
-                    pathElem = pathElem.replaceAll("\\\\.", ".");
-                }
-                sb.append("(n:\"").append(pathElem).append("\")");
-            }
-
-            if (scalarField != null) {
-                sb.append("{").append(scalarField).append("}");
-                for (int i = 0; i < attsPath.length - 1; i++) {
-                    sb.append("}");
-                }
-            }
-
-            return sb.toString();
-        }
-    }
-
-    public void setRecordsService(RecordsService recordsService) {
-        graphQLService.setRecordsService(recordsService);
-    }
-
-    public static class ScalarField<FieldTypeT> {
-
-        private String schema;
-        private Class<FieldTypeT> fieldClass;
-
-        public ScalarField(Class<FieldTypeT> fieldClass, String schema) {
-            this.schema = schema;
-            this.fieldClass = fieldClass;
-        }
-
-        public String getSchema() {
-            return schema;
-        }
-
-        public Class<FieldTypeT> getFieldType() {
-            return fieldClass;
-        }
     }
 }

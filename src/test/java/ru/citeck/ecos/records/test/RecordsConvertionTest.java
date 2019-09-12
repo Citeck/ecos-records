@@ -12,7 +12,7 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsConvertionTest extends LocalRecordsDAO implements RecordsQueryLocalDAO {
@@ -26,7 +26,7 @@ public class RecordsConvertionTest extends LocalRecordsDAO implements RecordsQue
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         factory.getQueryLangService().register(query -> query, SOURCE_LANG, CONVERTED_LANG);
 

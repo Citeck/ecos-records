@@ -10,8 +10,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.predicate.json.JsonConverter;
 import ru.citeck.ecos.predicate.model.*;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
@@ -26,9 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Standard converter for predicates based on jackson library.
  */
+@Slf4j
 public class StdJsonConverter extends StdDeserializer<Predicate> implements JsonConverter {
-
-    private static final Log logger = LogFactory.getLog(StdJsonConverter.class);
 
     private Map<String, Class<? extends Predicate>> predicateTypes = new ConcurrentHashMap<>();
     private Map<String, PredicateResolver> predicateResolvers = new ConcurrentHashMap<>();
@@ -128,7 +126,7 @@ public class StdJsonConverter extends StdDeserializer<Predicate> implements Json
         try {
             getTypes = type.getMethod("getTypes");
         } catch (NoSuchMethodException e) {
-            logger.error("Method getTypes not found in " + type, e);
+            log.error("Method getTypes not found in " + type, e);
         }
 
         if (getTypes == null) {

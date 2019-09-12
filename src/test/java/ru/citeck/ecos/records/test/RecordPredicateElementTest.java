@@ -7,12 +7,12 @@ import ru.citeck.ecos.predicate.Element;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.model.Predicates;
-import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
@@ -37,7 +37,7 @@ public class RecordPredicateElementTest extends LocalRecordsDAO implements Recor
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         predicates = factory.getPredicateService();
 

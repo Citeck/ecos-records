@@ -2,12 +2,10 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -25,7 +23,7 @@ import java.util.stream.Collectors;
  * Local records DAO.
  *
  * <p>
- * Extend this DAO if your data located in the same alfresco instance
+ * Extend this DAO if your data located in the same application instance
  * (when you don't want to execute graphql query remotely)
  * Important: This class implement only RecordsDAO.
  * All other interfaces should be implemented in children classes
@@ -38,12 +36,9 @@ import java.util.stream.Collectors;
  *
  * @author Pavel Simonov
  */
+@Slf4j
 @SuppressWarnings("unchecked")
-public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements RecordsMetaServiceAware,
-                                                                            RecordsServiceAware,
-                                                                            PredicateServiceAware {
-
-    private static final Log logger = LogFactory.getLog(LocalRecordsDAO.class);
+public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements ServiceFactoryAware {
 
     protected RecordsService recordsService;
     protected PredicateService predicateService;
@@ -228,22 +223,14 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Reco
     }
 
     protected void writeWarn(String msg) {
-        logger.warn(toString() + ": " + msg);
+        log.warn(toString() + ": " + msg);
     }
 
     @Override
-    public void setRecordsMetaService(RecordsMetaService recordsMetaService) {
-        this.recordsMetaService = recordsMetaService;
-    }
-
-    @Override
-    public void setRecordsService(RecordsService recordsService) {
-        this.recordsService = recordsService;
-    }
-
-    @Override
-    public void setPredicateService(PredicateService predicateService) {
-        this.predicateService = predicateService;
+    public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
+        recordsService = serviceFactory.getRecordsService();
+        predicateService = serviceFactory.getPredicateService();
+        recordsMetaService = serviceFactory.getRecordsMetaService();
     }
 
     @Override

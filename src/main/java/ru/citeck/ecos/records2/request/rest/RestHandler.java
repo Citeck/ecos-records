@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -9,9 +8,8 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.List;
 
+@Slf4j
 public class RestHandler {
-
-    private static final Log logger = LogFactory.getLog(RestHandler.class);
 
     private RecordsService recordsService;
 
@@ -22,12 +20,12 @@ public class RestHandler {
     public Object queryRecords(QueryBody body) {
 
         if (body.getQuery() != null && body.getRecords() != null) {
-            logger.warn("There must be one of 'records' or 'query' field "
-                        + "but found both. 'records' field will be ignored");
+            log.warn("There must be one of 'records' or 'query' field "
+                   + "but found both. 'records' field will be ignored");
         }
         if (body.getAttributes() != null && body.getSchema() != null) {
-            logger.warn("There must be one of 'attributes' or 'schema' field "
-                        + "but found both. 'schema' field will be ignored");
+            log.warn("There must be one of 'attributes' or 'schema' field "
+                   + "but found both. 'schema' field will be ignored");
         }
 
         RecordsResult<?> recordsResult;

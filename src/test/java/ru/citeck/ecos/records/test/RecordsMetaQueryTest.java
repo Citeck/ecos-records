@@ -11,9 +11,12 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsMetaQueryTest {
@@ -23,7 +26,7 @@ public class RecordsMetaQueryTest {
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsMetaService = factory.createRecordsMetaService();
+        recordsMetaService = factory.getRecordsMetaService();
     }
 
     @Test
@@ -187,5 +190,4 @@ public class RecordsMetaQueryTest {
             this.someatt = someatt;
         }
     }
-
 }

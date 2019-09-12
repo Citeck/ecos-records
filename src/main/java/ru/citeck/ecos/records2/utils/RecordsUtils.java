@@ -2,9 +2,8 @@ package ru.citeck.ecos.records2.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
@@ -18,9 +17,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RecordsUtils {
-
-    private static final Log logger = LogFactory.getLog(RecordsUtils.class);
 
     public static Map<String, Class<?>> getAttributesClasses(String sourceId,
                                                              Collection<String> attributes,
@@ -45,7 +43,7 @@ public class RecordsUtils {
                 try {
                     result.put(attribute, Class.forName(javaClassStr));
                 } catch (ClassNotFoundException e) {
-                    logger.warn("Attribute class not found: " + javaClassStr, e);
+                    log.warn("Attribute class not found: " + javaClassStr, e);
                 }
             }
         }
@@ -76,7 +74,7 @@ public class RecordsUtils {
             Object propValue = PropertyUtils.getProperty(value, "id");
             return propValue != null ? propValue.toString() : null;
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            logger.debug(e);
+            log.debug("Error", e);
         }
         return null;
     }

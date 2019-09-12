@@ -1,8 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -18,9 +17,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class BeanValueFactory implements MetaValueFactory<Object> {
-
-    private static final Log logger = LogFactory.getLog(BeanValueFactory.class);
 
     @Override
     public MetaValue getValue(Object value) {
@@ -78,7 +76,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
                             displayName = (String) readMethod.invoke(bean);
                             break;
                         } catch (Exception e) {
-                            logger.error("Can't get DisplayName", e);
+                            log.error("Can't get DisplayName", e);
                             break;
                         }
                     }
@@ -102,7 +100,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             try {
                 return PropertyUtils.getProperty(bean, name);
             } catch (NoSuchMethodException e) {
-                logger.debug("Property not found", e);
+                log.debug("Property not found", e);
             }
             return null;
         }
@@ -112,7 +110,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             try {
                 return PropertyUtils.getPropertyDescriptor(bean, name) != null;
             } catch (NoSuchMethodException e) {
-                logger.debug("Property not found", e);
+                log.debug("Property not found", e);
             }
             return false;
         }
@@ -177,7 +175,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
                 try {
                     descriptor = PropertyUtils.getPropertyDescriptor(bean, getName());
                 } catch (NoSuchMethodException e) {
-                    logger.debug("Descriptor not found", e);
+                    log.debug("Descriptor not found", e);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }

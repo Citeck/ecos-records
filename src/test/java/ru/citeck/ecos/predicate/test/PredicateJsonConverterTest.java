@@ -15,7 +15,7 @@ public class PredicateJsonConverterTest {
     @Test
     void testOptimization() {
 
-        PredicateService predicateService = new RecordsServiceFactory().createPredicateService();
+        PredicateService predicateService = new RecordsServiceFactory().getPredicateService();
         Predicate deepPredicate =
             Predicates.and(
                 Predicates.not(Predicates.empty("att")),

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.graphql;
 
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 
 /**
  * Query context.
@@ -10,7 +10,7 @@ import ru.citeck.ecos.records2.RecordsService;
 @Deprecated
 public class GqlContext extends QueryContext {
 
-    public GqlContext(RecordsService recordsService) {
-        super(recordsService);
+    public GqlContext(RecordsServiceFactory serviceFactory) {
+        super(serviceFactory);
     }
 }

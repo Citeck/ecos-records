@@ -2,11 +2,14 @@ package ru.citeck.ecos.records2.meta;
 
 import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AttributesMetaResolver {
+
+    private static final Pattern SUBFIELDS_PATTERN = Pattern.compile("^([^{]+)\\{(.+)}$");
 
     public AttributesSchema createSchema(Map<String, String> attributes) {
         return createSchema(attributes, true);
@@ -31,7 +34,7 @@ public class AttributesMetaResolver {
             schema.append(key).append(":");
 
             if (path.charAt(0) != '.') {
-                path = convertAttDefinition(path, "disp", false);
+                path = convertAttToGqlFormat(path, "disp", false);
             }
 
             schema.append(path, 1, path.length());
@@ -42,10 +45,21 @@ public class AttributesMetaResolver {
         return new AttributesSchema(schema.toString(), keysMapping);
     }
 
-    public String convertAttDefinition(String def, String defaultScalar, boolean multiple) {
+    public String convertAttToGqlFormat(String att, String defaultScalar, boolean multiple) {
 
-        String fieldName = def;
+        if (att.startsWith(".")) {
+            return att;
+        }
+
+        String fieldName = att;
         String scalarField = defaultScalar;
+
+        Matcher subFieldsMatcher = SUBFIELDS_PATTERN.matcher(fieldName);
+        String subFields = null;
+        if (subFieldsMatcher.matches()) {
+            fieldName = subFieldsMatcher.group(1);
+            subFields = subFieldsMatcher.group(2);
+        }
 
         int questionIdx = fieldName.indexOf('?');
         if (questionIdx >= 0) {
@@ -56,7 +70,7 @@ public class AttributesMetaResolver {
         if (fieldName.startsWith("#")) {
 
             if (scalarField == null) {
-                throw new IllegalArgumentException("Illegal attribute: '" + def + "'");
+                throw new IllegalArgumentException("Illegal attribute: '" + att + "'");
             }
 
             String inner;
@@ -101,7 +115,43 @@ public class AttributesMetaResolver {
                 sb.append("(n:\"").append(pathElem).append("\")");
             }
 
-            if (scalarField != null) {
+            if (subFields != null) {
+
+                List<String> innerAtts = Arrays.stream(subFields.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+
+                sb.append("{");
+
+                int attsCounter = innerAtts.size() - 1;
+                for (String innerAttWithAlias : innerAtts) {
+
+                    int aliasDelimIdx = innerAttWithAlias.indexOf(':');
+                    String alias;
+                    String innerAtt;
+
+                    if (aliasDelimIdx == -1) {
+                        alias = getValidAlias(innerAttWithAlias);
+                        innerAtt = innerAttWithAlias;
+                    } else {
+                        alias = innerAttWithAlias.substring(0, aliasDelimIdx).trim();
+                        innerAtt = innerAttWithAlias.substring(aliasDelimIdx + 1).trim();
+                    }
+
+                    innerAtt = convertAttToGqlFormat(innerAtt, defaultScalar, false);
+                    sb.append(alias).append(":").append(innerAtt.substring(1));
+
+                    if (attsCounter-- > 0) {
+                        sb.append(",");
+                    }
+                }
+
+                sb.append("}");
+                for (int i = 0; i < attsPath.length - 1; i++) {
+                    sb.append("}");
+                }
+
+            } else if (scalarField != null) {
                 sb.append("{").append(scalarField).append("}");
                 for (int i = 0; i < attsPath.length - 1; i++) {
                     sb.append("}");
@@ -110,5 +160,22 @@ public class AttributesMetaResolver {
 
             return sb.toString();
         }
+    }
+
+    private String getValidAlias(String alias) {
+
+        alias = alias.toLowerCase();
+
+        int dotIdx = alias.indexOf('.');
+        if (dotIdx > 0) {
+            alias = alias.substring(0, dotIdx);
+        }
+
+        int scalarDelimIdx = alias.indexOf('?');
+        if (scalarDelimIdx >= 0) {
+            alias = alias.substring(0, scalarDelimIdx);
+        }
+
+        return alias.replaceAll("[^a-z0-9]", "_");
     }
 }

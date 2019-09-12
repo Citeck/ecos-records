@@ -207,7 +207,7 @@ public class DtoMetaResolver {
                     schema = att;
                 }
             } else {
-                schema = attributesMeta.convertAttDefinition(att, null, multiple);
+                schema = attributesMeta.convertAttToGqlFormat(att, null, multiple);
             }
         }
         return schema.replaceAll("'", "\"");

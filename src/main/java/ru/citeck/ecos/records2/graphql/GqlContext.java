@@ -1,16 +1,21 @@
 package ru.citeck.ecos.records2.graphql;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.RecordsService;
 
 /**
  * Query context.
  * @deprecated use QueryContext instead
  */
+@Slf4j
 @Deprecated
 public class GqlContext extends QueryContext {
 
-    public GqlContext(RecordsServiceFactory serviceFactory) {
-        super(serviceFactory);
+    public GqlContext() {
+    }
+
+    public GqlContext(RecordsService recordsService) {
+        log.warn("GQL Context is deprecated! " + recordsService);
     }
 }

@@ -15,11 +15,7 @@ public class QueryContext {
     private List<?> metaValues;
     private Map<String, Object> contextData = new ConcurrentHashMap<>();
 
-    private final RecordsServiceFactory serviceFactory;
-
-    public QueryContext(RecordsServiceFactory serviceFactory) {
-        this.serviceFactory = serviceFactory;
-    }
+    private RecordsServiceFactory serviceFactory;
 
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
@@ -102,6 +98,14 @@ public class QueryContext {
 
     public void setMetaValues(List<?> metaValues) {
         this.metaValues = metaValues;
+    }
+
+    public void setServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
+
+    public RecordsServiceFactory getServiceFactory() {
+        return serviceFactory;
     }
 
     public RecordsService getRecordsService() {

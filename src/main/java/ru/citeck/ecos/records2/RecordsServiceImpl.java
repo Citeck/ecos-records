@@ -31,9 +31,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
+    private RecordsServiceFactory serviceFactory;
     private Supplier<? extends QueryContext> queryContextSupplier;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
         this.recordsResolver = serviceFactory.getRecordsResolver();
         this.recordsMetaService = serviceFactory.getRecordsMetaService();
         this.queryContextSupplier = serviceFactory.getQueryContextSupplier();
@@ -283,6 +285,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         boolean isContextOwner = false;
         if (context == null) {
             context = queryContextSupplier.get();
+            context.setServiceFactory(serviceFactory);
             QueryContext.setCurrent(context);
             isContextOwner = true;
         }

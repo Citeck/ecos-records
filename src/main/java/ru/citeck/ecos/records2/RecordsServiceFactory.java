@@ -216,6 +216,6 @@ public class RecordsServiceFactory {
     }
 
     protected Supplier<? extends QueryContext> createQueryContextSupplier() {
-        return () -> new QueryContext(this);
+        return () -> new QueryContext();
     }
 }

@@ -32,13 +32,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
     private RecordsServiceFactory serviceFactory;
-    private Supplier<? extends QueryContext> queryContextSupplier;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
         this.recordsResolver = serviceFactory.getRecordsResolver();
         this.recordsMetaService = serviceFactory.getRecordsMetaService();
-        this.queryContextSupplier = serviceFactory.getQueryContextSupplier();
     }
 
     /* QUERY */
@@ -284,8 +282,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         QueryContext context = QueryContext.getCurrent();
         boolean isContextOwner = false;
         if (context == null) {
-            context = queryContextSupplier.get();
-            context.setServiceFactory(serviceFactory);
+            context = serviceFactory.createQueryContext();
             QueryContext.setCurrent(context);
             isContextOwner = true;
         }

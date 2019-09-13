@@ -216,6 +216,12 @@ public class RecordsServiceFactory {
     }
 
     protected Supplier<? extends QueryContext> createQueryContextSupplier() {
-        return () -> new QueryContext();
+        return QueryContext::new;
+    }
+
+    public final QueryContext createQueryContext() {
+        QueryContext context = getQueryContextSupplier().get();
+        context.setServiceFactory(this);
+        return context;
     }
 }

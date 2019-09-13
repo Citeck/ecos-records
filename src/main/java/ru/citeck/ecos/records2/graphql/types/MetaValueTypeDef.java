@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceAware;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
-import ru.citeck.ecos.records2.graphql.GqlContext;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
@@ -159,12 +159,12 @@ public class MetaValueTypeDef implements GqlTypeDefinition, RecordsServiceAware 
         return getAtts(env).stream().findFirst().orElse(null);
     }
 
-    public List<MetaValue> getAsMetaValues(Object rawValue, GqlContext context, MetaField metaField) {
+    public List<MetaValue> getAsMetaValues(Object rawValue, QueryContext context, MetaField metaField) {
         return getAsMetaValues(rawValue, context, metaField, false);
     }
 
     public List<MetaValue> getAsMetaValues(Object rawValue,
-                                           GqlContext context,
+                                           QueryContext context,
                                            MetaField metaField,
                                            boolean forceInit) {
 
@@ -205,7 +205,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition, RecordsServiceAware 
     }
 
     private MetaValue getAsMetaValue(Object value,
-                                     GqlContext context,
+                                     QueryContext context,
                                      MetaField metaField,
                                      boolean forceInit) {
 

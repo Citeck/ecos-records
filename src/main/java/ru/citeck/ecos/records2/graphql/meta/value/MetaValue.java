@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import ru.citeck.ecos.records2.graphql.GqlContext;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 
 import java.util.Collections;
@@ -17,7 +17,7 @@ public interface MetaValue {
     /**
      * Initialize value with context before execute other methods.
      */
-    default <T extends GqlContext> void init(T context, MetaField field) {
+    default <T extends QueryContext> void init(T context, MetaField field) {
     }
 
     /**

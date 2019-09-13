@@ -34,11 +34,24 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
+    private Supplier<? extends QueryContext> queryContextSupplier;
 
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService, RecordsResolver recordsResolver) {
+    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
+                              RecordsResolver recordsResolver) {
+        this(recordsMetaService, recordsResolver, null);
+    }
 
-        this.recordsMetaService = recordsMetaService;
+    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
+                              RecordsResolver recordsResolver,
+                              Supplier<? extends QueryContext> queryContextSupplier) {
+
         this.recordsResolver = recordsResolver;
+        this.recordsMetaService = recordsMetaService;
+        if (queryContextSupplier != null) {
+            this.queryContextSupplier = queryContextSupplier;
+        } else {
+            this.queryContextSupplier = () -> new QueryContext(this);
+        }
 
         if (this.recordsResolver instanceof RecordsServiceAware) {
             ((RecordsServiceAware) recordsResolver).setRecordsService(this);
@@ -291,6 +304,14 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
 
+        QueryContext context = QueryContext.getCurrent();
+        boolean isContextOwner = false;
+        if (context == null) {
+            context = queryContextSupplier.get();
+            QueryContext.setCurrent(context);
+            isContextOwner = true;
+        }
+
         T result;
 
         try {
@@ -299,6 +320,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             logger.error("Records resolving error", e);
             result = orElse.get();
             result.addError(ErrorUtils.convertException(e));
+        } finally {
+            if (isContextOwner) {
+                QueryContext.removeCurrent();
+            }
         }
 
         return result;

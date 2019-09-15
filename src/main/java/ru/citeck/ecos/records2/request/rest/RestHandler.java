@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.request.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
@@ -29,20 +30,33 @@ public class RestHandler {
         }
 
         RecordsResult<?> recordsResult;
+        List<JsonNode> foreach = body.getForeach();
 
         if (body.getQuery() != null) {
 
             if (body.getAttributes() != null) {
 
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getAttributes());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                }
 
             } else if (body.getSchema() != null) {
 
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getSchema());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
+                }
 
             } else {
 
-                recordsResult = recordsService.queryRecords(body.getQuery());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery());
+                }
             }
         } else {
 

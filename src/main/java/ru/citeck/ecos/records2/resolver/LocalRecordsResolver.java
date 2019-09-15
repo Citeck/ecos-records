@@ -308,7 +308,22 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
+        RecordsResult<RecordMeta> results = getMetaImpl(records, schema);
+
+        if (log.isDebugEnabled()) {
+            log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
+        }
+
+        return results;
+    }
+
+    private RecordsResult<RecordMeta> getMetaImpl(Collection<RecordRef> records, String schema) {
+
         RecordsResult<RecordMeta> results = new RecordsResult<>();
+        if (StringUtils.isBlank(schema)) {
+            results.setRecords(records.stream().map(RecordMeta::new).collect(Collectors.toList()));
+            return results;
+        }
 
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
@@ -330,10 +345,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
             results.merge(meta);
         });
-
-        if (log.isDebugEnabled()) {
-            log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
-        }
 
         return results;
     }

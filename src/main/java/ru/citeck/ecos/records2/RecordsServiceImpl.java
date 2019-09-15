@@ -22,21 +22,19 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\(n:\"([^\"]+)\"\\).+");
 
-    private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
-    private RecordsServiceFactory serviceFactory;
+    private RecordsMetaService recordsMetaService;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
-        this.serviceFactory = serviceFactory;
-        this.recordsResolver = serviceFactory.getRecordsResolver();
-        this.recordsMetaService = serviceFactory.getRecordsMetaService();
+        super(serviceFactory);
+        recordsResolver = serviceFactory.getRecordsResolver();
+        recordsMetaService = serviceFactory.getRecordsMetaService();
     }
 
     /* QUERY */
@@ -60,11 +58,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsQueryResult<RecordMeta> meta = queryRecords(query, attributes);
 
         return new RecordsQueryResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
-    }
-
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes) {
-        return queryRecords(query, toAttributesMap(attributes));
     }
 
     @Override
@@ -95,34 +88,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     @Override
-    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
-                                                   Collection<String> attributes) {
-
-        return getAttributes(records, toAttributesMap(attributes));
-    }
-
-    @Override
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Map<String, String> attributes) {
 
         return getAttributesImpl(records, attributes, true);
-    }
-
-    @Override
-    public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
-        return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
     }
 
     @Override
@@ -279,61 +248,17 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
 
-        QueryContext context = QueryContext.getCurrent();
-        boolean isContextOwner = false;
-        if (context == null) {
-            context = serviceFactory.createQueryContext();
-            QueryContext.setCurrent(context);
-            isContextOwner = true;
-        }
-
         T result;
 
         try {
-            result = impl.get();
+            result = withQueryContext(impl);
         } catch (Exception e) {
             log.error("Records resolving error", e);
             result = orElse.get();
             result.addError(ErrorUtils.convertException(e));
-        } finally {
-            if (isContextOwner) {
-                QueryContext.removeCurrent();
-            }
         }
 
         return result;
-    }
-
-    private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
-
-        if (values.getRecords().isEmpty()) {
-            return new RecordMeta(record);
-        }
-        RecordMeta meta = values.getRecords()
-                                .stream()
-                                .filter(r -> record.equals(r.getId()))
-                                .findFirst()
-                                .orElse(null);
-
-        if (meta == null && values.getRecords().size() > 0) {
-            log.warn("Records is not empty but '" + record + "' is not found. Records: "
-                    + values.getRecords()
-                            .stream()
-                            .map(m -> "'" + m.getId() + "'")
-                            .collect(Collectors.joining(", ")));
-        }
-        if (meta == null) {
-            meta = new RecordMeta(record);
-        }
-        return meta;
-    }
-
-    private Map<String, String> toAttributesMap(Collection<String> attributes) {
-        Map<String, String> attributesMap = new HashMap<>();
-        for (String attribute : attributes) {
-            attributesMap.put(attribute, attribute);
-        }
-        return attributesMap;
     }
 
     @Override

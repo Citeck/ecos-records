@@ -112,10 +112,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private List<RecordMeta> getDistinctValues(String sourceId, DistinctQuery distinctQuery, int max, String schema) {
 
+        if (max == -1) {
+            max = 50;
+        }
+
         RecordsQuery recordsQuery = new RecordsQuery();
         recordsQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
         recordsQuery.setSourceId(sourceId);
-        recordsQuery.setMaxItems(max != -1 ? max : 20);
+        recordsQuery.setMaxItems(Math.max(max, 20));
 
         Optional<JsonNode> query = queryLangService.convertLang(distinctQuery.getQuery(),
                 distinctQuery.getLanguage(),
@@ -153,12 +157,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
                 JsonNode att = value.get("att");
                 String strVal = att.path(distinctValueAlias).asText();
 
-                distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
-
                 if (att.isMissingNode() || att.isNull()) {
                     recordsQuery.setSkipCount(recordsQuery.getSkipCount() + 1);
                 } else {
-                    values.put(strVal, att);
+                    JsonNode replaced = values.put(strVal, att);
+                    if (replaced == null) {
+                        distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
+                    }
                 }
             }
 

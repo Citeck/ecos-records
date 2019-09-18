@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -14,8 +15,14 @@ public class RestHandler {
 
     private RecordsService recordsService;
 
+    @Deprecated
     public RestHandler(RecordsService recordsService) {
+        log.error("Constructor with recordsService is deprecated");
         this.recordsService = recordsService;
+    }
+
+    public RestHandler(RecordsServiceFactory factory) {
+        this.recordsService = factory.getRecordsService();
     }
 
     public Object queryRecords(QueryBody body) {

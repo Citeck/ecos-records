@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
 import ru.citeck.ecos.records2.meta.DtoMetaResolver;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
@@ -28,6 +29,7 @@ import java.util.function.Supplier;
 
 public class RecordsServiceFactory {
 
+    private RestHandler restHandler;
     private RecordsMetaGql recordsMetaGql;
     private RecordsService recordsService;
     private DtoMetaResolver dtoMetaResolver;
@@ -223,5 +225,16 @@ public class RecordsServiceFactory {
         QueryContext context = getQueryContextSupplier().get();
         context.setServiceFactory(this);
         return context;
+    }
+
+    protected RestHandler createRestHandler() {
+        return new RestHandler(this);
+    }
+
+    public final RestHandler getRestHandler() {
+        if (restHandler == null) {
+            restHandler = createRestHandler();
+        }
+        return restHandler;
     }
 }

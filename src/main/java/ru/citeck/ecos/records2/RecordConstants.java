@@ -14,6 +14,7 @@ public final class RecordConstants {
     public static final String ATT_DASHBOARD_TYPE = "_dashboardType";
     public static final String ATT_MODIFIED = "_modified";
     public static final String ATT_CONTENT = "_content";
+    public static final String ATT_ACTIONS = "_actions";
 
     public static final String FORM_MODE_CREATE = "CREATE";
     public static final String FORM_MODE_EDIT = "EDIT";

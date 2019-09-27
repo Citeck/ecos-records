@@ -1,50 +1,69 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.List;
 
+@Slf4j
 public class RestHandler {
-
-    private static final Log logger = LogFactory.getLog(RestHandler.class);
 
     private RecordsService recordsService;
 
+    @Deprecated
     public RestHandler(RecordsService recordsService) {
+        log.error("Constructor with recordsService is deprecated");
         this.recordsService = recordsService;
+    }
+
+    public RestHandler(RecordsServiceFactory factory) {
+        this.recordsService = factory.getRecordsService();
     }
 
     public Object queryRecords(QueryBody body) {
 
         if (body.getQuery() != null && body.getRecords() != null) {
-            logger.warn("There must be one of 'records' or 'query' field "
-                        + "but found both. 'records' field will be ignored");
+            log.warn("There must be one of 'records' or 'query' field "
+                   + "but found both. 'records' field will be ignored");
         }
         if (body.getAttributes() != null && body.getSchema() != null) {
-            logger.warn("There must be one of 'attributes' or 'schema' field "
-                        + "but found both. 'schema' field will be ignored");
+            log.warn("There must be one of 'attributes' or 'schema' field "
+                   + "but found both. 'schema' field will be ignored");
         }
 
         RecordsResult<?> recordsResult;
+        List<JsonNode> foreach = body.getForeach();
 
         if (body.getQuery() != null) {
 
             if (body.getAttributes() != null) {
 
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getAttributes());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                }
 
             } else if (body.getSchema() != null) {
 
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getSchema());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
+                }
 
             } else {
 
-                recordsResult = recordsService.queryRecords(body.getQuery());
+                if (foreach != null) {
+                    recordsResult = recordsService.queryRecords(foreach, body.getQuery());
+                } else {
+                    recordsResult = recordsService.queryRecords(body.getQuery());
+                }
             }
         } else {
 

@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -84,6 +85,8 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 
+    RecordsQueryResult<List<RecordRef>> queryRecords(List<JsonNode> foreach, RecordsQuery query);
+
     /**
      * Query records with data. Specified class will be used to determine
      * which attributes will be requested from a data source. Each property
@@ -98,6 +101,8 @@ public interface RecordsService {
      */
     <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass);
 
+    <T> RecordsQueryResult<List<T>> queryRecords(List<JsonNode> foreach, RecordsQuery query, Class<T> metaClass);
+
     /**
      * Query records and its attributes.
      *
@@ -106,6 +111,10 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
+
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach,
+                                                      RecordsQuery query,
+                                                      Collection<String> attributes);
 
     /**
      * Query records and its attributes.
@@ -117,6 +126,10 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach,
+                                                      RecordsQuery query,
+                                                      Map<String, String> attributes);
+
     /**
      * Low-level method to search records and receive its metadata.
      * Usually, you should not use this method because it has a set of disadvantages against other methods.
@@ -124,6 +137,8 @@ public interface RecordsService {
      * @param schema GraphQL schema of metadata to receive
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
+
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach, RecordsQuery query, String schema);
 
     /* ATTRIBUTES */
 

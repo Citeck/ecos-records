@@ -35,7 +35,7 @@ class RemoteRecordsDAOTest {
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         queryHandler = new RestHandler(recordsService);
 

@@ -172,48 +172,38 @@ public class PredicateServiceImpl implements PredicateService {
 
     private Predicate optimize(Predicate predicate) {
 
+        Predicate result = predicate;
+
         if (predicate instanceof ComposedPredicate) {
 
-            ComposedPredicate comp = (ComposedPredicate) predicate;
+            ComposedPredicate comp = predicate.copy();
+            result = comp;
 
             if ((comp instanceof AndPredicate
                     || comp instanceof OrPredicate) && comp.getPredicates().size() == 1) {
 
-                predicate = optimize(comp.getPredicates().get(0));
+                result = optimize(comp.getPredicates().get(0));
 
             } else {
 
-                List<Predicate> toAdd = null;
-                List<Predicate> toRemove = null;
+                List<Predicate> predicatesToOptimize = comp.getPredicates();
+                comp.setPredicates(null);
 
-                for (Predicate child : comp.getPredicates()) {
-
-                    Predicate optimized = optimize(child);
-
-                    if (child != optimized) {
-                        if (toAdd == null) {
-                            toAdd = new ArrayList<>();
-                            toRemove = new ArrayList<>();
-                        }
-                        toAdd.add(optimized);
-                        toRemove.add(child);
-                    }
-                }
-
-                if (toAdd != null) {
-                    List<Predicate> predicates = new ArrayList<>(comp.getPredicates());
-                    predicates.removeAll(toRemove);
-                    predicates.addAll(toAdd);
-                    comp.setPredicates(predicates);
+                for (Predicate child : predicatesToOptimize) {
+                    comp.addPredicate(optimize(child));
                 }
             }
+
+            return result;
+
         } else if (predicate instanceof NotPredicate) {
 
-            NotPredicate not = (NotPredicate) predicate;
+            NotPredicate not = predicate.copy();
             not.setPredicate(optimize(not.getPredicate()));
+            result = not;
         }
 
-        return predicate;
+        return result;
     }
 
     private JsonConverter getJsonConverter() {

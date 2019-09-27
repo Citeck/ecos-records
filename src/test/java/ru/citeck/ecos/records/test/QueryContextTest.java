@@ -30,7 +30,7 @@ public class QueryContextTest extends LocalRecordsDAO implements RecordsMetaLoca
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         setId(SOURCE_ID);
         recordsService.register(this);

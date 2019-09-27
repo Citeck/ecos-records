@@ -2,12 +2,9 @@ package ru.citeck.ecos.records2.graphql.types;
 
 import graphql.Scalars;
 import graphql.schema.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceAware;
-import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
@@ -25,10 +22,9 @@ import java.util.stream.Collectors;
  *
  * @author Pavel Simonov
  */
+@Slf4j
 @SuppressWarnings("unchecked")
-public class MetaValueTypeDef implements GqlTypeDefinition, RecordsServiceAware {
-
-    private static final Log logger = LogFactory.getLog(MetaValueTypeDef.class);
+public class MetaValueTypeDef implements GqlTypeDefinition {
 
     public static final String TYPE_NAME = "MetaValue";
 
@@ -133,7 +129,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition, RecordsServiceAware 
         try {
             return value.has(name);
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            logger.error("Failed to get attribute " + name, e);
+            log.error("Failed to get attribute " + name, e);
             return false;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -286,14 +282,5 @@ public class MetaValueTypeDef implements GqlTypeDefinition, RecordsServiceAware 
 
     public <T> void register(MetaValueFactory<T> factory) {
         factory.getValueTypes().forEach(t -> valueFactories.put(t, factory));
-    }
-
-    @Override
-    public void setRecordsService(RecordsService recordsService) {
-        valueFactories.values().forEach(v -> {
-            if (v instanceof RecordsServiceAware) {
-                ((RecordsServiceAware) v).setRecordsService(recordsService);
-            }
-        });
     }
 }

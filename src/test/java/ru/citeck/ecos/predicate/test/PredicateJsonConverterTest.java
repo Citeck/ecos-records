@@ -12,42 +12,48 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PredicateJsonConverterTest {
 
-    @Test
-    void testOptimization() {
-
-        PredicateService predicateService = new RecordsServiceFactory().createPredicateService();
-        Predicate deepPredicate =
-            Predicates.and(
-                Predicates.not(Predicates.empty("att")),
-                Predicates.equal("att", "Val"),
-                Predicates.and(
-                    Predicates.empty("att")
-                ),
-                Predicates.and(
+    private Predicate createDeepPredicate() {
+        return Predicates.and(
+                    Predicates.not(Predicates.empty("att")),
+                    Predicates.equal("att", "Val"),
                     Predicates.and(
-                        Predicates.not(
-                            Predicates.and(
+                        Predicates.empty("att")
+                    ),
+                    Predicates.and(
+                        Predicates.and(
+                            Predicates.not(
                                 Predicates.and(
-                                    Predicates.equal("aa", "bb")
+                                    Predicates.and(
+                                        Predicates.equal("aa", "bb")
+                                    )
                                 )
                             )
                         )
                     )
-                )
-            );
+                );
+    }
 
-        Predicate optimizedPredicate =
-            Predicates.and(
-                Predicates.not(Predicates.empty("att")),
-                Predicates.equal("att", "Val"),
-                Predicates.empty("att"),
-                Predicates.not(Predicates.equal("aa", "bb"))
-            );
+    private Predicate getOptimizedPredicate() {
+        return Predicates.and(
+            Predicates.not(Predicates.empty("att")),
+            Predicates.equal("att", "Val"),
+            Predicates.empty("att"),
+            Predicates.not(Predicates.equal("aa", "bb"))
+        );
+    }
+
+    @Test
+    void testOptimization() {
+
+        PredicateService predicateService = new RecordsServiceFactory().getPredicateService();
+        Predicate deepPredicate = createDeepPredicate();
+        Predicate optimizedPredicate = getOptimizedPredicate();
 
         ObjectNode deepJson = predicateService.writeJson(deepPredicate);
         ObjectNode optimJson = predicateService.writeJson(optimizedPredicate);
 
         assertEquals(optimJson, deepJson);
+        assertEquals(deepPredicate, createDeepPredicate());
 
         deepJson = JsonNodeFactory.instance.objectNode();
         deepJson.put("t", "and");
@@ -67,7 +73,4 @@ public class PredicateJsonConverterTest {
 
         assertEquals(Predicates.equal("name", "value"), jsonToPred);
     }
-
-
-
 }

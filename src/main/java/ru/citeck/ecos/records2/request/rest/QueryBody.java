@@ -1,24 +1,28 @@
 package ru.citeck.ecos.records2.request.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Getter;
+import lombok.Setter;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
 import java.util.*;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class QueryBody {
 
     public static final String SINGLE_ATT_KEY = "a";
 
-    private List<RecordRef> records;
-    private RecordsQuery query;
+    @Getter @Setter private List<RecordRef> records;
+    @Getter @Setter private RecordsQuery query;
+    @Getter @Setter private List<JsonNode> foreach;
 
-    private String schema;
-    private Map<String, String> attributes;
+    @Getter @Setter private String schema;
+    @Getter private Map<String, String> attributes;
+
     private boolean isSingleRecord = false;
     private boolean isSingleAttribute = false;
 
@@ -36,26 +40,6 @@ public class QueryBody {
         }
         this.attributes.put(SINGLE_ATT_KEY, attribute);
         isSingleAttribute = true;
-    }
-
-    public List<RecordRef> getRecords() {
-        return records;
-    }
-
-    public void setRecords(List<RecordRef> records) {
-        this.records = records;
-    }
-
-    public RecordsQuery getQuery() {
-        return query;
-    }
-
-    public void setQuery(RecordsQuery query) {
-        this.query = query;
-    }
-
-    public Map<String, String> getAttributes() {
-        return attributes;
     }
 
     @JsonSetter
@@ -88,14 +72,6 @@ public class QueryBody {
         this.attributes = attributes;
     }
 
-    public String getSchema() {
-        return schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
     @JsonIgnore
     public boolean isSingleRecord() {
         return isSingleRecord && records != null && records.size() == 1;
@@ -120,12 +96,21 @@ public class QueryBody {
             && Objects.equals(records, queryBody.records)
             && Objects.equals(query, queryBody.query)
             && Objects.equals(schema, queryBody.schema)
-            && Objects.equals(attributes, queryBody.attributes);
+            && Objects.equals(attributes, queryBody.attributes)
+            && Objects.equals(foreach, queryBody.foreach);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(records, query, schema, attributes, isSingleRecord, isSingleAttribute);
+        return Objects.hash(
+            records,
+            query,
+            schema,
+            attributes,
+            isSingleRecord,
+            isSingleAttribute,
+            foreach
+        );
     }
 
     @Override
@@ -137,6 +122,7 @@ public class QueryBody {
             + ", attributes=" + attributes
             + ", isSingleRecord=" + isSingleRecord
             + ", isSingleAttribute=" + isSingleAttribute
+            + ", foreach=" + foreach
             + '}';
     }
 }

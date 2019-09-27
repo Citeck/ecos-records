@@ -26,6 +26,15 @@ public class EmptyPredicate extends AttributePredicate {
     }
 
     @Override
+    public <T extends Predicate> T copy() {
+
+        @SuppressWarnings("unchecked")
+        T result = (T) new EmptyPredicate(getAttribute());
+
+        return result;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

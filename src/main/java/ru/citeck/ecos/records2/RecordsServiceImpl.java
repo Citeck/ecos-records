@@ -2,11 +2,9 @@ package ru.citeck.ecos.records2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -17,51 +15,26 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsDAORegistry;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
-import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\(n:\"([^\"]+)\"\\).+");
 
-    private static final Log logger = LogFactory.getLog(RecordsServiceImpl.class);
-
-    private RecordsMetaService recordsMetaService;
     private RecordsResolver recordsResolver;
-    private Supplier<? extends QueryContext> queryContextSupplier;
+    private RecordsMetaService recordsMetaService;
 
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
-                              RecordsResolver recordsResolver) {
-        this(recordsMetaService, recordsResolver, null);
-    }
-
-    public RecordsServiceImpl(RecordsMetaService recordsMetaService,
-                              RecordsResolver recordsResolver,
-                              Supplier<? extends QueryContext> queryContextSupplier) {
-
-        this.recordsResolver = recordsResolver;
-        this.recordsMetaService = recordsMetaService;
-        if (queryContextSupplier != null) {
-            this.queryContextSupplier = queryContextSupplier;
-        } else {
-            this.queryContextSupplier = () -> new QueryContext(this);
-        }
-
-        if (this.recordsResolver instanceof RecordsServiceAware) {
-            ((RecordsServiceAware) recordsResolver).setRecordsService(this);
-        }
-        if (this.recordsResolver instanceof RecordsMetaServiceAware) {
-            ((RecordsMetaServiceAware) recordsResolver).setRecordsMetaService(recordsMetaService);
-        }
-        if (this.recordsMetaService instanceof RecordsServiceAware) {
-            ((RecordsServiceAware) recordsMetaService).setRecordsService(this);
-        }
+    public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
+        super(serviceFactory);
+        recordsResolver = serviceFactory.getRecordsResolver();
+        recordsMetaService = serviceFactory.getRecordsMetaService();
     }
 
     /* QUERY */
@@ -85,11 +58,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsQueryResult<RecordMeta> meta = queryRecords(query, attributes);
 
         return new RecordsQueryResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
-    }
-
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes) {
-        return queryRecords(query, toAttributesMap(attributes));
     }
 
     @Override
@@ -120,34 +88,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     @Override
-    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
-
-        return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
-                                                   Collection<String> attributes) {
-
-        return getAttributes(records, toAttributesMap(attributes));
-    }
-
-    @Override
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Map<String, String> attributes) {
 
         return getAttributesImpl(records, attributes, true);
-    }
-
-    @Override
-    public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
-        return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
     }
 
     @Override
@@ -187,7 +131,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
         if (attributes.isEmpty()) {
-            logger.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+            log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
 
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
@@ -304,61 +248,17 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
 
-        QueryContext context = QueryContext.getCurrent();
-        boolean isContextOwner = false;
-        if (context == null) {
-            context = queryContextSupplier.get();
-            QueryContext.setCurrent(context);
-            isContextOwner = true;
-        }
-
         T result;
 
         try {
-            result = impl.get();
+            result = withQueryContext(impl);
         } catch (Exception e) {
-            logger.error("Records resolving error", e);
+            log.error("Records resolving error", e);
             result = orElse.get();
             result.addError(ErrorUtils.convertException(e));
-        } finally {
-            if (isContextOwner) {
-                QueryContext.removeCurrent();
-            }
         }
 
         return result;
-    }
-
-    private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
-
-        if (values.getRecords().isEmpty()) {
-            return new RecordMeta(record);
-        }
-        RecordMeta meta = values.getRecords()
-                                .stream()
-                                .filter(r -> record.equals(r.getId()))
-                                .findFirst()
-                                .orElse(null);
-
-        if (meta == null && values.getRecords().size() > 0) {
-            logger.warn("Records is not empty but '" + record + "' is not found. Records: "
-                    + values.getRecords()
-                            .stream()
-                            .map(m -> "'" + m.getId() + "'")
-                            .collect(Collectors.joining(", ")));
-        }
-        if (meta == null) {
-            meta = new RecordMeta(record);
-        }
-        return meta;
-    }
-
-    private Map<String, String> toAttributesMap(Collection<String> attributes) {
-        Map<String, String> attributesMap = new HashMap<>();
-        for (String attribute : attributes) {
-            attributesMap.put(attribute, attribute);
-        }
-        return attributesMap;
     }
 
     @Override

@@ -63,7 +63,7 @@ class RemoteRecordsResolverTest {
 
         Factory factory = new Factory(this::jsonPost);
 
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
 
         refs.add(RecordRef.valueOf("src1@loc1"));
         refs.add(RecordRef.valueOf("src1@loc2"));

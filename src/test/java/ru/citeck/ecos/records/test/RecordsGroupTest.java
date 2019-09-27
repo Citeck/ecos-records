@@ -34,11 +34,11 @@ class RecordsGroupTest extends LocalRecordsDAO
     private static final List<PojoMeta> VALUES;
 
     static {
-        VALUES = Arrays.asList(
-            new PojoMeta("one", 1),
-            new PojoMeta("one", 2),
-            new PojoMeta("one", 3),
-            new PojoMeta("one", 4),
+        List<PojoMeta> values = new ArrayList<>();
+        for (int i = 0; i < 30; i++) {
+            values.add(new PojoMeta("one", i));
+        }
+        values.addAll(Arrays.asList(
             new PojoMeta("1one55", 200),
             new PojoMeta("1one55", 200),
             new PojoMeta("one", 1000),
@@ -53,7 +53,9 @@ class RecordsGroupTest extends LocalRecordsDAO
             new PojoMeta("two", 6623),
             new PojoMeta("two123", 6342),
             new PojoMeta(null, 6342)
-        );
+        ));
+
+        VALUES = Collections.unmodifiableList(values);
     }
 
     private RecordsServiceImpl recordsService;
@@ -64,7 +66,7 @@ class RecordsGroupTest extends LocalRecordsDAO
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = (RecordsServiceImpl) factory.createRecordsService();
+        recordsService = (RecordsServiceImpl) factory.getRecordsService();
         predicateService = factory.getPredicateService();
         queryLangService = factory.getQueryLangService();
 
@@ -182,7 +184,19 @@ class RecordsGroupTest extends LocalRecordsDAO
         Predicate predicate = predicateService.readJson(recordsQuery.getQuery());
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
 
-        result.setRecords(VALUES.stream().filter(pojoPredicate).collect(Collectors.toList()));
+        int max = recordsQuery.getMaxItems() >= 0 ? recordsQuery.getMaxItems() : Integer.MAX_VALUE;
+
+        List<PojoMeta> filteredValues = VALUES.stream()
+            .filter(pojoPredicate)
+            .collect(Collectors.toList());
+
+        List<Object> resultList = new ArrayList<>();
+
+        for (int i = 0; i < max && i < filteredValues.size(); i++) {
+            resultList.add(filteredValues.get(i));
+        }
+
+        result.setRecords(resultList);
 
         return result;
     }
@@ -190,21 +204,58 @@ class RecordsGroupTest extends LocalRecordsDAO
     @Test
     void test() throws IOException {
 
+        Predicate predicate = Predicates.gt("numKey", 4);
+
         RecordsQuery recordsQuery = new RecordsQuery();
-        recordsQuery.setQuery(Predicates.gt("numKey", 4));
+        recordsQuery.setQuery(predicate);
         recordsQuery.setSourceId(SOURCE_ID);
         recordsQuery.setLanguage("fts");
         recordsQuery.setGroupBy(Collections.singletonList("strVal"));
 
         RecordsQuery baseQuery = objectMapper.readValue(objectMapper.writeValueAsString(recordsQuery), RecordsQuery.class);
 
-        assertResults(recordsService.queryRecords(recordsQuery, Result.class));
+        assertResults(recordsService.queryRecords(recordsQuery, Result.class), predicate);
         assertEquals(baseQuery, recordsQuery);
 
         recordsQuery = new RecordsQuery(baseQuery);
         recordsQuery.setLanguage("fts");
 
-        assertResults(recordsService.queryRecords(recordsQuery, Result.class));
+        assertResults(recordsService.queryRecords(recordsQuery, Result.class), predicate);
+    }
+
+    private void assertResults(RecordsQueryResult<Result> records, Predicate predicate) {
+
+        java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
+        List<PojoMeta> filteredValues = VALUES.stream()
+            .filter(v -> v.strVal != null)
+            .filter(pojoPredicate)
+            .collect(Collectors.toList());
+
+        List<Result> results = records.getRecords();
+
+        Set<String> expectedDistinctValues = new HashSet<>();
+        filteredValues.forEach(v -> expectedDistinctValues.add(v.getStrVal()));
+
+        assertEquals(expectedDistinctValues.size(), results.size());
+
+        for (Result result : results) {
+
+            String value = result.getStrVal();
+            Double sum = result.getSum();
+
+            Double expectedSum = filteredValues.stream()
+                .filter(v -> v.strVal.equals(value))
+                .mapToDouble(PojoMeta::getNumber)
+                .sum();
+
+            assertEquals(expectedSum, sum);
+
+            long expectedCount = filteredValues.stream()
+                .filter(v -> v.strVal.equals(value))
+                .count();
+
+            assertEquals(expectedCount, (long) result.getValues().size());
+        }
     }
 
     @Test
@@ -255,49 +306,6 @@ class RecordsGroupTest extends LocalRecordsDAO
         result.getRecords().forEach(r -> distinctFromQuery.add(r.value));
 
         assertEquals(manualCalculatedDistinct, distinctFromQuery);
-    }
-
-    private void assertResults(RecordsQueryResult<Result> records) {
-
-        List<Result> results = records.getRecords();
-
-        assertEquals(7, results.size());
-
-        for (Result result : results) {
-            String value = result.getStrVal();
-
-            switch (value) {
-                case "1one55":
-                    assertEquals(12.0, result.getSum());
-                    assertEquals(2,  result.getValues().size());
-                    break;
-                case "one":
-                    assertEquals(9.0, result.getSum());
-                    assertEquals(3,  result.getValues().size());
-                    break;
-                case "1one":
-                    assertEquals(4.0, result.getSum());
-                    assertEquals(1,  result.getValues().size());
-                    break;
-                case "one12312":
-                    assertEquals(8.0, result.getSum());
-                    assertEquals(1,  result.getValues().size());
-                    break;
-                case "2one":
-                    assertEquals(8.0, result.getSum());
-                    assertEquals(2,  result.getValues().size());
-                    break;
-                case "two":
-                    assertEquals(9.0, result.getSum());
-                    assertEquals(3,  result.getValues().size());
-                    break;
-                case "two123":
-                    assertEquals(6.0, result.getSum());
-                    assertEquals(1,  result.getValues().size());
-                    break;
-
-            }
-        }
     }
 
     public static class DistinctValue {

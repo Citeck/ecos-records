@@ -38,6 +38,15 @@ public class NotPredicate implements Predicate {
     }
 
     @Override
+    public <T extends Predicate> T copy() {
+
+        @SuppressWarnings("unchecked")
+        T result = (T) new NotPredicate(predicate.copy());
+
+        return result;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

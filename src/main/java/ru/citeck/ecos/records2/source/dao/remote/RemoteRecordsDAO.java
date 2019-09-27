@@ -1,14 +1,14 @@
 package ru.citeck.ecos.records2.source.dao.remote;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import ru.citeck.ecos.records2.*;
+import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
-import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaResult;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.typed.RecordsRefsQueryResult;
+import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDAO;
@@ -19,12 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RemoteRecordsDAO extends AbstractRecordsDAO
                               implements RecordsMetaDAO,
                                          RecordsQueryWithMetaDAO,
                                          RecordsQueryDAO {
-
-    private static final Log logger = LogFactory.getLog(RemoteRecordsDAO.class);
 
     private boolean enabled = true;
 
@@ -48,7 +47,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
             if (result != null) {
                 return result.addSourceId(getId());
             } else {
-                logger.error("[" + getId() + "] queryRecords will return nothing. " + request);
+                log.error("[" + getId() + "] queryRecords will return nothing. " + request);
             }
         }
         return new RecordsRefsQueryResult();
@@ -70,7 +69,7 @@ public class RemoteRecordsDAO extends AbstractRecordsDAO
             if (result != null) {
                 return result.addSourceId(getId());
             } else {
-                logger.error("[" + getId() + "] queryRecords will return nothing. " + request);
+                log.error("[" + getId() + "] queryRecords will return nothing. " + request);
             }
         }
         return new RecordsMetaQueryResult();

@@ -7,12 +7,10 @@ import graphql.*;
 import graphql.language.SourceLocation;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceAware;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
@@ -20,27 +18,25 @@ import ru.citeck.ecos.records2.utils.RecordsUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RecordsMetaGql {
 
     private static final String META_QUERY_TEMPLATE = "{" + GqlMetaQueryDef.META_FIELD + "{%s}}";
 
-    private static final Log logger = LogFactory.getLog(RecordsMetaGql.class);
-
     private GraphQL graphQL;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    private List<GqlTypeDefinition> graphQLTypes;
 
-    public RecordsMetaGql(List<GqlTypeDefinition> graphQLTypes) {
+    public RecordsMetaGql(RecordsServiceFactory serviceFactory) {
 
-        this.graphQLTypes = graphQLTypes;
+        List<GqlTypeDefinition> graphQLTypes = serviceFactory.getGqlTypes();
 
         Map<String, GraphQLObjectType.Builder> types = new HashMap<>();
         graphQLTypes.forEach(def -> {
 
             GraphQLObjectType type = def.getType();
             if (type == null) {
-                logger.warn("Type definition return nothing: " + def.getClass());
+                log.warn("Type definition return nothing: " + def.getClass());
                 return;
             }
             GraphQLObjectType.Builder builder = types.get(type.getName());
@@ -123,7 +119,7 @@ public class RecordsMetaGql {
 
         if (errors != null && !errors.isEmpty()) {
 
-            logger.error("GraphQL query completed with errors:\nQuery: " + query);
+            log.error("GraphQL query completed with errors:\nQuery: " + query);
 
             for (GraphQLError error : errors) {
 
@@ -138,21 +134,13 @@ public class RecordsMetaGql {
                 String message = "GraphQL " + error.getErrorType() + locationsMsg + "message: " + error.getMessage();
 
                 if (error instanceof ExceptionWhileDataFetching) {
-                    logger.error(message, ((ExceptionWhileDataFetching) error).getException());
+                    log.error(message, ((ExceptionWhileDataFetching) error).getException());
                 } else {
-                    logger.error(message);
+                    log.error(message);
                 }
             }
         }
 
         return result;
-    }
-
-    public void setRecordsService(RecordsService recordsService) {
-        graphQLTypes.forEach(t -> {
-            if (t instanceof RecordsServiceAware) {
-                ((RecordsServiceAware) t).setRecordsService(recordsService);
-            }
-        });
     }
 }

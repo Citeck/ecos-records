@@ -1,7 +1,10 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -9,9 +12,13 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import java.util.Collections;
 import java.util.List;
 
-public class RecordRefValueFactory implements MetaValueFactory<RecordRef>, RecordsServiceAware {
+public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
 
-    private RecordsService recordsService;
+    private RecordsServiceFactory serviceFactory;
+
+    public RecordRefValueFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
 
     @Override
     public MetaValue getValue(RecordRef value) {
@@ -23,10 +30,6 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef>, Recor
         return Collections.singletonList(RecordRef.class);
     }
 
-    @Override
-    public void setRecordsService(RecordsService recordsService) {
-        this.recordsService = recordsService;
-    }
 
     public class RecordRefValue implements MetaValue {
 
@@ -39,7 +42,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef>, Recor
 
         @Override
         public <T extends QueryContext> void init(T context, MetaField field) {
-            meta = recordsService.getRawAttributes(ref, field.getInnerAttributesMap());
+            meta = serviceFactory.getRecordsService().getRawAttributes(ref, field.getInnerAttributesMap());
         }
 
         @Override

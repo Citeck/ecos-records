@@ -41,7 +41,7 @@ public class RecordsQuery {
 
     public RecordsQuery(RecordsQuery other) {
         this.page = other.page;
-        this.query = other.query;
+        this.query = other.query != null ? other.query.deepCopy() : null;
         this.debug = other.debug;
         this.language = other.language;
         this.sourceId = other.sourceId;

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.resolver;
 
-import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -14,7 +15,9 @@ import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,38 +67,38 @@ public class RemoteRecordsResolver implements RecordsResolver {
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
         return execRecordsAppRequest(
-                records,
-                QUERY_URL,
-                RecordRef::getAppName,
-                RecordRef::removeAppName,
-                this::addAppName,
-                appRecords -> {
-                    QueryBody queryBody = new QueryBody();
-                    queryBody.setRecords(appRecords);
-                    queryBody.setSchema(schema);
-                    return queryBody;
-                },
-                RecordsMetaQueryResult.class
+            records,
+            QUERY_URL,
+            RecordRef::getAppName,
+            RecordRef::removeAppName,
+            this::addAppName,
+            appRecords -> {
+                QueryBody queryBody = new QueryBody();
+                queryBody.setRecords(appRecords);
+                queryBody.setSchema(schema);
+                return queryBody;
+            },
+            RecordsMetaQueryResult.class
         );
     }
 
     @Override
     public RecordsMutResult mutate(RecordsMutation mutation) {
         return this.execRecordsAppRequest(
-                mutation.getRecords(),
-                MUTATE_URL,
-                m -> m.getId().getAppName(),
-                this::removeAppName,
-                this::addAppName,
-                appRecords -> {
-                    MutationBody body = new MutationBody();
-                    body.setRecords(appRecords);
-                    if (mutation.isDebug()) {
-                        body.setDebug(true);
-                    }
-                    return body;
-                },
-                RecordsMutResult.class
+            mutation.getRecords(),
+            MUTATE_URL,
+            m -> m.getId().getAppName(),
+            this::removeAppName,
+            this::addAppName,
+            appRecords -> {
+                MutationBody body = new MutationBody();
+                body.setRecords(appRecords);
+                if (mutation.isDebug()) {
+                    body.setDebug(true);
+                }
+                return body;
+            },
+            RecordsMutResult.class
         );
     }
 

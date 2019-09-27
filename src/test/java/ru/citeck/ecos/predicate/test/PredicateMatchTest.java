@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PredicateMatchTest implements Element, ElementAttributes {
@@ -32,7 +33,7 @@ public class PredicateMatchTest implements Element, ElementAttributes {
         attributes.put("d", "dd");
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        PredicateService service = factory.createPredicateService();
+        PredicateService service = factory.getPredicateService();
 
         Predicate pred = Predicates.or(
             Predicates.eq("a", "aa"),

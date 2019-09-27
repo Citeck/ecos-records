@@ -1,27 +1,21 @@
 package ru.citeck.ecos.records2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
+@Slf4j
 public class QueryContext {
-
-    private static final Logger logger = LoggerFactory.getLogger(QueryContext.class);
 
     private static final ThreadLocal<QueryContext> current = new ThreadLocal<>();
 
     private List<?> metaValues;
     private Map<String, Object> contextData = new ConcurrentHashMap<>();
 
-    private final RecordsService recordsService;
-
-    public QueryContext(RecordsService recordsService) {
-        this.recordsService = recordsService;
-    }
+    private RecordsServiceFactory serviceFactory;
 
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
@@ -58,7 +52,7 @@ public class QueryContext {
     public <T> T getOrPutData(String key, Class<?> type, Supplier<? extends T> newValue) {
         Object value = contextData.computeIfAbsent(key, k -> newValue.get());
         if (!type.isInstance(value)) {
-            logger.warn("Context data with the key '" + key + "' is not an instance of a " + type + ". "
+            log.warn("Context data with the key '" + key + "' is not an instance of a " + type + ". "
                       + "Data will be overridden. Current data: " + value);
             value = newValue.get();
             contextData.put(key, value);
@@ -106,7 +100,15 @@ public class QueryContext {
         this.metaValues = metaValues;
     }
 
+    public void setServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
+
+    public RecordsServiceFactory getServiceFactory() {
+        return serviceFactory;
+    }
+
     public RecordsService getRecordsService() {
-        return recordsService;
+        return serviceFactory.getRecordsService();
     }
 }

@@ -29,7 +29,7 @@ class LocalRecordsTest {
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.createRecordsService();
+        recordsService = factory.getRecordsService();
         recordsService.register(new RecordsQueryDAOImpl());
         recordsService.register(new RecordsSource());
         recordsService.register(new RecordsWithMetaSource());

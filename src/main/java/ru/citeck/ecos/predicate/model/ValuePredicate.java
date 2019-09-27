@@ -56,6 +56,20 @@ public class ValuePredicate extends AttributePredicate {
     }
 
     @Override
+    public <T extends Predicate> T copy() {
+
+        ValuePredicate predicate = new ValuePredicate();
+        predicate.setAttribute(getAttribute());
+        predicate.setType(getType());
+        predicate.setValue(getValue());
+
+        @SuppressWarnings("unchecked")
+        T result = (T) predicate;
+
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "('" + getAttribute() + "' " + type + " '" + value + "')";
     }

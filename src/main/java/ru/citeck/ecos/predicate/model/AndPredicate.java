@@ -27,6 +27,19 @@ public class AndPredicate extends ComposedPredicate {
     }
 
     @Override
+    public <T extends Predicate> T copy() {
+
+        AndPredicate copy = new AndPredicate();
+        copy.setPredicates(getPredicates().stream()
+                                          .map(p -> (Predicate) p.copy())
+                                          .collect(Collectors.toList()));
+        @SuppressWarnings("unchecked")
+        T result = (T) copy;
+
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "(" + getPredicates().stream()
                                     .map(Object::toString)

@@ -11,9 +11,12 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsMetaQueryTest {
@@ -23,7 +26,7 @@ public class RecordsMetaQueryTest {
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsMetaService = factory.createRecordsMetaService();
+        recordsMetaService = factory.getRecordsMetaService();
     }
 
     @Test
@@ -55,6 +58,13 @@ public class RecordsMetaQueryTest {
         attributesMap.put("6", ".att(n:\"name\"){att(n:\"title\"){str}}");
         attributesMap.put("7", "name?num");
         attributesMap.put("8", "name\\.withdot.title?num");
+        attributesMap.put("9", "name.title{inner}");
+        attributesMap.put("10", "name.title{inner,inner2,inner3}");
+        attributesMap.put("11", "name.title{key:inner?str,inner2}");
+        attributesMap.put("12", "name.title{ key:inner?str  ,   key2:inner2?bool }");
+        attributesMap.put("13", "name.title.other.deep{aa:inner?json}");
+        attributesMap.put("15", "name{aa:inner.and.more?bool,bb:inner2}");
+        attributesMap.put("16", "name{aa:inner[]{array}}");
 
         AttributesSchema schema = recordsMetaService.createSchema(attributesMap);
         assertEquals(""
@@ -66,7 +76,15 @@ public class RecordsMetaQueryTest {
             + "f:att(n:\"name\"){disp},"
             + "g:att(n:\"name\"){att(n:\"title\"){str}},"
             + "h:att(n:\"name\"){num},"
-            + "i:att(n:\"name.withdot\"){att(n:\"title\"){num}}", schema.getSchema());
+            + "i:att(n:\"name.withdot\"){att(n:\"title\"){num}},"
+            + "j:att(n:\"name\"){att(n:\"title\"){inner:att(n:\"inner\"){disp}}},"
+            + "k:att(n:\"name\"){att(n:\"title\"){inner:att(n:\"inner\"){disp},inner2:att(n:\"inner2\"){disp},inner3:att(n:\"inner3\"){disp}}},"
+            + "l:att(n:\"name\"){att(n:\"title\"){key:att(n:\"inner\"){str},inner2:att(n:\"inner2\"){disp}}},"
+            + "m:att(n:\"name\"){att(n:\"title\"){key:att(n:\"inner\"){str},key2:att(n:\"inner2\"){bool}}},"
+            + "n:att(n:\"name\"){att(n:\"title\"){att(n:\"other\"){att(n:\"deep\"){aa:att(n:\"inner\"){json}}}}},"
+            + "o:att(n:\"name\"){aa:att(n:\"inner\"){att(n:\"and\"){att(n:\"more\"){bool}}},bb:att(n:\"inner2\"){disp}},"
+            + "p:att(n:\"name\"){aa:atts(n:\"inner\"){array:att(n:\"array\"){disp}}}",
+            schema.getSchema());
     }
 
     public static class SimplePojo {
@@ -187,5 +205,4 @@ public class RecordsMetaQueryTest {
             this.someatt = someatt;
         }
     }
-
 }

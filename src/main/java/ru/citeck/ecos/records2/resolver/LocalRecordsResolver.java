@@ -2,8 +2,7 @@ package ru.citeck.ecos.records2.resolver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.model.AndPredicate;
 import ru.citeck.ecos.predicate.model.OrPredicate;
@@ -11,12 +10,13 @@ import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.querylang.QueryWithLang;
-import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;
 import ru.citeck.ecos.records2.exception.RecordsSourceNotFoundException;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceAware;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.RecordsError;
@@ -31,23 +31,15 @@ import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class LocalRecordsResolver implements RecordsResolver,
-                                             RecordsServiceAware,
-                                             RecordsMetaServiceAware,
-                                             PredicateServiceAware,
-                                             RecordsDAORegistry {
+@Slf4j
+public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry {
 
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
-
-    private static final Log logger = LogFactory.getLog(LocalRecordsResolver.class);
 
     private Map<String, RecordsMetaDAO> metaDAO = new ConcurrentHashMap<>();
     private Map<String, RecordsQueryDAO> queryDAO = new ConcurrentHashMap<>();
@@ -56,13 +48,16 @@ public class LocalRecordsResolver implements RecordsResolver,
 
     private Map<Class<? extends RecordsDAO>, Map<String, ? extends RecordsDAO>> daoMapByType;
 
-    private RecordsService recordsService;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
-    private RecordsMetaService recordsMetaService;
 
-    public LocalRecordsResolver(QueryLangService queryLangService) {
-        this.queryLangService = queryLangService;
+    private RecordsServiceFactory serviceFactory;
+
+    public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
+
+        this.serviceFactory = serviceFactory;
+        this.predicateService = serviceFactory.getPredicateService();
+        this.queryLangService = serviceFactory.getQueryLangService();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsMetaDAO.class, metaDAO);
@@ -81,7 +76,7 @@ public class LocalRecordsResolver implements RecordsResolver,
 
             if (convertedQuery == null) {
                 String errorMsg = "GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query;
-                logger.warn(errorMsg);
+                log.warn(errorMsg);
                 RecordsQueryResult<RecordMeta> result = queryRecordsImpl(query, schema);
                 result.addError(new RecordsError(errorMsg));
                 return result;
@@ -117,17 +112,21 @@ public class LocalRecordsResolver implements RecordsResolver,
 
     private List<RecordMeta> getDistinctValues(String sourceId, DistinctQuery distinctQuery, int max, String schema) {
 
+        if (max == -1) {
+            max = 50;
+        }
+
         RecordsQuery recordsQuery = new RecordsQuery();
         recordsQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
         recordsQuery.setSourceId(sourceId);
-        recordsQuery.setMaxItems(max != -1 ? max : 20);
+        recordsQuery.setMaxItems(Math.max(max, 20));
 
         Optional<JsonNode> query = queryLangService.convertLang(distinctQuery.getQuery(),
                 distinctQuery.getLanguage(),
                 PredicateService.LANGUAGE_PREDICATE);
 
         if (!query.isPresent()) {
-            logger.error("Language " + distinctQuery.getLanguage() + " is not supported by Distinct Query");
+            log.error("Language " + distinctQuery.getLanguage() + " is not supported by Distinct Query");
             return Collections.emptyList();
         }
 
@@ -158,12 +157,13 @@ public class LocalRecordsResolver implements RecordsResolver,
                 JsonNode att = value.get("att");
                 String strVal = att.path(distinctValueAlias).asText();
 
-                distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
-
                 if (att.isMissingNode() || att.isNull()) {
                     recordsQuery.setSkipCount(recordsQuery.getSkipCount() + 1);
                 } else {
-                    values.put(strVal, att);
+                    JsonNode replaced = values.put(strVal, att);
+                    if (replaced == null) {
+                        distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
+                    }
                 }
             }
 
@@ -246,8 +246,8 @@ public class LocalRecordsResolver implements RecordsResolver,
 
         if (records == null) {
 
-            logger.error("Query failed. \n" + query + "\nSchema:\n" + schema);
-            logger.error("Exceptions: \n" + exceptions.stream()
+            log.error("Query failed. \n" + query + "\nSchema:\n" + schema);
+            log.error("Exceptions: \n" + exceptions.stream()
                                                          .map(Throwable::getMessage)
                                                          .collect(Collectors.joining("\n")));
             records = new RecordsQueryResult<>();
@@ -268,16 +268,16 @@ public class LocalRecordsResolver implements RecordsResolver,
         DaoWithConvQuery<RecordsQueryWithMetaDAO> daoWithQuery = getDaoWithQuery(query,
                                                                                      RecordsQueryWithMetaDAO.class);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
+        if (log.isDebugEnabled()) {
+            log.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
         }
 
         long queryStart = System.currentTimeMillis();
         RecordsQueryResult<RecordMeta> records = daoWithQuery.dao.queryRecords(daoWithQuery.query, schema);
         long queryDuration = System.currentTimeMillis() - queryStart;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Stop records with meta query. Duration: " + queryDuration);
+        if (log.isDebugEnabled()) {
+            log.debug("Stop records with meta query. Duration: " + queryDuration);
         }
 
         if (query.isDebug()) {
@@ -291,17 +291,17 @@ public class LocalRecordsResolver implements RecordsResolver,
 
         DaoWithConvQuery<RecordsQueryDAO> daoWithQuery = getDaoWithQuery(query, RecordsQueryDAO.class);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Start records query: " + daoWithQuery.query.getQuery());
+        if (log.isDebugEnabled()) {
+            log.debug("Start records query: " + daoWithQuery.query.getQuery());
         }
 
         long recordsQueryStart = System.currentTimeMillis();
         RecordsQueryResult<RecordRef> recordRefs = daoWithQuery.dao.queryRecords(daoWithQuery.query);
         long recordsTime = System.currentTimeMillis() - recordsQueryStart;
 
-        if (logger.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             int found = recordRefs.getRecords().size();
-            logger.debug("Stop records query. Found: " + found + " Duration: " + recordsTime);
+            log.debug("Stop records query. Found: " + found + " Duration: " + recordsTime);
         }
         return recordRefs;
     }
@@ -309,11 +309,26 @@ public class LocalRecordsResolver implements RecordsResolver,
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
+        if (log.isDebugEnabled()) {
+            log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
+        RecordsResult<RecordMeta> results = getMetaImpl(records, schema);
+
+        if (log.isDebugEnabled()) {
+            log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
+        }
+
+        return results;
+    }
+
+    private RecordsResult<RecordMeta> getMetaImpl(Collection<RecordRef> records, String schema) {
+
         RecordsResult<RecordMeta> results = new RecordsResult<>();
+        if (StringUtils.isBlank(schema)) {
+            results.setRecords(records.stream().map(RecordMeta::new).collect(Collectors.toList()));
+            return results;
+        }
 
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
@@ -330,15 +345,11 @@ public class LocalRecordsResolver implements RecordsResolver,
                 meta.setRecords(recs.stream().map(RecordMeta::new).collect(Collectors.toList()));
                 meta.addError(new RecordsError("Records source '" + sourceId + "' can't return attributes"));
 
-                logger.debug("Records source '" + sourceId + "' can't return attributes");
+                log.debug("Records source '" + sourceId + "' can't return attributes");
             }
 
             results.merge(meta);
         });
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
-        }
 
         return results;
     }
@@ -406,9 +417,9 @@ public class LocalRecordsResolver implements RecordsResolver,
         register(mutableDAO, MutableRecordsDAO.class, recordsDao);
         register(queryWithMetaDAO, RecordsQueryWithMetaDAO.class, recordsDao);
 
-        execDaoSetter(recordsDao, PredicateServiceAware.class, this.predicateService);
-        execDaoSetter(recordsDao, RecordsMetaServiceAware.class, this.recordsMetaService);
-        execDaoSetter(recordsDao, RecordsServiceAware.class, this.recordsService);
+        if (recordsDao instanceof ServiceFactoryAware) {
+            ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
+        }
     }
 
     private <T extends RecordsDAO> void register(Map<String, T> map, Class<T> type, RecordsDAO value) {
@@ -437,67 +448,6 @@ public class LocalRecordsResolver implements RecordsResolver,
             throw new RecordsSourceNotFoundException(sourceId, type);
         }
         return source.get();
-    }
-
-    private <T> void execAllDaoSetters(Class<?> awareClass, T value) {
-        forEachDao(dao -> execDaoSetter(dao, awareClass, value));
-    }
-
-    private <T> void execDaoSetter(RecordsDAO dao, Class<?> awareClass, T value) {
-
-        if (value == null) {
-            return;
-        }
-
-        Method[] methods = awareClass.getDeclaredMethods();
-        if (methods.length == 1
-                && methods[0].getParameterCount() == 1
-                && methods[0].getParameterTypes()[0].isInstance(value)) {
-
-            Method method = methods[0];
-
-            if (awareClass.isInstance(dao)) {
-                try {
-                    method.invoke(dao, value);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException("Error", e);
-                }
-            }
-        }
-    }
-
-    private void forEachDao(Consumer<RecordsDAO> action) {
-
-        Map<RecordsDAO, Boolean> visited = new IdentityHashMap<>();
-
-        Consumer<RecordsDAO> singleVisitAction = dao -> {
-            if (visited.put(dao, true) == null) {
-                action.accept(dao);
-            }
-        };
-
-        metaDAO.values().forEach(singleVisitAction);
-        queryDAO.values().forEach(singleVisitAction);
-        mutableDAO.values().forEach(singleVisitAction);
-        queryWithMetaDAO.values().forEach(singleVisitAction);
-    }
-
-    @Override
-    public void setPredicateService(PredicateService predicateService) {
-        this.predicateService = predicateService;
-        execAllDaoSetters(PredicateServiceAware.class, predicateService);
-    }
-
-    @Override
-    public void setRecordsMetaService(RecordsMetaService recordsMetaService) {
-        this.recordsMetaService = recordsMetaService;
-        execAllDaoSetters(RecordsMetaServiceAware.class, recordsMetaService);
-    }
-
-    @Override
-    public void setRecordsService(RecordsService recordsService) {
-        this.recordsService = recordsService;
-        execAllDaoSetters(RecordsServiceAware.class, recordsService);
     }
 
     private static class DaoWithConvQuery<T extends RecordsQueryBaseDAO> {

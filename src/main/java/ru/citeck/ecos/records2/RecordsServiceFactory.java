@@ -5,6 +5,7 @@ import ru.citeck.ecos.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
@@ -42,10 +43,11 @@ public class RecordsServiceFactory {
     private RemoteRecordsResolver remoteRecordsResolver;
     private AttributesMetaResolver attributesMetaResolver;
     private Supplier<? extends QueryContext> queryContextSupplier;
+    private MetaValuesConverter metaValuesConverter;
 
     private List<GqlTypeDefinition> gqlTypes;
 
-    public final RecordsService getRecordsService() {
+    public final synchronized RecordsService getRecordsService() {
         if (recordsService == null) {
             recordsService = createRecordsService();
         }
@@ -56,7 +58,7 @@ public class RecordsServiceFactory {
         return new RecordsServiceImpl(this);
     }
 
-    public final RecordsResolver getRecordsResolver() {
+    public final synchronized RecordsResolver getRecordsResolver() {
         if (recordsResolver == null) {
             recordsResolver = createRecordsResolver();
         }
@@ -67,7 +69,7 @@ public class RecordsServiceFactory {
         return new LocalRemoteResolver(this);
     }
 
-    public final RemoteRecordsResolver getRemoteRecordsResolver() {
+    public final synchronized RemoteRecordsResolver getRemoteRecordsResolver() {
         if (remoteRecordsResolver == null) {
             remoteRecordsResolver = createRemoteRecordsResolver();
         }
@@ -78,7 +80,7 @@ public class RecordsServiceFactory {
         return null;
     }
 
-    public final LocalRecordsResolver getLocalRecordsResolver() {
+    public final synchronized LocalRecordsResolver getLocalRecordsResolver() {
         if (localRecordsResolver == null) {
             localRecordsResolver = createLocalRecordsResolver();
             createDefaultRecordsDAO().forEach(localRecordsResolver::register);
@@ -94,7 +96,7 @@ public class RecordsServiceFactory {
         return Collections.singletonList(new RecordsGroupDAO());
     }
 
-    public final QueryLangService getQueryLangService() {
+    public final synchronized QueryLangService getQueryLangService() {
         if (queryLangService == null) {
             queryLangService = createQueryLangService();
         }
@@ -105,7 +107,7 @@ public class RecordsServiceFactory {
         return new QueryLangServiceImpl();
     }
 
-    public final RecordsMetaService getRecordsMetaService() {
+    public final synchronized RecordsMetaService getRecordsMetaService() {
         if (recordsMetaService == null) {
             recordsMetaService = createRecordsMetaService();
         }
@@ -116,7 +118,7 @@ public class RecordsServiceFactory {
         return new RecordsMetaServiceImpl(this);
     }
 
-    public final PredicateService getPredicateService() {
+    public final synchronized PredicateService getPredicateService() {
         if (predicateService == null) {
             predicateService = createPredicateService();
         }
@@ -127,7 +129,7 @@ public class RecordsServiceFactory {
         return new PredicateServiceImpl();
     }
 
-    public final RecordsMetaGql getRecordsMetaGql() {
+    public final synchronized RecordsMetaGql getRecordsMetaGql() {
         if (recordsMetaGql == null) {
             recordsMetaGql = createRecordsMetaGql();
         }
@@ -138,7 +140,7 @@ public class RecordsServiceFactory {
         return new RecordsMetaGql(this);
     }
 
-    public final List<GqlTypeDefinition> getGqlTypes() {
+    public final synchronized List<GqlTypeDefinition> getGqlTypes() {
         if (gqlTypes == null) {
             gqlTypes = createGqlTypes();
         }
@@ -148,9 +150,7 @@ public class RecordsServiceFactory {
     protected List<GqlTypeDefinition> createGqlTypes() {
 
         List<GqlTypeDefinition> gqlTypes = new ArrayList<>();
-
-        MetaValueTypeDef metaValueTypeDef = new MetaValueTypeDef();
-        metaValueTypeDef.setMetaValueFactories(getMetaValueFactories());
+        MetaValueTypeDef metaValueTypeDef = new MetaValueTypeDef(this);
 
         gqlTypes.add(metaValueTypeDef);
 
@@ -163,7 +163,18 @@ public class RecordsServiceFactory {
         return gqlTypes;
     }
 
-    public final List<MetaValueFactory> getMetaValueFactories() {
+    public final synchronized MetaValuesConverter getMetaValuesConverter() {
+        if (metaValuesConverter == null) {
+            metaValuesConverter = createMetaValuesConverter();
+        }
+        return metaValuesConverter;
+    }
+
+    protected MetaValuesConverter createMetaValuesConverter() {
+        return new MetaValuesConverter(this);
+    }
+
+    public final synchronized List<MetaValueFactory> getMetaValueFactories() {
         if (metaValueFactories == null) {
             metaValueFactories = createMetaValueFactories();
         }
@@ -188,7 +199,7 @@ public class RecordsServiceFactory {
         return metaValueFactories;
     }
 
-    public final AttributesMetaResolver getAttributesMetaResolver() {
+    public final synchronized AttributesMetaResolver getAttributesMetaResolver() {
         if (attributesMetaResolver == null) {
             attributesMetaResolver = createAttributesMetaResolver();
         }
@@ -199,7 +210,7 @@ public class RecordsServiceFactory {
         return new AttributesMetaResolver();
     }
 
-    public final DtoMetaResolver getDtoMetaResolver() {
+    public final synchronized DtoMetaResolver getDtoMetaResolver() {
         if (dtoMetaResolver == null) {
             dtoMetaResolver = createDtoMetaResolver();
         }
@@ -210,7 +221,7 @@ public class RecordsServiceFactory {
         return new DtoMetaResolver(this);
     }
 
-    public final Supplier<? extends QueryContext> getQueryContextSupplier() {
+    public final synchronized Supplier<? extends QueryContext> getQueryContextSupplier() {
         if (queryContextSupplier == null) {
             queryContextSupplier = createQueryContextSupplier();
         }
@@ -221,7 +232,7 @@ public class RecordsServiceFactory {
         return QueryContext::new;
     }
 
-    public final QueryContext createQueryContext() {
+    public final synchronized QueryContext createQueryContext() {
         QueryContext context = getQueryContextSupplier().get();
         context.setServiceFactory(this);
         return context;
@@ -231,7 +242,7 @@ public class RecordsServiceFactory {
         return new RestHandler(this);
     }
 
-    public final RestHandler getRestHandler() {
+    public final synchronized RestHandler getRestHandler() {
         if (restHandler == null) {
             restHandler = createRestHandler();
         }

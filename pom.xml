@@ -6,8 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ru.citeck.ecos.community</groupId>
-    <artifactId>ecos-records</artifactId>
+    <artifactId>ecos-records-project</artifactId>
     <version>1.8.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <properties>
 
@@ -96,6 +97,64 @@
 
     <build>
 
+        <pluginManagement>
+
+            <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-pmd-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <linkXRef>false</linkXRef>
+                        <sourceEncoding>UTF-8</sourceEncoding>
+                        <minimumTokens>100</minimumTokens>
+                        <targetJdk>1.8</targetJdk>
+                        <printFailingErrors>true</printFailingErrors>
+                        <rulesets>
+                            <ruleset>../pmd-rules.xml</ruleset>
+                        </rulesets>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>check</goal>
+                                <goal>cpd-check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <configuration>
+                        <configLocation>../style-rules.xml</configLocation>
+                        <consoleOutput>true</consoleOutput>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>8.18</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+
+            </plugins>
+
+        </pluginManagement>
+
         <plugins>
 
             <plugin>
@@ -118,31 +177,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <linkXRef>false</linkXRef>
-                    <sourceEncoding>UTF-8</sourceEncoding>
-                    <minimumTokens>100</minimumTokens>
-                    <targetJdk>1.8</targetJdk>
-                    <printFailingErrors>true</printFailingErrors>
-                    <rulesets>
-                        <ruleset>/pmd-rules.xml</ruleset>
-                    </rulesets>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>cpd-check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>3.1.12</version>
@@ -155,34 +189,14 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <configLocation>style-rules.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>8.18</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
         </plugins>
 
     </build>
+
+    <modules>
+        <module>ecos-records</module>
+        <module>ecos-records-spring</module>
+    </modules>
 
     <repositories>
         <repository>

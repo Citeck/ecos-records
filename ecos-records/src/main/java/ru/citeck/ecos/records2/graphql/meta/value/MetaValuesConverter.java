@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 
@@ -21,16 +20,13 @@ public class MetaValuesConverter {
     }
 
     @SuppressWarnings("unchecked")
-    public MetaValue toMetaValue(Object value, QueryContext context, MetaField field) {
+    public MetaValue toMetaValue(Object value) {
 
         MetaValueFactory<Object> factory = valueFactories.get(value.getClass());
         if (factory == null) {
             factory = valueFactories.get(Object.class);
         }
 
-        MetaValue metaValue = factory.getValue(value);
-        metaValue.init(context, field);
-
-        return metaValue;
+        return factory.getValue(value);
     }
 }

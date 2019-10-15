@@ -213,7 +213,10 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             return metaValue;
         }
 
-        return converter.toMetaValue(value, context, metaField);
+        MetaValue metaValue = converter.toMetaValue(value);
+        metaValue.init(context, metaField);
+
+        return metaValue;
     }
 
     private List<?> getAtts(DataFetchingEnvironment env) {

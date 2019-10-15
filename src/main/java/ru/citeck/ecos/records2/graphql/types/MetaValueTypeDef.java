@@ -4,17 +4,13 @@ import graphql.Scalars;
 import graphql.schema.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.*;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +28,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         return new GraphQLTypeReference(TYPE_NAME);
     }
 
-    private Map<Class<?>, MetaValueFactory> valueFactories = new ConcurrentHashMap<>();
+    private MetaValuesConverter converter;
+
+    public MetaValueTypeDef(RecordsServiceFactory factory) {
+        converter = factory.getMetaValuesConverter();
+    }
 
     @Override
     public GraphQLObjectType getType() {
@@ -213,15 +213,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             return metaValue;
         }
 
-        MetaValueFactory factory = valueFactories.get(value.getClass());
-        if (factory == null) {
-            factory = valueFactories.get(Object.class);
-        }
-
-        MetaValue metaValue = factory.getValue(value);
-        metaValue.init(context, metaField);
-
-        return metaValue;
+        return converter.toMetaValue(value, context, metaField);
     }
 
     private List<?> getAtts(DataFetchingEnvironment env) {
@@ -274,13 +266,5 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             throw new IllegalArgumentException(name + " is a mandatory parameter!");
         }
         return value;
-    }
-
-    public void setMetaValueFactories(List<MetaValueFactory> valueFactories) {
-        valueFactories.forEach(this::register);
-    }
-
-    public <T> void register(MetaValueFactory<T> factory) {
-        factory.getValueTypes().forEach(t -> valueFactories.put(t, factory));
     }
 }

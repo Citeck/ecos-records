@@ -7,12 +7,12 @@ import ru.citeck.ecos.predicate.model.*;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
 
 public class PredicateUtils {
 
-    private static final String DTO_ATT_PREFIX = "__";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static List<String> getAllPredicateAttributes(Predicate predicate) {
@@ -79,28 +79,27 @@ public class PredicateUtils {
 
             String att = pred.getAttribute();
 
-            if (att.startsWith(DTO_ATT_PREFIX)) {
-
-                att = att.replaceAll("^" + DTO_ATT_PREFIX, "");
-
-                if (dtoFields.contains(att)) {
-                    dtoData.put(att, pred.getValue());
-                    return null;
-                }
+            if (dtoFields.contains(att)) {
+                dtoData.put(att, pred.getValue());
+                return null;
             }
 
             return pred;
         }, true);
-
-        if (predicateField != null) {
-            dtoData.put(predicateField, filtered);
-        }
 
         ObjectNode dtoDataNode = MAPPER.valueToTree(dtoData);
         try {
             MAPPER.readerForUpdating(dto).readValue(dtoDataNode);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+
+        if (predicateField != null) {
+            try {
+                PropertyUtils.setProperty(dto, predicateField, filtered);
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return dto;
@@ -120,6 +119,10 @@ public class PredicateUtils {
 
         } else if (predicate instanceof ComposedPredicate) {
 
+            if (onlyAnd && !(predicate instanceof AndPredicate)) {
+                return null;
+            }
+
             ComposedPredicate composed = (ComposedPredicate) predicate;
             List<Predicate> mappedPredicates = new ArrayList<>();
 
@@ -132,11 +135,13 @@ public class PredicateUtils {
 
             if (mappedPredicates.isEmpty()) {
                 return null;
+            } else if (mappedPredicates.size() == 1) {
+                return mappedPredicates.get(0);
             }
 
             if (composed instanceof AndPredicate) {
                 return Predicates.and(mappedPredicates);
-            } else if (composed instanceof OrPredicate && !onlyAnd) {
+            } else if (composed instanceof OrPredicate) {
                 return Predicates.or(mappedPredicates);
             } else {
                 return null;

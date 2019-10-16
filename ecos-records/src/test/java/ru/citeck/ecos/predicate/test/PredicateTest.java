@@ -116,7 +116,8 @@ class PredicateTest {
                 )
             ),
             Predicates.eq("Field", "value"),
-            Predicates.eq("Test", "value2")
+            Predicates.eq("Test", "value2"),
+            Predicates.eq("testTest", "value2")
         );
 
         List<Predicate> testedPredicates = new ArrayList<>();
@@ -125,19 +126,16 @@ class PredicateTest {
             return p.getAttribute().startsWith("test");
         });
 
-        assertEquals(11, testedPredicates.size());
+        assertEquals(12, testedPredicates.size());
 
         Predicate expected = Predicates.and(
             Predicates.or(
                 Predicates.eq("test", "test1"),
                 Predicates.eq("test2", "test2"),
                 Predicates.not(Predicates.eq("test3", "test3")),
-                Predicates.or(
-                    Predicates.or(
-                        Predicates.eq("test", "test")
-                    )
-                )
-            )
+                Predicates.eq("test", "test")
+            ),
+            Predicates.eq("testTest", "value2")
         );
 
         assertEquals(expected, filtered.get());

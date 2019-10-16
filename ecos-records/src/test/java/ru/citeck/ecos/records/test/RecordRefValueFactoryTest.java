@@ -50,6 +50,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
         attsToRequest.put("att2", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.VALUE_FIELD + "?str");
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
+        attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
         RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
 
@@ -58,6 +59,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(Val.val0.value, meta.get("att0", ""));
         assertEquals(Val.val2.value, meta.get("att2", ""));
         assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
+        assertEquals(Val.val0.getString(), meta.get("assoc", ""));
     }
 
     @Override

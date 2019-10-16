@@ -61,14 +61,10 @@ public class PredicateUtils {
 
     public static <T> T convertToDto(Predicate predicate, T dto) {
 
-        String predicateField = null;
-
         Set<String> dtoFields = new HashSet<>();
 
         for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(dto)) {
-            if (predicateField == null && descriptor.getPropertyType().equals(Predicate.class)) {
-                predicateField = descriptor.getName();
-            } else {
+            if (!descriptor.getPropertyType().equals(Predicate.class)) {
                 dtoFields.add(descriptor.getName());
             }
         }
@@ -94,14 +90,12 @@ public class PredicateUtils {
             throw new RuntimeException(e);
         }
 
-        if (predicateField != null) {
-            try {
-                PropertyUtils.setProperty(dto, predicateField, filtered);
-            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            PropertyUtils.setProperty(dto, "predicate", filtered);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            //do nothing
+            return dto;
         }
-
         return dto;
     }
 

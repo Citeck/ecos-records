@@ -49,7 +49,7 @@ class PredicateUtilsTest {
         assertNull(dto.field3);
         assertNull(dto.field4);
 
-        assertEquals(Predicates.eq(otherField, otherValue), dto.filteredPred);
+        assertEquals(Predicates.eq(otherField, otherValue), dto.predicate);
 
         dto = PredicateUtils.convertToDto(
             Predicates.eq("fieldWithPrefix", fieldWithPrefixValue),
@@ -69,7 +69,7 @@ class PredicateUtilsTest {
         private Double field3;
         private String field4;
 
-        private Predicate filteredPred;
+        private Predicate predicate;
 
         private String fieldWithPrefix;
 

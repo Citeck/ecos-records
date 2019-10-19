@@ -47,6 +47,10 @@ public class PredicateUtils {
     }
 
     public static <T> T convertToDto(Predicate predicate, Class<T> type) {
+        return convertToDto(predicate, type, false);
+    }
+
+    public static <T> T convertToDto(Predicate predicate, Class<T> type, boolean onlyAnd) {
 
         T dto;
 
@@ -56,10 +60,14 @@ public class PredicateUtils {
             throw new RuntimeException(e);
         }
 
-        return convertToDto(predicate, dto);
+        return convertToDto(predicate, dto, onlyAnd);
     }
 
     public static <T> T convertToDto(Predicate predicate, T dto) {
+        return convertToDto(predicate, dto, false);
+    }
+
+    public static <T> T convertToDto(Predicate predicate, T dto, boolean onlyAnd) {
 
         Set<String> dtoFields = new HashSet<>();
 
@@ -76,12 +84,16 @@ public class PredicateUtils {
             String att = pred.getAttribute();
 
             if (dtoFields.contains(att)) {
-                dtoData.put(att, pred.getValue());
+
+                Object currentData = dtoData.get(att);
+                if (currentData == null || "".equals(currentData)) {
+                    dtoData.put(att, pred.getValue());
+                }
                 return null;
             }
 
             return pred;
-        }, true);
+        }, onlyAnd);
 
         ObjectNode dtoDataNode = MAPPER.valueToTree(dtoData);
         try {

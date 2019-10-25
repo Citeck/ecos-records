@@ -23,34 +23,54 @@ public class RecordsRestConfig {
     private RestTemplateBuilder restTemplateBuilder;
     private RecordsAlfrescoAuthInterceptor alfrescoAuthInterceptor;
 
+    private String alfRecBaseUrl;
+    private String alfRecUserBaseUrl;
+
     @Bean
     public RecordsRestConnection recordsRestConnection() {
         return this::jsonPost;
     }
 
     private <T> T jsonPost(String url, Object req, Class<T> respType) {
-        String serverId = getServerId(url);
+        return recordsRestTemplate().postForObject(convertUrl(url), req, respType);
+    }
 
-        if (eurekaClient != null) {
-            InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(serverId, false);
+    private String convertUrl(String url) {
 
-            String baseUrlKey;
-            if (RemoteRecordsUtils.isSystemContext()) {
-                baseUrlKey = "records-base-url";
+        if (eurekaClient == null) {
+            return url;
+        }
+
+        String baseUrlReplacement;
+        String instanceId = getInstanceId(url);
+
+        if (RemoteRecordsUtils.isSystemContext()) {
+            if (alfRecBaseUrl != null) {
+                baseUrlReplacement = alfRecBaseUrl;
             } else {
-                baseUrlKey = "records-user-base-url";
+                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-base-url");
             }
-
-            String apiUrl = instanceInfo.getMetadata().get(baseUrlKey);
-            if (StringUtils.isNotBlank(apiUrl)) {
-                url = url.replace(RemoteRecordsResolver.BASE_URL, apiUrl);
+        } else {
+            if (alfRecUserBaseUrl != null) {
+                baseUrlReplacement = alfRecUserBaseUrl;
+            } else {
+                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-user-base-url");
             }
         }
 
-        return recordsRestTemplate().postForObject(url, req, respType);
+        if (StringUtils.isNotBlank(baseUrlReplacement)) {
+            url = url.replace(RemoteRecordsResolver.BASE_URL, baseUrlReplacement);
+        }
+
+        return url;
     }
 
-    private String getServerId(String url) {
+    private String getEurekaMetaParam(String instanceId, String param) {
+        InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(instanceId, false);
+        return instanceInfo.getMetadata().get(param);
+    }
+
+    private String getInstanceId(String url) {
         int firstSlashIndex = url.indexOf("/");
         int nextSlashIndex = url.indexOf("/", firstSlashIndex + 1);
         return url.substring(firstSlashIndex + 1, nextSlashIndex);
@@ -83,6 +103,13 @@ public class RecordsRestConfig {
     @Autowired
     public void setProperties(RecordsProperties properties) {
         this.properties = properties;
+
+        RecordsProperties.AlfProps alfresco = properties.getAlfresco();
+
+        if (alfresco != null) {
+            alfRecBaseUrl = alfresco.getRecBaseUrl();
+            alfRecUserBaseUrl = alfresco.getRecUserBaseUrl();
+        }
     }
 
     @Autowired

@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.spring.RecordsProperties;
+import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
 import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAlfrescoAuthInterceptor;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
@@ -32,7 +33,15 @@ public class RecordsRestConfig {
 
         if (eurekaClient != null) {
             InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(serverId, false);
-            String apiUrl = instanceInfo.getMetadata().get("records-base-url");
+
+            String baseUrlKey;
+            if (RemoteRecordsUtils.isSystemContext()) {
+                baseUrlKey = "records-base-url";
+            } else {
+                baseUrlKey = "records-user-base-url";
+            }
+
+            String apiUrl = instanceInfo.getMetadata().get(baseUrlKey);
             if (StringUtils.isNotBlank(apiUrl)) {
                 url = url.replace(RemoteRecordsResolver.BASE_URL, apiUrl);
             }

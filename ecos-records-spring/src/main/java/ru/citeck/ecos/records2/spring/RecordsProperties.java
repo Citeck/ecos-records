@@ -16,6 +16,8 @@ public class RecordsProperties {
     @Data
     public static class AlfProps {
         private Authentication auth;
+        private String recBaseUrl;
+        private String recUserBaseUrl;
     }
 
     @Data

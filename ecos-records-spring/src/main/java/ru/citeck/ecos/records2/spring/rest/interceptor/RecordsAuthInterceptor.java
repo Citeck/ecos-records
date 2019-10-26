@@ -26,6 +26,8 @@ public class RecordsAuthInterceptor implements ClientHttpRequestInterceptor {
     public RecordsAuthInterceptor(RecordsProperties properties,
                                   CookiesAndLangInterceptor cookiesAndLangInterceptor) {
 
+        userRequestInterceptor = cookiesAndLangInterceptor;
+
         Map<String, RecordsProperties.App> apps = properties.getApps();
         if (apps == null) {
             return;
@@ -37,8 +39,6 @@ public class RecordsAuthInterceptor implements ClientHttpRequestInterceptor {
                 sysReqInterceptors.put(id, new BasicAuthorizationInterceptor(auth.getUsername(), auth.getPassword()));
             }
         });
-
-        userRequestInterceptor = cookiesAndLangInterceptor;
     }
 
     @Override

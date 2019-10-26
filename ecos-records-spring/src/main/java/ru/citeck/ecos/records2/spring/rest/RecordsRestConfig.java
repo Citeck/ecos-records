@@ -2,29 +2,34 @@ package ru.citeck.ecos.records2.spring.rest;
 
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
-import ru.citeck.ecos.records2.spring.RecordsProperties;
 import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
-import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAlfrescoAuthInterceptor;
+import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
+import java.util.Map;
+
+@Slf4j
 @Configuration
 public class RecordsRestConfig {
+
+    public static final String RECS_BASE_URL_META_KEY = "records-base-url";
+    public static final String RECS_USER_BASE_URL_META_KEY = "records-user-base-url";
 
     private EurekaClient eurekaClient;
     private RecordsProperties properties;
     private RestTemplateBuilder restTemplateBuilder;
-    private RecordsAlfrescoAuthInterceptor alfrescoAuthInterceptor;
-
-    private String alfRecBaseUrl;
-    private String alfRecUserBaseUrl;
+    private RecordsAuthInterceptor authInterceptor;
 
     @Bean
     public RecordsRestConnection recordsRestConnection() {
@@ -32,7 +37,18 @@ public class RecordsRestConfig {
     }
 
     private <T> T jsonPost(String url, Object req, Class<T> respType) {
-        return recordsRestTemplate().postForObject(convertUrl(url), req, respType);
+        String recordsUrl = convertUrl(url);
+        try {
+            return recordsRestTemplate().postForObject(recordsUrl, req, respType);
+        } catch (HttpClientErrorException e) {
+            log.error("Json POST failed. URL: " + recordsUrl);
+            throw e;
+        }
+    }
+
+    private RecordsProperties.App getAppProps(String id) {
+        Map<String, RecordsProperties.App> apps = properties.getApps();
+        return apps != null ? apps.get(id) : null;
     }
 
     private String convertUrl(String url) {
@@ -44,17 +60,22 @@ public class RecordsRestConfig {
         String baseUrlReplacement;
         String instanceId = getInstanceId(url);
 
+        RecordsProperties.App app = getAppProps(instanceId);
+
+        String baseUrl = app != null ? app.getRecBaseUrl() : null;
+        String userBaseUrl = app != null ? app.getRecUserBaseUrl() : null;
+
         if (RemoteRecordsUtils.isSystemContext()) {
-            if (alfRecBaseUrl != null) {
-                baseUrlReplacement = alfRecBaseUrl;
+            if (baseUrl != null) {
+                baseUrlReplacement = baseUrl;
             } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-base-url");
+                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_BASE_URL_META_KEY);
             }
         } else {
-            if (alfRecUserBaseUrl != null) {
-                baseUrlReplacement = alfRecUserBaseUrl;
+            if (userBaseUrl != null) {
+                baseUrlReplacement = userBaseUrl;
             } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-user-base-url");
+                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_USER_BASE_URL_META_KEY);
             }
         }
 
@@ -85,7 +106,7 @@ public class RecordsRestConfig {
 
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory.class)
-            .additionalInterceptors(alfrescoAuthInterceptor)
+            .additionalInterceptors(authInterceptor)
             .rootUri(rootUri)
             .build();
     }
@@ -103,17 +124,10 @@ public class RecordsRestConfig {
     @Autowired
     public void setProperties(RecordsProperties properties) {
         this.properties = properties;
-
-        RecordsProperties.AlfProps alfresco = properties.getAlfresco();
-
-        if (alfresco != null) {
-            alfRecBaseUrl = alfresco.getRecBaseUrl();
-            alfRecUserBaseUrl = alfresco.getRecUserBaseUrl();
-        }
     }
 
     @Autowired
-    public void setAlfrescoAuthInterceptor(RecordsAlfrescoAuthInterceptor alfrescoAuthInterceptor) {
-        this.alfrescoAuthInterceptor = alfrescoAuthInterceptor;
+    public void setAuthInterceptor(RecordsAuthInterceptor authInterceptor) {
+        this.authInterceptor = authInterceptor;
     }
 }

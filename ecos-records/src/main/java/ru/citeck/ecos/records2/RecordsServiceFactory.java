@@ -45,6 +45,8 @@ public class RecordsServiceFactory {
     private Supplier<? extends QueryContext> queryContextSupplier;
     private MetaValuesConverter metaValuesConverter;
 
+    private RecordsProperties properties;
+
     private List<GqlTypeDefinition> gqlTypes;
 
     public final synchronized RecordsService getRecordsService() {
@@ -247,5 +249,16 @@ public class RecordsServiceFactory {
             restHandler = createRestHandler();
         }
         return restHandler;
+    }
+
+    protected RecordsProperties createProperties() {
+        return new RecordsProperties();
+    }
+
+    public final synchronized RecordsProperties getProperties() {
+        if (properties == null) {
+            properties = createProperties();
+        }
+        return properties;
     }
 }

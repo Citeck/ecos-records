@@ -1,7 +1,9 @@
 package ru.citeck.ecos.records2.resolver;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -15,13 +17,12 @@ import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RemoteRecordsResolver implements RecordsResolver {
 
     public static final String BASE_URL = "/api/records/";
@@ -32,25 +33,40 @@ public class RemoteRecordsResolver implements RecordsResolver {
     private RecordsRestConnection restConnection;
     private String defaultAppName = "";
 
+    private Map<String, String> sourceIdMapping = new HashMap<>();
+
+    @Deprecated
     public RemoteRecordsResolver(RecordsRestConnection restConnection) {
         this.restConnection = restConnection;
+        log.warn("Deprecated constructor");
+    }
+
+    public RemoteRecordsResolver(RecordsServiceFactory factory, RecordsRestConnection restConnection) {
+        this.restConnection = restConnection;
+
+        Map<String, String> sourceIdMapping = factory.getProperties().getSourceIdMapping();
+        if (sourceIdMapping != null) {
+            this.sourceIdMapping.putAll(sourceIdMapping);
+        }
     }
 
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
 
         String sourceId = query.getSourceId();
+        if (sourceId.indexOf('/') == -1) {
+            sourceId = defaultAppName + "/" + sourceId;
+        }
+
+        sourceId = sourceIdMapping.getOrDefault(sourceId, sourceId);
+
         String appName;
 
         RecordsQuery appQuery = new RecordsQuery(query);
 
         int appDelimIdx = sourceId.indexOf("/");
-        if (appDelimIdx >= 0) {
-            appName = sourceId.substring(0, appDelimIdx);
-            appQuery.setSourceId(sourceId.substring(appDelimIdx + 1));
-        } else {
-            appName = defaultAppName;
-        }
+        appName = sourceId.substring(0, appDelimIdx);
+        appQuery.setSourceId(sourceId.substring(appDelimIdx + 1));
 
         String url = "/" + appName + QUERY_URL;
 

@@ -36,6 +36,7 @@ public class CookiesAndLangInterceptor implements ClientHttpRequestInterceptor {
         if (thisRequest != null) {
             newHeaders.set("Cookie", thisRequest.getHeader("Cookie"));
             newHeaders.set("Accept-Language", thisRequest.getHeader("Accept-Language"));
+            newHeaders.set("X-Alfresco-Remote-User", thisRequest.getHeader("X-Alfresco-Remote-User"));
         }
         return clientHttpRequestExecution.execute(newRequest, bytes);
     }

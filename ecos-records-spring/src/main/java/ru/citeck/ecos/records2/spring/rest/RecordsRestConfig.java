@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.spring.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
@@ -17,6 +18,7 @@ import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
 import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -30,6 +32,7 @@ public class RecordsRestConfig {
     private RecordsProperties properties;
     private RestTemplateBuilder restTemplateBuilder;
     private RecordsAuthInterceptor authInterceptor;
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Bean
     public RecordsRestConnection recordsRestConnection() {
@@ -37,13 +40,57 @@ public class RecordsRestConfig {
     }
 
     private <T> T jsonPost(String url, Object req, Class<T> respType) {
+
         String recordsUrl = convertUrl(url);
+        byte[] response = null;
+
         try {
-            return recordsRestTemplate().postForObject(recordsUrl, req, respType);
-        } catch (HttpClientErrorException e) {
-            log.error("Json POST failed. URL: " + recordsUrl);
-            throw e;
+
+            response = recordsRestTemplate().postForObject(recordsUrl, req, byte[].class);
+            return mapper.readValue(response, respType);
+
+        } catch (Exception e) {
+
+            int statusCode = -1;
+            if (e instanceof HttpStatusCodeException) {
+                statusCode = ((HttpStatusCodeException) e).getRawStatusCode();
+            }
+
+            log.error("Json POST failed. URL: " + recordsUrl
+                      + " Status code: "
+                      + statusCode
+                      + " message: "
+                      + e.getMessage());
+
+            logErrorObject("Request body", req);
+            logErrorObject("Request resp", response);
+
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    private void logErrorObject(String prefix, Object obj) {
+        String str;
+        if (obj == null) {
+            str = "null";
+        } else if (obj instanceof byte[]) {
+            str = new String((byte[]) obj, StandardCharsets.UTF_8);
+        } else {
+            try {
+                str = mapper.writeValueAsString(obj);
+            } catch (Exception e) {
+                try {
+                    str = obj.toString();
+                } catch (Exception ex) {
+                    str = obj.getClass() + "@" + System.identityHashCode(obj);
+                }
+            }
+        }
+        log.error(prefix + ": " + str);
     }
 
     private RecordsProperties.App getAppProps(String id) {

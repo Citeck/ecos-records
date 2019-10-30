@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Enumeration;
 
 //Relays ALL received cookies.
 //We could only relay JSESSIONID cookie - but, given how record-searching endpoint is served by Alfresco
@@ -35,13 +34,10 @@ public class CookiesAndLangInterceptor implements ClientHttpRequestInterceptor {
         HttpHeaders newHeaders = newRequest.getHeaders();
 
         if (thisRequest != null) {
-            Enumeration<String> headerNames = thisRequest.getHeaderNames();
-            if (headerNames != null) {
-                while (headerNames.hasMoreElements()) {
-                    String header = headerNames.nextElement();
-                    newHeaders.set(header, thisRequest.getHeader(header));
-                }
-            }
+            newHeaders.set("Cookie", thisRequest.getHeader("Cookie"));
+            newHeaders.set("Accept-Language", thisRequest.getHeader("Accept-Language"));
+            newHeaders.set("X-Alfresco-Remote-User", thisRequest.getHeader("X-Alfresco-Remote-User"));
+            newHeaders.set("X-uisrv-user", thisRequest.getHeader("X-uisrv-user"));
         }
         return clientHttpRequestExecution.execute(newRequest, bytes);
     }

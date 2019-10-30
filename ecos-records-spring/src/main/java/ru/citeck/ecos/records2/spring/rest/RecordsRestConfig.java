@@ -83,9 +83,11 @@ public class RecordsRestConfig {
             try {
                 str = mapper.writeValueAsString(obj);
             } catch (Exception e) {
+                log.error("log conversion failed: " + e.getClass() + " " + e.getMessage());
                 try {
                     str = obj.toString();
                 } catch (Exception ex) {
+                    log.error("log toString failed: " + ex.getClass() + " " + ex.getMessage());
                     str = obj.getClass() + "@" + System.identityHashCode(obj);
                 }
             }

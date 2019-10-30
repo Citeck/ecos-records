@@ -59,6 +59,7 @@ public class RecordsRestConfig {
             log.error("Json POST failed. URL: " + recordsUrl
                       + " Status code: "
                       + statusCode
+                      + " exception: " + e.getClass()
                       + " message: "
                       + e.getMessage());
 

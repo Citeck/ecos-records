@@ -71,17 +71,26 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         if (!query.getGroupBy().isEmpty()) {
 
-            RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID, RecordsQueryWithMetaDAO.class);
-            RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
+            RecordsQueryBaseDAO dao = getRecordsDAO(query.getSourceId(),
+                                                    RecordsQueryWithMetaDAO.class).orElse(null);
 
-            if (convertedQuery == null) {
-                String errorMsg = "GroupBy is not supported by language: " + query.getLanguage() + ". Query: " + query;
-                log.warn(errorMsg);
-                RecordsQueryResult<RecordMeta> result = queryRecordsImpl(query, schema);
-                result.addError(new RecordsError(errorMsg));
-                return result;
+            if (dao == null || !dao.isGroupingSupported()) {
+
+                RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID,
+                                                                      RecordsQueryWithMetaDAO.class);
+
+                RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
+
+                if (convertedQuery == null) {
+                    String errorMsg = "GroupBy is not supported by language: "
+                                      + query.getLanguage() + ". Query: " + query;
+                    log.warn(errorMsg);
+                    RecordsQueryResult<RecordMeta> result = queryRecordsImpl(query, schema);
+                    result.addError(new RecordsError(errorMsg));
+                    return result;
+                }
+                return groupsSource.queryRecords(convertedQuery, schema);
             }
-            return groupsSource.queryRecords(convertedQuery, schema);
         }
 
         if (DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
@@ -266,7 +275,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
     private RecordsQueryResult<RecordMeta> queryRecordsWithMeta(RecordsQuery query, String schema) {
 
         DaoWithConvQuery<RecordsQueryWithMetaDAO> daoWithQuery = getDaoWithQuery(query,
-                                                                                     RecordsQueryWithMetaDAO.class);
+                                                                                 RecordsQueryWithMetaDAO.class);
 
         if (log.isDebugEnabled()) {
             log.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);

@@ -86,7 +86,8 @@ public class AttributesMetaResolver {
                     inner = "";
             }
 
-            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + inner + "}";
+            String attName = fieldName.substring(1).replace("\"", "\\\"");
+            return ".edge(n:\"" + attName + "\"){" + scalarField + inner + "}";
 
         } else {
 
@@ -112,7 +113,7 @@ public class AttributesMetaResolver {
                 if (pathElem.contains("\\.")) {
                     pathElem = pathElem.replaceAll("\\\\.", ".");
                 }
-                sb.append("(n:\"").append(pathElem).append("\")");
+                sb.append("(n:\"").append(pathElem.replace("\"", "\\\"")).append("\")");
             }
 
             if (subFields != null) {

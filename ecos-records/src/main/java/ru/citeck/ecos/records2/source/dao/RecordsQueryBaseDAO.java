@@ -22,4 +22,8 @@ public interface RecordsQueryBaseDAO extends RecordsDAO {
     default List<String> getSupportedLanguages() {
         return Collections.emptyList();
     }
+
+    default boolean isGroupingSupported() {
+        return false;
+    }
 }

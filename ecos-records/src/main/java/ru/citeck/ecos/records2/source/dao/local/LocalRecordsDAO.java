@@ -5,13 +5,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.source.dao.AbstractRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.io.IOException;
@@ -26,13 +33,12 @@ import java.util.stream.Collectors;
  * Extend this DAO if your data located in the same application instance
  * (when you don't want to execute graphql query remotely)
  * Important: This class implement only RecordsDAO.
- * All other interfaces should be implemented in children classes
+ * All other interfaces should be implemented by inherited classes
  * </p>
  *
- * @see RecordsQueryDAO
- * @see RecordsMetaDAO
- * @see RecordsQueryWithMetaDAO
- * @see MutableRecordsDAO
+ * @see LocalRecordsQueryDAO
+ * @see LocalRecordsMetaDAO
+ * @see LocalRecordsQueryWithMetaDAO
  *
  * @author Pavel Simonov
  */
@@ -43,6 +49,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected RecordsService recordsService;
     protected PredicateService predicateService;
     protected RecordsMetaService recordsMetaService;
+    protected RecordsMetaGql recordsMetaGql;
 
     protected ObjectMapper objectMapper = new ObjectMapper();
 
@@ -107,17 +114,17 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
 
-        if (this instanceof RecordsQueryLocalDAO) {
+        if (this instanceof LocalRecordsQueryDAO) {
 
-            RecordsQueryLocalDAO recordsQueryLocalDAO = (RecordsQueryLocalDAO) this;
+            LocalRecordsQueryDAO recordsQueryLocalDAO = (LocalRecordsQueryDAO) this;
 
-            RecordsQueryResult<RecordRef> localRecords = recordsQueryLocalDAO.getLocalRecords(query);
+            RecordsQueryResult<RecordRef> localRecords = recordsQueryLocalDAO.queryLocalRecords(query);
             if (addSourceId) {
                 return new RecordsQueryResult<>(localRecords, r -> RecordRef.create(getId(), r));
             }
             return localRecords;
 
-        } else if (this instanceof RecordsQueryWithMetaLocalDAO) {
+        } else if (this instanceof LocalRecordsQueryWithMetaDAO) {
 
             RecordsQueryResult<RecordMeta> records = queryRecords(query, "id");
             return new RecordsQueryResult<>(records, RecordMeta::getId);
@@ -136,10 +143,14 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         List<RecordRef> recordRefs = new ArrayList<>();
         List<Object> rawMetaValues = new ArrayList<>();
 
-        if (this instanceof RecordsQueryWithMetaLocalDAO) {
+        MetaField metaField = null;
 
-            RecordsQueryWithMetaLocalDAO withMeta = (RecordsQueryWithMetaLocalDAO) this;
-            RecordsQueryResult<?> values = withMeta.getMetaValues(query);
+        if (this instanceof LocalRecordsQueryWithMetaDAO) {
+
+            LocalRecordsQueryWithMetaDAO withMeta = (LocalRecordsQueryWithMetaDAO) this;
+            metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
+
+            RecordsQueryResult<?> values = withMeta.queryLocalRecords(query, metaField);
 
             if (values != null) {
 
@@ -170,9 +181,15 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         }
 
         if (!recordRefs.isEmpty()) {
-            if (this instanceof RecordsMetaLocalDAO) {
-                RecordsMetaLocalDAO metaDao = (RecordsMetaLocalDAO) this;
-                rawMetaValues.addAll(metaDao.getMetaValues(recordRefs));
+
+            if (this instanceof LocalRecordsMetaDAO) {
+
+                if (metaField == null) {
+                    metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
+                }
+
+                LocalRecordsMetaDAO metaDao = (LocalRecordsMetaDAO) this;
+                rawMetaValues.addAll(metaDao.getLocalRecordsMeta(recordRefs, metaField));
             } else if (this instanceof RecordsMetaDAO) {
                 RecordsMetaDAO metaDao = (RecordsMetaDAO) this;
                 RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
@@ -199,12 +216,14 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
         RecordsResult<RecordMeta> result;
 
-        if (this instanceof RecordsMetaLocalDAO) {
+        if (this instanceof LocalRecordsMetaDAO) {
 
-            RecordsMetaLocalDAO metaLocalDao = (RecordsMetaLocalDAO) this;
+            LocalRecordsMetaDAO metaLocalDao = (LocalRecordsMetaDAO) this;
+
+            MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
 
             List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
-            List<?> metaValues = metaLocalDao.getMetaValues(localRecords);
+            List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, metaField);
             result = recordsMetaService.getMeta(metaValues, metaSchema);
 
         } else {
@@ -231,6 +250,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         recordsService = serviceFactory.getRecordsService();
         predicateService = serviceFactory.getPredicateService();
         recordsMetaService = serviceFactory.getRecordsMetaService();
+        recordsMetaGql = serviceFactory.getRecordsMetaGql();
     }
 
     @Override

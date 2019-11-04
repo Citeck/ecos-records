@@ -5,8 +5,8 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 
 import java.util.List;
 

@@ -6,11 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
-import ru.citeck.ecos.records2.graphql.meta.value.*;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
+import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**

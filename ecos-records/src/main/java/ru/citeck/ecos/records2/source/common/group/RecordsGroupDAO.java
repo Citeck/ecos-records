@@ -4,15 +4,16 @@ import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.predicate.model.AndPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.predicate.model.Predicates;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 
 import java.util.*;
 
-public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWithMetaLocalDAO {
+public class RecordsGroupDAO extends LocalRecordsDAO implements LocalRecordsQueryWithMetaDAO {
 
     public static final String ID = "group";
 
@@ -23,7 +24,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements RecordsQueryWith
     }
 
     @Override
-    public RecordsQueryResult getMetaValues(RecordsQuery query) {
+    public RecordsQueryResult queryLocalRecords(RecordsQuery query, MetaField field) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {

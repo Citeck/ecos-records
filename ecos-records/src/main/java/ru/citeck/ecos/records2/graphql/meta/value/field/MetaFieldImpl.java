@@ -1,6 +1,7 @@
-package ru.citeck.ecos.records2.graphql.meta.value;
+package ru.citeck.ecos.records2.graphql.meta.value.field;
 
 import graphql.language.*;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.*;
 
@@ -75,7 +76,9 @@ public class MetaFieldImpl implements MetaField {
 
                 Value value = arg.getValue();
                 if (value instanceof StringValue) {
-                    sb.append("\"").append(((StringValue) value).getValue()).append("\"");
+                    String strArg = ((StringValue) value).getValue();
+                    strArg = strArg.replace("\"", "\\\"");
+                    sb.append("\"").append(strArg).append("\"");
                 } else {
                     throw new IllegalArgumentException("Unknown type: " + value);
                 }

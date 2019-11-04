@@ -92,11 +92,10 @@ public class RecordsMetaGql {
         String query = String.format(META_QUERY_TEMPLATE, schema);
 
         Parser parser = new Parser();
-        Document document = parser.parseDocument(query);
 
         Field field;
-
         try {
+            Document document = parser.parseDocument(query);
             field = (Field) ((SelectionSet) document.getDefinitions()
                                                     .get(0)
                                                     .getChildren()

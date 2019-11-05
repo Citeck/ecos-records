@@ -1,30 +1,38 @@
 package ru.citeck.ecos.records2.spring.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
-import ru.citeck.ecos.records2.spring.RecordsProperties;
 import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
-import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAlfrescoAuthInterceptor;
+import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+@Slf4j
 @Configuration
 public class RecordsRestConfig {
+
+    public static final String RECS_BASE_URL_META_KEY = "records-base-url";
+    public static final String RECS_USER_BASE_URL_META_KEY = "records-user-base-url";
 
     private EurekaClient eurekaClient;
     private RecordsProperties properties;
     private RestTemplateBuilder restTemplateBuilder;
-    private RecordsAlfrescoAuthInterceptor alfrescoAuthInterceptor;
-
-    private String alfRecBaseUrl;
-    private String alfRecUserBaseUrl;
+    private RecordsAuthInterceptor authInterceptor;
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Bean
     public RecordsRestConnection recordsRestConnection() {
@@ -32,7 +40,65 @@ public class RecordsRestConfig {
     }
 
     private <T> T jsonPost(String url, Object req, Class<T> respType) {
-        return recordsRestTemplate().postForObject(convertUrl(url), req, respType);
+
+        String recordsUrl = convertUrl(url);
+        byte[] response = null;
+
+        try {
+
+            response = recordsRestTemplate().postForObject(recordsUrl, req, byte[].class);
+            return mapper.readValue(response, respType);
+
+        } catch (Exception e) {
+
+            int statusCode = -1;
+            if (e instanceof HttpStatusCodeException) {
+                statusCode = ((HttpStatusCodeException) e).getRawStatusCode();
+            }
+
+            log.error("Json POST failed. URL: " + recordsUrl
+                      + " Status code: "
+                      + statusCode
+                      + " exception: " + e.getClass()
+                      + " message: "
+                      + e.getMessage());
+
+            logErrorObject("Request body", req);
+            logErrorObject("Request resp", response);
+
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void logErrorObject(String prefix, Object obj) {
+        String str;
+        if (obj == null) {
+            str = "null";
+        } else if (obj instanceof byte[]) {
+            str = new String((byte[]) obj, StandardCharsets.UTF_8);
+        } else {
+            try {
+                str = mapper.writeValueAsString(obj);
+            } catch (Exception e) {
+                log.error("log conversion failed: " + e.getClass() + " " + e.getMessage());
+                try {
+                    str = obj.toString();
+                } catch (Exception ex) {
+                    log.error("log toString failed: " + ex.getClass() + " " + ex.getMessage());
+                    str = obj.getClass() + "@" + System.identityHashCode(obj);
+                }
+            }
+        }
+        log.error(prefix + ": " + str);
+    }
+
+    private RecordsProperties.App getAppProps(String id) {
+        Map<String, RecordsProperties.App> apps = properties.getApps();
+        return apps != null ? apps.get(id) : null;
     }
 
     private String convertUrl(String url) {
@@ -44,17 +110,22 @@ public class RecordsRestConfig {
         String baseUrlReplacement;
         String instanceId = getInstanceId(url);
 
+        RecordsProperties.App app = getAppProps(instanceId);
+
+        String baseUrl = app != null ? app.getRecBaseUrl() : null;
+        String userBaseUrl = app != null ? app.getRecUserBaseUrl() : null;
+
         if (RemoteRecordsUtils.isSystemContext()) {
-            if (alfRecBaseUrl != null) {
-                baseUrlReplacement = alfRecBaseUrl;
+            if (baseUrl != null) {
+                baseUrlReplacement = baseUrl;
             } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-base-url");
+                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_BASE_URL_META_KEY);
             }
         } else {
-            if (alfRecUserBaseUrl != null) {
-                baseUrlReplacement = alfRecUserBaseUrl;
+            if (userBaseUrl != null) {
+                baseUrlReplacement = userBaseUrl;
             } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, "records-user-base-url");
+                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_USER_BASE_URL_META_KEY);
             }
         }
 
@@ -85,7 +156,7 @@ public class RecordsRestConfig {
 
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory.class)
-            .additionalInterceptors(alfrescoAuthInterceptor)
+            .additionalInterceptors(authInterceptor)
             .rootUri(rootUri)
             .build();
     }
@@ -103,17 +174,10 @@ public class RecordsRestConfig {
     @Autowired
     public void setProperties(RecordsProperties properties) {
         this.properties = properties;
-
-        RecordsProperties.AlfProps alfresco = properties.getAlfresco();
-
-        if (alfresco != null) {
-            alfRecBaseUrl = alfresco.getRecBaseUrl();
-            alfRecUserBaseUrl = alfresco.getRecUserBaseUrl();
-        }
     }
 
     @Autowired
-    public void setAlfrescoAuthInterceptor(RecordsAlfrescoAuthInterceptor alfrescoAuthInterceptor) {
-        this.alfrescoAuthInterceptor = alfrescoAuthInterceptor;
+    public void setAuthInterceptor(RecordsAuthInterceptor authInterceptor) {
+        this.authInterceptor = authInterceptor;
     }
 }

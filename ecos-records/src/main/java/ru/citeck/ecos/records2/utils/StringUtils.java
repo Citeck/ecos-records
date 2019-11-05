@@ -126,4 +126,31 @@ public class StringUtils {
         }
         return count;
     }
+
+    public static String escapeDoubleQuotes(final String name) {
+
+        int quoteIdx = name.indexOf('"');
+
+        if (quoteIdx == -1) {
+            return name;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int beforeIdx = 0;
+
+        while (quoteIdx >= 0) {
+
+            sb.append(name, beforeIdx, quoteIdx);
+            if (quoteIdx == 0 || name.charAt(quoteIdx - 1) != '\\') {
+                sb.append('\\');
+            }
+
+            beforeIdx = quoteIdx;
+            quoteIdx = name.indexOf('"', quoteIdx + 1);
+        }
+
+        sb.append(name, beforeIdx, name.length());
+
+        return sb.toString();
+    }
 }

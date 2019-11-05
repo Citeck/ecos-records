@@ -37,22 +37,24 @@ public class QueryWithMetaFieldTest extends LocalRecordsDAO implements LocalReco
     public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
 
         List<String> atts = field.getInnerAttributes();
-        assertEquals(5, atts.size());
+        assertEquals(6, atts.size());
         assertEquals(new HashSet<>(Arrays.asList(
             "field0",
             "field1",
             "field2",
             "sum(\"field1\")",
+            "sum(\"field2\")",
             ".edge"//it's ok?
         )), new HashSet<>(atts));
 
         Map<String, String> innerAttributesMap = field.getInnerAttributesMap();
 
-        assertEquals(5, innerAttributesMap.size());
+        assertEquals(6, innerAttributesMap.size());
         assertEquals(".att(n:\"field0\"){disp}", innerAttributesMap.get("field0"));
         assertEquals(".att(n:\"field1\"){num}", innerAttributesMap.get("field1"));
         assertEquals(".atts(n:\"field2\"){disp}", innerAttributesMap.get("field2"));
         assertEquals(".att(n:\"sum(\\\"field1\\\")\"){num}", innerAttributesMap.get("sum(\"field1\")"));
+        assertEquals(".att(n:\"sum(\\\"field2\\\")\"){num}", innerAttributesMap.get("sum(\"field2\")"));
         assertEquals(".edge(n:\"field0(\\\"param\\\")\"){options{label:disp,value:str}}", innerAttributesMap.get(".edge"));
 
         TestDto dto = new TestDto();
@@ -86,6 +88,9 @@ public class QueryWithMetaFieldTest extends LocalRecordsDAO implements LocalReco
 
         @MetaAtt("sum(\"field1\")")
         private int sum;
+
+        @MetaAtt("sum(\\\"field2\\\")")
+        private int sum2;
 
         @MetaAtt("#field0(\"param\")?options")
         private List<Object> options;

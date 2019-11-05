@@ -46,7 +46,7 @@ class PredicateUtilsTest {
         assertEquals(field2Value, dto.field2);
         assertEquals(field22Value, dto.field22);
         assertEquals(fieldWithPrefixValue, dto.fieldWithPrefix);
-        assertNull(dto.field3);
+        assertEquals(123123d, dto.field3);
         assertNull(dto.field4);
 
         assertEquals(Predicates.eq(otherField, otherValue), dto.predicate);
@@ -57,6 +57,9 @@ class PredicateUtilsTest {
         );
 
         assertEquals(fieldWithPrefixValue, dto.fieldWithPrefix);
+
+        dto = PredicateUtils.convertToDto(pred, PredDto.class, true);
+        assertNull(dto.field3);
     }
 
     @Data

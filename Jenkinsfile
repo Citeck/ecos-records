@@ -1,3 +1,6 @@
+properties([
+    buildDiscarder(logRotator(daysToKeepStr: '', numToKeepStr: '3')),
+])
 timestamps {
   node {
     mattermostSend endpoint: 'https://mm.citeck.ru/hooks/9ytch3uox3retkfypuq7xi3yyr', channel: "build_notifications", color: 'good', message: " :arrow_forward: Build info - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
@@ -14,7 +17,7 @@ timestamps {
       }
       stage('Assembling and publishing project artifacts') {
         withMaven(mavenLocalRepo: '/opt/jenkins/.m2/repository', tempBinDir: '') {
-          sh "mvn clean deploy -DskipTests=true"
+          sh "mvn clean deploy"
         }
       }
     }

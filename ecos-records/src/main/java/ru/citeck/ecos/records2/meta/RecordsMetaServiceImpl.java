@@ -58,15 +58,11 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             if (resultKey == null) {
                 continue;
             }
-            if ("id".equals(resultKey)) {
-                resultAttributes.put(resultKey, meta.getId().toString());
+            JsonNode value = attributes.get(key);
+            if (resultKey.equals(".json") || !flat) {
+                resultAttributes.put(resultKey, value);
             } else {
-                JsonNode value = attributes.get(key);
-                if (resultKey.equals(".json") || !flat) {
-                    resultAttributes.put(resultKey, value);
-                } else {
-                    resultAttributes.put(resultKey, toFlatNode(value));
-                }
+                resultAttributes.put(resultKey, toFlatNode(value));
             }
         }
 

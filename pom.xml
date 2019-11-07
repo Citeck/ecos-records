@@ -7,7 +7,7 @@
 
     <groupId>ru.citeck.ecos.community</groupId>
     <artifactId>ecos-records-project</artifactId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.10.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -95,11 +95,6 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.28</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.5.20</version>
         </dependency>
 
     </dependencies>

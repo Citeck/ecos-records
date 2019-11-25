@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class BeanValueFactory implements MetaValueFactory<Object> {
@@ -97,6 +98,9 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
         @Override
         public Object getAttribute(String name, MetaField field) throws Exception {
+            if (bean instanceof Map) {
+                return ((Map) bean).get(name);
+            }
             try {
                 return PropertyUtils.getProperty(bean, name);
             } catch (NoSuchMethodException e) {

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.meta;
 
 import ru.citeck.ecos.records2.utils.ObjectKeyGenerator;
+import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -45,6 +46,10 @@ public class AttributesMetaResolver {
         return new AttributesSchema(schema.toString(), keysMapping);
     }
 
+    private String getValidSchemaParamName(String name) {
+        return StringUtils.escapeDoubleQuotes(name);
+    }
+
     public String convertAttToGqlFormat(String att, String defaultScalar, boolean multiple) {
 
         if (att.startsWith(".")) {
@@ -86,7 +91,8 @@ public class AttributesMetaResolver {
                     inner = "";
             }
 
-            return ".edge(n:\"" + fieldName.substring(1) + "\"){" + scalarField + inner + "}";
+            String attName = getValidSchemaParamName(fieldName.substring(1));
+            return ".edge(n:\"" + attName + "\"){" + scalarField + inner + "}";
 
         } else {
 
@@ -112,7 +118,7 @@ public class AttributesMetaResolver {
                 if (pathElem.contains("\\.")) {
                     pathElem = pathElem.replaceAll("\\\\.", ".");
                 }
-                sb.append("(n:\"").append(pathElem).append("\")");
+                sb.append("(n:\"").append(getValidSchemaParamName(pathElem)).append("\")");
             }
 
             if (subFields != null) {

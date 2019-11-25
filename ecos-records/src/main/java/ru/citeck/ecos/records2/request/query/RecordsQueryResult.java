@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.request.query;
 
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,10 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
         super(other);
         hasMore = other.hasMore;
         setTotalCount(other.totalCount);
+    }
+
+    public RecordsQueryResult(List<T> records) {
+        setRecords(records);
     }
 
     public <K> RecordsQueryResult(RecordsQueryResult<K> other, Function<K, T> mapper) {

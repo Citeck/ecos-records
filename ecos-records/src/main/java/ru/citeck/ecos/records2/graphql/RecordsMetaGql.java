@@ -4,13 +4,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import graphql.*;
+import graphql.language.Document;
+import graphql.language.Field;
+import graphql.language.SelectionSet;
 import graphql.language.SourceLocation;
+import graphql.parser.Parser;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.exception.GqlParseException;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
@@ -73,6 +81,30 @@ public class RecordsMetaGql {
         ExecutionResult result = executeImpl(query, context);
 
         return convertMeta(result, metaValues);
+    }
+
+    public MetaField getMetaFieldFromSchema(String schema) {
+
+        if (schema == null || schema.isEmpty()) {
+            return EmptyMetaField.INSTANCE;
+        }
+
+        String query = String.format(META_QUERY_TEMPLATE, schema);
+
+        Parser parser = new Parser();
+
+        Field field;
+        try {
+            Document document = parser.parseDocument(query);
+            field = (Field) ((SelectionSet) document.getDefinitions()
+                                                    .get(0)
+                                                    .getChildren()
+                                                    .get(0)).getSelections().get(0);
+        } catch (Exception e) {
+            throw new GqlParseException("Meta field can't be received from schema", schema, e);
+        }
+
+        return new MetaFieldImpl(field);
     }
 
     private List<RecordMeta> convertMeta(ExecutionResult executionResult,

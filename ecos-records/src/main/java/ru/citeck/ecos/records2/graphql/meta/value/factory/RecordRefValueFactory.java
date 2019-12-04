@@ -12,8 +12,11 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
+
+    private static final String ATT_ID = ".id";
 
     private RecordsServiceFactory serviceFactory;
 
@@ -44,7 +47,15 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         public <T extends QueryContext> void init(T context, MetaField field) {
 
             Map<String, String> attsMap = field.getInnerAttributesMap();
-            this.meta = serviceFactory.getRecordsService().getRawAttributes(ref, attsMap);
+            if (Objects.equals(attsMap.get(ATT_ID), ATT_ID)) {
+                attsMap.remove(ATT_ID);
+            }
+
+            if (attsMap.size() > 0) {
+                this.meta = serviceFactory.getRecordsService().getRawAttributes(ref, attsMap);
+            } else {
+                this.meta = new RecordMeta(ref);
+            }
 
             if (attsMap.containsKey(".assoc") && !attsMap.containsKey(".str")) {
                 meta.set(".str", meta.getStringOrNull(".assoc"));

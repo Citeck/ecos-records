@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records.test;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -15,6 +17,7 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +52,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
         attsToRequest.put("att2", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.VALUE_FIELD + "?str");
+        attsToRequest.put("att3", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.ARR_VALUE_FIELD + "[]?str");
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
         attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
@@ -60,6 +64,12 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(Val.val2.value, meta.get("att2", ""));
         assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
         assertEquals(Val.val0.getString(), meta.get("assoc", ""));
+
+        ArrayNode expected = JsonNodeFactory.instance.arrayNode();
+        expected.add(Val.val2.value);
+        expected.add(Val.val2.value);
+
+        assertEquals(expected, meta.get("att3"));
     }
 
     @Override
@@ -90,6 +100,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         static final String VAL0_FIELD = "val0";
         static final String VAL1_FIELD = "val1";
         static final String VAL2_FIELD = "val2";
+        static final String ARR_VALUE_FIELD = "value_arr";
 
         static final Val val0 = new Val(RecordRef.create(ID, "val0"));
         static final Val val1 = new Val(RecordRef.create(ID, "val1"));
@@ -129,6 +140,8 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
                     return val2.ref;
                 case VALUE_FIELD:
                     return value;
+                case ARR_VALUE_FIELD:
+                    return Arrays.asList(value, value);
                 default:
                     return null;
             }

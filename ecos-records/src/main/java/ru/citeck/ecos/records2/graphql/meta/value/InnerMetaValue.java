@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-public class InnerMetaValue implements MetaValue {
+public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaValue> {
 
     private final JsonNode value;
 
@@ -30,21 +32,21 @@ public class InnerMetaValue implements MetaValue {
         }
 
         if (fieldName != null) {
-
-            JsonNode node = value.path(fieldName);
-
-            if (node instanceof ArrayNode) {
-                List<Object> result = new ArrayList<>();
-                for (JsonNode val : node) {
-                    result.add(new InnerMetaValue(val));
-                }
-                return result;
-            } else {
-                return new InnerMetaValue(node);
-            }
+            return new InnerMetaValue(value.path(fieldName));
         }
-
         return null;
+    }
+
+    @Override
+    public Collection<InnerMetaValue> getCollectionView() {
+        if (value instanceof ArrayNode) {
+            List<InnerMetaValue> result = new ArrayList<>();
+            for (JsonNode val : value) {
+                result.add(new InnerMetaValue(val));
+            }
+            return result;
+        }
+        return Collections.singletonList(this);
     }
 
     @Override

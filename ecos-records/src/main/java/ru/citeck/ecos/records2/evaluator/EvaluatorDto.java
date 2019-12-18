@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class EvaluatorDto {
 
+    private String id;
     private String type;
     private boolean inverse;
     private ObjectNode config;

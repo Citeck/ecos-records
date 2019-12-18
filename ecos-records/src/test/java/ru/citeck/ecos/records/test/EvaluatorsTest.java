@@ -39,7 +39,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         evaluatorsService.register(this);
 
         EvaluatorDto evaluatorDto = new EvaluatorDto();
-        evaluatorDto.setId(ID);
+        evaluatorDto.setType(ID);
 
         RecordRef meta0Ref = RecordRef.create(ID, "Meta0");
         RecordRef meta1Ref = RecordRef.create(ID, "Meta1");
@@ -56,21 +56,21 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         assertTrue(evaluatorsService.evaluate(unknownRef, evaluatorDto));
 
         evaluatorDto = new EvaluatorDto();
-        evaluatorDto.setId("true");
+        evaluatorDto.setType("true");
 
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
         assertTrue(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
         assertTrue(evaluatorsService.evaluate(unknownRef, evaluatorDto));
 
         evaluatorDto = new EvaluatorDto();
-        evaluatorDto.setId("false");
+        evaluatorDto.setType("false");
 
         assertFalse(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
         assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
         assertFalse(evaluatorsService.evaluate(unknownRef, evaluatorDto));
 
         evaluatorDto = new EvaluatorDto();
-        evaluatorDto.setId("has-attribute");
+        evaluatorDto.setType("has-attribute");
         ObjectNode config = JsonNodeFactory.instance.objectNode();
         config.set("attribute", TextNode.valueOf("field0"));
         evaluatorDto.setConfig(config);
@@ -78,6 +78,11 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
         config.set("attribute", TextNode.valueOf("unknown_field"));
         assertFalse(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+    }
+
+    @Override
+    public String getType() {
+        return ID;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class HasPermissionEvaluator implements RecordEvaluator<Map<String, Strin
     }
 
     @Override
-    public String getId() {
+    public String getType() {
         return "has-permission";
     }
 

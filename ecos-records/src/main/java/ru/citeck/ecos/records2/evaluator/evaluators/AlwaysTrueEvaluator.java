@@ -4,7 +4,7 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 
 public class AlwaysTrueEvaluator implements RecordEvaluator<Object, Object, Object> {
 
-    public static final String ID = "true";
+    public static final String TYPE = "true";
 
     @Override
     public boolean evaluate(Object config, Object meta) {
@@ -27,7 +27,7 @@ public class AlwaysTrueEvaluator implements RecordEvaluator<Object, Object, Obje
     }
 
     @Override
-    public String getId() {
-        return ID;
+    public String getType() {
+        return TYPE;
     }
 }

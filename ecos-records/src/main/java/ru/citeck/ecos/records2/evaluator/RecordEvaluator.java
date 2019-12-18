@@ -38,7 +38,9 @@ public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
     boolean evaluate(EvalMetaT meta, ConfigT config);
 
     /**
-     * Get evaluator ID.
+     * Get evaluator type.
+     *
+     * @see EvaluatorDto#getType
      */
-    String getId();
+    String getType();
 }

@@ -28,7 +28,7 @@ public class RecordEvaluatorsRegistrar {
     }
 
     private void register(RecordEvaluator<?, ?, ?> evaluator) {
-        log.info("Register: \"" + evaluator.getId() + "\" with class " + evaluator.getClass().getName());
+        log.info("Register: \"" + evaluator.getType() + "\" with class " + evaluator.getClass().getName());
         recordEvaluatorsService.register(evaluator);
     }
 

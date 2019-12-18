@@ -20,7 +20,7 @@ public class HasAttributeEvaluator implements RecordEvaluator<Map<String, Object
     }
 
     @Override
-    public String getId() {
+    public String getType() {
         return "has-attribute";
     }
 

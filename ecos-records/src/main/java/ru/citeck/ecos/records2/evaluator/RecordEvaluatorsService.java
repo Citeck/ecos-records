@@ -117,7 +117,7 @@ public class RecordEvaluatorsService {
 
         @SuppressWarnings("unchecked")
         RecordEvaluator<Object, Object, Object> evaluator =
-            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getId());
+            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getType());
 
         if (evaluator == null) {
             return false;
@@ -145,10 +145,10 @@ public class RecordEvaluatorsService {
 
         @SuppressWarnings("unchecked")
         RecordEvaluator<Object, Object, Object> evaluator =
-            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getId());
+            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getType());
 
         if (evaluator == null) {
-            log.error("Evaluator with id " + evalDto.getId() + " is not found!");
+            log.error("Evaluator with type " + evalDto.getType() + " is not found!");
             return Collections.emptyMap();
         }
 
@@ -167,7 +167,7 @@ public class RecordEvaluatorsService {
             }
         } catch (Exception e) {
             log.error("Meta attributes can't be received. "
-                + "Id: " + evalDto.getId() + " Config: " + evalDto.getConfig(), e);
+                + "Id: " + evalDto.getType() + " Config: " + evalDto.getConfig(), e);
         }
 
         if (attributes == null) {
@@ -205,6 +205,6 @@ public class RecordEvaluatorsService {
     }
 
     public void register(RecordEvaluator<?, ?, ?> evaluator) {
-        evaluators.put(evaluator.getId(), evaluator);
+        evaluators.put(evaluator.getType(), evaluator);
     }
 }

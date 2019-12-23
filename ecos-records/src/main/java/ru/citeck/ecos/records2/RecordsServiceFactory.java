@@ -5,6 +5,7 @@ import ru.citeck.ecos.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsService;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsServiceImpl;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
@@ -59,7 +60,7 @@ public class RecordsServiceFactory {
     }
 
     protected RecordEvaluatorsService createRecordEvaluatorsService() {
-        return new RecordEvaluatorsService(this);
+        return new RecordEvaluatorsServiceImpl(this);
     }
 
     public final synchronized RecordsService getRecordsService() {

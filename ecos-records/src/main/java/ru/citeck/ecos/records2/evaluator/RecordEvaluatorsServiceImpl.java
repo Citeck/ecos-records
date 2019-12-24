@@ -81,39 +81,24 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
         Map<RecordRef, List<Boolean>> evalResultsByRecord = new HashMap<>();
 
         for (int i = 0; i < recordRefs.size(); i++) {
-
             RecordMeta meta = recordsMeta.get(i);
-            List<ObjectNode> evaluatorsMeta = new ArrayList<>();
-
-            for (Map<String, String> metaAtts : metaAttributes) {
-                ObjectNode evalMeta = JsonNodeFactory.instance.objectNode();
-                metaAtts.forEach((k, v) -> {
-                    JsonNode value = meta.get(v);
-                    if (value.isMissingNode()) {
-                        value = NullNode.getInstance();
-                    }
-                    evalMeta.set(k, value);
-                });
-                evaluatorsMeta.add(evalMeta);
-            }
-
-            List<Boolean> evalResult = evaluateWithMeta(evaluators, evaluatorsMeta);
+            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta.getAttributes());
             evalResultsByRecord.put(recordRefs.get(i), evalResult);
         }
 
         return evalResultsByRecord;
     }
 
-    private List<Boolean> evaluateWithMeta(List<EvaluatorDto> evaluators, List<ObjectNode> meta) {
+    private List<Boolean> evaluateWithMeta(List<EvaluatorDto> evaluators, ObjectNode meta) {
         List<Boolean> result = new ArrayList<>();
         for (int i = 0; i < evaluators.size(); i++) {
-            result.add(evaluateWithMeta(evaluators.get(i), meta.get(i)));
+            result.add(evaluateWithMeta(evaluators.get(i), meta));
         }
         return result;
     }
 
     @Override
-    public boolean evaluateWithMeta(EvaluatorDto evalDto, ObjectNode metaNode) {
+    public boolean evaluateWithMeta(EvaluatorDto evalDto, ObjectNode fullRecordMeta) {
 
         @SuppressWarnings("unchecked")
         RecordEvaluator<Object, Object, Object> evaluator =
@@ -124,13 +109,25 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
         }
 
         Object config = treeToValue(evalDto.getConfig(), evaluator.getConfigType());
-        Object requiredMeta = treeToValue(metaNode, evaluator.getEvalMetaType());
+
+        Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
+
+        ObjectNode evaluatorMeta = JsonNodeFactory.instance.objectNode();
+        metaAtts.forEach((k, v) -> {
+            JsonNode value = fullRecordMeta.path(v);
+            if (value.isMissingNode()) {
+                value = NullNode.getInstance();
+            }
+            evaluatorMeta.set(k, value);
+        });
+
+        Object requiredMeta = treeToValue(evaluatorMeta, evaluator.getEvalMetaType());
 
         try {
             boolean result = evaluator.evaluate(requiredMeta, config);
             return evalDto.isInverse() != result;
         } catch (Exception e) {
-            log.error("Evaluation failed. Dto: " + evalDto + " meta: " + metaNode, e);
+            log.error("Evaluation failed. Dto: " + evalDto + " meta: " + requiredMeta, e);
             return false;
         }
     }

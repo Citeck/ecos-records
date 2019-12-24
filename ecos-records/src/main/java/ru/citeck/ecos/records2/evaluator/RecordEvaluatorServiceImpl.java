@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
+public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     private RecordsService recordsService;
     private RecordsMetaService recordsMetaService;
@@ -28,7 +28,8 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public RecordEvaluatorsServiceImpl(RecordsServiceFactory factory) {
+    public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
+
         recordsService = factory.getRecordsService();
         recordsMetaService = factory.getRecordsMetaService();
 
@@ -40,9 +41,9 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
     }
 
     @Override
-    public boolean evaluate(RecordRef recordRef, EvaluatorDto evaluator) {
+    public boolean evaluate(RecordRef recordRef, RecordEvaluatorDto evaluator) {
 
-        List<EvaluatorDto> evaluators = Collections.singletonList(evaluator);
+        List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
         List<RecordRef> recordRefs = Collections.singletonList(recordRef);
 
         Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
@@ -50,9 +51,9 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
     }
 
     @Override
-    public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs, EvaluatorDto evaluator) {
+    public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs, RecordEvaluatorDto evaluator) {
 
-        List<EvaluatorDto> evaluators = Collections.singletonList(evaluator);
+        List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
 
         Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
         Map<RecordRef, Boolean> result = new HashMap<>();
@@ -63,7 +64,7 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
     }
 
     @Override
-    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs, List<EvaluatorDto> evaluators) {
+    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs, List<RecordEvaluatorDto> evaluators) {
 
         List<Map<String, String>> metaAttributes = getRequiredMetaAttributes(evaluators);
         Set<String> attsToRequest = new HashSet<>();
@@ -89,7 +90,7 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
         return evalResultsByRecord;
     }
 
-    private List<Boolean> evaluateWithMeta(List<EvaluatorDto> evaluators, ObjectNode meta) {
+    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, ObjectNode meta) {
         List<Boolean> result = new ArrayList<>();
         for (int i = 0; i < evaluators.size(); i++) {
             result.add(evaluateWithMeta(evaluators.get(i), meta));
@@ -98,7 +99,7 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
     }
 
     @Override
-    public boolean evaluateWithMeta(EvaluatorDto evalDto, ObjectNode fullRecordMeta) {
+    public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, ObjectNode fullRecordMeta) {
 
         @SuppressWarnings("unchecked")
         RecordEvaluator<Object, Object, Object> evaluator =
@@ -132,16 +133,16 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
         }
     }
 
-    private List<Map<String, String>> getRequiredMetaAttributes(List<EvaluatorDto> evaluators) {
+    private List<Map<String, String>> getRequiredMetaAttributes(List<RecordEvaluatorDto> evaluators) {
         List<Map<String, String>> result = new ArrayList<>();
-        for (EvaluatorDto dto : evaluators) {
+        for (RecordEvaluatorDto dto : evaluators) {
             result.add(getRequiredMetaAttributes(dto));
         }
         return result;
     }
 
     @Override
-    public Map<String, String> getRequiredMetaAttributes(EvaluatorDto evalDto) {
+    public Map<String, String> getRequiredMetaAttributes(RecordEvaluatorDto evalDto) {
 
         @SuppressWarnings("unchecked")
         RecordEvaluator<Object, Object, Object> evaluator =
@@ -211,8 +212,8 @@ public class RecordEvaluatorsServiceImpl implements RecordEvaluatorsService {
     public void register(RecordEvaluator<?, ?, ?> evaluator) {
         evaluators.put(evaluator.getType(), evaluator);
 
-        if (evaluator instanceof RecordEvaluatorsServiceAware) {
-            ((RecordEvaluatorsServiceAware) evaluator).setRecordEvaluatorsService(this);
+        if (evaluator instanceof RecordEvaluatorServiceAware) {
+            ((RecordEvaluatorServiceAware) evaluator).setRecordEvaluatorService(this);
         }
     }
 }

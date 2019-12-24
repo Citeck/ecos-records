@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.evaluator;
 /**
  * Evaluator interface to filter recordRefs by custom conditions.
  *
- * @see EvaluatorDto
+ * @see RecordEvaluatorDto
  */
 public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
 
@@ -40,7 +40,7 @@ public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
     /**
      * Get evaluator type.
      *
-     * @see EvaluatorDto#getType
+     * @see RecordEvaluatorDto#getType
      */
     String getType();
 }

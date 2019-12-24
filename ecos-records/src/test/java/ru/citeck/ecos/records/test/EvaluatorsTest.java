@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -8,9 +7,9 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.evaluator.EvaluatorDto;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsService;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -38,10 +37,10 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         setId(ID);
         recordsService.register(this);
 
-        RecordEvaluatorsService evaluatorsService = factory.getRecordEvaluatorsService();
+        RecordEvaluatorService evaluatorsService = factory.getRecordEvaluatorService();
         evaluatorsService.register(this);
 
-        EvaluatorDto evaluatorDto = new EvaluatorDto();
+        RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType(ID);
 
         RecordRef meta0Ref = RecordRef.create(ID, "Meta0");
@@ -76,7 +75,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         evaluatorDto.getConfig().set("attribute", TextNode.valueOf("unknown_field"));
         assertFalse(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
 
-        EvaluatorDto groupEvaluator = groupEvaluator(
+        RecordEvaluatorDto groupEvaluator = groupEvaluator(
             GroupEvaluator.JoinType.AND,
             hasAttEvaluator("field0"),
             alwaysTrueEvaluator()
@@ -129,13 +128,13 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         assertTrue(evaluatorsService.evaluate(meta0Ref, groupEvaluator));
     }
 
-    private EvaluatorDto groupEvaluator(GroupEvaluator.JoinType joinType, EvaluatorDto... evaluators) {
+    private RecordEvaluatorDto groupEvaluator(GroupEvaluator.JoinType joinType, RecordEvaluatorDto... evaluators) {
 
-        EvaluatorDto groupEvaluator = new EvaluatorDto();
+        RecordEvaluatorDto groupEvaluator = new RecordEvaluatorDto();
         groupEvaluator.setType("group");
 
         GroupEvaluator.Config groupConfig = new GroupEvaluator.Config();
-        groupConfig.setJoinType(joinType);
+        groupConfig.setJoinBy(joinType);
         groupConfig.setEvaluators(Arrays.asList(evaluators));
 
         groupEvaluator.setConfig(objectMapper.valueToTree(groupConfig));
@@ -143,20 +142,20 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         return groupEvaluator;
     }
 
-    private EvaluatorDto alwaysFalseEvaluator() {
-        EvaluatorDto evaluatorDto = new EvaluatorDto();
+    private RecordEvaluatorDto alwaysFalseEvaluator() {
+        RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("false");
         return evaluatorDto;
     }
 
-    private EvaluatorDto alwaysTrueEvaluator() {
-        EvaluatorDto evaluatorDto = new EvaluatorDto();
+    private RecordEvaluatorDto alwaysTrueEvaluator() {
+        RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("true");
         return evaluatorDto;
     }
 
-    private EvaluatorDto hasAttEvaluator(String att) {
-        EvaluatorDto evaluatorDto = new EvaluatorDto();
+    private RecordEvaluatorDto hasAttEvaluator(String att) {
+        RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("has-attribute");
         ObjectNode config = JsonNodeFactory.instance.objectNode();
         config.set("attribute", TextNode.valueOf(att));

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsServiceImpl;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 public class RecordEvaluatorsRegistrar {
 
     private List<RecordEvaluator<?, ?, ?>> evaluators;
-    private final RecordEvaluatorsServiceImpl recordEvaluatorsService;
+    private final RecordEvaluatorServiceImpl recordEvaluatorService;
 
     @PostConstruct
     public void register() {
@@ -29,7 +29,7 @@ public class RecordEvaluatorsRegistrar {
 
     private void register(RecordEvaluator<?, ?, ?> evaluator) {
         log.info("Register: \"" + evaluator.getType() + "\" with class " + evaluator.getClass().getName());
-        recordEvaluatorsService.register(evaluator);
+        recordEvaluatorService.register(evaluator);
     }
 
     @Autowired(required = false)

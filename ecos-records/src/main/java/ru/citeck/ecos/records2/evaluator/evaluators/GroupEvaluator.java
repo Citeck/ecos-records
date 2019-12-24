@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.evaluator.EvaluatorDto;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsService;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsServiceAware;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceAware;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -15,25 +15,25 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class GroupEvaluator implements RecordEvaluator<Map<String, String>, ObjectNode, GroupEvaluator.Config>,
-                                       RecordEvaluatorsServiceAware {
+                                       RecordEvaluatorServiceAware {
 
     public static final String TYPE = "group";
 
     @Setter
-    private RecordEvaluatorsService recordEvaluatorsService;
+    private RecordEvaluatorService recordEvaluatorService;
 
     @Override
     public boolean evaluate(ObjectNode meta, Config config) {
 
-        Stream<EvaluatorDto> evaluators = config.getEvaluators().stream();
-        Predicate<EvaluatorDto> predicate = evaluator -> recordEvaluatorsService.evaluateWithMeta(evaluator, meta);
+        Stream<RecordEvaluatorDto> evaluators = config.getEvaluators().stream();
+        Predicate<RecordEvaluatorDto> predicate = evaluator -> recordEvaluatorService.evaluateWithMeta(evaluator, meta);
 
-        if (JoinType.AND.equals(config.joinType)) {
+        if (JoinType.AND.equals(config.joinBy)) {
             return evaluators.allMatch(predicate);
-        } else if (JoinType.OR.equals(config.joinType)) {
+        } else if (JoinType.OR.equals(config.joinBy)) {
             return evaluators.anyMatch(predicate);
         } else {
-            log.warn("Unknown join type: " + config.joinType);
+            log.warn("Unknown join type: " + config.joinBy);
         }
         return false;
     }
@@ -45,7 +45,7 @@ public class GroupEvaluator implements RecordEvaluator<Map<String, String>, Obje
 
         config.getEvaluators()
             .stream()
-            .map(e -> recordEvaluatorsService.getRequiredMetaAttributes(e))
+            .map(e -> recordEvaluatorService.getRequiredMetaAttributes(e))
             .forEach(a -> atts.addAll(a.values()));
 
         Map<String, String> result = new HashMap<>();
@@ -74,8 +74,8 @@ public class GroupEvaluator implements RecordEvaluator<Map<String, String>, Obje
     @Data
     public static class Config {
 
-        private JoinType joinType = JoinType.AND;
-        private List<EvaluatorDto> evaluators = Collections.emptyList();
+        private JoinType joinBy = JoinType.AND;
+        private List<RecordEvaluatorDto> evaluators = Collections.emptyList();
     }
 
     public enum JoinType { AND, OR }

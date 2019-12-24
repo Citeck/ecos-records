@@ -9,7 +9,7 @@ import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorsService;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
@@ -55,8 +55,8 @@ public class RecordsServiceFactoryConfig extends RecordsServiceFactory {
 
     @Bean
     @Override
-    protected RecordEvaluatorsService createRecordEvaluatorsService() {
-        return super.createRecordEvaluatorsService();
+    protected RecordEvaluatorService createRecordEvaluatorService() {
+        return super.createRecordEvaluatorService();
     }
 
     @Bean

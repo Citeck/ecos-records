@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.resolver;
 
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -23,15 +24,28 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
     private LocalRecordsResolver local;
     private RecordsResolver remote;
 
+    private String currentApp;
+    private String currentAppSourceIdPrefix;
+    private boolean forceLocalMode;
+
     public LocalRemoteResolver(RecordsServiceFactory serviceFactory) {
+
         this.remote = serviceFactory.getRemoteRecordsResolver();
         this.local = serviceFactory.getLocalRecordsResolver();
+
+        RecordsProperties props = serviceFactory.getProperties();
+        this.currentApp = props.getAppName();
+        this.currentAppSourceIdPrefix = this.currentApp + "/";
+        this.forceLocalMode = props.isForceLocalMode();
+
         MandatoryParam.check("local", local);
     }
 
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
+
         String sourceId = query.getSourceId();
+
         if (remote == null || StringUtils.isBlank(sourceId) || !sourceId.contains("/")) {
             return local.queryRecords(query, schema);
         }

@@ -20,6 +20,26 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsUtils {
 
+    public static RecordsQueryResult<RecordMeta> metaWithDefaultAppName(RecordsQueryResult<RecordMeta> queryResult,
+                                                                        String appName) {
+        queryResult.setRecords(queryResult.getRecords()
+            .stream()
+            .map(r -> new RecordMeta(r.getId().withDefaultAppName(appName)))
+            .collect(Collectors.toList())
+        );
+        return queryResult;
+    }
+
+    public static RecordsQueryResult<RecordRef> refsWithDefaultAppName(RecordsQueryResult<RecordRef> queryResult,
+                                                                       String appName) {
+        queryResult.setRecords(queryResult.getRecords()
+            .stream()
+            .map(r -> r.withDefaultAppName(appName))
+            .collect(Collectors.toList())
+        );
+        return queryResult;
+    }
+
     public static Map<String, Class<?>> getAttributesClasses(String sourceId,
                                                              Collection<String> attributes,
                                                              Class<?> defaultClass,

@@ -7,9 +7,15 @@ import java.util.Map;
 @Data
 public class RecordsProperties {
 
+    private String appName = "";
     private RestProps rest;
     private Map<String, App> apps;
     private Map<String, String> sourceIdMapping;
+
+    /**
+     * Disable remote records for testing.
+     */
+    private boolean forceLocalMode;
 
     /**
      * Used by gateway.

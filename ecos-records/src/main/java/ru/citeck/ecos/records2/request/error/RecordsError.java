@@ -1,13 +1,14 @@
 package ru.citeck.ecos.records2.request.error;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class RecordsError {
 
-    private String type;
-    private String msg;
-    private List<String> stackTrace;
+    private String type = "";
+    private String msg = "";
+    private List<String> stackTrace = new ArrayList<>();
 
     public RecordsError() {
     }
@@ -42,7 +43,7 @@ public class RecordsError {
     }
 
     public void setStackTrace(List<String> stackTrace) {
-        this.stackTrace = stackTrace;
+        this.stackTrace = stackTrace != null ? stackTrace : new ArrayList<>();
     }
 
     @Override

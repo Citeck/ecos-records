@@ -84,6 +84,8 @@ public class RestHandler {
             }
         }
 
+        logErrors(recordsResult, body);
+
         if (body.isSingleRecord()) {
 
             Object record = recordsResult.getRecords()
@@ -105,9 +107,27 @@ public class RestHandler {
         return recordsResult;
     }
 
+    private void logErrors(RecordsResult<?> result, Object body) {
+
+        if (result.getErrors().isEmpty()) {
+            return;
+        }
+
+        log.error("Records request finished with ERRORS");
+
+        result.getErrors().forEach(err -> {
+            log.error("ERROR: [" + err.getType() + "] " + err.getMsg());
+            err.getStackTrace().forEach(log::error);
+        });
+
+        log.error("Req Body: " + body);
+    }
+
     public Object mutateRecords(MutationBody body) {
 
         RecordsMutResult result = recordsService.mutate(body);
+
+        logErrors(result, body);
 
         if (body.isSingleRecord()) {
             List<?> records = result.getRecords();

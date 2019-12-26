@@ -8,6 +8,8 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -20,24 +22,56 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsUtils {
 
-    public static RecordsQueryResult<RecordMeta> metaWithDefaultAppName(RecordsQueryResult<RecordMeta> queryResult,
-                                                                        String appName) {
-        queryResult.setRecords(queryResult.getRecords()
+    public static RecordsResult<RecordMeta> metaWithDefaultApp(RecordsResult<RecordMeta> metaResult,
+                                                               String appName) {
+        if (StringUtils.isBlank(appName)) {
+            return metaResult;
+        }
+        metaResult.setRecords(metaResult.getRecords()
             .stream()
             .map(r -> new RecordMeta(r.getId().withDefaultAppName(appName)))
+            .collect(Collectors.toList())
+        );
+        return metaResult;
+    }
+
+    public static RecordsQueryResult<RecordMeta> metaWithDefaultApp(RecordsQueryResult<RecordMeta> queryResult,
+                                                                    String appName) {
+        if (StringUtils.isBlank(appName)) {
+            return queryResult;
+        }
+        queryResult.setRecords(queryResult.getRecords()
+            .stream()
+            .map(meta -> meta.withDefaultAppName(appName))
             .collect(Collectors.toList())
         );
         return queryResult;
     }
 
-    public static RecordsQueryResult<RecordRef> refsWithDefaultAppName(RecordsQueryResult<RecordRef> queryResult,
-                                                                       String appName) {
-        queryResult.setRecords(queryResult.getRecords()
+    public static RecordsMutResult refsWithDefaultApp(RecordsMutResult result, String appName) {
+
+        if (StringUtils.isBlank(appName)) {
+            return result;
+        }
+        result.setRecords(result.getRecords()
             .stream()
-            .map(r -> r.withDefaultAppName(appName))
+            .map(meta -> meta.withDefaultAppName(appName))
             .collect(Collectors.toList())
         );
-        return queryResult;
+        return result;
+    }
+
+    public static RecordsDelResult refsWithDefaultApp(RecordsDelResult result, String appName) {
+
+        if (StringUtils.isBlank(appName)) {
+            return result;
+        }
+        result.setRecords(result.getRecords()
+            .stream()
+            .map(meta -> meta.withDefaultAppName(appName))
+            .collect(Collectors.toList())
+        );
+        return result;
     }
 
     public static Map<String, Class<?>> getAttributesClasses(String sourceId,

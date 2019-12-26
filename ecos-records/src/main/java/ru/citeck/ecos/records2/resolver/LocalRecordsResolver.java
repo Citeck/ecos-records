@@ -53,11 +53,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private RecordsServiceFactory serviceFactory;
 
+    private String currentApp;
+
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
         this.predicateService = serviceFactory.getPredicateService();
         this.queryLangService = serviceFactory.getQueryLangService();
+        this.currentApp = serviceFactory.getProperties().getAppName();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsMetaDAO.class, metaDAO);
@@ -69,9 +72,26 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
 
+        String sourceId = query.getSourceId();
+        int appDelimIdx = sourceId.indexOf('/');
+
+        if (appDelimIdx != -1) {
+
+            String appName = sourceId.substring(0, appDelimIdx);
+
+            //if appName is not current app then we in force local mode and sourceId with slash is correct
+            if (appName.equals(currentApp)) {
+                sourceId = sourceId.substring(appDelimIdx + 1);
+                query = new RecordsQuery(query);
+                query.setSourceId(sourceId);
+            }
+        }
+
+        RecordsQueryResult<RecordMeta> recordsResult = null;
+
         if (!query.getGroupBy().isEmpty()) {
 
-            RecordsQueryBaseDAO dao = getRecordsDAO(query.getSourceId(),
+            RecordsQueryBaseDAO dao = getRecordsDAO(sourceId,
                                                     RecordsQueryWithMetaDAO.class).orElse(null);
 
             if (dao == null || !dao.isGroupingSupported()) {
@@ -85,17 +105,16 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
                     String errorMsg = "GroupBy is not supported by language: "
                                       + query.getLanguage() + ". Query: " + query;
                     log.warn(errorMsg);
-                    RecordsQueryResult<RecordMeta> result = queryRecordsImpl(query, schema);
-                    result.addError(new RecordsError(errorMsg));
-                    return result;
+                    recordsResult = queryRecordsImpl(query, schema);
+                    recordsResult.addError(new RecordsError(errorMsg));
+                } else {
+                    recordsResult = groupsSource.queryRecords(convertedQuery, schema);
                 }
-                return groupsSource.queryRecords(convertedQuery, schema);
             }
         }
 
-        if (DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
+        if (recordsResult == null && DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
 
-            String sourceId = query.getSourceId();
             Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(sourceId, RecordsQueryWithMetaDAO.class);
             Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(sourceId, RecordsQueryDAO.class);
 
@@ -106,17 +125,20 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             if (!languages.contains(DistinctQuery.LANGUAGE)) {
 
                 DistinctQuery distinctQuery = query.getQuery(DistinctQuery.class);
-                RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
+                recordsResult = new RecordsQueryResult<>();
 
-                result.setRecords(getDistinctValues(query.getSourceId(),
-                                                    distinctQuery,
-                                                    query.getMaxItems(),
-                                                    schema));
-                return result;
+                recordsResult.setRecords(getDistinctValues(sourceId,
+                                                           distinctQuery,
+                                                           query.getMaxItems(),
+                                                           schema));
             }
         }
 
-        return queryRecordsImpl(query, schema);
+        if (recordsResult == null) {
+            recordsResult = queryRecordsImpl(query, schema);
+        }
+
+        return RecordsUtils.metaWithDefaultApp(recordsResult, currentApp);
     }
 
     private List<RecordMeta> getDistinctValues(String sourceId, DistinctQuery distinctQuery, int max, String schema) {
@@ -322,13 +344,20 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
+        records = records.stream().map(ref -> {
+            if (ref.getAppName().equals(currentApp)) {
+                ref = ref.removeAppName();
+            }
+            return ref;
+        }).collect(Collectors.toList());
+
         RecordsResult<RecordMeta> results = getMetaImpl(records, schema);
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
         }
 
-        return results;
+        return RecordsUtils.metaWithDefaultApp(results, currentApp);
     }
 
     private RecordsResult<RecordMeta> getMetaImpl(Collection<RecordRef> records, String schema) {
@@ -369,6 +398,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         RecordsMutResult result = new RecordsMutResult();
 
         mutation.getRecords().forEach(record -> {
+
+            if (currentApp.equals(record.getId().getAppName())) {
+                record = new RecordMeta(record, record.getId().removeAppName());
+            }
+
             MutableRecordsDAO dao = needRecordsDAO(record.getId().getSourceId(), MutableRecordsDAO.class);
             RecordsMutation sourceMut = new RecordsMutation();
             sourceMut.setRecords(Collections.singletonList(record));
@@ -376,7 +410,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             result.merge(dao.mutate(sourceMut));
         });
 
-        return result;
+        return RecordsUtils.refsWithDefaultApp(result, currentApp);
     }
 
     @Override
@@ -384,11 +418,21 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         RecordsDelResult result = new RecordsDelResult();
 
         RecordsUtils.groupRefBySource(deletion.getRecords()).forEach((sourceId, sourceRecords) -> {
+
             MutableRecordsDAO source = needRecordsDAO(sourceId, MutableRecordsDAO.class);
-            result.merge(source.delete(deletion));
+
+            RecordsDeletion sourceDeletion = new RecordsDeletion();
+            sourceDeletion.setRecords(sourceRecords.stream().map(ref -> {
+                if (ref.getAppName().equals(currentApp)) {
+                    ref = ref.removeAppName();
+                }
+                return ref;
+            }).collect(Collectors.toList()));
+
+            result.merge(source.delete(sourceDeletion));
         });
 
-        return result;
+        return RecordsUtils.refsWithDefaultApp(result, currentApp);
     }
 
     private <T extends RecordsQueryBaseDAO> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {

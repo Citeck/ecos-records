@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.spring;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.citeck.ecos.predicate.PredicateService;
@@ -23,6 +24,9 @@ public class RecordsServiceFactoryConfig extends RecordsServiceFactory {
 
     private RecordsRestConnection connection;
     private RecordsProperties properties;
+
+    @Value("${spring.application.name:}")
+    private String springAppName;
 
     @Override
     protected RemoteRecordsResolver createRemoteRecordsResolver() {
@@ -108,5 +112,8 @@ public class RecordsServiceFactoryConfig extends RecordsServiceFactory {
     @Autowired
     public void setProperties(RecordsProperties properties) {
         this.properties = properties;
+        if (!springAppName.isEmpty() && properties.getAppName().isEmpty()) {
+            properties.setAppName(springAppName);
+        }
     }
 }

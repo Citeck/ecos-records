@@ -16,6 +16,7 @@ import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -77,7 +78,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
 
         RecordsMetaQueryResult appResult = restConnection.jsonPost(url, queryBody, RecordsMetaQueryResult.class);
 
-        return appResult.addAppName(appName);
+        return RecordsUtils.metaWithDefaultApp(appResult, appName);
     }
 
     @Override

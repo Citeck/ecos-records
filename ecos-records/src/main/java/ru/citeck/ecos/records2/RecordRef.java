@@ -61,9 +61,10 @@ public class RecordRef {
     }
 
     public RecordRef withDefaultAppName(String appName) {
-        return appName == null
-            || appName.isEmpty()
-            || !this.appName.isEmpty() ? this : addAppName(appName);
+        if (StringUtils.isBlank(appName)) {
+            return this;
+        }
+        return !this.appName.isEmpty() ? this : addAppName(appName);
     }
 
     public RecordRef removeAppName() {

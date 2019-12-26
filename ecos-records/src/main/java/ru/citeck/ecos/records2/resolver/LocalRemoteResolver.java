@@ -17,7 +17,6 @@ import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry {
 
@@ -46,7 +45,12 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
 
         String sourceId = query.getSourceId();
 
-        if (remote == null || StringUtils.isBlank(sourceId) || !sourceId.contains("/")) {
+        if (remote == null
+            || StringUtils.isBlank(sourceId)
+            || !sourceId.contains("/")
+            || sourceId.startsWith(currentAppSourceIdPrefix)
+            || forceLocalMode) {
+
             return local.queryRecords(query, schema);
         }
         return remote.queryRecords(query, schema);
@@ -57,8 +61,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         if (remote == null || records.isEmpty()) {
             return local.getMeta(records, schema);
         }
-        Optional<RecordRef> first = records.stream().findFirst();
-        if (first.get().isRemote()) {
+        if (isRemoteRef(records.stream().findFirst().get())) {
             return remote.getMeta(records, schema);
         }
         return local.getMeta(records, schema);
@@ -70,7 +73,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         if (remote == null || records.isEmpty()) {
             return local.mutate(mutation);
         }
-        if (records.get(0).getId().isRemote()) {
+        if (isRemoteRef(records.get(0))) {
             return remote.mutate(mutation);
         }
         return local.mutate(mutation);
@@ -82,10 +85,18 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         if (remote == null || records.isEmpty()) {
             return local.delete(deletion);
         }
-        if (records.get(0).isRemote()) {
+        if (isRemoteRef(records.get(0))) {
             return remote.delete(deletion);
         }
         return local.delete(deletion);
+    }
+
+    private boolean isRemoteRef(RecordRef ref) {
+        return ref.isRemote() && !ref.getAppName().equals(currentApp) && !forceLocalMode;
+    }
+
+    private boolean isRemoteRef(RecordMeta meta) {
+        return isRemoteRef(meta.getId());
     }
 
     @Override

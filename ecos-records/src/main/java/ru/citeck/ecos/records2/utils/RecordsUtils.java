@@ -8,8 +8,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
-import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -46,32 +44,6 @@ public class RecordsUtils {
             .collect(Collectors.toList())
         );
         return queryResult;
-    }
-
-    public static RecordsMutResult refsWithDefaultApp(RecordsMutResult result, String appName) {
-
-        if (StringUtils.isBlank(appName)) {
-            return result;
-        }
-        result.setRecords(result.getRecords()
-            .stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList())
-        );
-        return result;
-    }
-
-    public static RecordsDelResult refsWithDefaultApp(RecordsDelResult result, String appName) {
-
-        if (StringUtils.isBlank(appName)) {
-            return result;
-        }
-        result.setRecords(result.getRecords()
-            .stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList())
-        );
-        return result;
     }
 
     public static Map<String, Class<?>> getAttributesClasses(String sourceId,

@@ -52,6 +52,13 @@ public class RecordMeta {
         setAttributes(attributes);
     }
 
+    public RecordMeta withId(RecordRef recordRef) {
+        if (getId().equals(recordRef)) {
+            return this;
+        }
+        return new RecordMeta(recordRef, attributes);
+    }
+
     public RecordMeta withDefaultAppName(String appName) {
         RecordRef currId = getId();
         RecordRef newId = currId.withDefaultAppName(appName);

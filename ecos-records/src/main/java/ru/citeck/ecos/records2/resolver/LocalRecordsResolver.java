@@ -344,9 +344,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
+        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+
         records = records.stream().map(ref -> {
             if (ref.getAppName().equals(currentApp)) {
-                ref = ref.removeAppName();
+                RecordRef newRef = ref.removeAppName();
+                refsMapping.put(newRef, ref);
+                ref = newRef;
             }
             return ref;
         }).collect(Collectors.toList());
@@ -357,7 +361,16 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
         }
 
-        return RecordsUtils.metaWithDefaultApp(results, currentApp);
+        results.setRecords(results.getRecords()
+            .stream()
+            .map(meta -> {
+                RecordRef ref = meta.getId();
+                return meta.withId(refsMapping.getOrDefault(ref, ref));
+            })
+            .collect(Collectors.toList())
+        );
+
+        return results;
     }
 
     private RecordsResult<RecordMeta> getMetaImpl(Collection<RecordRef> records, String schema) {
@@ -397,10 +410,15 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         RecordsMutResult result = new RecordsMutResult();
 
+        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+
         mutation.getRecords().forEach(record -> {
 
             if (currentApp.equals(record.getId().getAppName())) {
-                record = new RecordMeta(record, record.getId().removeAppName());
+
+                RecordRef newId = record.getId().removeAppName();
+                refsMapping.put(newId, record.getId());
+                record = new RecordMeta(record, newId);
             }
 
             MutableRecordsDAO dao = needRecordsDAO(record.getId().getSourceId(), MutableRecordsDAO.class);
@@ -410,12 +428,25 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             result.merge(dao.mutate(sourceMut));
         });
 
-        return RecordsUtils.refsWithDefaultApp(result, currentApp);
+        if (!refsMapping.isEmpty()) {
+            result.setRecords(result.getRecords()
+                .stream()
+                .map(meta -> {
+                    RecordRef ref = meta.getId();
+                    return meta.withId(refsMapping.getOrDefault(ref, ref));
+                })
+                .collect(Collectors.toList())
+            );
+        }
+        return result;
     }
 
     @Override
     public RecordsDelResult delete(RecordsDeletion deletion) {
+
         RecordsDelResult result = new RecordsDelResult();
+
+        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
 
         RecordsUtils.groupRefBySource(deletion.getRecords()).forEach((sourceId, sourceRecords) -> {
 
@@ -424,7 +455,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             RecordsDeletion sourceDeletion = new RecordsDeletion();
             sourceDeletion.setRecords(sourceRecords.stream().map(ref -> {
                 if (ref.getAppName().equals(currentApp)) {
-                    ref = ref.removeAppName();
+                    RecordRef newRef = ref.removeAppName();
+                    refsMapping.put(newRef, ref);
+                    ref = newRef;
                 }
                 return ref;
             }).collect(Collectors.toList()));
@@ -432,7 +465,18 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             result.merge(source.delete(sourceDeletion));
         });
 
-        return RecordsUtils.refsWithDefaultApp(result, currentApp);
+        if (!refsMapping.isEmpty()) {
+            result.setRecords(result.getRecords()
+                .stream()
+                .map(meta -> {
+                    RecordRef ref = meta.getId();
+                    return meta.withId(refsMapping.getOrDefault(ref, ref));
+                })
+                .collect(Collectors.toList())
+            );
+        }
+
+        return result;
     }
 
     private <T extends RecordsQueryBaseDAO> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {

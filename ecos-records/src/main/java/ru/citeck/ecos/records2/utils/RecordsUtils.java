@@ -29,7 +29,7 @@ public class RecordsUtils {
         }
         metaResult.setRecords(metaResult.getRecords()
             .stream()
-            .map(r -> new RecordMeta(r.getId().withDefaultAppName(appName)))
+            .map(meta -> meta.withDefaultAppName(appName))
             .collect(Collectors.toList())
         );
         return metaResult;

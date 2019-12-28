@@ -113,14 +113,22 @@ public class RestHandler {
             return;
         }
 
-        log.error("Records request finished with ERRORS");
+        StringBuilder msg = new StringBuilder("Records request finished with ERRORS\n");
 
         result.getErrors().forEach(err -> {
-            log.error("ERROR: [" + err.getType() + "] " + err.getMsg());
-            err.getStackTrace().forEach(log::error);
+
+            msg.append("ERROR: [")
+                .append(err.getType())
+                .append("] ")
+                .append(err.getMsg())
+                .append("\n");
+
+            err.getStackTrace().forEach(line -> msg.append(line).append("\n"));
         });
 
-        log.error("Req Body: " + body);
+        msg.append("Req Body: ").append(body).append("\n");
+
+        log.error(msg.toString());
     }
 
     public Object mutateRecords(MutationBody body) {

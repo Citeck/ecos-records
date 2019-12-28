@@ -212,11 +212,20 @@ public abstract class AbstractRecordsService implements RecordsService {
         if (values.getRecords().isEmpty()) {
             return new RecordMeta(record);
         }
-        RecordMeta meta = values.getRecords()
-                                .stream()
-                                .filter(r -> record.equals(r.getId()))
-                                .findFirst()
-                                .orElse(null);
+        RecordMeta meta;
+        if (values.getRecords().size() == 1) {
+            meta = values.getRecords().get(0);
+            if (!record.equals(meta.getId())) {
+                meta = new RecordMeta(meta, record);
+            }
+            return meta;
+        }
+
+        meta = values.getRecords()
+                     .stream()
+                     .filter(r -> record.equals(r.getId()))
+                     .findFirst()
+                     .orElse(null);
 
         if (meta == null && values.getRecords().size() > 0) {
             log.warn("Records is not empty but '" + record + "' is not found. Records: "

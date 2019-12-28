@@ -7,12 +7,15 @@ import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.source.common.AttributesMixin;
+import ru.citeck.ecos.records2.source.common.AttributesMixinMetaValue;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
@@ -24,6 +27,8 @@ import ru.citeck.ecos.records2.utils.RecordsUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -50,10 +55,12 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected PredicateService predicateService;
     protected RecordsMetaService recordsMetaService;
     protected RecordsMetaGql recordsMetaGql;
+    protected MetaValuesConverter metaValuesConverter;
 
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     private boolean addSourceId = true;
+    private List<AttributesMixin<?>> mixins = new ArrayList<>();
 
     {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -202,7 +209,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         }
 
         if (!rawMetaValues.isEmpty()) {
-            queryResult.merge(recordsMetaService.getMeta(rawMetaValues, metaSchema));
+            queryResult.merge(getMetaImpl(rawMetaValues, metaSchema));
         }
 
         if (addSourceId) {
@@ -224,7 +231,9 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
             List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
             List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, metaField);
-            result = recordsMetaService.getMeta(metaValues, metaSchema);
+
+
+            result = getMetaImpl(metaValues, metaSchema);
 
         } else {
 
@@ -241,6 +250,22 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         return result;
     }
 
+    private RecordsResult<RecordMeta> getMetaImpl(List<?> records, String schema) {
+
+        if (mixins.isEmpty()) {
+            return recordsMetaService.getMeta(records, schema);
+        }
+
+        Map<Class<?>, Object> metaCache = new ConcurrentHashMap<>();
+
+        List<?> recordsWithMixin = records.stream()
+            .map(r -> metaValuesConverter.toMetaValue(records))
+            .map(r -> new AttributesMixinMetaValue(r, recordsMetaService, mixins, metaCache))
+            .collect(Collectors.toList());
+
+        return recordsMetaService.getMeta(recordsWithMixin, schema);
+    }
+
     protected void writeWarn(String msg) {
         log.warn(toString() + ": " + msg);
     }
@@ -251,6 +276,11 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         predicateService = serviceFactory.getPredicateService();
         recordsMetaService = serviceFactory.getRecordsMetaService();
         recordsMetaGql = serviceFactory.getRecordsMetaGql();
+        metaValuesConverter = serviceFactory.getMetaValuesConverter();
+    }
+
+    public void addAttributesMixin(AttributesMixin<?> mixin) {
+        this.mixins.add(mixin);
     }
 
     @Override

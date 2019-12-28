@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,34 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             schema = "id";
         }
         return new RecordsResult<>(graphQLService.getMeta(records, schema));
+    }
+
+    @Override
+    public <T> T getMeta(Object record, Class<T> metaClass) {
+
+        RecordsResult<T> meta = getMeta(Collections.singletonList(record), metaClass);
+        ErrorUtils.logErrors(meta);
+
+        if (meta.getRecords().isEmpty()) {
+            throw new IllegalStateException("Meta can't be received for record "
+                                            + record + " and metaClass: " + metaClass);
+        }
+
+        return meta.getRecords().get(0);
+    }
+
+    @Override
+    public <T> RecordsResult<T> getMeta(List<?> records, Class<T> metaClass) {
+
+        Map<String, String> attributes = getAttributes(metaClass);
+        if (attributes.isEmpty()) {
+            log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
+        }
+        AttributesSchema schema = createSchema(attributes);
+        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
+        meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
+
+        return new RecordsResult<>(meta, m -> instantiateMeta(metaClass, m));
     }
 
     @Override

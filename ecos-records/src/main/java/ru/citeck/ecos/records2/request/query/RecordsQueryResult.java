@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.request.query;
 
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,6 +56,12 @@ public class RecordsQueryResult<T> extends RecordsResult<T> {
 
     public void setTotalCount(long totalCount) {
         this.totalCount = totalCount;
+    }
+
+    public static <T> RecordsQueryResult<T> of(T... values) {
+        RecordsQueryResult<T> result = new RecordsQueryResult<>();
+        result.setRecords(Arrays.asList(values));
+        return result;
     }
 
     @Override

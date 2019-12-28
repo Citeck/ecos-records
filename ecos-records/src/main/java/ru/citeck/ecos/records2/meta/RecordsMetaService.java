@@ -17,4 +17,8 @@ public interface RecordsMetaService {
     List<RecordMeta> convertMetaResult(List<RecordMeta> nodes, AttributesSchema schema, boolean flat);
 
     RecordsResult<RecordMeta> getMeta(List<?> records, String schema);
+
+    <T> RecordsResult<T> getMeta(List<?> records, Class<T> metaClass);
+
+    <T> T getMeta(Object record, Class<T> metaClass);
 }

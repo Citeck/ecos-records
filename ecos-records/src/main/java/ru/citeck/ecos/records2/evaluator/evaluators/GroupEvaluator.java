@@ -2,12 +2,12 @@ package ru.citeck.ecos.records2.evaluator.evaluators;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceAware;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -15,11 +15,10 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class GroupEvaluator implements RecordEvaluator<Map<String, String>, ObjectNode, GroupEvaluator.Config>,
-                                       RecordEvaluatorServiceAware {
+                                       ServiceFactoryAware {
 
     public static final String TYPE = "group";
 
-    @Setter
     private RecordEvaluatorService recordEvaluatorService;
 
     @Override
@@ -39,7 +38,7 @@ public class GroupEvaluator implements RecordEvaluator<Map<String, String>, Obje
     }
 
     @Override
-    public Map<String, String> getRequiredMeta(Config config) {
+    public Map<String, String> getMetaToRequest(Config config) {
 
         Set<String> atts = new HashSet<>();
 
@@ -57,18 +56,13 @@ public class GroupEvaluator implements RecordEvaluator<Map<String, String>, Obje
     }
 
     @Override
-    public Class<ObjectNode> getEvalMetaType() {
-        return ObjectNode.class;
-    }
-
-    @Override
-    public Class<Config> getConfigType() {
-        return Config.class;
-    }
-
-    @Override
     public String getType() {
         return TYPE;
+    }
+
+    @Override
+    public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.recordEvaluatorService = serviceFactory.getRecordEvaluatorService();
     }
 
     @Data

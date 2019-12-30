@@ -20,23 +20,13 @@ public class HasPermissionEvaluator implements RecordEvaluator<Map<String, Strin
     }
 
     @Override
-    public Map<String, String> getRequiredMeta(Config config) {
+    public Map<String, String> getMetaToRequest(Config config) {
 
         if (StringUtils.isBlank(config.permission)) {
             throw new IllegalArgumentException("You need to specify a permission for evaluating. Config:" + config);
         }
 
         return Collections.singletonMap(HAS_PERM_PROP, String.format(PERMISSION_ATT_PATTERN, config.permission));
-    }
-
-    @Override
-    public Class<Config> getConfigType() {
-        return Config.class;
-    }
-
-    @Override
-    public Class<Meta> getEvalMetaType() {
-        return Meta.class;
     }
 
     @Override

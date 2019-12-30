@@ -5,7 +5,7 @@ package ru.citeck.ecos.records2.evaluator;
  *
  * @see RecordEvaluatorDto
  */
-public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
+public interface RecordEvaluator<ReqMetaT, ResMetaT, ConfigT> {
 
     /**
      * Get attributes which is required for Evaluator.
@@ -13,21 +13,7 @@ public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
      * @param config evaluator configuration
      * @return Map&lt;String, String&gt; or meta class instance or null if attributes is not required
      */
-    ReqMetaT getRequiredMeta(ConfigT config);
-
-    /**
-     * Meta type for conversion of received attributes. Used for type safety.
-
-     * @return DTO class or null
-     */
-    Class<EvalMetaT> getEvalMetaType();
-
-    /**
-     * Evaluator config type. Used for type safety.
-     *
-     * @return config class or null
-     */
-    Class<ConfigT> getConfigType();
+    ReqMetaT getMetaToRequest(ConfigT config);
 
     /**
      * Evaluate result by meta and config.
@@ -35,7 +21,7 @@ public interface RecordEvaluator<ReqMetaT, EvalMetaT, ConfigT> {
      * @param meta metadata received from recordRef
      * @param config evaluator config
      */
-    boolean evaluate(EvalMetaT meta, ConfigT config);
+    boolean evaluate(ResMetaT meta, ConfigT config);
 
     /**
      * Get evaluator type.

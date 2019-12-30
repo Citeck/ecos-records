@@ -25,7 +25,7 @@ public class HasAttributeEvaluator implements RecordEvaluator<Map<String, Object
     }
 
     @Override
-    public Map<String, Object> getRequiredMeta(Config config) {
+    public Map<String, Object> getMetaToRequest(Config config) {
 
         if (StringUtils.isBlank(config.attribute)) {
             throw new IllegalArgumentException("You need to specify a attribute, for evaluating. Config:"
@@ -33,16 +33,6 @@ public class HasAttributeEvaluator implements RecordEvaluator<Map<String, Object
         }
 
         return Collections.singletonMap(HAS_ATT_META_FIELD, String.format(HAS_ATTRIBUTE_PATTERN, config.attribute));
-    }
-
-    @Override
-    public Class<Meta> getEvalMetaType() {
-        return Meta.class;
-    }
-
-    @Override
-    public Class<Config> getConfigType() {
-        return Config.class;
     }
 
     @Data

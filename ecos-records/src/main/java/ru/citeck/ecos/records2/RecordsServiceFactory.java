@@ -6,6 +6,7 @@ import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
+import ru.citeck.ecos.records2.evaluator.evaluators.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
@@ -53,8 +54,16 @@ public class RecordsServiceFactory {
     private List<GqlTypeDefinition> gqlTypes;
 
     public final synchronized RecordEvaluatorService getRecordEvaluatorService() {
+
         if (recordEvaluatorService == null) {
+
             recordEvaluatorService = createRecordEvaluatorService();
+
+            recordEvaluatorService.register(new AlwaysTrueEvaluator());
+            recordEvaluatorService.register(new AlwaysFalseEvaluator());
+            recordEvaluatorService.register(new HasAttributeEvaluator());
+            recordEvaluatorService.register(new HasPermissionEvaluator());
+            recordEvaluatorService.register(new GroupEvaluator());
         }
         return recordEvaluatorService;
     }

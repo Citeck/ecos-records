@@ -6,11 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.evaluator.evaluators.*;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -24,20 +20,16 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     private RecordsService recordsService;
     private RecordsMetaService recordsMetaService;
 
-    private Map<String, RecordEvaluator> evaluators = new ConcurrentHashMap<>();
+    private Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 
     private ObjectMapper objectMapper = new ObjectMapper();
+    private RecordsServiceFactory factory;
 
     public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
 
+        this.factory = factory;
         recordsService = factory.getRecordsService();
         recordsMetaService = factory.getRecordsMetaService();
-
-        register(new AlwaysTrueEvaluator());
-        register(new AlwaysFalseEvaluator());
-        register(new HasAttributeEvaluator());
-        register(new HasPermissionEvaluator());
-        register(new GroupEvaluator());
     }
 
     @Override
@@ -101,11 +93,10 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     @Override
     public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, ObjectNode fullRecordMeta) {
 
-        @SuppressWarnings("unchecked")
-        RecordEvaluator<Object, Object, Object> evaluator =
-            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getType());
+        ParameterizedRecordEvaluator evaluator = this.evaluators.get(evalDto.getType());
 
         if (evaluator == null) {
+            log.warn("Evaluator doesn't found for type " + evalDto.getType() + ". Return false.");
             return false;
         }
 
@@ -122,7 +113,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             evaluatorMeta.set(k, value);
         });
 
-        Object requiredMeta = treeToValue(evaluatorMeta, evaluator.getEvalMetaType());
+        Object requiredMeta = treeToValue(evaluatorMeta, evaluator.getResMetaType());
 
         try {
             boolean result = evaluator.evaluate(requiredMeta, config);
@@ -144,9 +135,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     @Override
     public Map<String, String> getRequiredMetaAttributes(RecordEvaluatorDto evalDto) {
 
-        @SuppressWarnings("unchecked")
-        RecordEvaluator<Object, Object, Object> evaluator =
-            (RecordEvaluator<Object, Object, Object>) this.evaluators.get(evalDto.getType());
+        ParameterizedRecordEvaluator evaluator = this.evaluators.get(evalDto.getType());
 
         if (evaluator == null) {
             log.error("Evaluator with type " + evalDto.getType() + " is not found!");
@@ -157,11 +146,13 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         try {
 
             Object configObj = treeToValue(evalDto.getConfig(), evaluator.getConfigType());
-            Object requiredMeta = evaluator.getRequiredMeta(configObj);
+            Object requiredMeta = evaluator.getMetaToRequest(configObj);
 
             if (requiredMeta != null) {
                 if (requiredMeta instanceof Map) {
-                    attributes = (Map<String, String>) requiredMeta;
+                    @SuppressWarnings("unchecked")
+                    Map<String, String> typedAttributes = (Map<String, String>) requiredMeta;
+                    attributes = typedAttributes;
                 } else {
                     attributes = recordsMetaService.getAttributes(requiredMeta.getClass());
                 }
@@ -178,7 +169,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         return attributes;
     }
 
-    private Object treeToValue(JsonNode treeValue, Class<Object> type) {
+    private Object treeToValue(JsonNode treeValue, Class<?> type) {
         Object instance = null;
         if (type != null) {
             if (type.isAssignableFrom(ObjectNode.class) && treeValue instanceof ObjectNode) {
@@ -210,10 +201,10 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     @Override
     public void register(RecordEvaluator<?, ?, ?> evaluator) {
-        evaluators.put(evaluator.getType(), evaluator);
+        evaluators.put(evaluator.getType(), new ParameterizedRecordEvaluator(evaluator));
 
-        if (evaluator instanceof RecordEvaluatorServiceAware) {
-            ((RecordEvaluatorServiceAware) evaluator).setRecordEvaluatorService(this);
+        if (evaluator instanceof ServiceFactoryAware) {
+            ((ServiceFactoryAware) evaluator).setRecordsServiceFactory(factory);
         }
     }
 }

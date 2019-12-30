@@ -16,6 +16,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
 import ru.citeck.ecos.records2.source.common.AttributesMixinMetaValue;
+import ru.citeck.ecos.records2.source.common.ParameterizedAttsMixin;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
@@ -60,7 +61,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     private boolean addSourceId = true;
-    private List<AttributesMixin<?>> mixins = new ArrayList<>();
+    private List<ParameterizedAttsMixin> mixins = new ArrayList<>();
 
     {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -256,10 +257,10 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
             return recordsMetaService.getMeta(records, schema);
         }
 
-        Map<Class<?>, Object> metaCache = new ConcurrentHashMap<>();
+        Map<Object, Object> metaCache = new ConcurrentHashMap<>();
 
         List<?> recordsWithMixin = records.stream()
-            .map(r -> metaValuesConverter.toMetaValue(records))
+            .map(r -> metaValuesConverter.toMetaValue(r))
             .map(r -> new AttributesMixinMetaValue(r, recordsMetaService, mixins, metaCache))
             .collect(Collectors.toList());
 
@@ -279,8 +280,20 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
     }
 
-    public void addAttributesMixin(AttributesMixin<?> mixin) {
-        this.mixins.add(mixin);
+    public void addAttributesMixin(AttributesMixin<?, ?> mixin) {
+        this.mixins.add(new ParameterizedAttsMixin(mixin));
+    }
+
+    /**
+     * Remove attributes mixin by reference equality.
+     */
+    public void removeAttributesMixin(AttributesMixin<?, ?> mixin) {
+        AttributesMixin<Object, Object> typedMixin = (AttributesMixin<Object, Object>) mixin;
+        for (int i = this.mixins.size() - 1; i >= 0; i--) {
+            if (this.mixins.get(i).getImpl() == typedMixin) {
+                this.mixins.remove(i);
+            }
+        }
     }
 
     @Override

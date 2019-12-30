@@ -21,7 +21,9 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,10 +77,28 @@ public class AttributesMixinTest extends LocalRecordsDAO
         assertEquals(NullNode.getInstance(), meta.get(strAtt));
         assertEquals(NullNode.getInstance(), meta.get(intAtt));
 
-        addAttributesMixin(new Mixin());
+        MixinWithDto mixinWithDto = new MixinWithDto();
+        addAttributesMixin(mixinWithDto);
 
-        result = recordsService.queryRecords(query, mixinAtts);
-        meta = result.getRecords().get(0);
+        checkValidComputedAttributes();
+        removeAttributesMixin(mixinWithDto);
+
+        addAttributesMixin(new MixinWithMap());
+        checkValidComputedAttributes();
+    }
+
+    private void checkValidComputedAttributes() {
+
+        RecordsQuery query = new RecordsQuery();
+        query.setSourceId(ID);
+
+        String intAtt = intFieldsSumName + "?num";
+        String strAtt = strFieldValueWithPrefixName;
+
+        List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
+
+        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
+        RecordMeta meta = result.getRecords().get(0);
 
         assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
         assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
@@ -128,7 +148,37 @@ public class AttributesMixinTest extends LocalRecordsDAO
         private int intField1;
     }
 
-    public static class Mixin implements AttributesMixin<MixinMeta> {
+    public static class MixinWithMap implements AttributesMixin<Map<String, String>, RecordMeta> {
+
+        @Override
+        public boolean hasAttribute(String attribute) {
+            return MixinWithDto.atts.contains(attribute);
+        }
+
+        @Override
+        public Object getAttribute(String attribute, RecordMeta meta, MetaField field) {
+            switch (attribute) {
+                case strFieldValueWithPrefixName:
+                    return strFieldPrefixValue + meta.getStringOrNull("strField");
+                case intFieldsSumName:
+                    return meta.get("intField0", 0.0) + meta.get("intField1", 0.0);
+            }
+            return null;
+        }
+
+        @Override
+        public Map<String, String> getMetaToRequest() {
+
+            Map<String, String> res = new HashMap<>();
+            res.put("intField0", "intField0");
+            res.put("intField1", "intField1");
+            res.put("strField", "strField");
+
+            return res;
+        }
+    }
+
+    public static class MixinWithDto implements AttributesMixin<MixinMeta, MixinMeta> {
 
         private static final List<String> atts = Arrays.asList(strFieldValueWithPrefixName, intFieldsSumName);
 
@@ -149,8 +199,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
 
         @Override
-        public Class<MixinMeta> getRequiredMetaType() {
-            return MixinMeta.class;
+        public MixinMeta getMetaToRequest() {
+            return new MixinMeta();
         }
     }
 }

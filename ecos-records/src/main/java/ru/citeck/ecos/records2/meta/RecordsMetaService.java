@@ -20,5 +20,9 @@ public interface RecordsMetaService {
 
     <T> RecordsResult<T> getMeta(List<?> records, Class<T> metaClass);
 
+    RecordMeta getMeta(Object record, Map<String, String> attributes);
+
+    RecordsResult<RecordMeta> getMeta(List<?> records, Map<String, String> attributes);
+
     <T> T getMeta(Object record, Class<T> metaClass);
 }

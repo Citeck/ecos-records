@@ -169,18 +169,8 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
     }
 
     @Override
-    public RequiredMeta getRequiredMeta(Object o) {
+    public RequiredMeta getMetaToRequest(Object o) {
         return new RequiredMeta();
-    }
-
-    @Override
-    public Class<RequiredMeta> getEvalMetaType() {
-        return RequiredMeta.class;
-    }
-
-    @Override
-    public Class<Object> getConfigType() {
-        return null;
     }
 
     @Override

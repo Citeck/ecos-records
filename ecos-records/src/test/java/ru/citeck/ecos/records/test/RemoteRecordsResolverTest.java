@@ -42,7 +42,7 @@ class RemoteRecordsResolverTest {
 
         @Override
         public RecordsResolver createRecordsResolver() {
-            RemoteRecordsResolver resolver = new RemoteRecordsResolver(connection);
+            RemoteRecordsResolver resolver = new RemoteRecordsResolver(this, connection);
             resolver.setDefaultAppName(DEFAULT_APP);
             return resolver;
         }

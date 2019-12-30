@@ -60,11 +60,36 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         if (attributes.isEmpty()) {
             log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
+        RecordsResult<RecordMeta> meta = getMeta(records, attributes);
+        return new RecordsResult<>(meta, m -> instantiateMeta(metaClass, m));
+    }
+
+    @Override
+    public RecordMeta getMeta(Object record, Map<String, String> attributes) {
+
+        RecordsResult<RecordMeta> meta = getMeta(Collections.singletonList(record), attributes);
+        ErrorUtils.logErrors(meta);
+
+        if (meta.getRecords().isEmpty()) {
+            throw new IllegalStateException("Meta can't be received for record "
+                + record + " and attributes: " + attributes);
+        }
+
+        return meta.getRecords().get(0);
+    }
+
+    @Override
+    public RecordsResult<RecordMeta> getMeta(List<?> records, Map<String, String> attributes) {
+
+        if (attributes.isEmpty()) {
+            throw new IllegalArgumentException("Attributes is empty. Records: " + records);
+        }
+
         AttributesSchema schema = createSchema(attributes);
         RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
         meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
 
-        return new RecordsResult<>(meta, m -> instantiateMeta(metaClass, m));
+        return meta;
     }
 
     @Override

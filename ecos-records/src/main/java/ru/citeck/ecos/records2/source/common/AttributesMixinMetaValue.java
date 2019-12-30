@@ -1,27 +1,27 @@
 package ru.citeck.ecos.records2.source.common;
 
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
-    private List<AttributesMixin<Object>> mixins;
+    private List<ParameterizedAttsMixin> mixins;
     private RecordsMetaService recordsMetaService;
-    private Map<Class<?>, Object> metaCache;
+    private Map<Object, Object> metaCache;
 
     public AttributesMixinMetaValue(MetaValue impl,
                                     RecordsMetaService recordsMetaService,
-                                    List<AttributesMixin<?>> mixins,
-                                    Map<Class<?>, Object> metaCache) {
+                                    List<ParameterizedAttsMixin> mixins,
+                                    Map<Object, Object> metaCache) {
         super(impl);
-        @SuppressWarnings("unchecked")
-        List<AttributesMixin<Object>> typedMixins = (List<AttributesMixin<Object>>) (List<?>) mixins;
-        this.mixins = typedMixins;
+        this.mixins = mixins;
         this.metaCache = metaCache;
         this.recordsMetaService = recordsMetaService;
     }
@@ -29,17 +29,34 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     @Override
     public Object getAttribute(String name, MetaField field) throws Exception {
 
-        for (AttributesMixin<Object> mixin : mixins) {
+        for (ParameterizedAttsMixin mixin : mixins) {
             if (mixin.hasAttribute(name)) {
 
-                Class<?> metaType = mixin.getRequiredMetaType();
+                Object metaToRequest = mixin.getMetaToRequest();
+                Class<?> resMetaType = mixin.getResMetaType();
 
-                if (metaType == null) {
+                if (metaToRequest == null || resMetaType == null) {
                     return mixin.getAttribute(name, null, field);
                 }
 
-                Object requiredMeta = metaCache.computeIfAbsent(metaType, t ->
-                    recordsMetaService.getMeta(this, t));
+                if (metaToRequest instanceof Map) {
+                    metaToRequest = new HashMap<>((Map<?, ?>) metaToRequest);
+                }
+
+                Object requiredMeta = metaCache.computeIfAbsent(metaToRequest, reqMeta -> {
+
+                    if (reqMeta instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, String> attributes = (Map<String, String>) reqMeta;
+                        RecordMeta resMeta = recordsMetaService.getMeta(this, attributes);
+                        if (resMetaType.isAssignableFrom(RecordMeta.class)) {
+                            return resMeta;
+                        }
+                        return recordsMetaService.instantiateMeta(resMetaType, resMeta);
+                    } else {
+                        return recordsMetaService.getMeta(this, reqMeta.getClass());
+                    }
+                });
 
                 return mixin.getAttribute(name, requiredMeta, field);
             }

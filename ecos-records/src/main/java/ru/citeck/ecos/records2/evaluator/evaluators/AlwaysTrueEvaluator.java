@@ -12,17 +12,7 @@ public class AlwaysTrueEvaluator implements RecordEvaluator<Object, Object, Obje
     }
 
     @Override
-    public Object getRequiredMeta(Object config) {
-        return null;
-    }
-
-    @Override
-    public Class<Object> getEvalMetaType() {
-        return null;
-    }
-
-    @Override
-    public Class<Object> getConfigType() {
+    public Object getMetaToRequest(Object config) {
         return null;
     }
 

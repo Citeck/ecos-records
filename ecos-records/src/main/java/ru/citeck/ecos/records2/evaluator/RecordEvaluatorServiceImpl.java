@@ -75,14 +75,14 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         for (int i = 0; i < recordRefs.size(); i++) {
             RecordMeta meta = recordsMeta.get(i);
-            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta.getAttributes());
+            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta);
             evalResultsByRecord.put(recordRefs.get(i), evalResult);
         }
 
         return evalResultsByRecord;
     }
 
-    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, ObjectNode meta) {
+    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, RecordMeta meta) {
         List<Boolean> result = new ArrayList<>();
         for (int i = 0; i < evaluators.size(); i++) {
             result.add(evaluateWithMeta(evaluators.get(i), meta));
@@ -91,7 +91,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     }
 
     @Override
-    public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, ObjectNode fullRecordMeta) {
+    public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta) {
 
         ParameterizedRecordEvaluator evaluator = this.evaluators.get(evalDto.getType());
 
@@ -106,14 +106,24 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         ObjectNode evaluatorMeta = JsonNodeFactory.instance.objectNode();
         metaAtts.forEach((k, v) -> {
-            JsonNode value = fullRecordMeta.path(v);
+            JsonNode value = fullRecordMeta.get(v);
             if (value.isMissingNode()) {
                 value = NullNode.getInstance();
             }
             evaluatorMeta.set(k, value);
         });
 
-        Object requiredMeta = treeToValue(evaluatorMeta, evaluator.getResMetaType());
+        Class<?> resMetaType = evaluator.getResMetaType();
+        Object requiredMeta;
+        if (resMetaType == null) {
+            requiredMeta = null;
+        } else if (resMetaType.isAssignableFrom(RecordMeta.class)) {
+            RecordMeta meta = new RecordMeta(fullRecordMeta.getId());
+            meta.setAttributes(evaluatorMeta);
+            requiredMeta = meta;
+        } else {
+            requiredMeta = treeToValue(evaluatorMeta, evaluator.getResMetaType());
+        }
 
         try {
             boolean result = evaluator.evaluate(requiredMeta, config);

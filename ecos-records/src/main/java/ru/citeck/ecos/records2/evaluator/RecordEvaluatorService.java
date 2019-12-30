@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.evaluator;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public interface RecordEvaluatorService {
 
     Map<String, String> getRequiredMetaAttributes(RecordEvaluatorDto evalDto);
 
-    boolean evaluateWithMeta(RecordEvaluatorDto evalDto, ObjectNode metaNode);
+    boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta);
 
     void register(RecordEvaluator<?, ?, ?> evaluator);
 }

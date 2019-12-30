@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2.evaluator.evaluators;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Slf4j
-public class GroupEvaluator implements RecordEvaluator<Map<String, String>, ObjectNode, GroupEvaluator.Config>,
+public class GroupEvaluator implements RecordEvaluator<Map<String, String>, RecordMeta, GroupEvaluator.Config>,
                                        ServiceFactoryAware {
 
     public static final String TYPE = "group";
@@ -22,7 +22,7 @@ public class GroupEvaluator implements RecordEvaluator<Map<String, String>, Obje
     private RecordEvaluatorService recordEvaluatorService;
 
     @Override
-    public boolean evaluate(ObjectNode meta, Config config) {
+    public boolean evaluate(RecordMeta meta, Config config) {
 
         Stream<RecordEvaluatorDto> evaluators = config.getEvaluators().stream();
         Predicate<RecordEvaluatorDto> predicate = evaluator -> recordEvaluatorService.evaluateWithMeta(evaluator, meta);

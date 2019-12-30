@@ -153,6 +153,8 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
                     @SuppressWarnings("unchecked")
                     Map<String, String> typedAttributes = (Map<String, String>) requiredMeta;
                     attributes = typedAttributes;
+                } else if (requiredMeta instanceof Class) {
+                    attributes = recordsMetaService.getAttributes((Class<?>) requiredMeta);
                 } else {
                     attributes = recordsMetaService.getAttributes(requiredMeta.getClass());
                 }

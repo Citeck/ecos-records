@@ -138,16 +138,6 @@ public class AttributesMixinTest extends LocalRecordsDAO
         private int intField1 = intField1Value;
     }
 
-    @Data
-    public static class MixinMeta {
-
-        @MetaAtt("strField")
-        private String str;
-
-        private int intField0;
-        private int intField1;
-    }
-
     public static class MixinWithMap implements AttributesMixin<Map<String, String>, RecordMeta> {
 
         @Override
@@ -178,7 +168,7 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
     }
 
-    public static class MixinWithDto implements AttributesMixin<MixinMeta, MixinMeta> {
+    public static class MixinWithDto implements AttributesMixin<Class<MixinWithDto.MixinMeta>, MixinWithDto.MixinMeta> {
 
         private static final List<String> atts = Arrays.asList(strFieldValueWithPrefixName, intFieldsSumName);
 
@@ -199,8 +189,18 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
 
         @Override
-        public MixinMeta getMetaToRequest() {
-            return new MixinMeta();
+        public Class<MixinMeta> getMetaToRequest() {
+            return MixinMeta.class;
+        }
+
+        @Data
+        public static class MixinMeta {
+
+            @MetaAtt("strField")
+            private String str;
+
+            private int intField0;
+            private int intField1;
         }
     }
 }

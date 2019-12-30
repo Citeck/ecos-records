@@ -53,6 +53,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                             return resMeta;
                         }
                         return recordsMetaService.instantiateMeta(resMetaType, resMeta);
+                    } else if (reqMeta instanceof Class) {
+                        return recordsMetaService.getMeta(this, (Class<?>) reqMeta);
                     } else {
                         return recordsMetaService.getMeta(this, reqMeta.getClass());
                     }

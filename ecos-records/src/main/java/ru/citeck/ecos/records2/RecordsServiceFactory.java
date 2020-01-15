@@ -59,11 +59,12 @@ public class RecordsServiceFactory {
 
             recordEvaluatorService = createRecordEvaluatorService();
 
+            recordEvaluatorService.register(new GroupEvaluator());
+            recordEvaluatorService.register(new PredicateEvaluator());
             recordEvaluatorService.register(new AlwaysTrueEvaluator());
             recordEvaluatorService.register(new AlwaysFalseEvaluator());
             recordEvaluatorService.register(new HasAttributeEvaluator());
             recordEvaluatorService.register(new HasPermissionEvaluator());
-            recordEvaluatorService.register(new GroupEvaluator());
         }
         return recordEvaluatorService;
     }

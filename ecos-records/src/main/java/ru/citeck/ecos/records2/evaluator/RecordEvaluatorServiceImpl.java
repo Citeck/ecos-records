@@ -26,7 +26,6 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     private RecordsServiceFactory factory;
 
     public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
-
         this.factory = factory;
         recordsService = factory.getRecordsService();
         recordsMetaService = factory.getRecordsMetaService();
@@ -84,8 +83,8 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, RecordMeta meta) {
         List<Boolean> result = new ArrayList<>();
-        for (int i = 0; i < evaluators.size(); i++) {
-            result.add(evaluateWithMeta(evaluators.get(i), meta));
+        for (RecordEvaluatorDto evaluator : evaluators) {
+            result.add(evaluateWithMeta(evaluator, meta));
         }
         return result;
     }
@@ -159,7 +158,13 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             Object requiredMeta = evaluator.getMetaToRequest(configObj);
 
             if (requiredMeta != null) {
-                if (requiredMeta instanceof Map) {
+                if (requiredMeta instanceof Collection) {
+                    @SuppressWarnings("unchecked")
+                    Collection<String> typedAttributes = (Collection<String>) requiredMeta;
+                    Map<String, String> attributesMap = new HashMap<>();
+                    typedAttributes.forEach(att -> attributesMap.put(att, att));
+                    attributes = attributesMap;
+                } else if (requiredMeta instanceof Map) {
                     @SuppressWarnings("unchecked")
                     Map<String, String> typedAttributes = (Map<String, String>) requiredMeta;
                     attributes = typedAttributes;

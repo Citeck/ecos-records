@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.predicate.model.Predicate;
+import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
+import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
@@ -126,6 +129,53 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         );
 
         assertTrue(evaluatorsService.evaluate(meta0Ref, groupEvaluator));
+
+        evaluatorDto = toEvaluatorDto(Predicates.eq("field0", "field0"));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.and(
+            Predicates.eq("field0", "field0"),
+            Predicates.eq("field1", "field1")
+        ));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.eq("intField2", 10));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.gt("intField2", 10));
+        assertFalse(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.ge("intField2", 10));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.le("intField2", 10));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.gt("intField2", 5));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        evaluatorDto = toEvaluatorDto(Predicates.lt("intField2", 15));
+        assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
+        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+    }
+
+    private RecordEvaluatorDto toEvaluatorDto(Predicate predicate) {
+
+        RecordEvaluatorDto predicateEvaluator = new RecordEvaluatorDto();
+        predicateEvaluator.setType(PredicateEvaluator.TYPE);
+
+        PredicateEvaluator.Config config = new PredicateEvaluator.Config();
+        config.setPredicate(predicateService.writeJson(predicate));
+
+        predicateEvaluator.setConfig(objectMapper.valueToTree(config));
+        return predicateEvaluator;
     }
 
     private RecordEvaluatorDto groupEvaluator(GroupEvaluator.JoinType joinType, RecordEvaluatorDto... evaluators) {
@@ -195,6 +245,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
 
         private String field0 = "field0";
         private String field1 = "field1";
+        private int intField2 = 10;
     }
 
     @Data

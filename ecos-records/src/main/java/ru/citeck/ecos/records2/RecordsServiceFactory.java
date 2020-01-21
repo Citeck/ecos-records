@@ -53,24 +53,38 @@ public class RecordsServiceFactory {
 
     private List<GqlTypeDefinition> gqlTypes;
 
+    private RecordEvaluatorService tmpEvaluatorsService;
+
     public final synchronized RecordEvaluatorService getRecordEvaluatorService() {
-
         if (recordEvaluatorService == null) {
-
-            recordEvaluatorService = createRecordEvaluatorService();
-
-            recordEvaluatorService.register(new GroupEvaluator());
-            recordEvaluatorService.register(new PredicateEvaluator());
-            recordEvaluatorService.register(new AlwaysTrueEvaluator());
-            recordEvaluatorService.register(new AlwaysFalseEvaluator());
-            recordEvaluatorService.register(new HasAttributeEvaluator());
-            recordEvaluatorService.register(new HasPermissionEvaluator());
+            if (tmpEvaluatorsService != null) {
+                recordEvaluatorService = tmpEvaluatorsService;
+            } else {
+                recordEvaluatorService = createRecordEvaluatorService();
+            }
         }
         return recordEvaluatorService;
     }
 
     protected RecordEvaluatorService createRecordEvaluatorService() {
-        return new RecordEvaluatorServiceImpl(this);
+
+        if (tmpEvaluatorsService != null) {
+            return tmpEvaluatorsService;
+        }
+
+        RecordEvaluatorService service = new RecordEvaluatorServiceImpl(this);
+        tmpEvaluatorsService = service;
+
+        service.register(new GroupEvaluator());
+        service.register(new PredicateEvaluator());
+        service.register(new AlwaysTrueEvaluator());
+        service.register(new AlwaysFalseEvaluator());
+        service.register(new HasAttributeEvaluator());
+        service.register(new HasPermissionEvaluator());
+
+        tmpEvaluatorsService = null;
+
+        return service;
     }
 
     public final synchronized RecordsService getRecordsService() {

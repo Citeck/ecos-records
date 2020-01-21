@@ -248,6 +248,8 @@ public interface RecordsService {
      */
     RecordsMutResult mutate(RecordsMutation mutation);
 
+    RecordMeta mutate(RecordMeta meta);
+
     /**
      * Delete records.
      */

@@ -36,6 +36,10 @@ public class RecordsMutation {
         }
     }
 
+    public void addRecord(RecordMeta meta) {
+        this.records.add(meta);
+    }
+
     public boolean isDebug() {
         return debug;
     }

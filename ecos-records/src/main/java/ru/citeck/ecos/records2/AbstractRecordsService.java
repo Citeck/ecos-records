@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
+import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -180,6 +183,23 @@ public abstract class AbstractRecordsService implements RecordsService {
     @Override
     public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
         return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
+    }
+
+    /* MUTATE */
+
+    @Override
+    public RecordMeta mutate(RecordMeta meta) {
+
+        RecordsMutation mutation = new RecordsMutation();
+        mutation.addRecord(meta);
+        RecordsMutResult result = this.mutate(mutation);
+
+        ErrorUtils.logErrors(result);
+
+        return result.getRecords()
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Record mutation failed. Meta: " + meta));
     }
 
     /* UTILS */

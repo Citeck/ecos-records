@@ -17,6 +17,7 @@ public final class RecordConstants {
     public static final String ATT_MODIFIER = "_modifier";
     public static final String ATT_CONTENT = "_content";
     public static final String ATT_ACTIONS = "_actions";
+    public static final String ATT_NOT_EXISTS = "_notExists";
 
     public static final String FORM_MODE_CREATE = "CREATE";
     public static final String FORM_MODE_EDIT = "EDIT";

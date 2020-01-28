@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Unique identifier of a record.
  */
-public class RecordRef {
+public class RecordRef implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final RecordRef EMPTY = new RecordRef();
 

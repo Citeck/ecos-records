@@ -22,6 +22,10 @@ public class MetaValuesConverter {
     @SuppressWarnings("unchecked")
     public MetaValue toMetaValue(Object value) {
 
+        if (value instanceof MetaValue) {
+            return (MetaValue) value;
+        }
+
         MetaValueFactory<Object> factory = valueFactories.get(value.getClass());
         if (factory == null) {
             factory = valueFactories.get(Object.class);

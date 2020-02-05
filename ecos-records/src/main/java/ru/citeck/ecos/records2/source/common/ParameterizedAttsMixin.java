@@ -28,8 +28,8 @@ public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
     }
 
     @Override
-    public boolean hasAttribute(String attribute) {
-        return impl.hasAttribute(attribute);
+    public List<String> getAttributesList() {
+        return impl.getAttributesList();
     }
 
     @Override

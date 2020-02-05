@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test.local;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -13,6 +14,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
@@ -20,10 +22,7 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +34,7 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
     private static final String ID = "mixinSourceId";
     private static final String REC_ID = "rec-id";
+    private static final String REC_META_VALUE_ID = "rec-meta-value-id";
 
     private static final String strFieldValue = "value";
     private static final String strFieldPrefixValue = "prefix-";
@@ -45,6 +45,11 @@ public class AttributesMixinTest extends LocalRecordsDAO
     private static final int intField1Value = 20;
     private static final int intFieldsSum = intField0Value + intField1Value;
     private static final String intFieldsSumName = "intFieldsSumName";
+
+    private static final String finalFieldValue = "some final value";
+    private static final String finalFieldName = "finalField";
+
+    private static final String recordRefAttName = "recId";
 
     private RecordsService recordsService;
 
@@ -85,6 +90,12 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         addAttributesMixin(new MixinWithMap());
         checkValidComputedAttributes();
+
+        addAttributesMixin(new MixinWithRecRef());
+        checkValidComputedAttributes();
+
+        JsonNode attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
+        assertEquals(TextNode.valueOf(REC_META_VALUE_ID), attValue);
     }
 
     private void checkValidComputedAttributes() {
@@ -95,23 +106,27 @@ public class AttributesMixinTest extends LocalRecordsDAO
         String intAtt = intFieldsSumName + "?num";
         String strAtt = strFieldValueWithPrefixName;
 
-        List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
+        List<String> mixinAtts = Arrays.asList(strAtt, intAtt, finalFieldName);
 
         RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
-        RecordMeta meta = result.getRecords().get(0);
 
-        assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
-        assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+        result.getRecords().forEach(meta -> {
 
-        meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
+            assertEquals(TextNode.valueOf(finalFieldValue), meta.get(finalFieldName));
 
-        assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
-        assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+            assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+
+            meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
+
+            assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+        });
     }
 
     @Override
     public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
-        return RecordsQueryResult.of(new Record());
+        return RecordsQueryResult.of(new Record(), new MetaValueRecord(REC_META_VALUE_ID));
     }
 
     @Override
@@ -119,6 +134,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
         return records.stream().map(r -> {
             if (REC_ID.equals(r.getId())) {
                 return new Record();
+            } else if (REC_META_VALUE_ID.equals(r.getId())) {
+                return new MetaValueRecord(REC_META_VALUE_ID);
             } else {
                 return new EmptyRecord();
             }
@@ -136,13 +153,62 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         private int intField0 = intField0Value;
         private int intField1 = intField1Value;
+        private String finalField = finalFieldValue;
+    }
+
+    public static class MetaValueRecord implements MetaValue {
+
+        private String id;
+
+        public MetaValueRecord(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public Object getAttribute(String name, MetaField field) throws Exception {
+
+            switch (name) {
+                case "strField": return strFieldValue;
+                case "intField0": return intField0Value;
+                case "intField1": return intField1Value;
+                case finalFieldName: return finalFieldValue;
+            }
+
+            return null;
+        }
+    }
+
+    public static class MixinWithRecRef implements AttributesMixin<Object, RecordRef> {
+
+        @Override
+        public List<String> getAttributesList() {
+            return Collections.singletonList(recordRefAttName);
+        }
+
+        @Override
+        public Object getAttribute(String attribute, RecordRef id, MetaField field) {
+            if (attribute.equals(recordRefAttName)) {
+                return id.toString();
+            }
+            return null;
+        }
+
+        @Override
+        public Object getMetaToRequest() {
+            return null;
+        }
     }
 
     public static class MixinWithMap implements AttributesMixin<Map<String, String>, RecordMeta> {
 
         @Override
-        public boolean hasAttribute(String attribute) {
-            return MixinWithDto.atts.contains(attribute);
+        public List<String> getAttributesList() {
+            return MixinWithDto.atts;
         }
 
         @Override
@@ -173,8 +239,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
         private static final List<String> atts = Arrays.asList(strFieldValueWithPrefixName, intFieldsSumName);
 
         @Override
-        public boolean hasAttribute(String attribute) {
-            return atts.contains(attribute);
+        public List<String> getAttributesList() {
+            return atts;
         }
 
         @Override

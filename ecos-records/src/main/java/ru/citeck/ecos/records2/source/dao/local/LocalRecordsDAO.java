@@ -26,9 +26,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -61,7 +59,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     private boolean addSourceId = true;
-    private List<ParameterizedAttsMixin> mixins = new ArrayList<>();
+    private Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
 
     {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -281,19 +279,36 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     }
 
     public void addAttributesMixin(AttributesMixin<?, ?> mixin) {
-        this.mixins.add(new ParameterizedAttsMixin(mixin));
+
+        ParameterizedAttsMixin paramMixin = new ParameterizedAttsMixin(mixin);
+
+        Set<String> atts = new HashSet(mixin.getAttributesList());
+        atts.forEach(a -> {
+            if (mixins.containsKey(a)) {
+                log.error("Mixin tries to replace existing attribute. "
+                        + "It's not allowed. Attribute: " + a + " mixin: " + mixin);
+            } else {
+                mixins.put(a, paramMixin);
+            }
+        });
+        new ParameterizedAttsMixin(mixin);
     }
 
     /**
      * Remove attributes mixin by reference equality.
      */
     public void removeAttributesMixin(AttributesMixin<?, ?> mixin) {
+
         AttributesMixin<Object, Object> typedMixin = (AttributesMixin<Object, Object>) mixin;
-        for (int i = this.mixins.size() - 1; i >= 0; i--) {
-            if (this.mixins.get(i).getImpl() == typedMixin) {
-                this.mixins.remove(i);
+
+        Set<String> attsToRemove = new HashSet<>();
+        mixin.getAttributesList().forEach(a -> {
+            ParameterizedAttsMixin parameterizedAttsMixin = mixins.get(a);
+            if (parameterizedAttsMixin != null && parameterizedAttsMixin.getImpl() == typedMixin) {
+                attsToRemove.add(a);
             }
-        }
+        });
+        attsToRemove.forEach(a -> mixins.remove(a));
     }
 
     @Override

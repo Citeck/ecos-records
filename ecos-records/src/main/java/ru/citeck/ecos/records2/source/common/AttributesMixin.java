@@ -2,6 +2,8 @@ package ru.citeck.ecos.records2.source.common;
 
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
+import java.util.List;
+
 /**
  * Custom attributes for any RecordsDao.
  *
@@ -10,7 +12,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
  */
 public interface AttributesMixin<ReqMetaT, ResMetaT> {
 
-    boolean hasAttribute(String attribute);
+    List<String> getAttributesList();
 
     Object getAttribute(String attribute, ResMetaT meta, MetaField field);
 

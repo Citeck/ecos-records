@@ -1,8 +1,8 @@
 package ru.citeck.ecos.predicate.json.std;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ru.citeck.ecos.predicate.model.Predicate;
 
 import java.util.List;

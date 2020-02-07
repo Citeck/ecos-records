@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 

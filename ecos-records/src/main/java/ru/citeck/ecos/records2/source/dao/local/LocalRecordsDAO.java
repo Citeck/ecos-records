@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.DeserializationFeature;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.records2.*;

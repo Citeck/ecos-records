@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ru.citeck.ecos.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.records2.RecordMeta;

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.predicate.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 
 import java.util.Collections;
 import java.util.List;

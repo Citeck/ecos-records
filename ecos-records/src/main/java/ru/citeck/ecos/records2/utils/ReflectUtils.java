@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.utils;
 
-import com.fasterxml.jackson.databind.type.TypeFactory;
+import ecos.com.fasterxml.jackson210.databind.type.TypeFactory;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.querylang;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 
 public class QueryWithLang {
 

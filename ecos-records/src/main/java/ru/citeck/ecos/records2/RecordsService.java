@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;

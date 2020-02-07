@@ -1,6 +1,6 @@
 package ru.citeck.ecos.predicate.conv;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ru.citeck.ecos.predicate.model.Predicate;
 
 public interface PredicateConverter {

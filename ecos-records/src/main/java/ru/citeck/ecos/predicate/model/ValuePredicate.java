@@ -1,8 +1,8 @@
 package ru.citeck.ecos.predicate.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
+import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonValue;
 
 import java.util.Arrays;
 import java.util.List;

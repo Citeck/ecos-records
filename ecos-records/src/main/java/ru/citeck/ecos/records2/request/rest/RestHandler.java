@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;

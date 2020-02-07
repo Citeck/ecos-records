@@ -1,7 +1,7 @@
 package ru.citeck.ecos.predicate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.predicate.model.*;
 

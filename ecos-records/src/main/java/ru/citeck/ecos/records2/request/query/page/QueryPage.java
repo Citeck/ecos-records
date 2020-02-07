@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.request.query.page;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ru.citeck.ecos.records2.RecordRef;
 
 public abstract class QueryPage {

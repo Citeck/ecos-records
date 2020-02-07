@@ -1,20 +1,24 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.util.ISO8601Utils;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
 
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@Slf4j
 public class RecordMeta {
 
     private RecordRef id = RecordRef.EMPTY;
@@ -114,7 +118,14 @@ public class RecordMeta {
     public Date getDateOrNull(String name) {
         String value = getAttribute(name, "");
         if (!value.isEmpty()) {
-            return ISO8601Utils.parse(value);
+            try {
+                Calendar calendar = DatatypeConverter.parseDateTime(value);
+                if (calendar != null) {
+                    return calendar.getTime();
+                }
+            } catch (Exception e) {
+                log.error("Date can't be parsed: '" + value + "'. Return null", e);
+            }
         }
         return null;
     }

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 
 import java.io.Serializable;
 import java.util.ArrayList;

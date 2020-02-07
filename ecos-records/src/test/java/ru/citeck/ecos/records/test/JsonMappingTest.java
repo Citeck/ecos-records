@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.request.error.RecordsError;
 

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.predicate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import ru.citeck.ecos.predicate.comparator.DefaultValueComparator;
 import ru.citeck.ecos.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.predicate.json.JsonConverter;

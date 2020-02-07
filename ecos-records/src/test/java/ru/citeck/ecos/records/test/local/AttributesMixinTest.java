@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records.test.local;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.DoubleNode;
+import ecos.com.fasterxml.jackson210.databind.node.NullNode;
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

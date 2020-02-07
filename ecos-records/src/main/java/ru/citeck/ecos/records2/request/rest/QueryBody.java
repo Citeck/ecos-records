@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.citeck.ecos.records2.RecordRef;

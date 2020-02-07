@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 

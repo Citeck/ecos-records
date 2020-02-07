@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.request.query.lang;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 
 public class DistinctQuery {
 

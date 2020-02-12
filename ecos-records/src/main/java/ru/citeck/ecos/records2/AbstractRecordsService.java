@@ -15,7 +15,6 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,7 +94,7 @@ public abstract class AbstractRecordsService implements RecordsService {
                                                          RecordsQuery query,
                                                          Function<RecordsQuery, RecordsQueryResult<T>> queryImpl) {
 
-        return withQueryContext(() -> {
+        return QueryContext.withContext(serviceFactory, () -> {
 
             RecordsQueryResult<List<T>> result = new RecordsQueryResult<>();
 
@@ -203,29 +202,6 @@ public abstract class AbstractRecordsService implements RecordsService {
     }
 
     /* UTILS */
-
-    <T> T withQueryContext(Supplier<T> callable) {
-
-        QueryContext context = QueryContext.getCurrent();
-        boolean isContextOwner = false;
-        if (context == null) {
-            context = serviceFactory.createQueryContext();
-            QueryContext.setCurrent(context);
-            isContextOwner = true;
-        }
-
-        T result;
-
-        try {
-            result = callable.get();
-        } finally {
-            if (isContextOwner) {
-                QueryContext.removeCurrent();
-            }
-        }
-
-        return result;
-    }
 
     private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
 

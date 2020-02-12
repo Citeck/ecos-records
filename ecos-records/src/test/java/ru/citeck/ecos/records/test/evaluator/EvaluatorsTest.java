@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records.test;
+package ru.citeck.ecos.records.test.evaluator;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;

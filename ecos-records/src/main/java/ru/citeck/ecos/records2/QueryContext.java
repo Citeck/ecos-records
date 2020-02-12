@@ -22,9 +22,33 @@ public class QueryContext {
         return (T) current.get();
     }
 
+    public static <T> T withContext(RecordsServiceFactory serviceFactory, Supplier<T> callable) {
+
+        QueryContext context = QueryContext.getCurrent();
+        boolean isContextOwner = false;
+        if (context == null) {
+            context = serviceFactory.createQueryContext();
+            QueryContext.setCurrent(context);
+            isContextOwner = true;
+        }
+
+        T result;
+
+        try {
+            result = callable.get();
+        } finally {
+            if (isContextOwner) {
+                QueryContext.removeCurrent();
+            }
+        }
+
+        return result;
+    }
+
     public static <T extends QueryContext> void setCurrent(T context) {
         current.set(context);
     }
+
 
     public static void removeCurrent() {
         current.remove();

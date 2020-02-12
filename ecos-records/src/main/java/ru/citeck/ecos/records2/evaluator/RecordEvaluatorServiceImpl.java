@@ -33,20 +33,34 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     @Override
     public boolean evaluate(RecordRef recordRef, RecordEvaluatorDto evaluator) {
+        return evaluate(recordRef, evaluator, Collections.emptyMap());
+    }
+
+    @Override
+    public boolean evaluate(RecordRef recordRef,
+                            RecordEvaluatorDto evaluator,
+                            Object model) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
         List<RecordRef> recordRefs = Collections.singletonList(recordRef);
 
-        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
+        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators, model);
         return evaluateResult.get(recordRef).get(0);
     }
 
     @Override
     public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs, RecordEvaluatorDto evaluator) {
+        return evaluate(recordRefs, evaluator, Collections.emptyMap());
+    }
+
+    @Override
+    public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs,
+                                            RecordEvaluatorDto evaluator,
+                                            Object model) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
 
-        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
+        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators, model);
         Map<RecordRef, Boolean> result = new HashMap<>();
 
         evaluateResult.forEach((ref, b) -> result.put(ref, b.get(0)));
@@ -55,16 +69,44 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     }
 
     @Override
-    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs, List<RecordEvaluatorDto> evaluators) {
+    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs,
+                                                  List<RecordEvaluatorDto> evaluators) {
+        return evaluate(recordRefs, evaluators, Collections.emptyMap());
+    }
+
+    @Override
+    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs,
+                                                  List<RecordEvaluatorDto> evaluators,
+                                                  Object model) {
+
+        if (model == null) {
+            model = Collections.emptyMap();
+        }
 
         List<Map<String, String>> metaAttributes = getRequiredMetaAttributes(evaluators);
         Set<String> attsToRequest = new HashSet<>();
 
         metaAttributes.forEach(atts -> attsToRequest.addAll(atts.values()));
 
+        Set<String> recordAttsToRequest = new HashSet<>();
+        Map<String, String> modelAttsToRequest = new HashMap<>();
+
+        attsToRequest.forEach(att -> {
+            if (att.charAt(0) == '$' || att.startsWith(".att(n:\"$") || att.startsWith(".atts(n:\"$")) {
+                modelAttsToRequest.put(att, att.replaceFirst("\\$", ""));
+            } else {
+                recordAttsToRequest.add(att);
+            }
+        });
+
+        RecordMeta modelMeta = null;
+        if (!modelAttsToRequest.isEmpty()) {
+            modelMeta = recordsMetaService.getMeta(model, modelAttsToRequest);
+        }
+
         List<RecordMeta> recordsMeta;
         if (!attsToRequest.isEmpty()) {
-            RecordsResult<RecordMeta> recordsRes = recordsService.getAttributes(recordRefs, attsToRequest);
+            RecordsResult<RecordMeta> recordsRes = recordsService.getAttributes(recordRefs, recordAttsToRequest);
             recordsMeta = recordsRes.getRecords();
         } else {
             recordsMeta = recordRefs.stream().map(RecordMeta::new).collect(Collectors.toList());
@@ -74,17 +116,22 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         for (int i = 0; i < recordRefs.size(); i++) {
             RecordMeta meta = recordsMeta.get(i);
-            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta);
+            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta, modelMeta);
             evalResultsByRecord.put(recordRefs.get(i), evalResult);
         }
 
         return evalResultsByRecord;
     }
 
-    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, RecordMeta meta) {
+    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, RecordMeta record, RecordMeta model) {
         List<Boolean> result = new ArrayList<>();
         for (RecordEvaluatorDto evaluator : evaluators) {
-            result.add(evaluateWithMeta(evaluator, meta));
+            if (model != null && model.getAttributes().size() != 0) {
+                RecordMeta recordWithModel = new RecordMeta(record);
+                model.forEach(recordWithModel::set);
+                record = recordWithModel;
+            }
+            result.add(evaluateWithMeta(evaluator, record));
         }
         return result;
     }

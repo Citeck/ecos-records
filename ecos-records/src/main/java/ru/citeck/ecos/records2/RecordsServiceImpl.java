@@ -251,7 +251,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         T result;
 
         try {
-            result = withQueryContext(impl);
+            result = QueryContext.withContext(serviceFactory, impl);
         } catch (Exception e) {
             log.error("Records resolving error", e);
             result = orElse.get();

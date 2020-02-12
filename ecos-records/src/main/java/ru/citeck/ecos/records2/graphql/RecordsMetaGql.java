@@ -34,8 +34,11 @@ public class RecordsMetaGql {
     private GraphQL graphQL;
 
     private ObjectMapper objectMapper = new ObjectMapper();
+    private RecordsServiceFactory serviceFactory;
 
     public RecordsMetaGql(RecordsServiceFactory serviceFactory) {
+
+        this.serviceFactory = serviceFactory;
 
         List<GqlTypeDefinition> graphQLTypes = serviceFactory.getGqlTypes();
 
@@ -75,10 +78,11 @@ public class RecordsMetaGql {
 
         String query = String.format(META_QUERY_TEMPLATE, schema);
 
-        QueryContext context = QueryContext.getCurrent();
-        context.setMetaValues(metaValues);
-
-        ExecutionResult result = executeImpl(query, context);
+        ExecutionResult result = QueryContext.withContext(serviceFactory, () -> {
+            QueryContext context = QueryContext.getCurrent();
+            context.setMetaValues(metaValues);
+            return executeImpl(query, context);
+        });
 
         return convertMeta(result, metaValues);
     }

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring;
+package ru.citeck.ecos.records2.spring.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

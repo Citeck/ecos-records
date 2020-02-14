@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring.rest.interceptor;
+package ru.citeck.ecos.records2.spring.web.interceptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;

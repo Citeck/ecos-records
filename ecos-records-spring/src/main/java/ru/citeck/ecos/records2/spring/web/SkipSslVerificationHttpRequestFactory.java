@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring.rest;
+package ru.citeck.ecos.records2.spring.web;
 
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 

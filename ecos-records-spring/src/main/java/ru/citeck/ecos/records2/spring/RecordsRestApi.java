@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.spring;
 
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
 
+import java.io.IOException;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",
@@ -31,6 +33,8 @@ public class RecordsRestApi {
     private Environment environment;
 
     private boolean isProdProfile = true;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public RecordsRestApi(RestHandler restHandler) {
@@ -152,8 +156,10 @@ public class RecordsRestApi {
     @PostMapping("/query")
     public Object recordsQuery(
         @ApiParam(value = "query text")
-        @RequestBody QueryBody body) {
-        return encodeResponse(restHandler.queryRecords(body));
+        @RequestBody byte[] body) throws IOException {
+
+        QueryBody queryBody = mapper.readValue(body, QueryBody.class);
+        return encodeResponse(restHandler.queryRecords(queryBody));
     }
 
     @ApiOperation(
@@ -201,8 +207,10 @@ public class RecordsRestApi {
     @PostMapping("/mutate")
     public Object recordsMutate(
         @ApiParam(value = "change query text")
-        @RequestBody MutationBody body) {
-        return encodeResponse(restHandler.mutateRecords(body));
+        @RequestBody byte[] body) throws IOException {
+
+        MutationBody mutationBody = mapper.readValue(body, MutationBody.class);
+        return encodeResponse(restHandler.mutateRecords(mutationBody));
     }
 
     @ApiOperation(
@@ -233,8 +241,10 @@ public class RecordsRestApi {
     @PostMapping("/delete")
     public Object recordsDelete(
         @ApiParam(value = "query text")
-        @RequestBody DeletionBody body) {
-        return encodeResponse(restHandler.deleteRecords(body));
+        @RequestBody byte[] body) throws IOException {
+
+        DeletionBody deletionBody = mapper.readValue(body, DeletionBody.class);
+        return encodeResponse(restHandler.deleteRecords(deletionBody));
     }
 
     private Object encodeResponse(Object response) {

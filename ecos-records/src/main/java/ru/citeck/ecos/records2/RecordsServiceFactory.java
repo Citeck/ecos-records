@@ -225,6 +225,7 @@ public class RecordsServiceFactory {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
+        metaValueFactories.add(new MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());
         metaValueFactories.add(new BeanValueFactory());
         metaValueFactories.add(new BooleanValueFactory());

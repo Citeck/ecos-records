@@ -154,12 +154,12 @@ public class RecordsRestApi {
             + "```"
     )
     @PostMapping("/query")
-    public Object recordsQuery(
+    public byte[] recordsQuery(
         @ApiParam(value = "query text")
         @RequestBody byte[] body) throws IOException {
 
         QueryBody queryBody = mapper.readValue(body, QueryBody.class);
-        return encodeResponse(restHandler.queryRecords(queryBody));
+        return mapper.writeValueAsBytes(encodeResponse(restHandler.queryRecords(queryBody)));
     }
 
     @ApiOperation(
@@ -205,12 +205,12 @@ public class RecordsRestApi {
             + "```\n"
     )
     @PostMapping("/mutate")
-    public Object recordsMutate(
+    public byte[] recordsMutate(
         @ApiParam(value = "change query text")
         @RequestBody byte[] body) throws IOException {
 
         MutationBody mutationBody = mapper.readValue(body, MutationBody.class);
-        return encodeResponse(restHandler.mutateRecords(mutationBody));
+        return mapper.writeValueAsBytes(encodeResponse(restHandler.mutateRecords(mutationBody)));
     }
 
     @ApiOperation(
@@ -239,12 +239,12 @@ public class RecordsRestApi {
             + "```\n"
     )
     @PostMapping("/delete")
-    public Object recordsDelete(
+    public byte[] recordsDelete(
         @ApiParam(value = "query text")
         @RequestBody byte[] body) throws IOException {
 
         DeletionBody deletionBody = mapper.readValue(body, DeletionBody.class);
-        return encodeResponse(restHandler.deleteRecords(deletionBody));
+        return mapper.writeValueAsBytes(encodeResponse(restHandler.deleteRecords(deletionBody)));
     }
 
     private Object encodeResponse(Object response) {

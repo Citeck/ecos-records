@@ -40,6 +40,11 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
         }
 
         @Override
+        public Object getJson() {
+            return value.getAsMap();
+        }
+
+        @Override
         public boolean has(String name) {
             return value.has(new Locale(name));
         }

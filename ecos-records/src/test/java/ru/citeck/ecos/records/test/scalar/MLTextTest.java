@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test.scalar;
 
+import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +32,13 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
 
     private static final String EN_VALUE = "EN VALUE";
     private static final String RU_VALUE = "RU VALUE";
+
+    private static final MLText testML = new MLText();
+
+    static {
+        testML.put(Locale.ENGLISH, EN_VALUE);
+        testML.put(new Locale("ru"), RU_VALUE);
+    }
 
     private RecordsService recordsService;
 
@@ -77,7 +85,7 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
     }
 
     @Test
-    void testWithRecords() {
+    void testWithRecords() throws JsonProcessingException {
 
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(ID);
@@ -87,20 +95,20 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
         atts.add(Locale.ENGLISH.toString());
         atts.add(".str");
         atts.add("eu");
+        atts.add(".json");
 
         RecordMeta res = recordsService.queryRecords(query, atts).getRecords().get(0);
         assertEquals(EN_VALUE, res.get(Locale.ENGLISH.toString(), ""));
         assertEquals(RU_VALUE, res.get("ru", ""));
         assertEquals(EN_VALUE, res.get(".str", ""));
         assertEquals(EN_VALUE, res.get("eu", ""));
+
+        assertEquals(testML, objectMapper.treeToValue(res.get(".json"), MLText.class));
     }
 
     @Override
     public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
-        MLText text = new MLText();
-        text.put(Locale.ENGLISH, EN_VALUE);
-        text.put(new Locale("ru"), RU_VALUE);
-        return RecordsQueryResult.of(text);
+        return RecordsQueryResult.of(testML);
     }
 
     @Data

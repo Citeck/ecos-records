@@ -96,8 +96,8 @@ public class ObjectData {
         return data.size();
     }
 
-    public ObjectData copy() {
-        return new ObjectData(data);
+    public ObjectData deepCopy() {
+        return new ObjectData(JsonUtils.copy(data));
     }
 
     @Override

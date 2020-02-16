@@ -146,7 +146,7 @@ public class RecordMeta {
 
     public void setAttributes(ObjectData attributes) {
         if (attributes != null) {
-            this.attributes = attributes.copy();
+            this.attributes = attributes.deepCopy();
         } else {
             this.attributes = new ObjectData();
         }

@@ -10,7 +10,10 @@ import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.objdata.DataValue;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,6 +105,30 @@ public class JsonUtils {
 
     public static <T extends JsonNode> T valueToTree(Object value) {
         return getMapper().valueToTree(value);
+    }
+
+    public static <T> T read(Reader reader, Class<T> type) {
+        try {
+            return getMapper().readValue(reader, type);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public static <T> T read(File file, Class<T> type) {
+        try {
+            return getMapper().readValue(file, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T read(InputStream inputStream, Class<T> type) {
+        try {
+            return getMapper().readValue(inputStream, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static <T> T read(byte[] json, Class<T> type) {

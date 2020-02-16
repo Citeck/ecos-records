@@ -5,8 +5,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +19,11 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
-import ru.citeck.ecos.records2.spring.utils.web.WebUtils;
+import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.spring.utils.web.exception.RequestHandlingException;
+import ru.citeck.ecos.records2.spring.utils.web.exception.ResponseHandlingException;
+import ru.citeck.ecos.records2.utils.SecurityUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Locale;
 
@@ -31,13 +37,18 @@ import java.util.Locale;
 public class RecordsRestApi {
 
     private RestHandler restHandler;
-    private WebUtils webUtils;
+
+    private boolean isProdProfile = true;
+    private Environment environment;
 
     @Autowired
-    public RecordsRestApi(RestHandler restHandler,
-                          @Qualifier("jacksonWebUtils") WebUtils webUtils) {
+    public RecordsRestApi(RestHandler restHandler) {
         this.restHandler = restHandler;
-        this.webUtils = webUtils;
+    }
+
+    @EventListener
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        isProdProfile = environment != null && environment.acceptsProfiles("prod");
     }
 
     @ApiOperation(
@@ -150,16 +161,16 @@ public class RecordsRestApi {
     @PostMapping("/query")
     public byte[] recordsQuery(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
-        QueryBody queryBody = webUtils.convertRequest(body, QueryBody.class);
+        QueryBody queryBody = convertRequest(body, QueryBody.class);
 
         RecordsServiceFactory recordsServiceFactory = restHandler.getFactory();
         if (recordsServiceFactory == null) {
-            return webUtils.encodeResponse(restHandler.queryRecords(queryBody));
+            return encodeResponse(restHandler.queryRecords(queryBody));
         } else {
             return QueryContext.withContext(recordsServiceFactory, () -> {
                 Locale currentLocale = LocaleContextHolder.getLocale();
                 QueryContext.getCurrent().setLocale(currentLocale);
-                return webUtils.encodeResponse(restHandler.queryRecords(queryBody));
+                return encodeResponse(restHandler.queryRecords(queryBody));
             });
         }
     }
@@ -209,9 +220,9 @@ public class RecordsRestApi {
     @PostMapping("/mutate")
     public byte[] recordsMutate(@ApiParam(value = "change query text") @RequestBody byte[] body) {
 
-        MutationBody mutationBody = webUtils.convertRequest(body, MutationBody.class);
+        MutationBody mutationBody = convertRequest(body, MutationBody.class);
         Object mutatedRecords = restHandler.mutateRecords(mutationBody);
-        return webUtils.encodeResponse(mutatedRecords);
+        return encodeResponse(mutatedRecords);
     }
 
     @ApiOperation(
@@ -242,9 +253,35 @@ public class RecordsRestApi {
     @PostMapping("/delete")
     public byte[] recordsDelete(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
-        DeletionBody deletionBody = webUtils.convertRequest(body, DeletionBody.class);
+        DeletionBody deletionBody = convertRequest(body, DeletionBody.class);
         Object deletedRecords = restHandler.deleteRecords(deletionBody);
-        return webUtils.encodeResponse(deletedRecords);
+        return encodeResponse(deletedRecords);
+    }
+
+    private <T> T convertRequest(byte[] body, Class<T> valueType) {
+        try {
+            return JsonUtils.read(body, valueType);
+        } catch (Exception ioe) {
+            log.error("Jackson cannot parse request body", ioe);
+            throw new RequestHandlingException(ioe);
+        }
+    }
+
+    private byte[] encodeResponse(Object response) {
+        try {
+            if (isProdProfile && response instanceof RecordsResult) {
+                SecurityUtils.encodeResult((RecordsResult<?>) response);
+            }
+            return JsonUtils.toBytes(response);
+        } catch (Exception jpe) {
+            log.error("Jackson cannot write response body as bytes", jpe);
+            throw new ResponseHandlingException(jpe);
+        }
+    }
+
+    @Autowired(required = false)
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 }
 

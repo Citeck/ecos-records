@@ -13,7 +13,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.scalar.MLText;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;

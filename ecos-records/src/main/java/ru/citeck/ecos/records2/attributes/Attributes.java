@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.attributes;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.annotation.JsonValue;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.MandatoryParam;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,12 +20,13 @@ public class Attributes {
     }
 
     @JsonCreator
-    public Attributes(Map<String, AttValue> data) {
-        this.data = new HashMap<>(data);
-    }
-
+    @com.fasterxml.jackson.annotation.JsonCreator
     public Attributes(Object data) {
-        this.data = JsonUtils.convert(data, AttsMap.class);
+        if (data == null) {
+            this.data = new HashMap<>();
+        } else {
+            this.data = JsonUtils.convert(data, AttsMap.class);
+        }
     }
 
     public void forEach(BiConsumer<String, AttValue> consumer) {
@@ -86,6 +87,7 @@ public class Attributes {
     }
 
     @JsonValue
+    @com.fasterxml.jackson.annotation.JsonValue
     public Map<String, AttValue> getData() {
         return Collections.unmodifiableMap(data);
     }

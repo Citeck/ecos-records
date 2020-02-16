@@ -78,6 +78,7 @@ public class RecordRef implements Serializable {
     }
 
     @JsonCreator
+    @com.fasterxml.jackson.annotation.JsonCreator
     public static RecordRef valueOf(String recordRefStr) {
 
         if (isBlankId(recordRefStr)) {
@@ -159,6 +160,7 @@ public class RecordRef implements Serializable {
     }
 
     @JsonValue
+    @com.fasterxml.jackson.annotation.JsonValue
     @Override
     public String toString() {
         if (this == EMPTY) {

@@ -5,7 +5,7 @@ import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

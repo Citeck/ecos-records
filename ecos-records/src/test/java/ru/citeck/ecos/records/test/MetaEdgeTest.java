@@ -17,7 +17,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

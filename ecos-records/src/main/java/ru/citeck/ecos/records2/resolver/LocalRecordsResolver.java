@@ -28,9 +28,9 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.predicate.test;
+package ru.citeck.ecos.records.test.predicate;
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;

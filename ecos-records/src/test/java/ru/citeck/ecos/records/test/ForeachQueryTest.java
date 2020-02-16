@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,7 +13,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,8 +50,8 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
         recordsService.register(this);
     }
 
-    private JsonNode getQuery(String var) {
-        return JsonUtils.valueToTree(Predicates.and(
+    private Object getQuery(String var) {
+        return JsonUtils.toJava(JsonUtils.valueToTree(Predicates.and(
             Predicates.eq("test", var),
             Predicates.or(
                 Predicates.eq("aaa", var),
@@ -60,7 +59,7 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
                 Predicates.contains("ccc", var)
             ),
             Predicates.eq("test2", "test2")
-        ));
+        )));
     }
 
     @Test

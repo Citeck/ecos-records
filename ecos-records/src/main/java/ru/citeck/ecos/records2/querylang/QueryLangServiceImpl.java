@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.querylang;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.ReflectUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.List;
 import java.util.Map;

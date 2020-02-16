@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.request.query.page;
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 public abstract class QueryPage {
 
@@ -27,7 +28,10 @@ public abstract class QueryPage {
     public abstract QueryPage withMaxItems(Integer maxItems);
 
     @JsonCreator
-    public static QueryPage createPage(JsonNode pageData) {
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public static QueryPage createPage(Object pageDataObj) {
+
+        JsonNode pageData = JsonUtils.toJson(pageDataObj);
 
         Integer maxItems = getInt(pageData, MAX_ITEMS_FIELD);
 

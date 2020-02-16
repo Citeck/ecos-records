@@ -3,7 +3,7 @@ package ru.citeck.ecos.records.test;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -17,8 +17,8 @@ import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",

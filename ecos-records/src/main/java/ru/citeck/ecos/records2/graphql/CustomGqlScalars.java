@@ -4,7 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.*;
 import graphql.language.*;
 import graphql.schema.*;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;

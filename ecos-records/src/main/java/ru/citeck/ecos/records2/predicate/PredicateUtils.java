@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.predicate;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;

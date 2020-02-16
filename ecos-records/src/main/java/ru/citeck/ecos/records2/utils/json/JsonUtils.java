@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.utils;
+package ru.citeck.ecos.records2.utils.json;
 
 import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import ecos.com.fasterxml.jackson210.databind.*;
@@ -8,11 +8,10 @@ import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.attributes.AttValue;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -126,21 +125,11 @@ public class JsonUtils {
     }
 
     public static <T> T convert(Object value, Class<T> type, T deflt) {
-        if (type == Object.class) {
-            @SuppressWarnings("unchecked")
-            T resultT = (T) value;
-            return resultT;
-        }
         if (value instanceof Optional) {
             value = ((Optional<?>) value).orElse(null);
         }
         if (value == null || "null".equals(value)) {
             return deflt;
-        }
-        if (type.isInstance(value)) {
-            @SuppressWarnings("unchecked")
-            T valueT = (T) value;
-            return valueT;
         }
         try {
             if (value instanceof JsonNode) {
@@ -253,6 +242,25 @@ public class JsonUtils {
         }
     }
 
+    public static boolean isEquals(Object value0, Object value1) {
+
+        if (value0 == value1) {
+            return true;
+        }
+        if (value0 == null || value1 == null) {
+            return false;
+        }
+
+        if (value0.getClass().equals(value1.getClass())) {
+            return value0.equals(value1);
+        }
+
+        JsonNode json0 = toJson(value0);
+        JsonNode json1 = toJson(value1);
+
+        return json0.equals(json1);
+    }
+
     public static JsonNode toJson(Object value) {
         if (value == null) {
             return NullNode.getInstance();
@@ -266,31 +274,27 @@ public class JsonUtils {
         return getMapper().valueToTree(value);
     }
 
-    public static Serializable toJava(JsonNode node) {
+    public static Object toJava(Object node) {
 
-        if (node == null || node.isNull() || node.isMissingNode()) {
+        if (node instanceof AttValue) {
+            return ((AttValue) node).asJavaObj();
+        }
+
+        if (!(node instanceof JsonNode)) {
+            return node;
+        }
+
+        JsonNode jsonNode = (JsonNode) node;
+
+        if (jsonNode.isNull() || jsonNode.isMissingNode()) {
             return null;
         }
 
-        if (node.isArray()) {
-
-            ArrayList<Serializable> values = new ArrayList<>();
-
-            for (JsonNode subNode : node) {
-                values.add(toJava(subNode));
-            }
-
-            return values;
-
-        } else if (node.isNumber()) {
-
-            return node.isIntegralNumber() ? node.asLong() : node.asDouble();
-
-        } else if (node.isBoolean()) {
-
-            return node.asBoolean();
+        try {
+            return getMapper().treeToValue(jsonNode, Object.class);
+        } catch (JsonProcessingException e) {
+            log.error("Tree to Object.class conversion failed. Tree: " + node);
+            return null;
         }
-
-        return node.asText();
     }
 }

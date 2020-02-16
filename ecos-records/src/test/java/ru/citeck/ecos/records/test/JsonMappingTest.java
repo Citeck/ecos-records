@@ -2,7 +2,7 @@ package ru.citeck.ecos.records.test;
 
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.request.error.RecordsError;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

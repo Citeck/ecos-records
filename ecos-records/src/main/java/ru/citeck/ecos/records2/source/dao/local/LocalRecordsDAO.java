@@ -21,8 +21,8 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

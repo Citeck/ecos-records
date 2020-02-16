@@ -15,8 +15,8 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
 import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records2.evaluator.evaluators.*;
@@ -28,13 +29,17 @@ import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.LibsUtils;
+import ru.citeck.ecos.records2.utils.json.JsonNodeDeserializer;
+import ru.citeck.ecos.records2.utils.json.JsonNodeSerializer;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+@Slf4j
 public class RecordsServiceFactory {
 
     private RestHandler restHandler;
@@ -64,6 +69,13 @@ public class RecordsServiceFactory {
     {
         JsonUtils.addDeserializer(getPredicateJsonDeserializer());
         JsonUtils.addSerializer(new PredicateJsonSerializer());
+
+        if (LibsUtils.isJacksonPresent()) {
+            JsonUtils.addSerializer(new JsonNodeSerializer());
+            JsonUtils.addDeserializer(new JsonNodeDeserializer());
+        } else {
+            log.info("Jackson library is not found. Bridge converters won't be registered.");
+        }
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {
@@ -258,6 +270,7 @@ public class RecordsServiceFactory {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
+        metaValueFactories.add(new AttributesValueFactory());
         metaValueFactories.add(new AttValueFactory());
         metaValueFactories.add(new MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());
@@ -270,6 +283,10 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new LongValueFactory());
         metaValueFactories.add(new StringValueFactory());
         metaValueFactories.add(new RecordRefValueFactory(this));
+
+        if (LibsUtils.isJacksonPresent()) {
+            metaValueFactories.add(new JacksonJsonNodeValueFactory());
+        }
 
         return metaValueFactories;
     }

@@ -1,7 +1,5 @@
 package ru.citeck.ecos.records2.utils;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.RecordMeta;
@@ -75,12 +73,6 @@ public class RecordsUtils {
         }
 
         return result;
-    }
-
-    public static RecordRef getRecordId(ObjectNode recordMeta) {
-        JsonNode idNode = recordMeta.get("id");
-        String id = idNode != null && idNode.isTextual() ? idNode.asText() : null;
-        return id != null ? RecordRef.valueOf(id) : null;
     }
 
     public static List<RecordRef> toLocalRecords(Collection<RecordRef> records) {

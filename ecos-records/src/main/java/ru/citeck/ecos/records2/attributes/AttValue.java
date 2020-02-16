@@ -5,10 +5,9 @@ import ecos.com.fasterxml.jackson210.annotation.JsonValue;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.BooleanNode;
-import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.EqualsAndHashCode;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -24,10 +23,6 @@ public final class AttValue implements Iterable<AttValue> {
 
     private final JsonNode value;
 
-    public AttValue(Object value) {
-        this.value = JsonUtils.toJson(value);
-    }
-
     public AttValue(String value) {
         this.value = TextNode.valueOf(value);
     }
@@ -41,11 +36,9 @@ public final class AttValue implements Iterable<AttValue> {
     }
 
     @JsonCreator
-    AttValue(JsonNode value) {
-        if (value == null) {
-            value = NullNode.getInstance();
-        }
-        this.value = value.deepCopy();
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public AttValue(Object value) {
+        this.value = JsonUtils.toJson(value);
     }
 
     public AttValue copy() {
@@ -251,6 +244,7 @@ public final class AttValue implements Iterable<AttValue> {
         return value.asBoolean(defaultValue);
     }
 
+    @com.fasterxml.jackson.annotation.JsonValue
     public Object asJavaObj() {
         return JsonUtils.toJava(value);
     }
@@ -260,7 +254,7 @@ public final class AttValue implements Iterable<AttValue> {
     }
 
     @JsonValue
-    JsonNode jsonValue() {
+    JsonNode asJson() {
         return value;
     }
 

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.predicate.test;
+package ru.citeck.ecos.records.test.predicate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

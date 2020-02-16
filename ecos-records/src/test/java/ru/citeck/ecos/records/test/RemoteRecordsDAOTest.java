@@ -13,7 +13,7 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.source.dao.remote.RemoteRecordsDAO;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.HashMap;
 import java.util.List;

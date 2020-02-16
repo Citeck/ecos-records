@@ -1,11 +1,9 @@
 package ru.citeck.ecos.records2.predicate;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator;
 import ru.citeck.ecos.records2.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -82,7 +80,7 @@ public class PredicateServiceImpl implements PredicateService {
             ValuePredicate valuePredicate = (ValuePredicate) predicate;
             String attribute = valuePredicate.getAttribute();
             Object value = valuePredicate.getValue();
-            Object elementValue = toJava(attributes.getAttribute(attribute));
+            Object elementValue = JsonUtils.toJava(attributes.getAttribute(attribute));
 
             switch (valuePredicate.getType()) {
                 case EQ:
@@ -112,22 +110,9 @@ public class PredicateServiceImpl implements PredicateService {
         } else if (predicate instanceof EmptyPredicate) {
 
             String attribute = ((EmptyPredicate) predicate).getAttribute();
-            return comparator.isEmpty(toJava(attributes.getAttribute(attribute)));
+            return comparator.isEmpty(JsonUtils.toJava(attributes.getAttribute(attribute)));
         }
 
         return false;
-    }
-
-    private Object toJava(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof JsonNode) {
-            return JsonUtils.toJava((JsonNode) value);
-        }
-        if (value instanceof AttValue) {
-            return ((AttValue) value).asJavaObj();
-        }
-        return value;
     }
 }

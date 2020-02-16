@@ -10,8 +10,8 @@ import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;

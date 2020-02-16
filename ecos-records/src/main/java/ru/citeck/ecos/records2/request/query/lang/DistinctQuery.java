@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.request.query.lang;
 
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 public class DistinctQuery {
 

@@ -5,7 +5,7 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
-import ru.citeck.ecos.records2.utils.JsonUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;

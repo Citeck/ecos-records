@@ -7,8 +7,8 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.StringUtils;
@@ -102,8 +102,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
 
-        Attributes attributes = meta.getAttributes();
-        Attributes resultAttributes = new Attributes();
+        ObjectData attributes = meta.getAttributes();
+        ObjectData resultAttributes = new ObjectData();
         Map<String, String> keysMapping = schema.getKeysMapping();
 
         attributes.forEach((key, value) -> {

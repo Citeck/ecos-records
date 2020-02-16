@@ -4,13 +4,13 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -173,7 +173,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         PredicateEvaluator.Config config = new PredicateEvaluator.Config();
         config.setPredicate(predicate);
 
-        predicateEvaluator.setConfig(JsonUtils.convert(config, Attributes.class));
+        predicateEvaluator.setConfig(JsonUtils.convert(config, ObjectData.class));
         return predicateEvaluator;
     }
 
@@ -186,7 +186,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         groupConfig.setJoinBy(joinType);
         groupConfig.setEvaluators(Arrays.asList(evaluators));
 
-        groupEvaluator.setConfig(JsonUtils.convert(groupConfig, Attributes.class));
+        groupEvaluator.setConfig(JsonUtils.convert(groupConfig, ObjectData.class));
 
         return groupEvaluator;
     }
@@ -206,7 +206,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
     private RecordEvaluatorDto hasAttEvaluator(String att) {
         RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("has-attribute");
-        Attributes attributes = new Attributes();
+        ObjectData attributes = new ObjectData();
         attributes.set("attribute", att);
         evaluatorDto.setConfig(attributes);
         return evaluatorDto;

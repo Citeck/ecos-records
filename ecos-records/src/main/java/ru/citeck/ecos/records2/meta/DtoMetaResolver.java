@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.utils.StringUtils;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -73,7 +73,7 @@ public class DtoMetaResolver {
         return attributes;
     }
 
-    public <T> T instantiateMeta(Class<T> metaClass, Attributes attributes) {
+    public <T> T instantiateMeta(Class<T> metaClass, ObjectData attributes) {
         return JsonUtils.convert(attributes, metaClass);
     }
 

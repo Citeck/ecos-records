@@ -8,7 +8,7 @@ import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -276,8 +276,8 @@ public class JsonUtils {
 
     public static Object toJava(Object node) {
 
-        if (node instanceof AttValue) {
-            return ((AttValue) node).asJavaObj();
+        if (node instanceof DataValue) {
+            return ((DataValue) node).asJavaObj();
         }
 
         if (!(node instanceof JsonNode)) {

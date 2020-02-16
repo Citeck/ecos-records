@@ -3,10 +3,10 @@ package ru.citeck.ecos.records2.source.common.group;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -76,7 +76,7 @@ public class RecordsGroup implements MetaValue {
                 RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, schema);
 
                 return records.getRecords().stream().map(r -> {
-                    Attributes atts = r.getAttributes();
+                    ObjectData atts = r.getAttributes();
                     atts.set("id", r.getId().toString());
                     return new InnerMetaValue(JsonUtils.toJson(atts));
                 }).collect(Collectors.toList());

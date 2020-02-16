@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.attributes.AttValue;
-import ru.citeck.ecos.records2.attributes.Attributes;
+import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,7 +16,7 @@ public class RecordMeta {
 
     private RecordRef id = RecordRef.EMPTY;
 
-    private Attributes attributes = new Attributes();
+    private ObjectData attributes = new ObjectData();
 
     public RecordMeta() {
     }
@@ -44,7 +44,7 @@ public class RecordMeta {
         setId(id);
     }
 
-    public RecordMeta(RecordRef id, Attributes attributes) {
+    public RecordMeta(RecordRef id, ObjectData attributes) {
         setId(id);
         setAttributes(attributes);
     }
@@ -75,11 +75,11 @@ public class RecordMeta {
         this.id = RecordRef.valueOf(id);
     }
 
-    public void forEach(BiConsumer<String, AttValue> consumer) {
+    public void forEach(BiConsumer<String, DataValue> consumer) {
         attributes.forEach(consumer);
     }
 
-    public Attributes getAttributes() {
+    public ObjectData getAttributes() {
         return attributes;
     }
 
@@ -120,7 +120,7 @@ public class RecordMeta {
         return attributes.get(name, Boolean.class);
     }
 
-    public AttValue get(String name) {
+    public DataValue get(String name) {
         return getAttribute(name);
     }
 
@@ -128,7 +128,7 @@ public class RecordMeta {
         return getAttribute(name, orElse);
     }
 
-    public AttValue getAttribute(String name) {
+    public DataValue getAttribute(String name) {
         return attributes.get(name);
     }
 
@@ -144,11 +144,11 @@ public class RecordMeta {
         attributes.set(name, value);
     }
 
-    public void setAttributes(Attributes attributes) {
+    public void setAttributes(ObjectData attributes) {
         if (attributes != null) {
             this.attributes = attributes.copy();
         } else {
-            this.attributes = new Attributes();
+            this.attributes = new ObjectData();
         }
     }
 

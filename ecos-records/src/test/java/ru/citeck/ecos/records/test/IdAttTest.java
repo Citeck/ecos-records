@@ -6,9 +6,9 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 
@@ -34,7 +34,7 @@ class IdAttTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
 
     @Test
     void test() {
-        AttValue attribute = recordsService.getAttribute(RecordRef.create(ID, "test"), "id");
+        DataValue attribute = recordsService.getAttribute(RecordRef.create(ID, "test"), "id");
         assertEquals("test-id", attribute.asText());
     }
 

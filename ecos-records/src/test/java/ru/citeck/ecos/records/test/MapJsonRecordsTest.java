@@ -8,7 +8,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 
@@ -52,9 +52,9 @@ public class MapJsonRecordsTest extends LocalRecordsDAO
     @Test
     void testSingleStrAttribute() {
 
-        AttValue value = recordsService.getAttribute(TEST_REF,
+        DataValue value = recordsService.getAttribute(TEST_REF,
             ".att(n:\"key0\"){att(n:\"key1\"){att(n:\"key2\"){att(n:\"field\"){str}}}}");
 
-        assertEquals(new AttValue("Value0"), value);
+        assertEquals(new DataValue("Value0"), value);
     }
 }

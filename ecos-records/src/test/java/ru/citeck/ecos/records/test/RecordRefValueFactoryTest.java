@@ -9,9 +9,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -70,7 +70,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         expected.add(Val.val2.value);
         expected.add(Val.val2.value);
 
-        assertEquals(new AttValue(expected), meta.get("att3"));
+        assertEquals(new DataValue(expected), meta.get("att3"));
     }
 
     @Override

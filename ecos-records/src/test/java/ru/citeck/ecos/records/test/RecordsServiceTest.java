@@ -8,9 +8,9 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -127,9 +127,9 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testSingleStrAttribute() {
 
-        AttValue value = recordsService.getAttribute(TEST_REF, "fieldStr0");
+        DataValue value = recordsService.getAttribute(TEST_REF, "fieldStr0");
 
-        AttValue expected = new AttValue(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
+        DataValue expected = new DataValue(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -140,9 +140,9 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testSingleDateAttribute() {
 
-        AttValue value = recordsService.getAttribute(TEST_REF, "fieldDate");
+        DataValue value = recordsService.getAttribute(TEST_REF, "fieldDate");
 
-        AttValue expected = new AttValue(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
+        DataValue expected = new DataValue(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -213,16 +213,16 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testDisplayName() {
 
-        AttValue dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
+        DataValue dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
 
-        assertEquals(new AttValue(PojoMeta.DISPLAY_NAME), dispValue);
+        assertEquals(new DataValue(PojoMeta.DISPLAY_NAME), dispValue);
     }
 
     @Test
     void testRootJsonAttribute() {
 
-        AttValue value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
-        AttValue test = JsonUtils.convert(new PojoMeta("test"), AttValue.class);
+        DataValue value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
+        DataValue test = JsonUtils.convert(new PojoMeta("test"), DataValue.class);
 
         assertEquals(test, value);
     }

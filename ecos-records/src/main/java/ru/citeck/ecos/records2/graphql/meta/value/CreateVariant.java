@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.attributes.Attributes;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 
 import java.util.Objects;
 
@@ -10,7 +10,7 @@ public class CreateVariant {
     private RecordRef recordRef;
     private String formKey;
     private String label;
-    private Attributes attributes = new Attributes();
+    private ObjectData attributes = new ObjectData();
 
     public CreateVariant() {
     }
@@ -35,12 +35,12 @@ public class CreateVariant {
         return recordRef;
     }
 
-    public Attributes getAttributes() {
+    public ObjectData getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(Attributes attributes) {
-        this.attributes = new Attributes(attributes);
+    public void setAttributes(ObjectData attributes) {
+        this.attributes = new ObjectData(attributes);
     }
 
     public void setAttribute(String attribute, String value) {

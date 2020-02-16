@@ -6,7 +6,7 @@ import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
@@ -56,12 +56,12 @@ public abstract class AbstractRecordsService implements RecordsService {
     }
 
     @Override
-    public RecordsQueryResult<List<RecordRef>> queryRecords(List<AttValue> foreach, RecordsQuery query) {
+    public RecordsQueryResult<List<RecordRef>> queryRecords(List<DataValue> foreach, RecordsQuery query) {
         return queryForEach(foreach, query, this::queryRecords);
     }
 
     @Override
-    public <T> RecordsQueryResult<List<T>> queryRecords(List<AttValue> foreach,
+    public <T> RecordsQueryResult<List<T>> queryRecords(List<DataValue> foreach,
                                                         RecordsQuery query,
                                                         Class<T> metaClass) {
 
@@ -69,7 +69,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     }
 
     @Override
-    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<AttValue> foreach,
+    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                              RecordsQuery query,
                                                              Collection<String> attributes) {
 
@@ -77,7 +77,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     }
 
     @Override
-    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<AttValue> foreach,
+    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                              RecordsQuery query,
                                                              Map<String, String> attributes) {
 
@@ -85,14 +85,14 @@ public abstract class AbstractRecordsService implements RecordsService {
     }
 
     @Override
-    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<AttValue> foreach,
+    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                              RecordsQuery query,
                                                              String schema) {
 
         return queryForEach(foreach, query, q -> queryRecords(q, schema));
     }
 
-    private <T> RecordsQueryResult<List<T>> queryForEach(List<AttValue> foreach,
+    private <T> RecordsQueryResult<List<T>> queryForEach(List<DataValue> foreach,
                                                          RecordsQuery query,
                                                          Function<RecordsQuery, RecordsQueryResult<T>> queryImpl) {
 
@@ -102,7 +102,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
             int idx = 0;
 
-            for (AttValue eachIt : foreach) {
+            for (DataValue eachIt : foreach) {
 
                 RecordsQuery eachRecordsQuery = new RecordsQuery(query);
                 eachRecordsQuery.setQuery(replaceIt(JsonUtils.toJson(query.getQuery()), JsonUtils.toJson(eachIt)));

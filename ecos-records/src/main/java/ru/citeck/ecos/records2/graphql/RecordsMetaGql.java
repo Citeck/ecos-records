@@ -14,13 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.exception.GqlParseException;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -132,7 +132,7 @@ public class RecordsMetaGql {
                 RecordMeta recMeta = new RecordMeta(RecordsUtils.getMetaValueId(metaValues.get(i)));
                 JsonNode attributes = meta.get(i);
                 if (attributes instanceof ObjectNode) {
-                    recMeta.setAttributes(JsonUtils.convert(attributes, Attributes.class));
+                    recMeta.setAttributes(JsonUtils.convert(attributes, ObjectData.class));
                 }
                 result.add(recMeta);
             }

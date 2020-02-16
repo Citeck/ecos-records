@@ -7,7 +7,7 @@ import ru.citeck.ecos.records2.QueryConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -30,10 +30,10 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
 
     private List<RecordsQuery> queries = new ArrayList<>();
 
-    private List<AttValue> eachNode = Arrays.asList(
-        new AttValue("firstText"),
-        new AttValue("secondText"),
-        new AttValue("thirdText")
+    private List<DataValue> eachNode = Arrays.asList(
+        new DataValue("firstText"),
+        new DataValue("secondText"),
+        new DataValue("thirdText")
     );
 
     private List<RecordRef> resultRefs = Arrays.asList(

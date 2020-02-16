@@ -8,7 +8,7 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.Attributes;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.query.QueryConsistency;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.SortBy;
@@ -55,7 +55,7 @@ public class JacksonTest {
         assertEquals(query, res2);
         assertEquals(query, res3);
 
-        Attributes atts = new Attributes();
+        ObjectData atts = new ObjectData();
         atts.set("abc", 2134124);
         atts.set("eeeeee", "adasd");
         atts.set("double", 24.23);
@@ -65,10 +65,10 @@ public class JacksonTest {
         String mAttsJsonString = mapper.writeValueAsString(atts);
         String eAttsJsonString = JsonUtils.toString(atts);
 
-        Attributes attsRes0 = mapper.readValue(mAttsJsonString, Attributes.class);
-        Attributes attsRes1 = mapper.readValue(eAttsJsonString, Attributes.class);
-        Attributes attsRes2 = JsonUtils.read(mAttsJsonString, Attributes.class);
-        Attributes attsRes3 = JsonUtils.read(eAttsJsonString, Attributes.class);
+        ObjectData attsRes0 = mapper.readValue(mAttsJsonString, ObjectData.class);
+        ObjectData attsRes1 = mapper.readValue(eAttsJsonString, ObjectData.class);
+        ObjectData attsRes2 = JsonUtils.read(mAttsJsonString, ObjectData.class);
+        ObjectData attsRes3 = JsonUtils.read(eAttsJsonString, ObjectData.class);
 
         assertEquals(atts, attsRes0);
         assertEquals(atts, attsRes1);

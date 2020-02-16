@@ -8,12 +8,12 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
@@ -59,7 +59,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         RecordMeta meta = result.getRecords().get(0);
 
-        AttValue edgeNode = meta.get("edge");
+        DataValue edgeNode = meta.get("edge");
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
@@ -71,13 +71,13 @@ public class MetaEdgeTest extends LocalRecordsDAO
         assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());
 
         List<String> distinctVars = new ArrayList<>();
-        for (AttValue value : edgeNode.get("distinct")) {
+        for (DataValue value : edgeNode.get("distinct")) {
             distinctVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.distinctVariants, distinctVars);
 
         List<String> optionsVars = new ArrayList<>();
-        for (AttValue value : edgeNode.get("options")) {
+        for (DataValue value : edgeNode.get("options")) {
             optionsVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.optionsVariants, optionsVars);

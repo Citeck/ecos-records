@@ -1,17 +1,17 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;
 
-public class AttValueFactory implements MetaValueFactory<AttValue> {
+public class AttValueFactory implements MetaValueFactory<DataValue> {
 
     @Override
-    public MetaValue getValue(AttValue value) {
+    public MetaValue getValue(DataValue value) {
 
         return new MetaValue() {
 
@@ -34,7 +34,7 @@ public class AttValueFactory implements MetaValueFactory<AttValue> {
     }
 
     @Override
-    public List<Class<? extends AttValue>> getValueTypes() {
-        return Collections.singletonList(AttValue.class);
+    public List<Class<? extends DataValue>> getValueTypes() {
+        return Collections.singletonList(DataValue.class);
     }
 }

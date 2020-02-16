@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -25,6 +25,6 @@ class QueryBodyTest {
 
         QueryBody body3 = JsonUtils.convert("{\"foreach\":[\"test0\", \"test1\"], \"query\":{\"query\": \"q\"}}", QueryBody.class);
         assertEquals(2, body3.getForeach().size());
-        assertEquals(new AttValue("test0"), body3.getForeach().get(0));
+        assertEquals(new DataValue("test0"), body3.getForeach().get(0));
     }
 }

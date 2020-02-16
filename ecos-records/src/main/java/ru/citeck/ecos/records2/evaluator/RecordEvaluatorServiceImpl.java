@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.evaluator;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -146,7 +146,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
 
-        Attributes evaluatorMeta = new Attributes();
+        ObjectData evaluatorMeta = new ObjectData();
         metaAtts.forEach((k, v) -> evaluatorMeta.set(k, fullRecordMeta.get(v)));
 
         Class<?> resMetaType = evaluator.getResMetaType();

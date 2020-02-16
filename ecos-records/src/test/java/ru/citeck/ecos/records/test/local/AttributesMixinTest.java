@@ -8,10 +8,10 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
@@ -92,8 +92,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
         addAttributesMixin(new MixinWithRecRef());
         checkValidComputedAttributes();
 
-        AttValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
-        assertEquals(new AttValue(REC_META_VALUE_ID), attValue);
+        DataValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
+        assertEquals(new DataValue(REC_META_VALUE_ID), attValue);
     }
 
     private void checkValidComputedAttributes() {
@@ -110,15 +110,15 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         result.getRecords().forEach(meta -> {
 
-            assertEquals(new AttValue(finalFieldValue), meta.get(finalFieldName));
+            assertEquals(new DataValue(finalFieldValue), meta.get(finalFieldName));
 
-            assertEquals(new AttValue(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(new AttValue((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(new DataValue(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(new DataValue((double) intFieldsSum), meta.get(intAtt));
 
             meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
 
-            assertEquals(new AttValue(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(new AttValue((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(new DataValue(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(new DataValue((double) intFieldsSum), meta.get(intAtt));
         });
     }
 

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.attributes;
+package ru.citeck.ecos.records2.objdata;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.annotation.JsonValue;
@@ -17,32 +17,32 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 @EqualsAndHashCode
-public final class AttValue implements Iterable<AttValue> {
+public final class DataValue implements Iterable<DataValue> {
 
-    public static final AttValue NULL = new AttValue((Object) null);
+    public static final DataValue NULL = new DataValue((Object) null);
 
     private final JsonNode value;
 
-    public AttValue(String value) {
+    public DataValue(String value) {
         this.value = TextNode.valueOf(value);
     }
 
-    public AttValue(Boolean value) {
+    public DataValue(Boolean value) {
         this.value = Boolean.TRUE.equals(value) ? BooleanNode.TRUE : BooleanNode.FALSE;
     }
 
-    public AttValue(List<?> value) {
+    public DataValue(List<?> value) {
         this.value = JsonUtils.convert(value, ArrayNode.class);
     }
 
     @JsonCreator
     @com.fasterxml.jackson.annotation.JsonCreator
-    public AttValue(Object value) {
+    public DataValue(Object value) {
         this.value = JsonUtils.toJson(value);
     }
 
-    public AttValue copy() {
-        return new AttValue(value);
+    public DataValue copy() {
+        return new DataValue(value);
     }
 
     public boolean isObject() {
@@ -121,18 +121,18 @@ public final class AttValue implements Iterable<AttValue> {
         return value.isArray();
     }
 
-    public AttValue get(int i) {
-        return new AttValue(value.get(i));
+    public DataValue get(int i) {
+        return new DataValue(value.get(i));
     }
 
-    public AttValue get(String name) {
+    public DataValue get(String name) {
         JsonNode res;
         if (name.charAt(0) == '/') {
             res = value.at(name);
         } else {
             res = value.get(name);
         }
-        return new AttValue(res);
+        return new DataValue(res);
     }
 
     public int size() {
@@ -140,15 +140,15 @@ public final class AttValue implements Iterable<AttValue> {
     }
 
     @Override
-    public Iterator<AttValue> iterator() {
+    public Iterator<DataValue> iterator() {
         return new Iter(value);
     }
 
-    public void forEach(BiConsumer<String, AttValue> consumer) {
+    public void forEach(BiConsumer<String, DataValue> consumer) {
         Iterator<String> names = value.fieldNames();
         while (names.hasNext()) {
             String name = names.next();
-            consumer.accept(name, new AttValue(value.get(name)));
+            consumer.accept(name, new DataValue(value.get(name)));
         }
     }
 
@@ -249,8 +249,8 @@ public final class AttValue implements Iterable<AttValue> {
         return JsonUtils.toJava(value);
     }
 
-    public Attributes asAttributes() {
-        return value.isObject() ? JsonUtils.convert(value, Attributes.class) : new Attributes();
+    public ObjectData asAttributes() {
+        return value.isObject() ? JsonUtils.convert(value, ObjectData.class) : new ObjectData();
     }
 
     @JsonValue
@@ -263,7 +263,7 @@ public final class AttValue implements Iterable<AttValue> {
         return value.toString();
     }
 
-    private static class Iter implements Iterator<AttValue> {
+    private static class Iter implements Iterator<DataValue> {
 
         private Iterator<JsonNode> iterator;
 
@@ -277,8 +277,8 @@ public final class AttValue implements Iterable<AttValue> {
         }
 
         @Override
-        public AttValue next() {
-            return new AttValue(iterator.next());
+        public DataValue next() {
+            return new DataValue(iterator.next());
         }
     }
 }

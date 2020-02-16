@@ -5,11 +5,11 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
-import ru.citeck.ecos.records2.attributes.AttValue;
-import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;
 import ru.citeck.ecos.records2.exception.RecordsSourceNotFoundException;
+import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
 import ru.citeck.ecos.records2.predicate.model.OrPredicate;
@@ -174,7 +174,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         String distinctAtt = distinctQuery.getAttribute();
 
-        HashMap<String, AttValue> values = new HashMap<>();
+        HashMap<String, DataValue> values = new HashMap<>();
 
         do {
 
@@ -184,13 +184,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
             for (RecordMeta value : queryResult.getRecords()) {
 
-                AttValue att = value.get("att");
+                DataValue att = value.get("att");
                 String strVal = att.get(distinctValueAlias).asText();
 
                 if (att.isNull()) {
                     recordsQuery.setSkipCount(recordsQuery.getSkipCount() + 1);
                 } else {
-                    AttValue replaced = values.put(strVal, att);
+                    DataValue replaced = values.put(strVal, att);
                     if (replaced == null) {
                         distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
                     }
@@ -199,9 +199,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         } while (found > 0 && values.size() <= max && ++requests <= max);
 
-        return values.values().stream().filter(AttValue::isObject).map(v -> {
+        return values.values().stream().filter(DataValue::isObject).map(v -> {
 
-            Attributes attributes = v.asAttributes();
+            ObjectData attributes = v.asAttributes();
             RecordRef ref = RecordRef.valueOf(attributes.get("id").asText());
 
             attributes.remove(distinctValueAlias);

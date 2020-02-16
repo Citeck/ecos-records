@@ -30,8 +30,6 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.utils.LibsUtils;
-import ru.citeck.ecos.records2.utils.json.JsonNodeDeserializer;
-import ru.citeck.ecos.records2.utils.json.JsonNodeSerializer;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
@@ -69,13 +67,6 @@ public class RecordsServiceFactory {
     {
         JsonUtils.addDeserializer(getPredicateJsonDeserializer());
         JsonUtils.addSerializer(new PredicateJsonSerializer());
-
-        if (LibsUtils.isJacksonPresent()) {
-            JsonUtils.addSerializer(new JsonNodeSerializer());
-            JsonUtils.addDeserializer(new JsonNodeDeserializer());
-        } else {
-            log.info("Jackson library is not found. Bridge converters won't be registered.");
-        }
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

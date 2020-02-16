@@ -9,6 +9,7 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.utils.LibsUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,15 @@ public class JsonUtils {
     private static Map<Class<Object>, JsonSerializer<?>> serializers = new HashMap<>();
 
     private static volatile boolean initialized = false;
+
+    static {
+        if (LibsUtils.isJacksonPresent()) {
+            addSerializer(new JsonNodeSerializer());
+            addDeserializer(new JsonNodeDeserializer());
+        } else {
+            log.info("Jackson library is not found. Bridge converters won't be registered.");
+        }
+    }
 
     private static ObjectMapper getMapper() {
 

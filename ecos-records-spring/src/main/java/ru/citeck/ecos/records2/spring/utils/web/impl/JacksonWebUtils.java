@@ -1,7 +1,5 @@
 package ru.citeck.ecos.records2.spring.utils.web.impl;
 
-import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.EnvironmentAware;
@@ -14,8 +12,7 @@ import ru.citeck.ecos.records2.spring.utils.web.WebUtils;
 import ru.citeck.ecos.records2.spring.utils.web.exception.RequestHandlingException;
 import ru.citeck.ecos.records2.spring.utils.web.exception.ResponseHandlingException;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
-
-import java.io.IOException;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 /**
  * WebUtils implementation for work with request and response with Jackson lib.
@@ -24,7 +21,6 @@ import java.io.IOException;
 @Slf4j
 public class JacksonWebUtils implements WebUtils, EnvironmentAware {
 
-    private final ObjectMapper mapper = new ObjectMapper();
     private boolean isProdProfile = true;
     private Environment environment;
 
@@ -35,8 +31,8 @@ public class JacksonWebUtils implements WebUtils, EnvironmentAware {
 
     public <T> T convertRequest(byte[] body, Class<T> valueType) {
         try {
-            return mapper.readValue(body, valueType);
-        } catch (IOException ioe) {
+            return JsonUtils.read(body, valueType);
+        } catch (Exception ioe) {
             log.error("Jackson cannot parse request body", ioe);
             throw new RequestHandlingException(ioe);
         }
@@ -44,11 +40,11 @@ public class JacksonWebUtils implements WebUtils, EnvironmentAware {
 
     public byte[] encodeResponse(Object response) {
         try {
-            if (isProdProfile || response instanceof RecordsResult) {
-                response = SecurityUtils.encodeResult((RecordsResult<?>) response);
+            if (isProdProfile && response instanceof RecordsResult) {
+                SecurityUtils.encodeResult((RecordsResult<?>) response);
             }
-            return mapper.writeValueAsBytes(response);
-        } catch (JsonProcessingException jpe) {
+            return JsonUtils.toBytes(response);
+        } catch (Exception jpe) {
             log.error("Jackson cannot write response body as bytes", jpe);
             throw new ResponseHandlingException(jpe);
         }

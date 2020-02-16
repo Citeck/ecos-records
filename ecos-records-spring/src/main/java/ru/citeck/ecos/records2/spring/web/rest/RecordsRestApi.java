@@ -151,15 +151,15 @@ public class RecordsRestApi {
     public byte[] recordsQuery(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
         QueryBody queryBody = webUtils.convertRequest(body, QueryBody.class);
-        Object queryRecords = restHandler.queryRecords(queryBody);
+
         RecordsServiceFactory recordsServiceFactory = restHandler.getFactory();
         if (recordsServiceFactory == null) {
-            return webUtils.encodeResponse(queryRecords);
+            return webUtils.encodeResponse(restHandler.queryRecords(queryBody));
         } else {
             return QueryContext.withContext(recordsServiceFactory, () -> {
                 Locale currentLocale = LocaleContextHolder.getLocale();
                 QueryContext.getCurrent().setLocale(currentLocale);
-                return webUtils.encodeResponse(queryRecords);
+                return webUtils.encodeResponse(restHandler.queryRecords(queryBody));
             });
         }
     }

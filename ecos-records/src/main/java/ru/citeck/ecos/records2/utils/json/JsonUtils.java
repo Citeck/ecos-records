@@ -96,6 +96,9 @@ public class JsonUtils {
     }
 
     public static JsonNode readTree(String json) {
+        if (json == null) {
+            return null;
+        }
         try {
             return getMapper().readTree(json);
         } catch (JsonProcessingException e) {
@@ -104,10 +107,16 @@ public class JsonUtils {
     }
 
     public static <T extends JsonNode> T valueToTree(Object value) {
+        if (value == null) {
+            return null;
+        }
         return getMapper().valueToTree(value);
     }
 
     public static <T> T read(Reader reader, Class<T> type) {
+        if (reader == null) {
+            return null;
+        }
         try {
             return getMapper().readValue(reader, type);
         } catch (IOException e) {
@@ -116,6 +125,9 @@ public class JsonUtils {
     }
 
     public static <T> T read(File file, Class<T> type) {
+        if (file == null) {
+            return null;
+        }
         try {
             return getMapper().readValue(file, type);
         } catch (IOException e) {
@@ -124,6 +136,9 @@ public class JsonUtils {
     }
 
     public static <T> T read(InputStream inputStream, Class<T> type) {
+        if (inputStream == null) {
+            return null;
+        }
         try {
             return getMapper().readValue(inputStream, type);
         } catch (IOException e) {
@@ -132,6 +147,9 @@ public class JsonUtils {
     }
 
     public static <T> T read(byte[] json, Class<T> type) {
+        if (json == null) {
+            return null;
+        }
         try {
             return getMapper().readValue(json, type);
         } catch (IOException e) {
@@ -140,6 +158,9 @@ public class JsonUtils {
     }
 
     public static <T> T read(String json, Class<T> type) {
+        if (json == null) {
+            return null;
+        }
         try {
             return getMapper().readValue(json, type);
         } catch (JsonProcessingException e) {

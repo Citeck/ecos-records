@@ -102,7 +102,7 @@ public class ObjectData {
 
     @Override
     public String toString() {
-        return data.toString();
+        return JsonUtils.toString(data);
     }
 
     @Override

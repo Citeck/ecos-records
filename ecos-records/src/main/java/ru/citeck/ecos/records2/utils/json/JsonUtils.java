@@ -157,15 +157,57 @@ public class JsonUtils {
         }
     }
 
-    public static <T> T read(String json, Class<T> type) {
-        if (json == null) {
-            return null;
+    public static <T> T read(String value, Class<T> type) {
+        return read(value, type, null);
+    }
+
+    public static <T> T read(String value, Class<T> type, T deflt) {
+
+        if (value == null) {
+            return deflt;
         }
-        try {
-            return getMapper().readValue(json, type);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Json string is incorrect: " + json, e);
+
+        Object result;
+
+        if (type == Boolean.class) {
+
+            if (Boolean.TRUE.toString().equals(value)) {
+                result = true;
+            } else if (Boolean.FALSE.toString().equals(value)) {
+                result = false;
+            } else {
+                result = null;
+            }
+        } else {
+
+            Character firstNotEmptyChar = null;
+            for (int i = 0; i < value.length(); i++) {
+                char ch = value.charAt(i);
+                if (ch != ' ') {
+                    firstNotEmptyChar = ch;
+                    break;
+                }
+            }
+
+            try {
+                if (firstNotEmptyChar != null
+                    && (firstNotEmptyChar == '{'
+                    || firstNotEmptyChar == '['
+                    || firstNotEmptyChar == '"')) {
+
+                    result = getMapper().readValue(value, type);
+                } else {
+                    result = getMapper().readValue("\"" + value + "\"", type);
+                }
+            } catch (Exception e) {
+                log.error("Conversion error. Type: '" + type + "' Value: '" + value + "'", e);
+                result = null;
+            }
         }
+
+        @SuppressWarnings("unchecked")
+        T resultT = (T) result;
+        return resultT != null ? resultT : deflt;
     }
 
     public static <T> T convert(Object value, Class<T> type) {
@@ -190,47 +232,14 @@ public class JsonUtils {
 
                 return getMapper().treeToValue(node, type);
             }
-            Object result;
+            T result;
             if (value instanceof String) {
-
-                if (type == Boolean.class) {
-
-                    if (Boolean.TRUE.toString().equals(value)) {
-                        result = true;
-                    } else if (Boolean.FALSE.toString().equals(value)) {
-                        result = false;
-                    } else {
-                        result = null;
-                    }
-                } else {
-
-                    String valueStr = (String) value;
-
-                    Character firstNotEmptyChar = null;
-                    for (int i = 0; i < valueStr.length(); i++) {
-                        char ch = valueStr.charAt(i);
-                        if (ch != ' ') {
-                            firstNotEmptyChar = ch;
-                            break;
-                        }
-                    }
-
-                    if (firstNotEmptyChar != null
-                        && (firstNotEmptyChar == '{'
-                            || firstNotEmptyChar == '['
-                            || firstNotEmptyChar == '"')) {
-
-                        result = getMapper().readValue(valueStr, type);
-                    } else {
-                        result = getMapper().readValue("\"" + valueStr + "\"", type);
-                    }
-                }
+                result = read((String) value, type, deflt);
             } else {
                 result = getMapper().convertValue(value, type);
             }
 
-            @SuppressWarnings("unchecked")
-            T resultT = (T) result;
+            T resultT = result;
             return resultT != null ? resultT : deflt;
 
         } catch (Exception e) {

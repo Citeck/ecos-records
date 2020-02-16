@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring.rest.interceptor;
+package ru.citeck.ecos.records2.spring.web.interceptor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.BasicAuthorizationInterceptor;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.records2.RecordsProperties;
-import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
+import ru.citeck.ecos.records2.spring.utils.RemoteRecordsUtils;
 
 import java.io.IOException;
 import java.util.HashMap;

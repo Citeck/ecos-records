@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring;
+package ru.citeck.ecos.records2.spring.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 
 @Slf4j
 @Configuration
-public class RecordsServiceFactoryConfig extends RecordsServiceFactory {
+public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
 
     private RecordsRestConnection connection;
     private RecordsProperties properties;

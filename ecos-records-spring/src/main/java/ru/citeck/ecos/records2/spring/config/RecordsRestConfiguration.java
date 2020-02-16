@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring.rest;
+package ru.citeck.ecos.records2.spring.config;
 
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
@@ -13,8 +13,9 @@ import org.springframework.web.client.RestTemplate;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
-import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
-import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
+import ru.citeck.ecos.records2.spring.utils.RemoteRecordsUtils;
+import ru.citeck.ecos.records2.spring.web.SkipSslVerificationHttpRequestFactory;
+import ru.citeck.ecos.records2.spring.web.interceptor.RecordsAuthInterceptor;
 import ru.citeck.ecos.records2.utils.StringUtils;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -23,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @Configuration
-public class RecordsRestConfig {
+public class RecordsRestConfiguration {
 
     public static final String RECS_BASE_URL_META_KEY = "records-base-url";
     public static final String RECS_USER_BASE_URL_META_KEY = "records-user-base-url";

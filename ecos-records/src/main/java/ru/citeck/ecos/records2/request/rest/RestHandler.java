@@ -15,6 +15,7 @@ import java.util.List;
 public class RestHandler {
 
     private RecordsService recordsService;
+    private RecordsServiceFactory factory;
 
     @Deprecated
     public RestHandler(RecordsService recordsService) {
@@ -23,6 +24,7 @@ public class RestHandler {
     }
 
     public RestHandler(RecordsServiceFactory factory) {
+        this.factory = factory;
         this.recordsService = factory.getRecordsService();
     }
 
@@ -127,5 +129,9 @@ public class RestHandler {
 
     public Object deleteRecords(DeletionBody body) {
         return recordsService.delete(body);
+    }
+
+    public RecordsServiceFactory getFactory() {
+        return factory;
     }
 }

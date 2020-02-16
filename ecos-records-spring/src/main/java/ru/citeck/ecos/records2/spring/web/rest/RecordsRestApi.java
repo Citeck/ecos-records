@@ -1,24 +1,25 @@
-package ru.citeck.ecos.records2.spring;
+package ru.citeck.ecos.records2.spring.web.rest;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
-import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.SecurityUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.records2.spring.utils.web.WebUtils;
+
+import java.util.Locale;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",
@@ -30,23 +31,18 @@ import ru.citeck.ecos.records2.utils.json.JsonUtils;
 public class RecordsRestApi {
 
     private RestHandler restHandler;
-    private Environment environment;
-
-    private boolean isProdProfile = true;
+    private WebUtils webUtils;
 
     @Autowired
-    public RecordsRestApi(RestHandler restHandler) {
+    public RecordsRestApi(RestHandler restHandler,
+                          @Qualifier("jacksonWebUtils") WebUtils webUtils) {
         this.restHandler = restHandler;
-    }
-
-    @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        isProdProfile = environment != null && environment.acceptsProfiles("prod");
+        this.webUtils = webUtils;
     }
 
     @ApiOperation(
-        value = "Query arbitrary set of atributes from arbitrary sources",
-        notes = "Full description of quesry syntax "
+        value = "Query arbitrary set of attributes from arbitrary sources",
+        notes = "Full description of query syntax "
             + "see [here](https://citeck.atlassian.net/wiki/spaces/knowledgebase/pages/369557505/11.+ECOS+Records) .\n"
             + "#### Существует четыре операции, которые можно проделывать над записями:\n"
             + "* Поиск записей\n"
@@ -152,12 +148,20 @@ public class RecordsRestApi {
             + "```"
     )
     @PostMapping("/query")
-    public byte[] recordsQuery(
-        @ApiParam(value = "query text")
-        @RequestBody byte[] body) {
+    public byte[] recordsQuery(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
-        QueryBody queryBody = JsonUtils.read(body, QueryBody.class);
-        return JsonUtils.toBytes(encodeResponse(restHandler.queryRecords(queryBody)));
+        QueryBody queryBody = webUtils.convertRequest(body, QueryBody.class);
+        Object queryRecords = restHandler.queryRecords(queryBody);
+        RecordsServiceFactory recordsServiceFactory = restHandler.getFactory();
+        if (recordsServiceFactory == null) {
+            return webUtils.encodeResponse(queryRecords);
+        } else {
+            return QueryContext.withContext(recordsServiceFactory, () -> {
+                Locale currentLocale = LocaleContextHolder.getLocale();
+                QueryContext.getCurrent().setLocale(currentLocale);
+                return webUtils.encodeResponse(queryRecords);
+            });
+        }
     }
 
     @ApiOperation(
@@ -203,12 +207,11 @@ public class RecordsRestApi {
             + "```\n"
     )
     @PostMapping("/mutate")
-    public byte[] recordsMutate(
-        @ApiParam(value = "change query text")
-        @RequestBody byte[] body) {
+    public byte[] recordsMutate(@ApiParam(value = "change query text") @RequestBody byte[] body) {
 
-        MutationBody mutationBody = JsonUtils.read(body, MutationBody.class);
-        return JsonUtils.toBytes(encodeResponse(restHandler.mutateRecords(mutationBody)));
+        MutationBody mutationBody = webUtils.convertRequest(body, MutationBody.class);
+        Object mutatedRecords = restHandler.mutateRecords(mutationBody);
+        return webUtils.encodeResponse(mutatedRecords);
     }
 
     @ApiOperation(
@@ -237,24 +240,11 @@ public class RecordsRestApi {
             + "```\n"
     )
     @PostMapping("/delete")
-    public byte[] recordsDelete(
-        @ApiParam(value = "query text")
-        @RequestBody byte[] body) {
+    public byte[] recordsDelete(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
-        DeletionBody deletionBody = JsonUtils.read(body, DeletionBody.class);
-        return JsonUtils.toBytes(encodeResponse(restHandler.deleteRecords(deletionBody)));
-    }
-
-    private Object encodeResponse(Object response) {
-        if (!isProdProfile || !(response instanceof RecordsResult)) {
-            return response;
-        }
-        return SecurityUtils.encodeResult((RecordsResult<?>) response);
-    }
-
-    @Autowired(required = false)
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
+        DeletionBody deletionBody = webUtils.convertRequest(body, DeletionBody.class);
+        Object deletedRecords = restHandler.deleteRecords(deletionBody);
+        return webUtils.encodeResponse(deletedRecords);
     }
 }
 

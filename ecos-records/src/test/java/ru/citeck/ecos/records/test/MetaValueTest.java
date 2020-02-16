@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -75,7 +76,7 @@ public class MetaValueTest extends LocalRecordsDAO
         assertEquals(MetaVal.DOUBLE_VALUE, meta.getAttribute("num", 0.0));
         assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
         assertEquals(true, meta.getAttribute("has", false));
-        assertEquals(MetaVal.JSON_VALUE, meta.getAttribute("json"));
+        assertEquals(new AttValue(MetaVal.JSON_VALUE), meta.getAttribute("json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
         assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());

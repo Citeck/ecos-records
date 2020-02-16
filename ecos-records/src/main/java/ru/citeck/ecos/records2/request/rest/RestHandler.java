@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -38,7 +38,7 @@ public class RestHandler {
         }
 
         RecordsResult<?> recordsResult;
-        List<JsonNode> foreach = body.getForeach();
+        List<AttValue> foreach = body.getForeach();
 
         if (body.getQuery() != null) {
 

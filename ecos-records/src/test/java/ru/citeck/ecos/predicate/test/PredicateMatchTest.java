@@ -2,12 +2,12 @@ package ru.citeck.ecos.predicate.test;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.predicate.Element;
-import ru.citeck.ecos.predicate.ElementAttributes;
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.predicate.Element;
+import ru.citeck.ecos.records2.predicate.ElementAttributes;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;

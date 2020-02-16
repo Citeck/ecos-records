@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.source.dao.remote.RemoteRecordsDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +29,6 @@ class RemoteRecordsDAOTest {
 
     private RecordsService recordsService;
     private RestHandler queryHandler;
-    private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
     void init() {
@@ -44,7 +43,7 @@ class RemoteRecordsDAOTest {
         remoteRecordsDAO.setRestConnection(new RecordsRestConnection() {
             @Override
             public <T> T jsonPost(String url, Object request, Class<T> resultType) {
-                return mapper.convertValue(queryHandler.queryRecords((QueryBody) request), resultType);
+                return JsonUtils.convert(queryHandler.queryRecords((QueryBody) request), resultType);
             }
         });
 

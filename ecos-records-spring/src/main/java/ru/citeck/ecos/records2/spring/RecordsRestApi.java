@@ -1,7 +1,8 @@
 package ru.citeck.ecos.records2.spring;
 
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -16,9 +17,8 @@ import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
-
-import java.io.IOException;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",
@@ -33,8 +33,6 @@ public class RecordsRestApi {
     private Environment environment;
 
     private boolean isProdProfile = true;
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public RecordsRestApi(RestHandler restHandler) {
@@ -156,10 +154,10 @@ public class RecordsRestApi {
     @PostMapping("/query")
     public byte[] recordsQuery(
         @ApiParam(value = "query text")
-        @RequestBody byte[] body) throws IOException {
+        @RequestBody byte[] body) {
 
-        QueryBody queryBody = mapper.readValue(body, QueryBody.class);
-        return mapper.writeValueAsBytes(encodeResponse(restHandler.queryRecords(queryBody)));
+        QueryBody queryBody = JsonUtils.read(body, QueryBody.class);
+        return JsonUtils.toBytes(encodeResponse(restHandler.queryRecords(queryBody)));
     }
 
     @ApiOperation(
@@ -207,10 +205,10 @@ public class RecordsRestApi {
     @PostMapping("/mutate")
     public byte[] recordsMutate(
         @ApiParam(value = "change query text")
-        @RequestBody byte[] body) throws IOException {
+        @RequestBody byte[] body) {
 
-        MutationBody mutationBody = mapper.readValue(body, MutationBody.class);
-        return mapper.writeValueAsBytes(encodeResponse(restHandler.mutateRecords(mutationBody)));
+        MutationBody mutationBody = JsonUtils.read(body, MutationBody.class);
+        return JsonUtils.toBytes(encodeResponse(restHandler.mutateRecords(mutationBody)));
     }
 
     @ApiOperation(
@@ -241,10 +239,10 @@ public class RecordsRestApi {
     @PostMapping("/delete")
     public byte[] recordsDelete(
         @ApiParam(value = "query text")
-        @RequestBody byte[] body) throws IOException {
+        @RequestBody byte[] body) {
 
-        DeletionBody deletionBody = mapper.readValue(body, DeletionBody.class);
-        return mapper.writeValueAsBytes(encodeResponse(restHandler.deleteRecords(deletionBody)));
+        DeletionBody deletionBody = JsonUtils.read(body, DeletionBody.class);
+        return JsonUtils.toBytes(encodeResponse(restHandler.deleteRecords(deletionBody)));
     }
 
     private Object encodeResponse(Object response) {

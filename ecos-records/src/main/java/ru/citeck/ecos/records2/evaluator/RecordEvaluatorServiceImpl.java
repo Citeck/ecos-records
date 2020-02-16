@@ -1,14 +1,11 @@
 package ru.citeck.ecos.records2.evaluator;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.NullNode;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +19,6 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     private Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 
-    private ObjectMapper objectMapper = new ObjectMapper();
     private RecordsServiceFactory factory;
 
     public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
@@ -146,18 +142,12 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             return false;
         }
 
-        Object config = treeToValue(evalDto.getConfig(), evaluator.getConfigType());
+        Object config = JsonUtils.convert(evalDto.getConfig(), evaluator.getConfigType());
 
         Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
 
-        ObjectNode evaluatorMeta = JsonNodeFactory.instance.objectNode();
-        metaAtts.forEach((k, v) -> {
-            JsonNode value = fullRecordMeta.get(v);
-            if (value.isMissingNode()) {
-                value = NullNode.getInstance();
-            }
-            evaluatorMeta.set(k, value);
-        });
+        Attributes evaluatorMeta = new Attributes();
+        metaAtts.forEach((k, v) -> evaluatorMeta.set(k, fullRecordMeta.get(v)));
 
         Class<?> resMetaType = evaluator.getResMetaType();
         Object requiredMeta;
@@ -168,7 +158,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             meta.setAttributes(evaluatorMeta);
             requiredMeta = meta;
         } else {
-            requiredMeta = treeToValue(evaluatorMeta, evaluator.getResMetaType());
+            requiredMeta = JsonUtils.convert(evaluatorMeta, evaluator.getResMetaType());
         }
 
         try {
@@ -201,7 +191,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         Map<String, String> attributes = null;
         try {
 
-            Object configObj = treeToValue(evalDto.getConfig(), evaluator.getConfigType());
+            Object configObj = JsonUtils.convert(evalDto.getConfig(), evaluator.getConfigType());
             Object requiredMeta = evaluator.getMetaToRequest(configObj);
 
             if (requiredMeta != null) {
@@ -231,36 +221,6 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         }
 
         return attributes;
-    }
-
-    private Object treeToValue(JsonNode treeValue, Class<?> type) {
-        Object instance = null;
-        if (type != null) {
-            if (type.isAssignableFrom(ObjectNode.class) && treeValue instanceof ObjectNode) {
-                return treeValue.deepCopy();
-            }
-            try {
-                instance = type.newInstance();
-                treeToValue(treeValue, instance);
-            } catch (Exception e) {
-                log.error("Type can't be created: " + type);
-                instance = null;
-            }
-        }
-        return instance;
-    }
-
-    private void treeToValue(JsonNode treeValue, Object reqObj) {
-
-        if (reqObj == null || treeValue == null || treeValue.isNull() || treeValue.isMissingNode()) {
-            return;
-        }
-
-        try {
-            objectMapper.readerForUpdating(reqObj).readValue(treeValue);
-        } catch (Exception e) {
-            log.error("Value conversion failed. ReqObj: " + reqObj + " value: " + treeValue, e);
-        }
     }
 
     @Override

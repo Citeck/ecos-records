@@ -1,14 +1,12 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
-import ecos.com.fasterxml.jackson210.databind.DeserializationFeature;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.predicate.PredicateService;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -23,9 +21,9 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -56,14 +54,8 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected RecordsMetaGql recordsMetaGql;
     protected MetaValuesConverter metaValuesConverter;
 
-    protected ObjectMapper objectMapper = new ObjectMapper();
-
     private boolean addSourceId = true;
     private Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
-
-    {
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    }
 
     public LocalRecordsDAO() {
     }
@@ -92,14 +84,8 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
             }
 
             for (int i = 0; i < recordRefs.size(); i++) {
-
                 RecordMeta meta = mutation.getRecords().get(i);
-
-                try {
-                    objectMapper.readerForUpdating(values.get(i)).readValue(meta.getAttributes());
-                } catch (IOException e) {
-                    throw new RuntimeException("Mutation failed", e);
-                }
+                JsonUtils.applyData(meta.getAttributes(), values.get(i));
             }
 
             RecordsMutResult result = mutableDao.save(values);

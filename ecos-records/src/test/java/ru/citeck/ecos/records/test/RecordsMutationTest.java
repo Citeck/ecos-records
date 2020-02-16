@@ -64,6 +64,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
         assertEquals("test1", valuesToMutate.get(TEST_REF).getField1());
         assertTrue(valuesToMutate.get(TEST_REF).isBool());
 
+        meta = new RecordMeta(TEST_REF);
         meta.set(".att(n:\"field\"){str}", "test__");
         meta.set(".att(n:\"field0\"){json}", "test0__");
         meta.set(".att(n:\"field1\"){disp}", "test1__");

@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -37,7 +37,7 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
 
         RecordRef ref = RecordRef.create(ID, "test");
 
-        JsonNode attribute = recordsService.getAttribute(ref, "field0");
+        AttValue attribute = recordsService.getAttribute(ref, "field0");
         assertEquals("field0", attribute.asText());
 
         attribute = recordsService.getAttribute(ref, "inner.field1");

@@ -2,9 +2,9 @@ package ru.citeck.ecos.predicate.test;
 
 import lombok.Data;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.predicate.PredicateUtils;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.Predicates;
+import ru.citeck.ecos.records2.predicate.PredicateUtils;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

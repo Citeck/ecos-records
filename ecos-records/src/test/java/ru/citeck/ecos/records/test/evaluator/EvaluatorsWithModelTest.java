@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records.test.evaluator;
 
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EvaluatorsWithModelTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
 
     private static final String ID = "test";
-
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void test() {
@@ -50,7 +49,7 @@ public class EvaluatorsWithModelTest extends LocalRecordsDAO implements LocalRec
 
         EvalConfig config = new EvalConfig();
         config.someParam = EvalConfig.PARAM_VALUE;
-        evaluatorDto.setConfig(objectMapper.valueToTree(config));
+        evaluatorDto.setConfig(JsonUtils.convert(config, Attributes.class));
 
         assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto, model));
     }

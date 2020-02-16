@@ -1,28 +1,23 @@
 package ru.citeck.ecos.records2.request.query;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonSerialize;
-import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.page.AfterPage;
 import ru.citeck.ecos.records2.request.query.page.QueryPage;
 import ru.citeck.ecos.records2.request.query.page.SkipPage;
-import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@Slf4j
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecordsQuery {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private String sourceId = "";
 
@@ -33,7 +28,7 @@ public class RecordsQuery {
 
     private QueryConsistency consistency = QueryConsistency.DEFAULT;
     private String language = "";
-    private JsonNode query = MissingNode.getInstance();
+    private Object query = null;
     private boolean debug = false;
 
     public RecordsQuery() {
@@ -41,7 +36,7 @@ public class RecordsQuery {
 
     public RecordsQuery(RecordsQuery other) {
         this.page = other.page;
-        this.query = other.query != null ? other.query.deepCopy() : null;
+        this.query = JsonUtils.copy(other.query);
         this.debug = other.debug;
         this.language = other.language;
         this.sourceId = other.sourceId;
@@ -58,44 +53,34 @@ public class RecordsQuery {
         this.sourceId = sourceId;
     }
 
-    public <T> T getQuery(Class<T> type) {
+    public <T> T getQueryOrNull(Class<T> type) {
         try {
-            if (query.isTextual()) {
-                if (String.class.equals(type)) {
-                    return type.cast(query.asText());
-                }
-                return objectMapper.readValue(query.textValue(), type);
-            } else {
-                return objectMapper.treeToValue(query, type);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Query is incorrect: " + query, e);
+            return getQuery(type);
+        } catch (Exception e) {
+            log.debug("Can't convert query to type " + type + ". Query: " + query);
+            return null;
         }
     }
 
-    public JsonNode getQuery() {
+    public <T> T getQuery(Class<T> type) {
+        return JsonUtils.convert(query, type);
+    }
+
+    public Object getQuery() {
         return query;
     }
 
-    public void setQuery(Object query) {
-        this.query = objectMapper.valueToTree(query);
-    }
-
     @JsonSetter
-    public void setQuery(JsonNode query) {
-        if (query != null) {
+    public void setQuery(Object query) {
+        if (query instanceof String) {
             this.query = query;
         } else {
-            this.query = MissingNode.getInstance();
+            this.query = JsonUtils.toJson(query);
         }
     }
 
     public void setQuery(String query) {
-        if (StringUtils.isNotBlank(query)) {
-            this.query = TextNode.valueOf(query);
-        } else {
-            this.query = MissingNode.getInstance();
-        }
+        this.query = query;
     }
 
     public String getLanguage() {

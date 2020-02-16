@@ -1,9 +1,5 @@
 package ru.citeck.ecos.records2;
 
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.PredicateServiceImpl;
-import ru.citeck.ecos.querylang.QueryLangService;
-import ru.citeck.ecos.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records2.evaluator.evaluators.*;
@@ -18,6 +14,13 @@ import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
 import ru.citeck.ecos.records2.meta.DtoMetaResolver;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
+import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonDeserializer;
+import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonSerializer;
+import ru.citeck.ecos.records2.predicate.json.std.PredicateTypes;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
@@ -25,6 +28,7 @@ import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,12 +52,41 @@ public class RecordsServiceFactory {
     private Supplier<? extends QueryContext> queryContextSupplier;
     private MetaValuesConverter metaValuesConverter;
     private RecordEvaluatorService recordEvaluatorService;
+    private PredicateJsonDeserializer predicateJsonDeserializer;
+    private PredicateTypes predicateTypes;
 
     private RecordsProperties properties;
 
     private List<GqlTypeDefinition> gqlTypes;
 
     private RecordEvaluatorService tmpEvaluatorsService;
+
+    {
+        JsonUtils.addDeserializer(getPredicateJsonDeserializer());
+        JsonUtils.addSerializer(new PredicateJsonSerializer());
+    }
+
+    public final synchronized PredicateTypes getPredicateTypes() {
+        if (predicateTypes == null) {
+            predicateTypes = createPredicateTypes();
+        }
+        return predicateTypes;
+    }
+
+    protected PredicateTypes createPredicateTypes() {
+        return new PredicateTypes();
+    }
+
+    public final synchronized PredicateJsonDeserializer getPredicateJsonDeserializer() {
+        if (predicateJsonDeserializer == null) {
+            predicateJsonDeserializer = createPredicateJsonDeserializer();
+        }
+        return predicateJsonDeserializer;
+    }
+
+    protected synchronized PredicateJsonDeserializer createPredicateJsonDeserializer() {
+        return new PredicateJsonDeserializer(getPredicateTypes());
+    }
 
     public final synchronized RecordEvaluatorService getRecordEvaluatorService() {
         if (recordEvaluatorService == null) {
@@ -225,6 +258,7 @@ public class RecordsServiceFactory {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
+        metaValueFactories.add(new AttValueFactory());
         metaValueFactories.add(new MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());
         metaValueFactories.add(new BeanValueFactory());

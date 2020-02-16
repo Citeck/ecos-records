@@ -1,15 +1,15 @@
 package ru.citeck.ecos.records2.evaluator.evaluators;
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.Data;
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.PredicateUtils;
-import ru.citeck.ecos.predicate.model.Predicate;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.List;
 
@@ -22,13 +22,13 @@ public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordM
 
     @Override
     public List<String> getMetaToRequest(Config config) {
-        Predicate predicate = predicateService.readJson(config.predicate);
+        Predicate predicate = JsonUtils.convert(config.predicate, Predicate.class);
         return PredicateUtils.getAllPredicateAttributes(predicate);
     }
 
     @Override
     public boolean evaluate(RecordMeta meta, Config config) {
-        Predicate predicate = predicateService.readJson(config.predicate);
+        Predicate predicate = JsonUtils.convert(config.predicate, Predicate.class);
         return predicateService.isMatch(new RecordElement(meta), predicate);
     }
 
@@ -44,6 +44,6 @@ public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordM
 
     @Data
     public static class Config {
-        private ObjectNode predicate;
+        private Predicate predicate;
     }
 }

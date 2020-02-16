@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.evaluator;
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.Data;
+import ru.citeck.ecos.records2.attributes.Attributes;
 
 @Data
 public class RecordEvaluatorDto {
@@ -9,5 +9,5 @@ public class RecordEvaluatorDto {
     private String id;
     private String type;
     private boolean inverse;
-    private ObjectNode config;
+    private Attributes config;
 }

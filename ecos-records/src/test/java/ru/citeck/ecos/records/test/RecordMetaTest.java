@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import ecos.com.fasterxml.jackson210.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,8 +15,6 @@ class RecordMetaTest {
     @Test
     void testJson() {
 
-        ObjectMapper mapper = new ObjectMapper();
-
         RecordMeta meta = new RecordMeta();
         meta.setId("someId");
         meta.setAttribute("stringValue", "TestAtt2");
@@ -27,16 +25,16 @@ class RecordMetaTest {
         String json;
         RecordMeta meta2;
         try {
-            json = mapper.writeValueAsString(meta);
-            meta2 = mapper.readValue(json, RecordMeta.class);
+            json = JsonUtils.toString(meta);
+            meta2 = JsonUtils.read(json, RecordMeta.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         assertEquals(meta, meta2);
 
-        assertEquals(meta.get("intValue", new BigDecimal(10)), new BigDecimal(5));
-        assertEquals(meta.get("stringValue", new BigDecimal(10)), new BigDecimal(10));
-        assertEquals(meta.get("MISSING", new BigDecimal(10)), new BigDecimal(10));
+        assertEquals(new BigDecimal(5), meta.get("intValue", new BigDecimal(10)));
+        assertEquals(new BigDecimal(10), meta.get("stringValue", new BigDecimal(10)));
+        assertEquals(new BigDecimal(10), meta.get("MISSING", new BigDecimal(10)));
     }
 }

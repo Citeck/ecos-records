@@ -1,22 +1,21 @@
 package ru.citeck.ecos.records.test.evaluator;
 
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
+import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +74,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         evaluatorDto = hasAttEvaluator("field0");
 
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
-        evaluatorDto.getConfig().set("attribute", TextNode.valueOf("unknown_field"));
+        evaluatorDto.getConfig().set("attribute", "unknown_field");
         assertFalse(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
 
         RecordEvaluatorDto groupEvaluator = groupEvaluator(
@@ -172,9 +171,9 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         predicateEvaluator.setType(PredicateEvaluator.TYPE);
 
         PredicateEvaluator.Config config = new PredicateEvaluator.Config();
-        config.setPredicate(predicateService.writeJson(predicate));
+        config.setPredicate(predicate);
 
-        predicateEvaluator.setConfig(objectMapper.valueToTree(config));
+        predicateEvaluator.setConfig(JsonUtils.convert(config, Attributes.class));
         return predicateEvaluator;
     }
 
@@ -187,7 +186,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         groupConfig.setJoinBy(joinType);
         groupConfig.setEvaluators(Arrays.asList(evaluators));
 
-        groupEvaluator.setConfig(objectMapper.valueToTree(groupConfig));
+        groupEvaluator.setConfig(JsonUtils.convert(groupConfig, Attributes.class));
 
         return groupEvaluator;
     }
@@ -207,9 +206,9 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
     private RecordEvaluatorDto hasAttEvaluator(String att) {
         RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("has-attribute");
-        ObjectNode config = JsonNodeFactory.instance.objectNode();
-        config.set("attribute", TextNode.valueOf(att));
-        evaluatorDto.setConfig(config);
+        Attributes attributes = new Attributes();
+        attributes.set("attribute", att);
+        evaluatorDto.setConfig(attributes);
         return evaluatorDto;
     }
 

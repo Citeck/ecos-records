@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
@@ -78,13 +78,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     /* ATTRIBUTES */
 
     @Override
-    public JsonNode getAttribute(RecordRef record, String attribute) {
+    public AttValue getAttribute(RecordRef record, String attribute) {
         RecordsResult<RecordMeta> meta = getAttributes(Collections.singletonList(record),
                                                        Collections.singletonList(attribute));
         if (!meta.getRecords().isEmpty()) {
             return meta.getRecords().get(0).getAttribute(attribute);
         }
-        return MissingNode.getInstance();
+        return new AttValue((Object) null);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
             RecordMeta record = records.get(i);
 
-            ObjectNode attributes = JsonNodeFactory.instance.objectNode();
+            Attributes attributes = new Attributes();
 
             record.forEach((name, value) -> {
 
@@ -193,7 +193,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                         value = convertAssocValue(value, aliasToRecordRef);
                     }
 
-                    attributes.put(simpleName, value);
+                    attributes.set(simpleName, value);
                 }
             });
 
@@ -219,18 +219,18 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return result;
     }
 
-    private JsonNode convertAssocValue(JsonNode value, Map<String, RecordRef> mapping) {
+    private AttValue convertAssocValue(AttValue value, Map<String, RecordRef> mapping) {
         if (value.isTextual()) {
             String textValue = value.asText();
             if (mapping.containsKey(textValue)) {
-                return TextNode.valueOf(mapping.get(textValue).toString());
+                return new AttValue(mapping.get(textValue).toString());
             }
         } else if (value.isArray()) {
-            ArrayNode convertedValue = JsonNodeFactory.instance.arrayNode();
-            for (JsonNode node : value) {
+            List<AttValue> convertedValue = new ArrayList<>();
+            for (AttValue node : value) {
                 convertedValue.add(convertAssocValue(node, mapping));
             }
-            return convertedValue;
+            return new AttValue(convertedValue);
         }
         return value;
     }

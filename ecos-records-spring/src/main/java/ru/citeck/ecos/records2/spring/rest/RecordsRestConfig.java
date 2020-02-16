@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.spring.rest;
 
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +15,7 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.spring.RemoteRecordsUtils;
 import ru.citeck.ecos.records2.spring.rest.interceptor.RecordsAuthInterceptor;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -32,7 +32,6 @@ public class RecordsRestConfig {
     private RecordsProperties properties;
     private RestTemplateBuilder restTemplateBuilder;
     private RecordsAuthInterceptor authInterceptor;
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Bean
     public RecordsRestConnection recordsRestConnection() {
@@ -47,7 +46,7 @@ public class RecordsRestConfig {
         try {
 
             response = recordsRestTemplate().postForObject(recordsUrl, req, byte[].class);
-            return mapper.readValue(response, respType);
+            return JsonUtils.read(response, respType);
 
         } catch (Exception e) {
 
@@ -66,11 +65,7 @@ public class RecordsRestConfig {
             logErrorObject("Request body", req);
             logErrorObject("Request resp", response);
 
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            } else {
-                throw new RuntimeException(e);
-            }
+            throw e;
         }
     }
 
@@ -82,7 +77,7 @@ public class RecordsRestConfig {
             str = new String((byte[]) obj, StandardCharsets.UTF_8);
         } else {
             try {
-                str = mapper.writeValueAsString(obj);
+                str = JsonUtils.toString(obj);
             } catch (Exception e) {
                 log.error("log conversion failed: " + e.getClass() + " " + e.getMessage());
                 try {

@@ -1,9 +1,5 @@
 package ru.citeck.ecos.records.test.local;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.DoubleNode;
-import ecos.com.fasterxml.jackson210.databind.node.NullNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,6 +8,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -26,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AttributesMixinTest extends LocalRecordsDAO
@@ -74,13 +72,13 @@ public class AttributesMixinTest extends LocalRecordsDAO
         RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
         RecordMeta meta = result.getRecords().get(0);
 
-        assertEquals(NullNode.getInstance(), meta.get(strAtt));
-        assertEquals(NullNode.getInstance(), meta.get(intAtt));
+        assertTrue(meta.get(strAtt).isNull());
+        assertTrue(meta.get(intAtt).isNull());
 
         meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
 
-        assertEquals(NullNode.getInstance(), meta.get(strAtt));
-        assertEquals(NullNode.getInstance(), meta.get(intAtt));
+        assertTrue(meta.get(strAtt).isNull());
+        assertTrue(meta.get(intAtt).isNull());
 
         MixinWithDto mixinWithDto = new MixinWithDto();
         addAttributesMixin(mixinWithDto);
@@ -94,8 +92,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
         addAttributesMixin(new MixinWithRecRef());
         checkValidComputedAttributes();
 
-        JsonNode attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
-        assertEquals(TextNode.valueOf(REC_META_VALUE_ID), attValue);
+        AttValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
+        assertEquals(new AttValue(REC_META_VALUE_ID), attValue);
     }
 
     private void checkValidComputedAttributes() {
@@ -112,15 +110,15 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         result.getRecords().forEach(meta -> {
 
-            assertEquals(TextNode.valueOf(finalFieldValue), meta.get(finalFieldName));
+            assertEquals(new AttValue(finalFieldValue), meta.get(finalFieldName));
 
-            assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+            assertEquals(new AttValue(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(new AttValue((double) intFieldsSum), meta.get(intAtt));
 
             meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
 
-            assertEquals(TextNode.valueOf(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(DoubleNode.valueOf(intFieldsSum), meta.get(intAtt));
+            assertEquals(new AttValue(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(new AttValue((double) intFieldsSum), meta.get(intAtt));
         });
     }
 

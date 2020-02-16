@@ -11,6 +11,14 @@ import java.util.stream.Collectors;
 
 public class ReflectUtils {
 
+    public static Class<?> getGenericClassArg(Class<?> type, Class<?> genericType) {
+        List<Class<?>> args = getGenericClassArgs(type, genericType);
+        if (args.size() > 0) {
+            return args.get(0);
+        }
+        return null;
+    }
+
     public static List<Class<?>> getGenericClassArgs(Class<?> type, Class<?> genericType) {
 
         return getGenericArgs(type, genericType)

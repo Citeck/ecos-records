@@ -3,19 +3,20 @@ package ru.citeck.ecos.records.test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.*;
-import ru.citeck.ecos.querylang.QueryLangService;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.*;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -181,7 +182,7 @@ class RecordsGroupTest extends LocalRecordsDAO
 
         RecordsQueryResult<Object> result = new RecordsQueryResult<>();
 
-        Predicate predicate = predicateService.readJson(recordsQuery.getQuery());
+        Predicate predicate = recordsQuery.getQuery(Predicate.class);
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
 
         int max = recordsQuery.getMaxItems() >= 0 ? recordsQuery.getMaxItems() : Integer.MAX_VALUE;
@@ -212,7 +213,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         recordsQuery.setLanguage("fts");
         recordsQuery.setGroupBy(Collections.singletonList("strVal"));
 
-        RecordsQuery baseQuery = objectMapper.readValue(objectMapper.writeValueAsString(recordsQuery), RecordsQuery.class);
+        RecordsQuery baseQuery = JsonUtils.copy(recordsQuery);
 
         assertResults(recordsService.queryRecords(recordsQuery, Result.class), predicate);
         assertEquals(baseQuery, recordsQuery);
@@ -290,7 +291,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         DistinctQuery distinctQuery = new DistinctQuery();
         distinctQuery.setAttribute(distinctAtt);
         distinctQuery.setLanguage("predicate");
-        distinctQuery.setQuery(predicateService.writeJson(predicate));
+        distinctQuery.setQuery(predicate);
         recordsQuery.setQuery(distinctQuery);
 
         RecordsQueryResult<DistinctValue> result = recordsService.queryRecords(recordsQuery, DistinctValue.class);

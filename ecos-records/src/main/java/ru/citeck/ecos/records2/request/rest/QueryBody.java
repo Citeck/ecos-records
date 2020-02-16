@@ -7,6 +7,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.attributes.AttValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
 import java.util.*;
@@ -18,7 +19,7 @@ public class QueryBody {
 
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;
-    @Getter @Setter private List<JsonNode> foreach;
+    @Getter @Setter private List<AttValue> foreach;
 
     @Getter @Setter private String schema;
     @Getter private Map<String, String> attributes;

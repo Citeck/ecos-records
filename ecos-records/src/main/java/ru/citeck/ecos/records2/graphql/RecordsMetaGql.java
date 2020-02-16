@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2.graphql;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import graphql.*;
 import graphql.language.Document;
@@ -15,12 +14,14 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.Attributes;
 import ru.citeck.ecos.records2.graphql.exception.GqlParseException;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -33,7 +34,6 @@ public class RecordsMetaGql {
 
     private GraphQL graphQL;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
     private RecordsServiceFactory serviceFactory;
 
     public RecordsMetaGql(RecordsServiceFactory serviceFactory) {
@@ -125,14 +125,14 @@ public class RecordsMetaGql {
 
         } else {
 
-            JsonNode jsonNode = objectMapper.valueToTree(executionResult.getData());
+            JsonNode jsonNode = JsonUtils.toJson(executionResult.getData());
             JsonNode meta = jsonNode.get(GqlMetaQueryDef.META_FIELD);
 
             for (int i = 0; i < meta.size(); i++) {
                 RecordMeta recMeta = new RecordMeta(RecordsUtils.getMetaValueId(metaValues.get(i)));
                 JsonNode attributes = meta.get(i);
                 if (attributes instanceof ObjectNode) {
-                    recMeta.setAttributes((ObjectNode) attributes);
+                    recMeta.setAttributes(JsonUtils.convert(attributes, Attributes.class));
                 }
                 result.add(recMeta);
             }

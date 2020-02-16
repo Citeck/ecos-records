@@ -1,20 +1,20 @@
 package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.QueryConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.attributes.AttValue;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
+import ru.citeck.ecos.records2.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,14 +28,13 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
 
     private static final String ID = "";
     private RecordsService recordsService;
-    private PredicateService predicateService;
 
     private List<RecordsQuery> queries = new ArrayList<>();
 
-    private List<JsonNode> eachNode = Arrays.asList(
-        TextNode.valueOf("firstText"),
-        TextNode.valueOf("secondText"),
-        TextNode.valueOf("thirdText")
+    private List<AttValue> eachNode = Arrays.asList(
+        new AttValue("firstText"),
+        new AttValue("secondText"),
+        new AttValue("thirdText")
     );
 
     private List<RecordRef> resultRefs = Arrays.asList(
@@ -48,13 +47,12 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
-        predicateService = factory.getPredicateService();
         setId(ID);
         recordsService.register(this);
     }
 
     private JsonNode getQuery(String var) {
-        return predicateService.writeJson(Predicates.and(
+        return JsonUtils.valueToTree(Predicates.and(
             Predicates.eq("test", var),
             Predicates.or(
                 Predicates.eq("aaa", var),

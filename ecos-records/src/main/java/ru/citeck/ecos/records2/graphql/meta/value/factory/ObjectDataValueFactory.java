@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.utils.json.JsonUtils;
 import java.util.Collections;
 import java.util.List;
 
-public class AttributesValueFactory implements MetaValueFactory<ObjectData> {
+public class ObjectDataValueFactory implements MetaValueFactory<ObjectData> {
 
     @Override
     public MetaValue getValue(ObjectData value) {
@@ -27,7 +27,7 @@ public class AttributesValueFactory implements MetaValueFactory<ObjectData> {
 
             @Override
             public Object getJson() {
-                return this;
+                return value;
             }
         };
     }

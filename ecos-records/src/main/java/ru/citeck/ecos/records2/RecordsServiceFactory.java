@@ -261,7 +261,7 @@ public class RecordsServiceFactory {
 
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
-        metaValueFactories.add(new AttributesValueFactory());
+        metaValueFactories.add(new ObjectDataValueFactory());
         metaValueFactories.add(new AttValueFactory());
         metaValueFactories.add(new MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());

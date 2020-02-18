@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records.test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
@@ -10,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class QueryBodyTest {
 
     @Test
-    void test() {
+    void test() throws JsonProcessingException {
 
         QueryBody body0 = JsonUtils.read("{\"attributes\":{\"att0\":\"att0\",\"att1\":\"att1\"}}", QueryBody.class);
         QueryBody body1 = JsonUtils.convert("{\"attributes\":[\"att0\",\"att1\"]}", QueryBody.class);
@@ -26,5 +28,13 @@ class QueryBodyTest {
         QueryBody body3 = JsonUtils.convert("{\"foreach\":[\"test0\", \"test1\"], \"query\":{\"query\": \"q\"}}", QueryBody.class);
         assertEquals(2, body3.getForeach().size());
         assertEquals(new DataValue("test0"), body3.getForeach().get(0));
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        QueryBody body = new QueryBody();
+        String strBodyFromUtils = JsonUtils.toString(body);
+        String strBodyFromMapper = mapper.writeValueAsString(body);
+
+        assertEquals(strBodyFromMapper, strBodyFromUtils);
     }
 }

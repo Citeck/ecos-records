@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class QueryBody {
 
     public static final String SINGLE_ATT_KEY = "a";
@@ -44,6 +45,7 @@ public class QueryBody {
     }
 
     @JsonSetter
+    @com.fasterxml.jackson.annotation.JsonSetter
     public void setAttributes(JsonNode attributes) {
 
         Map<String, String> result = new HashMap<>();
@@ -74,11 +76,13 @@ public class QueryBody {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSingleRecord() {
         return isSingleRecord && records != null && records.size() == 1;
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSingleAttribute() {
         return isSingleAttribute && attributes != null && attributes.size() == 1;
     }

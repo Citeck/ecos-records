@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.IntNode;
@@ -16,6 +17,8 @@ import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -95,6 +98,12 @@ public class JacksonTest {
 
         assertEquals(controlTestDto, check0);
         assertEquals(controlTestDto, check1);
+
+        Map<String, String> data = new HashMap<>();
+        String value = "test";
+        data.put("field", value);
+        WithJsonField valueWithJsonField = JsonUtils.convert(data, WithJsonField.class);
+        assertEquals(value, valueWithJsonField.field.asText());
     }
 
     @Data
@@ -110,5 +119,11 @@ public class JacksonTest {
         private String queryField1 = "451231";
         private int intField = 222;
         private boolean boolField = true;
+    }
+
+    @Data
+    public static class WithJsonField {
+
+        private JsonNode field;
     }
 }

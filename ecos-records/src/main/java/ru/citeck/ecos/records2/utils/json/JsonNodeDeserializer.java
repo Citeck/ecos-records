@@ -23,7 +23,7 @@ public class JsonNodeDeserializer extends StdDeserializer<JsonNode> {
     public JsonNode deserialize(JsonParser jsonParser,
                                 DeserializationContext deserializationContext) throws IOException {
 
-        JsonNode node = jsonParser.readValueAsTree();
+        ecos.com.fasterxml.jackson210.databind.JsonNode node = jsonParser.readValueAsTree();
         Object nodeObj = JsonUtils.toJava(node);
 
         return objectMapper.valueToTree(nodeObj);

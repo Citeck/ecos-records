@@ -272,7 +272,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (recordsResolver instanceof RecordsDAORegistry) {
             ((RecordsDAORegistry) recordsResolver).register(recordsSource);
         } else {
-            throw new IllegalStateException("Records resolver doesn't support source registration");
+            log.warn("Records resolver doesn't support source registration. "
+                     + "Source: " + id + " " + recordsSource.getClass());
         }
     }
 }

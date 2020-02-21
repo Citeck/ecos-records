@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
 
-    private static final Instant startedTime = Instant.now();
+    private static final Instant STARTED_TIME = Instant.now();
 
     public static final String ID = "meta";
 
@@ -34,7 +34,7 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
         }).collect(Collectors.toList());
     }
 
-    public class MetaRoot implements MetaValue {
+    public static class MetaRoot implements MetaValue {
 
         @Override
         public Object getAttribute(String name, MetaField field) {
@@ -43,25 +43,27 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
                     return new Records();
                 case "time":
                     return new Time();
+                default:
+                    return null;
             }
-            return null;
         }
     }
 
-    public class Time implements MetaValue {
+    public static class Time implements MetaValue {
 
         @Override
         public Object getAttribute(String name, MetaField field) {
 
             switch (name) {
                 case "started":
-                    return startedTime;
+                    return STARTED_TIME;
                 case "uptime":
                     return getFormattedUptime();
                 case "uptimeMs":
                     return getUptimeMs();
+                default:
+                    return null;
             }
-            return null;
         }
 
         @Override
@@ -70,7 +72,7 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
         }
 
         private long getUptimeMs() {
-            return ChronoUnit.MILLIS.between(startedTime, Instant.now());
+            return ChronoUnit.MILLIS.between(STARTED_TIME, Instant.now());
         }
 
         private String getFormattedUptime() {
@@ -99,7 +101,7 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
         }
     }
 
-    public class Records implements MetaValue {
+    public static class Records implements MetaValue {
 
         @Override
         public Object getAttribute(String name, MetaField field) {

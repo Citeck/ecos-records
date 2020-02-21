@@ -1,15 +1,6 @@
 package ru.citeck.ecos.records2.resolver;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.AndPredicate;
-import ru.citeck.ecos.predicate.model.OrPredicate;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.Predicates;
-import ru.citeck.ecos.querylang.QueryLangService;
-import ru.citeck.ecos.querylang.QueryWithLang;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -17,6 +8,15 @@ import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;
 import ru.citeck.ecos.records2.exception.RecordsSourceNotFoundException;
+import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.AndPredicate;
+import ru.citeck.ecos.records2.predicate.model.OrPredicate;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.querylang.QueryWithLang;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.RecordsError;
@@ -30,6 +30,7 @@ import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +49,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private Map<Class<? extends RecordsDAO>, Map<String, ? extends RecordsDAO>> daoMapByType;
 
-    private PredicateService predicateService;
     private QueryLangService queryLangService;
 
     private RecordsServiceFactory serviceFactory;
@@ -58,7 +58,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
-        this.predicateService = serviceFactory.getPredicateService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
 
@@ -152,7 +151,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         recordsQuery.setSourceId(sourceId);
         recordsQuery.setMaxItems(Math.max(max, 20));
 
-        Optional<JsonNode> query = queryLangService.convertLang(distinctQuery.getQuery(),
+        Optional<Object> query = queryLangService.convertLang(distinctQuery.getQuery(),
                 distinctQuery.getLanguage(),
                 PredicateService.LANGUAGE_PREDICATE);
 
@@ -161,7 +160,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             return Collections.emptyList();
         }
 
-        Predicate predicate = predicateService.readJson(query.get());
+        Predicate predicate = JsonUtils.convert(query.get(), Predicate.class);
 
         OrPredicate distinctPredicate = Predicates.or(Predicates.empty(distinctQuery.getAttribute()));
         AndPredicate fullPredicate = Predicates.and(predicate, Predicates.not(distinctPredicate));
@@ -175,23 +174,23 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         String distinctAtt = distinctQuery.getAttribute();
 
-        HashMap<String, JsonNode> values = new HashMap<>();
+        HashMap<String, DataValue> values = new HashMap<>();
 
         do {
 
-            recordsQuery.setQuery(predicateService.writeJson(fullPredicate));
+            recordsQuery.setQuery(fullPredicate);
             RecordsQueryResult<RecordMeta> queryResult = queryRecords(recordsQuery, attSchema);
             found = queryResult.getRecords().size();
 
             for (RecordMeta value : queryResult.getRecords()) {
 
-                JsonNode att = value.get("att");
-                String strVal = att.path(distinctValueAlias).asText();
+                DataValue att = value.get("att");
+                String strVal = att.get(distinctValueAlias).asText();
 
-                if (att.isMissingNode() || att.isNull()) {
+                if (att.isNull()) {
                     recordsQuery.setSkipCount(recordsQuery.getSkipCount() + 1);
                 } else {
-                    JsonNode replaced = values.put(strVal, att);
+                    DataValue replaced = values.put(strVal, att);
                     if (replaced == null) {
                         distinctPredicate.addPredicate(Predicates.eq(distinctAtt, strVal));
                     }
@@ -200,11 +199,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         } while (found > 0 && values.size() <= max && ++requests <= max);
 
-        return values.values().stream().filter(JsonNode::isObject).map(v -> {
-            ObjectNode attributes = (ObjectNode) v;
-            RecordRef ref = RecordRef.valueOf(attributes.path("id").asText());
+        return values.values().stream().filter(DataValue::isObject).map(v -> {
+
+            ObjectData attributes = v.asAttributes();
+            RecordRef ref = RecordRef.valueOf(attributes.get("id").asText());
+
             attributes.remove(distinctValueAlias);
             attributes.remove("id");
+
             return new RecordMeta(ref, attributes);
         }).collect(Collectors.toList());
     }

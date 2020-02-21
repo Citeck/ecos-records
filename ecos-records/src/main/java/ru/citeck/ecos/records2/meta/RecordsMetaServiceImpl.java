@@ -1,19 +1,20 @@
 package ru.citeck.ecos.records2.meta;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -101,25 +102,21 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
 
-        ObjectNode attributes = meta.getAttributes();
-        ObjectNode resultAttributes = JsonNodeFactory.instance.objectNode();
+        ObjectData attributes = meta.getAttributes();
+        ObjectData resultAttributes = new ObjectData();
         Map<String, String> keysMapping = schema.getKeysMapping();
 
-        Iterator<String> fields = attributes.fieldNames();
+        attributes.forEach((key, value) -> {
 
-        while (fields.hasNext()) {
-            String key = fields.next();
             String resultKey = keysMapping.get(key);
-            if (resultKey == null) {
-                continue;
+            if (resultKey != null) {
+                if (resultKey.equals(".json") || !flat) {
+                    resultAttributes.set(resultKey, value);
+                } else {
+                    resultAttributes.set(resultKey, toFlatNode(JsonUtils.toJson(value)));
+                }
             }
-            JsonNode value = attributes.get(key);
-            if (resultKey.equals(".json") || !flat) {
-                resultAttributes.put(resultKey, value);
-            } else {
-                resultAttributes.put(resultKey, toFlatNode(value));
-            }
-        }
+        });
 
         RecordMeta recordMeta = new RecordMeta(meta.getId());
         recordMeta.setAttributes(resultAttributes);

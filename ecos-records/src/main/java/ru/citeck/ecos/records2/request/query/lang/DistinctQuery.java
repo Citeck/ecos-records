@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records2.request.query.lang;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 public class DistinctQuery {
 
     public static final String LANGUAGE = "distinct";
 
     private String attribute;
-    private JsonNode query;
+    private Object query;
     private String language;
 
     public String getAttribute() {
@@ -18,12 +18,16 @@ public class DistinctQuery {
         this.attribute = attribute;
     }
 
-    public JsonNode getQuery() {
+    public Object getQuery() {
         return query;
     }
 
-    public void setQuery(JsonNode query) {
-        this.query = query;
+    public void setQuery(Object query) {
+        if (query instanceof String) {
+            this.query = query;
+        } else {
+            this.query = JsonUtils.toJson(query);
+        }
     }
 
     public String getLanguage() {
@@ -34,7 +38,7 @@ public class DistinctQuery {
         this.language = language;
     }
 
-    public static DistinctQuery create(String attribute, JsonNode query, String language) {
+    public static DistinctQuery create(String attribute, Object query, String language) {
         DistinctQuery result = new DistinctQuery();
         result.setQuery(query);
         result.setLanguage(language);

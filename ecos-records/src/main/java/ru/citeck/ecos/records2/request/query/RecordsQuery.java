@@ -1,28 +1,24 @@
 package ru.citeck.ecos.records2.request.query;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.page.AfterPage;
 import ru.citeck.ecos.records2.request.query.page.QueryPage;
 import ru.citeck.ecos.records2.request.query.page.SkipPage;
-import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@Slf4j
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecordsQuery {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private String sourceId = "";
 
@@ -33,7 +29,7 @@ public class RecordsQuery {
 
     private QueryConsistency consistency = QueryConsistency.DEFAULT;
     private String language = "";
-    private JsonNode query = MissingNode.getInstance();
+    private JsonNode query = null;
     private boolean debug = false;
 
     public RecordsQuery() {
@@ -41,7 +37,7 @@ public class RecordsQuery {
 
     public RecordsQuery(RecordsQuery other) {
         this.page = other.page;
-        this.query = other.query != null ? other.query.deepCopy() : null;
+        this.query = JsonUtils.copy(other.query);
         this.debug = other.debug;
         this.language = other.language;
         this.sourceId = other.sourceId;
@@ -58,44 +54,27 @@ public class RecordsQuery {
         this.sourceId = sourceId;
     }
 
-    public <T> T getQuery(Class<T> type) {
+    public <T> T getQueryOrNull(Class<T> type) {
         try {
-            if (query.isTextual()) {
-                if (String.class.equals(type)) {
-                    return type.cast(query.asText());
-                }
-                return objectMapper.readValue(query.textValue(), type);
-            } else {
-                return objectMapper.treeToValue(query, type);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Query is incorrect: " + query, e);
+            return getQuery(type);
+        } catch (Exception e) {
+            log.debug("Can't convert query to type " + type + ". Query: " + query);
+            return null;
         }
     }
 
-    public JsonNode getQuery() {
-        return query;
+    public <T> T getQuery(Class<T> type) {
+        return JsonUtils.convert(query, type);
     }
 
-    public void setQuery(Object query) {
-        this.query = objectMapper.valueToTree(query);
+    public Object getQuery() {
+        return JsonUtils.toJava(query);
     }
 
     @JsonSetter
-    public void setQuery(JsonNode query) {
-        if (query != null) {
-            this.query = query;
-        } else {
-            this.query = MissingNode.getInstance();
-        }
-    }
-
-    public void setQuery(String query) {
-        if (StringUtils.isNotBlank(query)) {
-            this.query = TextNode.valueOf(query);
-        } else {
-            this.query = MissingNode.getInstance();
-        }
+    @com.fasterxml.jackson.annotation.JsonSetter
+    public void setQuery(Object query) {
+        this.query = JsonUtils.toJson(query);
     }
 
     public String getLanguage() {
@@ -107,16 +86,19 @@ public class RecordsQuery {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public int getSkipCount() {
         return getSkipPage().getSkipCount();
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public int getMaxItems() {
         return getPage().getMaxItems();
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public RecordRef getAfterId() {
         return getAfterPage().getAfterId();
     }
@@ -142,6 +124,7 @@ public class RecordsQuery {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public AfterPage getAfterPage() {
         if (page instanceof AfterPage) {
             return (AfterPage) page;
@@ -151,6 +134,7 @@ public class RecordsQuery {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public SkipPage getSkipPage() {
         if (page instanceof SkipPage) {
             return (SkipPage) page;
@@ -160,6 +144,7 @@ public class RecordsQuery {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isAfterIdMode() {
         return page instanceof AfterPage;
     }

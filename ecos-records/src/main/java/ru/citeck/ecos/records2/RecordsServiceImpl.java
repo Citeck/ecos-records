@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -78,13 +78,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     /* ATTRIBUTES */
 
     @Override
-    public JsonNode getAttribute(RecordRef record, String attribute) {
+    public DataValue getAttribute(RecordRef record, String attribute) {
         RecordsResult<RecordMeta> meta = getAttributes(Collections.singletonList(record),
                                                        Collections.singletonList(attribute));
         if (!meta.getRecords().isEmpty()) {
             return meta.getRecords().get(0).getAttribute(attribute);
         }
-        return MissingNode.getInstance();
+        return new DataValue((Object) null);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
             RecordMeta record = records.get(i);
 
-            ObjectNode attributes = JsonNodeFactory.instance.objectNode();
+            ObjectData attributes = new ObjectData();
 
             record.forEach((name, value) -> {
 
@@ -193,7 +193,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                         value = convertAssocValue(value, aliasToRecordRef);
                     }
 
-                    attributes.put(simpleName, value);
+                    attributes.set(simpleName, value);
                 }
             });
 
@@ -219,18 +219,18 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return result;
     }
 
-    private JsonNode convertAssocValue(JsonNode value, Map<String, RecordRef> mapping) {
+    private DataValue convertAssocValue(DataValue value, Map<String, RecordRef> mapping) {
         if (value.isTextual()) {
             String textValue = value.asText();
             if (mapping.containsKey(textValue)) {
-                return TextNode.valueOf(mapping.get(textValue).toString());
+                return new DataValue(mapping.get(textValue).toString());
             }
         } else if (value.isArray()) {
-            ArrayNode convertedValue = JsonNodeFactory.instance.arrayNode();
-            for (JsonNode node : value) {
+            List<DataValue> convertedValue = new ArrayList<>();
+            for (DataValue node : value) {
                 convertedValue.add(convertAssocValue(node, mapping));
             }
-            return convertedValue;
+            return new DataValue(convertedValue);
         }
         return value;
     }
@@ -272,7 +272,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (recordsResolver instanceof RecordsDAORegistry) {
             ((RecordsDAORegistry) recordsResolver).register(recordsSource);
         } else {
-            throw new IllegalStateException("Records resolver doesn't support source registration");
+            log.warn("Records resolver doesn't support source registration. "
+                     + "Source: " + id + " " + recordsSource.getClass());
         }
     }
 }

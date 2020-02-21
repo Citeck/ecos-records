@@ -1,17 +1,17 @@
 package ru.citeck.ecos.records2.meta;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -30,7 +30,6 @@ public class DtoMetaResolver {
 
     private Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
     private Map<Class<?>, Map<String, String>> attributesCache = new ConcurrentHashMap<>();
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     private AttributesMetaResolver attributesMeta;
 
@@ -74,13 +73,8 @@ public class DtoMetaResolver {
         return attributes;
     }
 
-    public <T> T instantiateMeta(Class<T> metaClass, ObjectNode attributes) {
-        try {
-            return objectMapper.treeToValue(attributes, metaClass);
-        } catch (JsonProcessingException e) {
-            log.error("Error while meta instantiating", e);
-            return null;
-        }
+    public <T> T instantiateMeta(Class<T> metaClass, ObjectData attributes) {
+        return JsonUtils.convert(attributes, metaClass);
     }
 
     private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {

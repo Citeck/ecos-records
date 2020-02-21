@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import ru.citeck.ecos.predicate.PredicateService;
-import ru.citeck.ecos.predicate.model.AndPredicate;
-import ru.citeck.ecos.predicate.model.Predicate;
-import ru.citeck.ecos.predicate.model.Predicates;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.AndPredicate;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
@@ -45,7 +45,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements LocalRecordsQuer
         String[] groupAtts = groupBy.get(0).split("&");
         int max = query.getMaxItems() > 0 ? query.getMaxItems() : MAX_ITEMS_DEFAULT;
 
-        Predicate basePredicate = predicateService.readJson(query.getQuery());
+        Predicate basePredicate = query.getQuery(Predicate.class);
         List<List<DistinctValue>> distinctValues = new ArrayList<>();
 
         for (String groupAtt : groupAtts) {
@@ -107,7 +107,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements LocalRecordsQuer
         groupPredicate.addPredicate(basePredicate);
         attributes.forEach((att, val) -> groupPredicate.addPredicate(Predicates.equal(att, val.getValue())));
 
-        groupQuery.setQuery(predicateService.writeJson(groupPredicate));
+        groupQuery.setQuery(groupPredicate);
         groupQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
         return new RecordsGroup(groupQuery, attributes, groupPredicate, recordsService);
@@ -121,7 +121,7 @@ public class RecordsGroupDAO extends LocalRecordsDAO implements LocalRecordsQuer
         DistinctQuery distinctQuery = new DistinctQuery();
 
         distinctQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
-        distinctQuery.setQuery(predicateService.writeJson(predicate));
+        distinctQuery.setQuery(predicate);
         distinctQuery.setAttribute(attribute);
 
         recordsQuery.setMaxItems(max);

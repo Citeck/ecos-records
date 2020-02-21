@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.predicate;
 
-import ru.citeck.ecos.predicate.Elements;
 import ru.citeck.ecos.records2.IterableRecords;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;

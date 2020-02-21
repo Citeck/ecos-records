@@ -1,8 +1,7 @@
 package ru.citeck.ecos.records2.graphql;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import graphql.*;
 import graphql.language.Document;
 import graphql.language.Field;
@@ -21,7 +20,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,7 +34,6 @@ public class RecordsMetaGql {
 
     private GraphQL graphQL;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
     private RecordsServiceFactory serviceFactory;
 
     public RecordsMetaGql(RecordsServiceFactory serviceFactory) {
@@ -125,14 +125,14 @@ public class RecordsMetaGql {
 
         } else {
 
-            JsonNode jsonNode = objectMapper.valueToTree(executionResult.getData());
+            JsonNode jsonNode = JsonUtils.toJson(executionResult.getData());
             JsonNode meta = jsonNode.get(GqlMetaQueryDef.META_FIELD);
 
             for (int i = 0; i < meta.size(); i++) {
                 RecordMeta recMeta = new RecordMeta(RecordsUtils.getMetaValueId(metaValues.get(i)));
                 JsonNode attributes = meta.get(i);
                 if (attributes instanceof ObjectNode) {
-                    recMeta.setAttributes((ObjectNode) attributes);
+                    recMeta.setAttributes(JsonUtils.convert(attributes, ObjectData.class));
                 }
                 result.add(recMeta);
             }

@@ -1,24 +1,26 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
 import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class QueryBody {
 
     public static final String SINGLE_ATT_KEY = "a";
 
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;
-    @Getter @Setter private List<JsonNode> foreach;
+    @Getter @Setter private List<DataValue> foreach;
 
     @Getter @Setter private String schema;
     @Getter private Map<String, String> attributes;
@@ -43,6 +45,7 @@ public class QueryBody {
     }
 
     @JsonSetter
+    @com.fasterxml.jackson.annotation.JsonSetter
     public void setAttributes(JsonNode attributes) {
 
         Map<String, String> result = new HashMap<>();
@@ -73,11 +76,13 @@ public class QueryBody {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSingleRecord() {
         return isSingleRecord && records != null && records.size() == 1;
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSingleAttribute() {
         return isSingleAttribute && attributes != null && attributes.size() == 1;
     }

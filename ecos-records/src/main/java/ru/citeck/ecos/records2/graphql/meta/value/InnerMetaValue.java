@@ -1,10 +1,11 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.NullNode;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
+import ecos.com.fasterxml.jackson210.databind.node.NullNode;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +15,10 @@ import java.util.List;
 public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaValue> {
 
     private final JsonNode value;
+
+    public InnerMetaValue(Object value) {
+        this.value = JsonUtils.convert(value, JsonNode.class);
+    }
 
     public InnerMetaValue(JsonNode value) {
         if (value == null || value instanceof MissingNode) {

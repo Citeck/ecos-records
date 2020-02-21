@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2.request.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -15,6 +15,7 @@ import java.util.List;
 public class RestHandler {
 
     private RecordsService recordsService;
+    private RecordsServiceFactory factory;
 
     @Deprecated
     public RestHandler(RecordsService recordsService) {
@@ -23,6 +24,7 @@ public class RestHandler {
     }
 
     public RestHandler(RecordsServiceFactory factory) {
+        this.factory = factory;
         this.recordsService = factory.getRecordsService();
     }
 
@@ -38,7 +40,7 @@ public class RestHandler {
         }
 
         RecordsResult<?> recordsResult;
-        List<JsonNode> foreach = body.getForeach();
+        List<DataValue> foreach = body.getForeach();
 
         if (body.getQuery() != null) {
 
@@ -127,5 +129,9 @@ public class RestHandler {
 
     public Object deleteRecords(DeletionBody body) {
         return recordsService.delete(body);
+    }
+
+    public RecordsServiceFactory getFactory() {
+        return factory;
     }
 }

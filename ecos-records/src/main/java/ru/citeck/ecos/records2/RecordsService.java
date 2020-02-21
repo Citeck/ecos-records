@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -85,7 +85,7 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 
-    RecordsQueryResult<List<RecordRef>> queryRecords(List<JsonNode> foreach, RecordsQuery query);
+    RecordsQueryResult<List<RecordRef>> queryRecords(List<DataValue> foreach, RecordsQuery query);
 
     /**
      * Query records with data. Specified class will be used to determine
@@ -101,7 +101,7 @@ public interface RecordsService {
      */
     <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass);
 
-    <T> RecordsQueryResult<List<T>> queryRecords(List<JsonNode> foreach, RecordsQuery query, Class<T> metaClass);
+    <T> RecordsQueryResult<List<T>> queryRecords(List<DataValue> foreach, RecordsQuery query, Class<T> metaClass);
 
     /**
      * Query records and its attributes.
@@ -112,7 +112,7 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
 
-    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach,
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Collection<String> attributes);
 
@@ -126,7 +126,7 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
-    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach,
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Map<String, String> attributes);
 
@@ -138,7 +138,7 @@ public interface RecordsService {
      */
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
 
-    RecordsQueryResult<List<RecordMeta>> queryRecords(List<JsonNode> foreach, RecordsQuery query, String schema);
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach, RecordsQuery query, String schema);
 
     /* ATTRIBUTES */
 
@@ -147,7 +147,7 @@ public interface RecordsService {
      *
      * @return flat record attribute value
      */
-    JsonNode getAttribute(RecordRef record, String attribute);
+    DataValue getAttribute(RecordRef record, String attribute);
 
     /**
      * Get record attributes.

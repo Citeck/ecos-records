@@ -1,17 +1,16 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 
 import java.util.Objects;
 
 public class CreateVariant {
 
     private RecordRef recordRef;
-    private ObjectNode attributes = JsonNodeFactory.instance.objectNode();
     private String formKey;
     private String label;
+    private ObjectData attributes = new ObjectData();
 
     public CreateVariant() {
     }
@@ -36,20 +35,16 @@ public class CreateVariant {
         return recordRef;
     }
 
-    public ObjectNode getAttributes() {
+    public ObjectData getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(ObjectNode attributes) {
-        if (attributes != null) {
-            this.attributes = attributes.deepCopy();
-        } else {
-            this.attributes = JsonNodeFactory.instance.objectNode();
-        }
+    public void setAttributes(ObjectData attributes) {
+        this.attributes = new ObjectData(attributes);
     }
 
     public void setAttribute(String attribute, String value) {
-        this.attributes.put(attribute, value);
+        this.attributes.set(attribute, value);
     }
 
     public String getFormKey() {

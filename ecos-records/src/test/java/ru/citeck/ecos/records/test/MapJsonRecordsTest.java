@@ -1,15 +1,14 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 
@@ -53,9 +52,9 @@ public class MapJsonRecordsTest extends LocalRecordsDAO
     @Test
     void testSingleStrAttribute() {
 
-        JsonNode value = recordsService.getAttribute(TEST_REF,
+        DataValue value = recordsService.getAttribute(TEST_REF,
             ".att(n:\"key0\"){att(n:\"key1\"){att(n:\"key2\"){att(n:\"field\"){str}}}}");
 
-        assertEquals(TextNode.valueOf("Value0"), value);
+        assertEquals(new DataValue("Value0"), value);
     }
 }

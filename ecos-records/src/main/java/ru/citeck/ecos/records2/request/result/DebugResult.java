@@ -1,10 +1,12 @@
 package ru.citeck.ecos.records2.request.result;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
+import ru.citeck.ecos.records2.objdata.ObjectData;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Iterator;
 
@@ -83,11 +85,11 @@ public abstract class DebugResult {
         return debug;
     }
 
-    public ObjectNode getDebug() {
-        return debug;
+    public ObjectData getDebug() {
+        return JsonUtils.convert(debug, ObjectData.class);
     }
 
-    public void setDebug(ObjectNode debug) {
-        this.debug = debug;
+    public void setDebug(ObjectData attributes) {
+        this.debug = JsonUtils.valueToTree(attributes);
     }
 }

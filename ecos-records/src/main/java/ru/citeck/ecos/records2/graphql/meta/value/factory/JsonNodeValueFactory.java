@@ -1,18 +1,15 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.*;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class JsonNodeValueFactory implements MetaValueFactory<JsonNode> {
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public MetaValue getValue(JsonNode value) {
@@ -21,17 +18,18 @@ public class JsonNodeValueFactory implements MetaValueFactory<JsonNode> {
 
             @Override
             public String getString() {
-                try {
-                    if (value == null || value instanceof NullNode || value instanceof MissingNode) {
-                        return null;
-                    } else if (value.isTextual()) {
-                        return value.asText();
-                    } else {
-                        return mapper.writeValueAsString(value);
-                    }
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException("Error! value: " + value);
+                if (value == null || value instanceof NullNode || value instanceof MissingNode) {
+                    return null;
+                } else if (value.isTextual()) {
+                    return value.asText();
+                } else {
+                    return JsonUtils.toString(value);
                 }
+            }
+
+            @Override
+            public Object getJson() {
+                return value;
             }
 
             @Override

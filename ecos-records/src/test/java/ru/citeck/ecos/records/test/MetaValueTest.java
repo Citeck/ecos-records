@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
@@ -75,7 +76,7 @@ public class MetaValueTest extends LocalRecordsDAO
         assertEquals(MetaVal.DOUBLE_VALUE, meta.getAttribute("num", 0.0));
         assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
         assertEquals(true, meta.getAttribute("has", false));
-        assertEquals(MetaVal.JSON_VALUE, meta.getAttribute("json"));
+        assertEquals(new DataValue(MetaVal.JSON_VALUE), meta.getAttribute("json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
         assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());

@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,9 +13,11 @@ import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,25 +59,25 @@ public class MetaEdgeTest extends LocalRecordsDAO
 
         RecordMeta meta = result.getRecords().get(0);
 
-        JsonNode edgeNode = meta.get("edge");
+        DataValue edgeNode = meta.get("edge");
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
         assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
-        CreateVariant variant = objectMapper.treeToValue(edgeNode.at("/createVariants/0/json"), CreateVariant.class);
+        CreateVariant variant = JsonUtils.convert(edgeNode.get("/createVariants/0/json"), CreateVariant.class);
         assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
-        assertEquals(EDGE_FIELD_NAME, edgeNode.path("name").asText());
+        assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());
 
         List<String> distinctVars = new ArrayList<>();
-        for (JsonNode value : edgeNode.get("distinct")) {
+        for (DataValue value : edgeNode.get("distinct")) {
             distinctVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.distinctVariants, distinctVars);
 
         List<String> optionsVars = new ArrayList<>();
-        for (JsonNode value : edgeNode.get("options")) {
+        for (DataValue value : edgeNode.get("options")) {
             optionsVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.optionsVariants, optionsVars);

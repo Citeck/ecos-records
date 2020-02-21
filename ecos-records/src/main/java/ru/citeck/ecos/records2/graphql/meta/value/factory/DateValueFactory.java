@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import ecos.com.fasterxml.jackson210.databind.util.ISO8601Utils;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.util.Collections;

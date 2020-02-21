@@ -15,6 +15,8 @@ public class QueryContext {
     private List<?> metaValues;
     private Map<String, Object> contextData = new ConcurrentHashMap<>();
 
+    private Locale locale = Locale.ENGLISH;
+
     private RecordsServiceFactory serviceFactory;
 
     @SuppressWarnings("unchecked")
@@ -45,10 +47,17 @@ public class QueryContext {
         return result;
     }
 
+    public Locale getLocale() {
+        return locale;
+    }
+
+    public void setLocale(Locale locale) {
+        this.locale = locale != null ? locale : Locale.ENGLISH;
+    }
+
     public static <T extends QueryContext> void setCurrent(T context) {
         current.set(context);
     }
-
 
     public static void removeCurrent() {
         current.remove();

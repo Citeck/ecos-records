@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
+import ecos.com.fasterxml.jackson210.annotation.JsonValue;
 import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.io.Serializable;
@@ -78,6 +78,7 @@ public class RecordRef implements Serializable {
     }
 
     @JsonCreator
+    @com.fasterxml.jackson.annotation.JsonCreator
     public static RecordRef valueOf(String recordRefStr) {
 
         if (isBlankId(recordRefStr)) {
@@ -159,6 +160,7 @@ public class RecordRef implements Serializable {
     }
 
     @JsonValue
+    @com.fasterxml.jackson.annotation.JsonValue
     @Override
     public String toString() {
         if (this == EMPTY) {

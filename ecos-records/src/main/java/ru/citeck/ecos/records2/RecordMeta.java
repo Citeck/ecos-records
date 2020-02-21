@@ -1,25 +1,22 @@
 package ru.citeck.ecos.records2;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
-import ru.citeck.ecos.records2.utils.MandatoryParam;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.records2.objdata.ObjectData;
 
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@Slf4j
 public class RecordMeta {
 
     private RecordRef id = RecordRef.EMPTY;
 
-    private ObjectNode attributes = JsonNodeFactory.instance.objectNode();
+    private ObjectData attributes = new ObjectData();
 
     public RecordMeta() {
     }
@@ -47,7 +44,7 @@ public class RecordMeta {
         setId(id);
     }
 
-    public RecordMeta(RecordRef id, ObjectNode attributes) {
+    public RecordMeta(RecordRef id, ObjectData attributes) {
         setId(id);
         setAttributes(attributes);
     }
@@ -78,15 +75,11 @@ public class RecordMeta {
         this.id = RecordRef.valueOf(id);
     }
 
-    public void forEach(BiConsumer<String, JsonNode> consumer) {
-        Iterator<String> names = attributes.fieldNames();
-        while (names.hasNext()) {
-            String name = names.next();
-            consumer.accept(name, attributes.get(name));
-        }
+    public void forEach(BiConsumer<String, DataValue> consumer) {
+        attributes.forEach(consumer);
     }
 
-    public ObjectNode getAttributes() {
+    public ObjectData getAttributes() {
         return attributes;
     }
 
@@ -95,7 +88,7 @@ public class RecordMeta {
     }
 
     public boolean hasAttribute(String name) {
-        return !isEmpty(attributes.path(name));
+        return attributes.has(name);
     }
 
     public String fmtDate(String name, String format) {
@@ -112,29 +105,22 @@ public class RecordMeta {
     }
 
     public Date getDateOrNull(String name) {
-        String value = getAttribute(name, "");
-        if (!value.isEmpty()) {
-            return ISO8601Utils.parse(value);
-        }
-        return null;
+        return attributes.get(name, Date.class, null);
     }
 
     public String getStringOrNull(String name) {
-        String value = getAttribute(name, "");
-        return value.isEmpty() ? null : value;
+        return attributes.get(name, String.class, null);
     }
 
     public Double getDoubleOrNull(String name) {
-        JsonNode attribute = getAttribute(name);
-        return isEmpty(attribute) ? null : attribute.asDouble();
+        return attributes.get(name, Double.class);
     }
 
     public Boolean getBoolOrNull(String name) {
-        JsonNode attribute = getAttribute(name);
-        return isEmpty(attribute) ? null : attribute.asBoolean();
+        return attributes.get(name, Boolean.class);
     }
 
-    public JsonNode get(String name) {
+    public DataValue get(String name) {
         return getAttribute(name);
     }
 
@@ -142,94 +128,27 @@ public class RecordMeta {
         return getAttribute(name, orElse);
     }
 
-    public JsonNode getAttribute(String name) {
-        return attributes.path(name);
+    public DataValue getAttribute(String name) {
+        return attributes.get(name);
     }
 
     public <T> T getAttribute(String name, T orElse) {
-
-        MandatoryParam.checkString("name", name);
-        MandatoryParam.check("orElse", orElse);
-
-        JsonNode att;
-        if (name.charAt(0) == '/') {
-            att = attributes.at(name);
-        } else {
-            att = attributes.get(name);
-        }
-        if (isEmpty(att)) {
-            return orElse;
-        }
-
-        Object value;
-
-        if (orElse instanceof String) {
-            value = att.asText();
-        } else if (orElse instanceof Integer) {
-            value = att.asInt((Integer) orElse);
-        } else if (orElse instanceof Long) {
-            value = att.asLong((Long) orElse);
-        } else if (orElse instanceof Double) {
-            value = att.asDouble((Double) orElse);
-        } else if (orElse instanceof Float) {
-            value = (float) att.asDouble((Float) orElse);
-        } else if (orElse instanceof BigDecimal) {
-            value = new BigDecimal(att.asDouble(((BigDecimal) orElse).doubleValue()));
-        } else if (orElse instanceof Boolean) {
-            value = att.asBoolean((Boolean) orElse);
-        } else if (orElse instanceof JsonNode) {
-            value = att;
-        } else {
-            value = orElse;
-        }
-
-        @SuppressWarnings("unchecked")
-        T resultValue = (T) value;
-
-        return resultValue;
+        return attributes.get(name, orElse);
     }
 
-    public void set(String name, Date value) {
+    public void set(String name, Object value) {
         setAttribute(name, value);
     }
 
-    public void set(String name, String value) {
-        setAttribute(name, value);
+    public void setAttribute(String name, Object value) {
+        attributes.set(name, value);
     }
 
-    public void set(String name, Boolean value) {
-        setAttribute(name, value);
-    }
-
-    public void set(String name, JsonNode value) {
-        setAttribute(name, value);
-    }
-
-    public void setAttribute(String name, Date value) {
-        setAttribute(name, ISO8601Utils.format(value));
-    }
-
-    public void setAttribute(String name, String value) {
-        attributes.put(name, value);
-    }
-
-    public void setAttribute(String name, Boolean value) {
-        attributes.put(name, value);
-    }
-
-    public void setAttribute(String name, JsonNode value) {
-        attributes.put(name, value);
-    }
-
-    private boolean isEmpty(JsonNode value) {
-        return value == null || value.isMissingNode() || value.isNull();
-    }
-
-    public void setAttributes(ObjectNode attributes) {
+    public void setAttributes(ObjectData attributes) {
         if (attributes != null) {
             this.attributes = attributes.deepCopy();
         } else {
-            this.attributes = JsonNodeFactory.instance.objectNode();
+            this.attributes = new ObjectData();
         }
     }
 

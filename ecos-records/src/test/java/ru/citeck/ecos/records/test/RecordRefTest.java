@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,9 +20,7 @@ class RecordRefTest {
                 "alfresco,tax-rep,workspace://SpacesStore/123213-21321-312321-213",
                 ",,workspace://SpacesStore/...",
                 ",123,"})
-    void test(String appName, String sourceId, String id) throws IOException {
-
-        ObjectMapper mapper = new ObjectMapper();
+    void test(String appName, String sourceId, String id) {
 
         RecordRef recordRef = RecordRef.create(appName, sourceId, id);
 
@@ -41,7 +39,7 @@ class RecordRefTest {
         RecordRef refFromStr = RecordRef.valueOf(recordStr);
         assertEquals(recordRef, refFromStr);
 
-        RecordsObj recordsObj = mapper.readValue("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
+        RecordsObj recordsObj = JsonUtils.read("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
         assertEquals(recordRef, recordsObj.list.get(0));
 
         if (appName == null) {
@@ -70,13 +68,13 @@ class RecordRefTest {
         RecordRef otherRef = RecordRef.create(appName + "0", sourceId, id);
         assertNotEquals(otherRef, recordRef);
 
-        String otherRefStr = mapper.writeValueAsString(otherRef);
+        String otherRefStr = JsonUtils.toString(otherRef);
         assertEquals("\"" + otherRef.toString() + "\"", otherRefStr);
 
-        RecordRef remappedOtherRef = mapper.readValue(otherRefStr, RecordRef.class);
+        RecordRef remappedOtherRef = JsonUtils.convert(otherRefStr, RecordRef.class);
         assertEquals(otherRef, remappedOtherRef);
 
-        RecordsList list = mapper.readValue("[\"\", \"\"]", RecordsList.class);
+        RecordsList list = JsonUtils.read("[\"\", \"\"]", RecordsList.class);
         assertEquals(2, list.size());
         assertSame(list.get(0), RecordRef.EMPTY);
         assertSame(list.get(1), RecordRef.EMPTY);

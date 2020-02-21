@@ -1,11 +1,7 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
+import ecos.com.fasterxml.jackson210.databind.util.ISO8601Utils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,12 +10,14 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,7 +34,6 @@ public class RecordsServiceTest extends LocalRecordsDAO
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
 
     private RecordsService recordsService;
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeAll
     void init() {
@@ -109,7 +106,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
         daoQuery.setIds(ids);
 
         RecordsQuery query = new RecordsQuery();
-        query.setQuery(objectMapper.writeValueAsString(daoQuery));
+        query.setQuery(daoQuery);
         query.setSourceId(SOURCE_ID);
 
         RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
@@ -130,9 +127,9 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testSingleStrAttribute() {
 
-        JsonNode value = recordsService.getAttribute(TEST_REF, "fieldStr0");
+        DataValue value = recordsService.getAttribute(TEST_REF, "fieldStr0");
 
-        TextNode expected = TextNode.valueOf(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
+        DataValue expected = new DataValue(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -143,9 +140,9 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testSingleDateAttribute() {
 
-        JsonNode value = recordsService.getAttribute(TEST_REF, "fieldDate");
+        DataValue value = recordsService.getAttribute(TEST_REF, "fieldDate");
 
-        TextNode expected = TextNode.valueOf(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
+        DataValue expected = new DataValue(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -216,16 +213,16 @@ public class RecordsServiceTest extends LocalRecordsDAO
     @Test
     void testDisplayName() {
 
-        JsonNode dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
+        DataValue dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
 
-        assertEquals(TextNode.valueOf(PojoMeta.DISPLAY_NAME), dispValue);
+        assertEquals(new DataValue(PojoMeta.DISPLAY_NAME), dispValue);
     }
 
     @Test
     void testRootJsonAttribute() {
 
-        JsonNode value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
-        JsonNode test = objectMapper.convertValue(new PojoMeta("test"), ObjectNode.class);
+        DataValue value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
+        DataValue test = JsonUtils.convert(new PojoMeta("test"), DataValue.class);
 
         assertEquals(test, value);
     }

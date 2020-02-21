@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2.request.query;
 
+import java.util.Objects;
+
 public class SortBy {
 
     private String attribute;
@@ -27,6 +29,24 @@ public class SortBy {
 
     public boolean isAscending() {
         return ascending;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SortBy sortBy = (SortBy) o;
+        return ascending == sortBy.ascending
+            && Objects.equals(attribute, sortBy.attribute);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(attribute, ascending);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.utils;
 
-import com.fasterxml.jackson.databind.type.TypeFactory;
+import ecos.com.fasterxml.jackson210.databind.type.TypeFactory;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -10,6 +10,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReflectUtils {
+
+    public static Class<?> getGenericClassArg(Class<?> type, Class<?> genericType) {
+        List<Class<?>> args = getGenericClassArgs(type, genericType);
+        if (args.size() > 0) {
+            return args.get(0);
+        }
+        return null;
+    }
 
     public static List<Class<?>> getGenericClassArgs(Class<?> type, Class<?> genericType) {
 

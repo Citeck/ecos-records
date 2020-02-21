@@ -1,12 +1,11 @@
 package ru.citeck.ecos.records2.graphql;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.*;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.*;
 import graphql.language.*;
 import graphql.schema.*;
+import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,20 +20,18 @@ public class CustomGqlScalars {
 
     private static class JsonNodeCoercing implements Coercing<JsonNode, JsonNode> {
 
-        private ObjectMapper mapper = new ObjectMapper();
-
         private JsonNode convertImpl(Object value) {
             if (value instanceof String) {
                 try {
-                    return mapper.readTree((String) value);
-                } catch (IOException e) {
-                    throw new CoercingParseValueException("Json string is incorrect: " + value);
+                    return JsonUtils.readTree((String) value);
+                } catch (Exception e) {
+                    throw new CoercingParseValueException("Json string is incorrect: " + value, e);
                 }
             } else if (value instanceof JsonNode) {
                 return (JsonNode) value;
             }
             try {
-                return mapper.valueToTree(value);
+                return JsonUtils.valueToTree(value);
             } catch (Exception e) {
                 throw new CoercingParseValueException(e);
             }
@@ -100,13 +97,13 @@ public class CustomGqlScalars {
             }
             if (input instanceof ArrayValue) {
                 List<Value> values = ((ArrayValue) input).getValues();
-                ArrayNode result = mapper.createArrayNode();
+                ArrayNode result = JsonUtils.createArrayNode();
                 values.forEach(v -> result.add(parseLiteral(v, variables)));
                 return result;
             }
             if (input instanceof ObjectValue) {
                 List<ObjectField> values = ((ObjectValue) input).getObjectFields();
-                ObjectNode result = mapper.createObjectNode();
+                ObjectNode result = JsonUtils.createObjectNode();
                 values.forEach(fld -> {
                     JsonNode parsedValue = parseLiteral(fld.getValue(), variables);
                     result.put(fld.getName(), parsedValue);

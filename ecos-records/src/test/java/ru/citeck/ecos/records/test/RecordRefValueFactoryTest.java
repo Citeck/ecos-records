@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
@@ -69,7 +70,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         expected.add(Val.val2.value);
         expected.add(Val.val2.value);
 
-        assertEquals(expected, meta.get("att3"));
+        assertEquals(new DataValue(expected), meta.get("att3"));
     }
 
     @Override

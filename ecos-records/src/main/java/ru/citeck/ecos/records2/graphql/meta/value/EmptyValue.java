@@ -4,7 +4,7 @@ import ru.citeck.ecos.records2.RecordConstants;
 
 public class EmptyValue implements MetaValue {
 
-    public static EmptyValue INSTANCE = new EmptyValue();
+    public static final EmptyValue INSTANCE = new EmptyValue();
 
     private EmptyValue() {
     }

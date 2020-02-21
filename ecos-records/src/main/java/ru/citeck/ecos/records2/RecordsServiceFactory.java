@@ -29,6 +29,7 @@ import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
 import ru.citeck.ecos.records2.utils.LibsUtils;
 import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
@@ -63,6 +64,7 @@ public class RecordsServiceFactory {
     private List<GqlTypeDefinition> gqlTypes;
 
     private RecordEvaluatorService tmpEvaluatorsService;
+    private RecordsService tmpRecordsService;
 
     {
         JsonUtils.addDeserializer(getPredicateJsonDeserializer());
@@ -131,7 +133,17 @@ public class RecordsServiceFactory {
     }
 
     protected RecordsService createRecordsService() {
-        return new RecordsServiceImpl(this);
+        if (tmpRecordsService != null) {
+            return tmpRecordsService;
+        }
+
+        RecordsService recordsService = new RecordsServiceImpl(this);
+        tmpRecordsService = recordsService;
+
+        recordsService.register(new MetaRecordsDAO());
+
+        tmpRecordsService = null;
+        return recordsService;
     }
 
     public final synchronized RecordsResolver getRecordsResolver() {

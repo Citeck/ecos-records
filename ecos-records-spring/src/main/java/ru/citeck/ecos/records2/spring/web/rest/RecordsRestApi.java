@@ -9,6 +9,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -158,7 +159,7 @@ public class RecordsRestApi {
             + "}\n"
             + "```"
     )
-    @PostMapping("/query")
+    @PostMapping(value = "/query", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsQuery(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
         QueryBody queryBody = convertRequest(body, QueryBody.class);
@@ -217,7 +218,7 @@ public class RecordsRestApi {
             + "}\n"
             + "```\n"
     )
-    @PostMapping("/mutate")
+    @PostMapping(value = "/mutate", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsMutate(@ApiParam(value = "change query text") @RequestBody byte[] body) {
 
         MutationBody mutationBody = convertRequest(body, MutationBody.class);
@@ -250,7 +251,7 @@ public class RecordsRestApi {
             + "}\n"
             + "```\n"
     )
-    @PostMapping("/delete")
+    @PostMapping(value = "/delete", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsDelete(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
         DeletionBody deletionBody = convertRequest(body, DeletionBody.class);

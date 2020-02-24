@@ -4,6 +4,8 @@ import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
@@ -13,11 +15,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.objdata.DataValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +65,7 @@ public class MetaEdgeTest extends LocalRecordsDAO
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
         assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
-        CreateVariant variant = JsonUtils.convert(edgeNode.get("/createVariants/0/json"), CreateVariant.class);
+        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants/0/json"), CreateVariant.class);
         assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.objdata.DataValue;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ public class AttValueFactory implements MetaValueFactory<DataValue> {
                 if (value.isValueNode()) {
                     return value.asText();
                 }
-                return JsonUtils.toString(value);
+                return Json.getMapper().toString(value);
             }
 
             @Override

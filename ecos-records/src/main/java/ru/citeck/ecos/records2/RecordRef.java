@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.annotation.JsonValue;
-import ru.citeck.ecos.records2.utils.StringUtils;
+import ru.citeck.ecos.commons.utils.StringUtils;
 
 import java.io.Serializable;
 import java.util.Objects;

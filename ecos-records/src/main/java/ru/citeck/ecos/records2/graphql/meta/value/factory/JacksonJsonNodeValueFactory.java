@@ -2,9 +2,9 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,7 @@ public class JacksonJsonNodeValueFactory implements MetaValueFactory<JsonNode> {
                 } else if (value.isTextual()) {
                     return value.asText();
                 } else {
-                    return JsonUtils.toString(value);
+                    return Json.getMapper().toString(value);
                 }
             }
 

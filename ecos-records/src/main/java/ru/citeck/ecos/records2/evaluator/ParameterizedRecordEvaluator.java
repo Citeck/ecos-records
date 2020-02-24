@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.evaluator;
 
 import lombok.Data;
-import ru.citeck.ecos.records2.utils.ReflectUtils;
+import ru.citeck.ecos.commons.utils.ReflectUtils;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class ParameterizedRecordEvaluator implements RecordEvaluator<Object, Obj
 
         this.impl = (RecordEvaluator<Object, Object, Object>) impl;
 
-        List<Class<?>> genericArgs = ReflectUtils.getGenericClassArgs(impl.getClass(), RecordEvaluator.class);
+        List<Class<?>> genericArgs = ReflectUtils.getGenericArgs(impl.getClass(), RecordEvaluator.class);
         if (genericArgs.size() != 3) {
             throw new IllegalArgumentException("Incorrect evaluator: [" + impl.getClass() + "] " + impl);
         }

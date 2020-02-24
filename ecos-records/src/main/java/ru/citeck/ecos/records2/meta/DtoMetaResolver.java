@@ -7,11 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.objdata.ObjectData;
-import ru.citeck.ecos.records2.utils.StringUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -74,7 +74,7 @@ public class DtoMetaResolver {
     }
 
     public <T> T instantiateMeta(Class<T> metaClass, ObjectData attributes) {
-        return JsonUtils.convert(attributes, metaClass);
+        return Json.getMapper().convert(attributes, metaClass);
     }
 
     private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {

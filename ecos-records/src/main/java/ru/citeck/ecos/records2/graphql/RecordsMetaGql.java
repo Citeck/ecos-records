@@ -11,6 +11,8 @@ import graphql.parser.Parser;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -20,9 +22,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -125,14 +125,14 @@ public class RecordsMetaGql {
 
         } else {
 
-            JsonNode jsonNode = JsonUtils.toJson(executionResult.getData());
+            JsonNode jsonNode = Json.getMapper().toJson(executionResult.getData());
             JsonNode meta = jsonNode.get(GqlMetaQueryDef.META_FIELD);
 
             for (int i = 0; i < meta.size(); i++) {
                 RecordMeta recMeta = new RecordMeta(RecordsUtils.getMetaValueId(metaValues.get(i)));
                 JsonNode attributes = meta.get(i);
                 if (attributes instanceof ObjectNode) {
-                    recMeta.setAttributes(JsonUtils.convert(attributes, ObjectData.class));
+                    recMeta.setAttributes(Json.getMapper().convert(attributes, ObjectData.class));
                 }
                 result.add(recMeta);
             }

@@ -10,14 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records2.spring.utils.RemoteRecordsUtils;
 import ru.citeck.ecos.records2.spring.web.SkipSslVerificationHttpRequestFactory;
 import ru.citeck.ecos.records2.spring.web.interceptor.RecordsAuthInterceptor;
-import ru.citeck.ecos.records2.utils.StringUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -47,7 +47,7 @@ public class RecordsRestConfiguration {
         try {
 
             response = recordsRestTemplate().postForObject(recordsUrl, req, byte[].class);
-            return JsonUtils.read(response, respType);
+            return Json.getMapper().read(response, respType);
 
         } catch (Exception e) {
 
@@ -78,7 +78,7 @@ public class RecordsRestConfiguration {
             str = new String((byte[]) obj, StandardCharsets.UTF_8);
         } else {
             try {
-                str = JsonUtils.toString(obj);
+                str = Json.getMapper().toString(obj);
             } catch (Exception e) {
                 log.error("log conversion failed: " + e.getClass() + " " + e.getMessage());
                 try {

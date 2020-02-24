@@ -3,10 +3,10 @@ package ru.citeck.ecos.records.test.predicate;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -50,8 +50,8 @@ public class PredicateJsonConverterTest {
         Predicate deepPredicate = createDeepPredicate();
         Predicate optimizedPredicate = getOptimizedPredicate();
 
-        ObjectNode deepJson = JsonUtils.valueToTree(deepPredicate);
-        ObjectNode optimJson = JsonUtils.valueToTree(optimizedPredicate);
+        ObjectNode deepJson = (ObjectNode) Json.getMapper().toJson(deepPredicate);
+        ObjectNode optimJson = (ObjectNode) Json.getMapper().toJson(optimizedPredicate);
 
         assertEquals(optimJson, deepJson);
         assertEquals(deepPredicate, createDeepPredicate());
@@ -70,7 +70,7 @@ public class PredicateJsonConverterTest {
         inner0.withArray("val").add(inner1);
         deepJson.withArray("val").add(inner0);
 
-        Predicate jsonToPred = JsonUtils.convert(deepJson, Predicate.class);
+        Predicate jsonToPred = Json.getMapper().convert(deepJson, Predicate.class);
 
         assertEquals(Predicates.equal("name", "value"), jsonToPred);
     }

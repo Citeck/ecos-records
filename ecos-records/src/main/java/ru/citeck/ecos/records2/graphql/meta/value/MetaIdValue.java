@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import ru.citeck.ecos.records2.utils.MandatoryParam;
+import ru.citeck.ecos.commons.utils.MandatoryParam;
 
 public class MetaIdValue implements MetaValue {
 

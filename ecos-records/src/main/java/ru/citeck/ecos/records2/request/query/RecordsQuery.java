@@ -5,11 +5,11 @@ import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.page.AfterPage;
 import ru.citeck.ecos.records2.request.query.page.QueryPage;
 import ru.citeck.ecos.records2.request.query.page.SkipPage;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +37,7 @@ public class RecordsQuery {
 
     public RecordsQuery(RecordsQuery other) {
         this.page = other.page;
-        this.query = JsonUtils.copy(other.query);
+        this.query = Json.getMapper().copy(other.query);
         this.debug = other.debug;
         this.language = other.language;
         this.sourceId = other.sourceId;
@@ -64,17 +64,17 @@ public class RecordsQuery {
     }
 
     public <T> T getQuery(Class<T> type) {
-        return JsonUtils.convert(query, type);
+        return Json.getMapper().convert(query, type);
     }
 
     public Object getQuery() {
-        return JsonUtils.toJava(query);
+        return Json.getMapper().toJava(query);
     }
 
     @JsonSetter
     @com.fasterxml.jackson.annotation.JsonSetter
     public void setQuery(Object query) {
-        this.query = JsonUtils.toJson(query);
+        this.query = Json.getMapper().toJson(query);
     }
 
     public String getLanguage() {

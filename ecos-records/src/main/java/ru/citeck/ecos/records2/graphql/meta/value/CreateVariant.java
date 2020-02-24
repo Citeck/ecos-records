@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 
 import java.util.Objects;
 

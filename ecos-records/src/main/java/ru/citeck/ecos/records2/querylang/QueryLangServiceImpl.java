@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.querylang;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.citeck.ecos.records2.utils.ReflectUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.ReflectUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class QueryLangServiceImpl implements QueryLangService {
     @Override
     public void register(QueryLangConverter<?, ?> converter, String fromLang, String toLang) {
 
-        List<Class<?>> genericArgs = ReflectUtils.getGenericClassArgs(converter.getClass(), QueryLangConverter.class);
+        List<Class<?>> genericArgs = ReflectUtils.getGenericArgs(converter.getClass(), QueryLangConverter.class);
 
         @SuppressWarnings("unchecked")
         QueryLangConverter<Object, Object> objConverter = (QueryLangConverter<Object, Object>) converter;
@@ -36,7 +36,7 @@ public class QueryLangServiceImpl implements QueryLangService {
         ConverterInfo converterInfo = languageConverters.get(new LangConvPair(fromLang, toLang));
 
         if (converterInfo != null) {
-            Object convertedQuery = JsonUtils.convert(query, converterInfo.getInputQueryType());
+            Object convertedQuery = Json.getMapper().convert(query, converterInfo.getInputQueryType());
             return Optional.ofNullable(converterInfo.converter.convert(convertedQuery));
         }
         return Optional.empty();

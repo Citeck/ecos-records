@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2.evaluator.evaluators;
 
 import lombok.Data;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.Collections;
 import java.util.Map;

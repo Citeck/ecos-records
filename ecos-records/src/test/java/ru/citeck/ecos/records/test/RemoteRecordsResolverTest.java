@@ -3,6 +3,7 @@ package ru.citeck.ecos.records.test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
@@ -20,7 +21,6 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -95,14 +95,14 @@ class RemoteRecordsResolverTest {
 
                 RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
                 result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r)).collect(Collectors.toList()));
-                return JsonUtils.convert(result, resultType);
+                return Json.getMapper().convert(result, resultType);
 
             } else if (body.getQuery() != null) {
 
                 assertFalse(body.getQuery().getSourceId().contains("/"));
                 RecordsResult<RecordMeta> result = new RecordsResult<>();
                 result.setRecords(new ArrayList<>(metaByRef.values()));
-                return JsonUtils.convert(result, resultType);
+                return Json.getMapper().convert(result, resultType);
 
             } else {
                 throw new IllegalStateException("Incorrect query: " + request);
@@ -113,7 +113,7 @@ class RemoteRecordsResolverTest {
 
             RecordsMutResult result = new RecordsMutResult();
             result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r.getId())).collect(Collectors.toList()));
-            return JsonUtils.convert(result, resultType);
+            return Json.getMapper().convert(result, resultType);
 
         } else if (request instanceof DeletionBody) {
 
@@ -121,7 +121,7 @@ class RemoteRecordsResolverTest {
 
             RecordsMutResult result = new RecordsMutResult();
             result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r)).collect(Collectors.toList()));
-            return JsonUtils.convert(result, resultType);
+            return Json.getMapper().convert(result, resultType);
 
         } else {
             throw new IllegalArgumentException("Body type is unknown: " + request + " "

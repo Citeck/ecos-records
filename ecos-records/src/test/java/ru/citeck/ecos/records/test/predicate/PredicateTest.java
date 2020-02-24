@@ -2,13 +2,13 @@ package ru.citeck.ecos.records.test.predicate;
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ class PredicateTest {
         valuePredicate.setValue(12312);
         valuePredicate.setAttribute("TestAtt");
 
-        ObjectNode jsonNode = JsonUtils.valueToTree(valuePredicate);
+        ObjectNode jsonNode = (ObjectNode) Json.getMapper().toJson(valuePredicate);
 
         assertEquals(valuePredicate.getValue(), jsonNode.get("val").asInt());
         assertEquals(valuePredicate.getType().asString(), jsonNode.get("t").asText());
@@ -87,8 +87,8 @@ class PredicateTest {
             "   ]\n" +
             "}";
 
-        Predicate predicate = JsonUtils.convert(pred, Predicate.class);
-        Predicate predicate2 = JsonUtils.convert(JsonUtils.valueToTree(predicate), Predicate.class);
+        Predicate predicate = Json.getMapper().convert(pred, Predicate.class);
+        Predicate predicate2 = Json.getMapper().convert((ObjectNode) Json.getMapper().toJson(predicate), Predicate.class);
 
         assertEquals(predicate, predicate2);
     }

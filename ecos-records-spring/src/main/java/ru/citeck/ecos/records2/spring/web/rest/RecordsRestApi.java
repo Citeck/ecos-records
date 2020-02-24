@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.rest.DeletionBody;
@@ -24,7 +25,6 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.spring.utils.web.exception.RequestHandlingException;
 import ru.citeck.ecos.records2.spring.utils.web.exception.ResponseHandlingException;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Locale;
 
@@ -261,7 +261,7 @@ public class RecordsRestApi {
 
     private <T> T convertRequest(byte[] body, Class<T> valueType) {
         try {
-            return JsonUtils.read(body, valueType);
+            return Json.getMapper().read(body, valueType);
         } catch (Exception ioe) {
             log.error("Jackson cannot parse request body", ioe);
             throw new RequestHandlingException(ioe);
@@ -273,7 +273,7 @@ public class RecordsRestApi {
             if (isProdProfile && response instanceof RecordsResult) {
                 SecurityUtils.encodeResult((RecordsResult<?>) response);
             }
-            return JsonUtils.toBytes(response);
+            return Json.getMapper().toBytes(response);
         } catch (Exception jpe) {
             log.error("Jackson cannot write response body as bytes", jpe);
             throw new ResponseHandlingException(jpe);

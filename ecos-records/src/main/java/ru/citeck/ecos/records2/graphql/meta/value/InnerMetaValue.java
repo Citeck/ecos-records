@@ -5,7 +5,7 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.commons.json.Json;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +17,7 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     private final JsonNode value;
 
     public InnerMetaValue(Object value) {
-        this.value = JsonUtils.convert(value, JsonNode.class);
+        this.value = Json.getMapper().convert(value, JsonNode.class);
     }
 
     public InnerMetaValue(JsonNode value) {

@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.objdata.DataValue;
-import ru.citeck.ecos.records2.objdata.ObjectData;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

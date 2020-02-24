@@ -5,14 +5,14 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.StringUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -113,7 +113,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 if (resultKey.equals(".json") || !flat) {
                     resultAttributes.set(resultKey, value);
                 } else {
-                    resultAttributes.set(resultKey, toFlatNode(JsonUtils.toJson(value)));
+                    resultAttributes.set(resultKey, toFlatNode(Json.getMapper().toJson(value)));
                 }
             }
         });
@@ -149,7 +149,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             final JsonNode finalNode = node;
 
             node.fieldNames().forEachRemaining(name ->
-                    objNode.put(name, toFlatNode(finalNode.get(name)))
+                objNode.set(name, toFlatNode(finalNode.get(name)))
             );
 
             node = objNode;

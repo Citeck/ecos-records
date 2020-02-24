@@ -2,8 +2,8 @@ package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -25,8 +25,8 @@ class RecordMetaTest {
         String json;
         RecordMeta meta2;
         try {
-            json = JsonUtils.toString(meta);
-            meta2 = JsonUtils.read(json, RecordMeta.class);
+            json = Json.getMapper().toString(meta);
+            meta2 = Json.getMapper().read(json, RecordMeta.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

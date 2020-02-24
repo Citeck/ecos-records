@@ -5,8 +5,8 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
-import ru.citeck.ecos.records2.objdata.ObjectData;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 
 import java.util.Iterator;
 
@@ -86,10 +86,10 @@ public abstract class DebugResult {
     }
 
     public ObjectData getDebug() {
-        return JsonUtils.convert(debug, ObjectData.class);
+        return Json.getMapper().convert(debug, ObjectData.class);
     }
 
     public void setDebug(ObjectData attributes) {
-        this.debug = JsonUtils.valueToTree(attributes);
+        this.debug = (ObjectNode) Json.getMapper().toJson(attributes);
     }
 }

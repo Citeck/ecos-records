@@ -2,6 +2,8 @@ package ru.citeck.ecos.records.test.evaluator;
 
 import lombok.Data;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
@@ -10,12 +12,10 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -173,7 +173,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         PredicateEvaluator.Config config = new PredicateEvaluator.Config();
         config.setPredicate(predicate);
 
-        predicateEvaluator.setConfig(JsonUtils.convert(config, ObjectData.class));
+        predicateEvaluator.setConfig(Json.getMapper().convert(config, ObjectData.class));
         return predicateEvaluator;
     }
 
@@ -186,7 +186,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         groupConfig.setJoinBy(joinType);
         groupConfig.setEvaluators(Arrays.asList(evaluators));
 
-        groupEvaluator.setConfig(JsonUtils.convert(groupConfig, ObjectData.class));
+        groupEvaluator.setConfig(Json.getMapper().convert(groupConfig, ObjectData.class));
 
         return groupEvaluator;
     }

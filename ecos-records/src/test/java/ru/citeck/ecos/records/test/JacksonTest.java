@@ -7,13 +7,13 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.query.QueryConsistency;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.SortBy;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,9 +46,9 @@ public class JacksonTest {
         ObjectMapper mapper = new ObjectMapper();
 
         String mJsonString = mapper.writeValueAsString(query);
-        String eJsonString = JsonUtils.toString(query);
+        String eJsonString = Json.getMapper().toString(query);
 
-        RecordsQuery res0 = JsonUtils.read(mJsonString, RecordsQuery.class);
+        RecordsQuery res0 = Json.getMapper().read(mJsonString, RecordsQuery.class);
         RecordsQuery res1 = mapper.readValue(mJsonString, RecordsQuery.class);
         RecordsQuery res2 = mapper.readValue(eJsonString, RecordsQuery.class);
         RecordsQuery res3 = mapper.readValue(eJsonString, RecordsQuery.class);
@@ -66,12 +66,12 @@ public class JacksonTest {
         atts.set("bool", true);
 
         String mAttsJsonString = mapper.writeValueAsString(atts);
-        String eAttsJsonString = JsonUtils.toString(atts);
+        String eAttsJsonString = Json.getMapper().toString(atts);
 
         ObjectData attsRes0 = mapper.readValue(mAttsJsonString, ObjectData.class);
         ObjectData attsRes1 = mapper.readValue(eAttsJsonString, ObjectData.class);
-        ObjectData attsRes2 = JsonUtils.read(mAttsJsonString, ObjectData.class);
-        ObjectData attsRes3 = JsonUtils.read(eAttsJsonString, ObjectData.class);
+        ObjectData attsRes2 = Json.getMapper().read(mAttsJsonString, ObjectData.class);
+        ObjectData attsRes3 = Json.getMapper().read(eAttsJsonString, ObjectData.class);
 
         assertEquals(atts, attsRes0);
         assertEquals(atts, attsRes1);
@@ -93,8 +93,8 @@ public class JacksonTest {
         controlTestDto.setTest2("12312");
         controlTestDto.setTest3(true);
 
-        TestDto check0 = JsonUtils.convert(mNode, TestDto.class);
-        TestDto check1 = JsonUtils.convert(eNode, TestDto.class);
+        TestDto check0 = Json.getMapper().convert(mNode, TestDto.class);
+        TestDto check1 = Json.getMapper().convert(eNode, TestDto.class);
 
         assertEquals(controlTestDto, check0);
         assertEquals(controlTestDto, check1);
@@ -102,7 +102,7 @@ public class JacksonTest {
         Map<String, String> data = new HashMap<>();
         String value = "test";
         data.put("field", value);
-        WithJsonField valueWithJsonField = JsonUtils.convert(data, WithJsonField.class);
+        WithJsonField valueWithJsonField = Json.getMapper().convert(data, WithJsonField.class);
         assertEquals(value, valueWithJsonField.field.asText());
     }
 

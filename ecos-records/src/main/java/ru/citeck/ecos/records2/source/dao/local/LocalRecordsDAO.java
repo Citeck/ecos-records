@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -22,7 +23,6 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,7 +85,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
             for (int i = 0; i < recordRefs.size(); i++) {
                 RecordMeta meta = mutation.getRecords().get(i);
-                JsonUtils.applyData(meta.getAttributes(), values.get(i));
+                Json.getMapper().applyData(values.get(i), meta.getAttributes());
             }
 
             RecordsMutResult result = mutableDao.save(values);

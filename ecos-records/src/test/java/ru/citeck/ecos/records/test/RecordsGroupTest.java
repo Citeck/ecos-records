@@ -3,6 +3,7 @@ package ru.citeck.ecos.records.test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
@@ -16,7 +17,6 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
 import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -213,7 +213,7 @@ class RecordsGroupTest extends LocalRecordsDAO
         recordsQuery.setLanguage("fts");
         recordsQuery.setGroupBy(Collections.singletonList("strVal"));
 
-        RecordsQuery baseQuery = JsonUtils.copy(recordsQuery);
+        RecordsQuery baseQuery = Json.getMapper().copy(recordsQuery);
 
         assertResults(recordsService.queryRecords(recordsQuery, Result.class), predicate);
         assertEquals(baseQuery, recordsQuery);

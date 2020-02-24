@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.request.query.lang;
 
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.commons.json.Json;
 
 public class DistinctQuery {
 
@@ -26,7 +26,7 @@ public class DistinctQuery {
         if (query instanceof String) {
             this.query = query;
         } else {
-            this.query = JsonUtils.toJson(query);
+            this.query = Json.getMapper().toJson(query);
         }
     }
 

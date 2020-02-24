@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records2.evaluator.evaluators.*;
@@ -30,8 +32,6 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
-import ru.citeck.ecos.records2.utils.LibsUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,8 +67,8 @@ public class RecordsServiceFactory {
     private RecordsService tmpRecordsService;
 
     {
-        JsonUtils.addDeserializer(getPredicateJsonDeserializer());
-        JsonUtils.addSerializer(new PredicateJsonSerializer());
+        Json.getContext().addDeserializer(getPredicateJsonDeserializer());
+        Json.getContext().addSerializer(new PredicateJsonSerializer());
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

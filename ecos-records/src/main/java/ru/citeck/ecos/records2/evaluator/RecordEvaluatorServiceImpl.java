@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records2.evaluator;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -142,7 +142,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             return false;
         }
 
-        Object config = JsonUtils.convert(evalDto.getConfig(), evaluator.getConfigType());
+        Object config = Json.getMapper().convert(evalDto.getConfig(), evaluator.getConfigType());
 
         Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
 
@@ -158,7 +158,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             meta.setAttributes(evaluatorMeta);
             requiredMeta = meta;
         } else {
-            requiredMeta = JsonUtils.convert(evaluatorMeta, evaluator.getResMetaType());
+            requiredMeta = Json.getMapper().convert(evaluatorMeta, evaluator.getResMetaType());
         }
 
         try {
@@ -191,7 +191,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         Map<String, String> attributes = null;
         try {
 
-            Object configObj = JsonUtils.convert(evalDto.getConfig(), evaluator.getConfigType());
+            Object configObj = Json.getMapper().convert(evalDto.getConfig(), evaluator.getConfigType());
             Object requiredMeta = evaluator.getMetaToRequest(configObj);
 
             if (requiredMeta != null) {

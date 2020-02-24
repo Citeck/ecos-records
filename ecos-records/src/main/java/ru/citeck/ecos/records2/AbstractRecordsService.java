@@ -6,14 +6,15 @@ import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.objdata.DataValue;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 public abstract class AbstractRecordsService implements RecordsService {
 
     protected RecordsServiceFactory serviceFactory;
+
+    private JsonMapper mapper = Json.getMapper();
 
     AbstractRecordsService(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
@@ -105,7 +108,7 @@ public abstract class AbstractRecordsService implements RecordsService {
             for (DataValue eachIt : foreach) {
 
                 RecordsQuery eachRecordsQuery = new RecordsQuery(query);
-                eachRecordsQuery.setQuery(replaceIt(JsonUtils.toJson(query.getQuery()), JsonUtils.toJson(eachIt)));
+                eachRecordsQuery.setQuery(replaceIt(mapper.toJson(query.getQuery()), mapper.toJson(eachIt)));
                 RecordsQueryResult<T> eachRes = queryImpl.apply(eachRecordsQuery);
 
                 result.setTotalCount(result.getTotalCount() + eachRes.getTotalCount());

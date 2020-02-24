@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.predicate;
 
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator;
 import ru.citeck.ecos.records2.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -80,7 +80,7 @@ public class PredicateServiceImpl implements PredicateService {
             ValuePredicate valuePredicate = (ValuePredicate) predicate;
             String attribute = valuePredicate.getAttribute();
             Object value = valuePredicate.getValue();
-            Object elementValue = JsonUtils.toJava(attributes.getAttribute(attribute));
+            Object elementValue = Json.getMapper().toJava(attributes.getAttribute(attribute));
 
             switch (valuePredicate.getType()) {
                 case EQ:
@@ -110,7 +110,7 @@ public class PredicateServiceImpl implements PredicateService {
         } else if (predicate instanceof EmptyPredicate) {
 
             String attribute = ((EmptyPredicate) predicate).getAttribute();
-            return comparator.isEmpty(JsonUtils.toJava(attributes.getAttribute(attribute)));
+            return comparator.isEmpty(Json.getMapper().toJava(attributes.getAttribute(attribute)));
         }
 
         return false;

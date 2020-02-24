@@ -3,8 +3,8 @@ package ru.citeck.ecos.records.test;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ class RecordRefTest {
         RecordRef refFromStr = RecordRef.valueOf(recordStr);
         assertEquals(recordRef, refFromStr);
 
-        RecordsObj recordsObj = JsonUtils.read("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
+        RecordsObj recordsObj = Json.getMapper().read("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
         assertEquals(recordRef, recordsObj.list.get(0));
 
         if (appName == null) {
@@ -68,13 +68,13 @@ class RecordRefTest {
         RecordRef otherRef = RecordRef.create(appName + "0", sourceId, id);
         assertNotEquals(otherRef, recordRef);
 
-        String otherRefStr = JsonUtils.toString(otherRef);
+        String otherRefStr = Json.getMapper().toString(otherRef);
         assertEquals("\"" + otherRef.toString() + "\"", otherRefStr);
 
-        RecordRef remappedOtherRef = JsonUtils.convert(otherRefStr, RecordRef.class);
+        RecordRef remappedOtherRef = Json.getMapper().convert(otherRefStr, RecordRef.class);
         assertEquals(otherRef, remappedOtherRef);
 
-        RecordsList list = JsonUtils.read("[\"\", \"\"]", RecordsList.class);
+        RecordsList list = Json.getMapper().read("[\"\", \"\"]", RecordsList.class);
         assertEquals(2, list.size());
         assertSame(list.get(0), RecordRef.EMPTY);
         assertSame(list.get(1), RecordRef.EMPTY);

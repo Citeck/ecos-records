@@ -21,14 +21,23 @@
 
         <jackson.version>2.3.2</jackson.version>
         <ecos.jackson.version>2.10.2.1</ecos.jackson.version>
+        <ecos.commons.version>1.0.4</ecos.commons.version>
         <junit.version>5.4.0</junit.version>
         <slf4j.version>1.7.28</slf4j.version>
 
         <jacoco-maven-plugin.version>0.8.2</jacoco-maven-plugin.version>
+        <kotlin.version>1.3.61</kotlin.version>
 
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.commons</groupId>
+            <artifactId>ecos-commons</artifactId>
+            <version>${ecos.commons.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>ru.citeck.ecos</groupId>
@@ -102,6 +111,13 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
 

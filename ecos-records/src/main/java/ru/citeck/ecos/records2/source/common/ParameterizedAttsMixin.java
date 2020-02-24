@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2.source.common;
 
 import lombok.Data;
+import ru.citeck.ecos.commons.utils.ReflectUtils;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.utils.ReflectUtils;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
     public ParameterizedAttsMixin(AttributesMixin<?, ?> impl) {
 
         this.impl = (AttributesMixin<Object, Object>) impl;
-        List<Class<?>> genericArgs = ReflectUtils.getGenericClassArgs(impl.getClass(), AttributesMixin.class);
+        List<Class<?>> genericArgs = ReflectUtils.getGenericArgs(impl.getClass(), AttributesMixin.class);
 
         if (genericArgs.size() != 2) {
             throw new IllegalArgumentException("Incorrect attributes mixin: [" + impl.getClass() + "] " + impl);

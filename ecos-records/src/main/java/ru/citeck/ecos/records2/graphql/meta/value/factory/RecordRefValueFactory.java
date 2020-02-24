@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
@@ -7,8 +9,6 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.objdata.DataValue;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 
@@ -96,11 +96,11 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
             if (result.isArray()) {
                 List<InnerMetaValue> resultList = new ArrayList<>();
                 for (DataValue node : result) {
-                    resultList.add(new InnerMetaValue(JsonUtils.toJson(node)));
+                    resultList.add(new InnerMetaValue(Json.getMapper().toJson(node)));
                 }
                 return resultList;
             }
-            return result.isNotNull() ? new InnerMetaValue(JsonUtils.toJson(result)) : null;
+            return result.isNotNull() ? new InnerMetaValue(Json.getMapper().toJson(result)) : null;
         }
     }
 }

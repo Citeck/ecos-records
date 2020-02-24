@@ -1,10 +1,11 @@
 package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.objdata.DataValue;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -16,7 +17,6 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsDAORegistry;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
-import ru.citeck.ecos.records2.utils.StringUtils;
 
 import java.util.*;
 import java.util.function.Supplier;

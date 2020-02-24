@@ -4,16 +4,16 @@ import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.MLText;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.scalar.MLText;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +32,8 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
     private static final MLText testML = new MLText();
 
     static {
-        testML.put(Locale.ENGLISH, EN_VALUE);
-        testML.put(new Locale("ru"), RU_VALUE);
+        testML.set(Locale.ENGLISH, EN_VALUE);
+        testML.set(new Locale("ru"), RU_VALUE);
     }
 
     private RecordsService recordsService;
@@ -57,22 +57,22 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
         String withInnerAsObj = "{\"textField\": " + mlAsObject + "}";
         String withInnerAsStr = "{\"textField\": \"" + enValue + "\"}";
 
-        WithInnerField strTxt0 = JsonUtils.read(withInnerAsStr, WithInnerField.class);
-        WithInnerField objTxt0 = JsonUtils.read(withInnerAsObj, WithInnerField.class);
+        WithInnerField strTxt0 = Json.getMapper().readNotNull(withInnerAsStr, WithInnerField.class);
+        WithInnerField objTxt0 = Json.getMapper().readNotNull(withInnerAsObj, WithInnerField.class);
 
         assertEquals(strTxt0.textField.get(Locale.ENGLISH), objTxt0.textField.get(Locale.ENGLISH));
 
         assertNotEquals(strTxt0, objTxt0);
-        strTxt0.textField.put(new Locale("ru"), ruValue);
+        strTxt0.textField.set(new Locale("ru"), ruValue);
         assertEquals(strTxt0, objTxt0);
 
-        String withInnerFromObj = JsonUtils.toString(objTxt0);
-        WithInnerField withInnerObjStrObj = JsonUtils.read(withInnerFromObj, WithInnerField.class);
+        String withInnerFromObj = Json.getMapper().toString(objTxt0);
+        WithInnerField withInnerObjStrObj = Json.getMapper().read(withInnerFromObj, WithInnerField.class);
 
         assertEquals(objTxt0, withInnerObjStrObj);
 
         String testValue = "TestValue";
-        MLText mlText = JsonUtils.read("{\"ru\":\"" + testValue + "\"}", MLText.class);
+        MLText mlText = Json.getMapper().read("{\"ru\":\"" + testValue + "\"}", MLText.class);
         assertEquals(testValue, mlText.getClosestValue(Locale.ENGLISH));
         assertNull(mlText.get(Locale.ENGLISH));
         assertEquals(testValue, mlText.get(new Locale("ru")));
@@ -97,7 +97,7 @@ public class MLTextTest extends LocalRecordsDAO implements LocalRecordsQueryWith
         assertEquals(EN_VALUE, res.get(".str", ""));
         assertEquals(EN_VALUE, res.get("eu", ""));
 
-        assertEquals(testML, JsonUtils.convert(res.get(".json"), MLText.class));
+        assertEquals(testML, Json.getMapper().convert(res.get(".json"), MLText.class));
     }
 
     @Override

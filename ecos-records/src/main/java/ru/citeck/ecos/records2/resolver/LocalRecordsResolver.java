@@ -1,6 +1,10 @@
 package ru.citeck.ecos.records2.resolver;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -8,8 +12,6 @@ import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;
 import ru.citeck.ecos.records2.exception.RecordsSourceNotFoundException;
-import ru.citeck.ecos.records2.objdata.DataValue;
-import ru.citeck.ecos.records2.objdata.ObjectData;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
 import ru.citeck.ecos.records2.predicate.model.OrPredicate;
@@ -29,8 +31,6 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
-import ru.citeck.ecos.records2.utils.StringUtils;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -160,7 +160,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             return Collections.emptyList();
         }
 
-        Predicate predicate = JsonUtils.convert(query.get(), Predicate.class);
+        Predicate predicate = Json.getMapper().convert(query.get(), Predicate.class);
 
         OrPredicate distinctPredicate = Predicates.or(Predicates.empty(distinctQuery.getAttribute()));
         AndPredicate fullPredicate = Predicates.and(predicate, Predicates.not(distinctPredicate));
@@ -201,7 +201,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         return values.values().stream().filter(DataValue::isObject).map(v -> {
 
-            ObjectData attributes = v.asAttributes();
+            ObjectData attributes = v.asObjectData();
             RecordRef ref = RecordRef.valueOf(attributes.get("id").asText());
 
             attributes.remove(distinctValueAlias);

@@ -4,7 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.*;
 import graphql.language.*;
 import graphql.schema.*;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
+import ru.citeck.ecos.commons.json.Json;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ public class CustomGqlScalars {
         private JsonNode convertImpl(Object value) {
             if (value instanceof String) {
                 try {
-                    return JsonUtils.readTree((String) value);
+                    return Json.getMapper().read((String) value);
                 } catch (Exception e) {
                     throw new CoercingParseValueException("Json string is incorrect: " + value, e);
                 }
@@ -31,7 +31,7 @@ public class CustomGqlScalars {
                 return (JsonNode) value;
             }
             try {
-                return JsonUtils.valueToTree(value);
+                return Json.getMapper().toJson(value);
             } catch (Exception e) {
                 throw new CoercingParseValueException(e);
             }
@@ -97,13 +97,13 @@ public class CustomGqlScalars {
             }
             if (input instanceof ArrayValue) {
                 List<Value> values = ((ArrayValue) input).getValues();
-                ArrayNode result = JsonUtils.createArrayNode();
+                ArrayNode result = Json.getMapper().newArrayNode();
                 values.forEach(v -> result.add(parseLiteral(v, variables)));
                 return result;
             }
             if (input instanceof ObjectValue) {
                 List<ObjectField> values = ((ObjectValue) input).getObjectFields();
-                ObjectNode result = JsonUtils.createObjectNode();
+                ObjectNode result = Json.getMapper().newObjectNode();
                 values.forEach(fld -> {
                     JsonNode parsedValue = parseLiteral(fld.getValue(), variables);
                     result.put(fld.getName(), parsedValue);

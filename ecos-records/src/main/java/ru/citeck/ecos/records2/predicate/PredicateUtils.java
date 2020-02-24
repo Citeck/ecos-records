@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.predicate;
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.utils.json.JsonUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -92,8 +92,8 @@ public class PredicateUtils {
             return pred;
         }, onlyAnd);
 
-        ObjectNode dtoDataNode = JsonUtils.valueToTree(dtoData);
-        JsonUtils.applyData(dtoDataNode, dto);
+        ObjectNode dtoDataNode = (ObjectNode) Json.getMapper().toJson(dtoData);
+        Json.getMapper().applyData(dto, dtoDataNode);
 
         try {
             PropertyUtils.setProperty(dto, "predicate", filtered);

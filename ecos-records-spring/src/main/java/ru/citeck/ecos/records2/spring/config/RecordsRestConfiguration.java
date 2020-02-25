@@ -8,8 +8,10 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.rest.*;
@@ -62,11 +64,6 @@ public class RecordsRestConfiguration {
         result.getHeaders().forEach((k, v) -> resultEntity.getHeaders().put(k, v));
 
         return resultEntity;
-    }
-
-    private String getEurekaMetaParam(String instanceId, String param) {
-        InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(instanceId, false);
-        return instanceInfo.getMetadata().get(param);
     }
 
     @Bean

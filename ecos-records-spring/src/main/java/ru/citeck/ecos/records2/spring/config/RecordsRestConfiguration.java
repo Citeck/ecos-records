@@ -70,13 +70,9 @@ public class RecordsRestConfiguration {
     @LoadBalanced
     public RestTemplate recordsRestTemplate() {
 
-        RecordsProperties.RestProps microRest = properties.getRest();
-        String rootUri = microRest != null && Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
-
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory.class)
             .additionalInterceptors(authInterceptor)
-            .rootUri(rootUri)
             .build();
     }
 

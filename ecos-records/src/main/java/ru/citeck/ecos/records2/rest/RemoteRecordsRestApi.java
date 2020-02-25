@@ -59,7 +59,7 @@ public class RemoteRecordsRestApi {
             RemoteAppInfo appInfo = remoteAppInfoProvider.getAppInfo(appName);
             if (appInfo != null) {
                 targetAppHost = appInfo.getHost() + ":" + appInfo.getPort();
-                targetAppIp = appInfo.getIp() + ":" + appInfo.getIp();
+                targetAppIp = appInfo.getIp() + ":" + appInfo.getPort();
             }
         } catch (Exception appInfoResolveException) {
             log.warn("Application info can't be received: '" + appName + "'", appInfoResolveException);
@@ -114,6 +114,14 @@ public class RemoteRecordsRestApi {
     }
 
     private String convertUrl(String url) {
+
+        if (!url.startsWith("http")) {
+            RecordsProperties.RestProps microRest = properties.getRest();
+            if (microRest != null) {
+                String schema = Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
+                url = schema + url;
+            }
+        }
 
         if (remoteAppInfoProvider == null) {
             return url;

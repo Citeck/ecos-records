@@ -9,7 +9,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.BasicAuthorizationInterceptor;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.records2.RecordsProperties;
-import ru.citeck.ecos.records2.spring.utils.RemoteRecordsUtils;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -15,7 +15,7 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.rest.RestApi;
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -31,12 +31,12 @@ public class RemoteRecordsResolver implements RecordsResolver {
     public static final String MUTATE_URL = BASE_URL + "mutate";
     public static final String DELETE_URL = BASE_URL + "delete";
 
-    private RestApi restApi;
+    private RemoteRecordsRestApi restApi;
     private String defaultAppName = "";
 
     private Map<String, String> sourceIdMapping = new HashMap<>();
 
-    public RemoteRecordsResolver(RecordsServiceFactory factory, RestApi restApi) {
+    public RemoteRecordsResolver(RecordsServiceFactory factory, RemoteRecordsRestApi restApi) {
         this.restApi = restApi;
 
         Map<String, String> sourceIdMapping = factory.getProperties().getSourceIdMapping();

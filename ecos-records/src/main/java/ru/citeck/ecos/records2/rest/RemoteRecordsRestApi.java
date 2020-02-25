@@ -10,15 +10,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
-public class RestApi {
+public class RemoteRecordsRestApi {
 
     private RecordsRestTemplate template;
     private RecordsProperties properties;
     private RemoteAppInfoProvider remoteAppInfoProvider;
 
-    public RestApi(RecordsRestTemplate template,
-                   RemoteAppInfoProvider remoteAppInfoProvider,
-                   RecordsProperties properties) {
+    public RemoteRecordsRestApi(RecordsRestTemplate template,
+                                RemoteAppInfoProvider remoteAppInfoProvider,
+                                RecordsProperties properties) {
 
         this.template = template;
         this.properties = properties;

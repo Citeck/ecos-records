@@ -54,7 +54,11 @@ public class QueryLangServiceImpl implements QueryLangService {
             LangConvPair langConvKey = new LangConvPair(language, prefLanguage);
             ConverterInfo converterInfo = languageConverters.get(langConvKey);
 
-            Object convertedQuery = converterInfo != null ? converterInfo.converter.convert(query) : null;
+            Object convertedQuery = null;
+            if (converterInfo != null) {
+                Object queryForConverter = Json.getMapper().convert(query, converterInfo.getInputQueryType());
+                convertedQuery = converterInfo.converter.convert(queryForConverter);
+            }
 
             if (convertedQuery != null) {
                 return Optional.of(new QueryWithLang(convertedQuery, prefLanguage));

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.spring.utils;
+package ru.citeck.ecos.records2.rest;
 
 public class RemoteRecordsUtils {
 

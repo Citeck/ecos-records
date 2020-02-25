@@ -15,7 +15,7 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
+import ru.citeck.ecos.records2.rest.RestApi;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -31,19 +31,13 @@ public class RemoteRecordsResolver implements RecordsResolver {
     public static final String MUTATE_URL = BASE_URL + "mutate";
     public static final String DELETE_URL = BASE_URL + "delete";
 
-    private RecordsRestConnection restConnection;
+    private RestApi restApi;
     private String defaultAppName = "";
 
     private Map<String, String> sourceIdMapping = new HashMap<>();
 
-    @Deprecated
-    public RemoteRecordsResolver(RecordsRestConnection restConnection) {
-        this.restConnection = restConnection;
-        log.warn("Deprecated constructor");
-    }
-
-    public RemoteRecordsResolver(RecordsServiceFactory factory, RecordsRestConnection restConnection) {
-        this.restConnection = restConnection;
+    public RemoteRecordsResolver(RecordsServiceFactory factory, RestApi restApi) {
+        this.restApi = restApi;
 
         Map<String, String> sourceIdMapping = factory.getProperties().getSourceIdMapping();
         if (sourceIdMapping != null) {
@@ -76,7 +70,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
         queryBody.setQuery(appQuery);
         queryBody.setSchema(schema == null ? "" : schema);
 
-        RecordsMetaQueryResult appResult = restConnection.jsonPost(url, queryBody, RecordsMetaQueryResult.class);
+        RecordsMetaQueryResult appResult = restApi.jsonPost(url, queryBody, RecordsMetaQueryResult.class);
 
         return RecordsUtils.metaWithDefaultApp(appResult, appName);
     }
@@ -202,7 +196,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
 
         String appUrl = "/" + appName + url;
 
-        RecordsResult<T> appResult = restConnection.jsonPost(appUrl, body, respType);
+        RecordsResult<T> appResult = restApi.jsonPost(appUrl, body, respType);
 
         appResult.setRecords(appResult.getRecords()
                                       .stream()

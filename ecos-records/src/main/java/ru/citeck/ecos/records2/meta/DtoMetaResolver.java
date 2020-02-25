@@ -7,8 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -56,8 +58,18 @@ public class DtoMetaResolver {
             new ScalarField<>(Date.class, "str"),
             new ScalarField<>(JsonNode.class, "json"),
             new ScalarField<>(ObjectNode.class, "json"),
-            new ScalarField<>(ArrayNode.class, "json")
+            new ScalarField<>(ArrayNode.class, "json"),
+            new ScalarField<>(ObjectData.class, "json"),
+            new ScalarField<>(DataValue.class, "json")
         ).forEach(s -> scalars.put(s.getFieldType(), s));
+
+        if (LibsUtils.isJacksonPresent()) {
+            Arrays.asList(
+                new ScalarField<>(com.fasterxml.jackson.databind.JsonNode.class, "json"),
+                new ScalarField<>(com.fasterxml.jackson.databind.node.ObjectNode.class, "json"),
+                new ScalarField<>(com.fasterxml.jackson.databind.node.ArrayNode.class, "json")
+            ).forEach(s -> scalars.put(s.getFieldType(), s));
+        }
     }
 
     public Map<String, String> getAttributes(Class<?> metaClass) {

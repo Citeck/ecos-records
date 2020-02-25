@@ -8,26 +8,17 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
-import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsProperties;
-import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
-import ru.citeck.ecos.records2.spring.utils.RemoteRecordsUtils;
+import ru.citeck.ecos.records2.rest.*;
 import ru.citeck.ecos.records2.spring.web.SkipSslVerificationHttpRequestFactory;
 import ru.citeck.ecos.records2.spring.web.interceptor.RecordsAuthInterceptor;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Slf4j
 @Configuration
 public class RecordsRestConfiguration {
-
-    public static final String RECS_BASE_URL_META_KEY = "records-base-url";
-    public static final String RECS_USER_BASE_URL_META_KEY = "records-user-base-url";
 
     private EurekaClient eurekaClient;
     private RecordsProperties properties;
@@ -35,112 +26,47 @@ public class RecordsRestConfiguration {
     private RecordsAuthInterceptor authInterceptor;
 
     @Bean
-    public RecordsRestConnection recordsRestConnection() {
-        return this::jsonPost;
+    public RestApi respApi() {
+        return new RestApi(this::jsonPost, createRemoteAppInfoProvider(), properties);
     }
 
-    private <T> T jsonPost(String url, Object req, Class<T> respType) {
+    private RemoteAppInfoProvider createRemoteAppInfoProvider() {
 
-        String recordsUrl = convertUrl(url);
-        byte[] response = null;
+        return appName -> {
 
-        try {
+            RemoteAppInfo info = new RemoteAppInfo();
 
-            response = recordsRestTemplate().postForObject(recordsUrl, req, byte[].class);
-            return Json.getMapper().read(response, respType);
+            InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(appName, false);
+            info.setIp(instanceInfo.getIPAddr());
+            info.setPort(instanceInfo.getPort());
+            info.setHost(instanceInfo.getHostName());
 
-        } catch (Exception e) {
+            info.setRecordsBaseUrl(instanceInfo.getMetadata().get(RestConstants.RECS_BASE_URL_META_KEY));
+            info.setRecordsUserBaseUrl(instanceInfo.getMetadata().get(RestConstants.RECS_USER_BASE_URL_META_KEY));
 
-            int statusCode = -1;
-            if (e instanceof HttpStatusCodeException) {
-                statusCode = ((HttpStatusCodeException) e).getRawStatusCode();
-            }
-
-            log.error("Json POST failed. URL: " + recordsUrl
-                      + " Status code: "
-                      + statusCode
-                      + " exception: " + e.getClass()
-                      + " message: "
-                      + e.getMessage());
-
-            logErrorObject("Request body", req);
-            logErrorObject("Request resp", response);
-
-            throw e;
-        }
+            return info;
+        };
     }
 
-    private void logErrorObject(String prefix, Object obj) {
-        String str;
-        if (obj == null) {
-            str = "null";
-        } else if (obj instanceof byte[]) {
-            str = new String((byte[]) obj, StandardCharsets.UTF_8);
-        } else {
-            try {
-                str = Json.getMapper().toString(obj);
-            } catch (Exception e) {
-                log.error("log conversion failed: " + e.getClass() + " " + e.getMessage());
-                try {
-                    str = obj.toString();
-                } catch (Exception ex) {
-                    log.error("log toString failed: " + ex.getClass() + " " + ex.getMessage());
-                    str = obj.getClass() + "@" + System.identityHashCode(obj);
-                }
-            }
-        }
-        log.error(prefix + ": " + str);
-    }
+    private RestResponseEntity jsonPost(String url, RestRequestEntity request) {
 
-    private RecordsProperties.App getAppProps(String id) {
-        Map<String, RecordsProperties.App> apps = properties.getApps();
-        return apps != null ? apps.get(id) : null;
-    }
+        HttpHeaders headers = new HttpHeaders();
+        request.getHeaders().forEach(headers::put);
+        HttpEntity<byte[]> httpEntity = new HttpEntity<>(request.getBody(), headers);
 
-    private String convertUrl(String url) {
+        ResponseEntity<byte[]> result = recordsRestTemplate().exchange(url, HttpMethod.POST, httpEntity, byte[].class);
 
-        if (eurekaClient == null) {
-            return url;
-        }
+        RestResponseEntity resultEntity = new RestResponseEntity();
+        resultEntity.setBody(result.getBody());
+        resultEntity.setStatus(result.getStatusCode().value());
+        result.getHeaders().forEach((k, v) -> resultEntity.getHeaders().put(k, v));
 
-        String baseUrlReplacement;
-        String instanceId = getInstanceId(url);
-
-        RecordsProperties.App app = getAppProps(instanceId);
-
-        String baseUrl = app != null ? app.getRecBaseUrl() : null;
-        String userBaseUrl = app != null ? app.getRecUserBaseUrl() : null;
-
-        if (RemoteRecordsUtils.isSystemContext()) {
-            if (baseUrl != null) {
-                baseUrlReplacement = baseUrl;
-            } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_BASE_URL_META_KEY);
-            }
-        } else {
-            if (userBaseUrl != null) {
-                baseUrlReplacement = userBaseUrl;
-            } else {
-                baseUrlReplacement = getEurekaMetaParam(instanceId, RECS_USER_BASE_URL_META_KEY);
-            }
-        }
-
-        if (StringUtils.isNotBlank(baseUrlReplacement)) {
-            url = url.replace(RemoteRecordsResolver.BASE_URL, baseUrlReplacement);
-        }
-
-        return url;
+        return resultEntity;
     }
 
     private String getEurekaMetaParam(String instanceId, String param) {
         InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(instanceId, false);
         return instanceInfo.getMetadata().get(param);
-    }
-
-    private String getInstanceId(String url) {
-        int firstSlashIndex = url.indexOf("/");
-        int nextSlashIndex = url.indexOf("/", firstSlashIndex + 1);
-        return url.substring(firstSlashIndex + 1, nextSlashIndex);
     }
 
     @Bean

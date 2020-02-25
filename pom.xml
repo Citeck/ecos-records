@@ -21,7 +21,7 @@
 
         <jackson.version>2.3.2</jackson.version>
         <ecos.jackson.version>2.10.2.1</ecos.jackson.version>
-        <ecos.commons.version>1.1.0</ecos.commons.version>
+        <ecos.commons.version>1.2.0-SNAPSHOT</ecos.commons.version>
         <junit.version>5.4.0</junit.version>
         <slf4j.version>1.7.28</slf4j.version>
 
@@ -36,7 +36,6 @@
             <groupId>ru.citeck.ecos.commons</groupId>
             <artifactId>ecos-commons</artifactId>
             <version>${ecos.commons.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -83,6 +82,20 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.8</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
 

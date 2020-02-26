@@ -77,11 +77,16 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
 
         private String getFormattedUptime() {
 
-            long uptime = getUptimeMs();
+            long uptimeMs = getUptimeMs();
+            long uptimeLeft = uptimeMs;
 
-            long hours = TimeUnit.MILLISECONDS.toHours(uptime);
-            long minutes = TimeUnit.MILLISECONDS.toMinutes(uptime);
-            long seconds = TimeUnit.MILLISECONDS.toSeconds(uptime);
+            long hours = TimeUnit.MILLISECONDS.toHours(uptimeLeft);
+            uptimeLeft -= TimeUnit.HOURS.toMillis(hours);
+
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(uptimeLeft);
+            uptimeLeft -= TimeUnit.MINUTES.toMillis(minutes);
+
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(uptimeLeft);
 
             String result = "";
             if (hours > 0) {
@@ -94,7 +99,7 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
                 result += seconds + "s";
             }
             if (result.isEmpty()) {
-                result = uptime + " ms";
+                result = uptimeMs + " ms";
             }
 
             return result;

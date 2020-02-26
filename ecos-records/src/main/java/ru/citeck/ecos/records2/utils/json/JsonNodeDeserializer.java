@@ -11,12 +11,12 @@ import java.io.IOException;
 /**
  * Bridge between com.fasterxml and ecos.com.fasterxml
  */
-public class JsonNodeDeserializer extends StdDeserializer<JsonNode> {
+public class JsonNodeDeserializer<T extends JsonNode> extends StdDeserializer<JsonNode> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JsonNodeDeserializer() {
-        super(JsonNode.class);
+    public JsonNodeDeserializer(Class<T> type) {
+        super(type);
     }
 
     @Override

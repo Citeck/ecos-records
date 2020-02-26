@@ -33,7 +33,20 @@ public class JsonUtils {
     static {
         if (LibsUtils.isJacksonPresent()) {
             addSerializer(new JsonNodeSerializer());
-            addDeserializer(new JsonNodeDeserializer());
+
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.JsonNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.ArrayNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.ObjectNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.BinaryNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.BigIntegerNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.BooleanNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.DoubleNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.FloatNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.IntNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.LongNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.POJONode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.ShortNode.class));
+            addDeserializer(new JsonNodeDeserializer<>(com.fasterxml.jackson.databind.node.TextNode.class));
         } else {
             log.info("Jackson library is not found. Bridge converters won't be registered.");
         }

@@ -28,8 +28,8 @@ public class RecordsRestConfiguration {
     private RecordsAuthInterceptor authInterceptor;
 
     @Bean
-    public RestApi respApi() {
-        return new RestApi(this::jsonPost, createRemoteAppInfoProvider(), properties);
+    public RemoteRecordsRestApi remoteRespApi() {
+        return new RemoteRecordsRestApi(this::jsonPost, createRemoteAppInfoProvider(), properties);
     }
 
     private RemoteAppInfoProvider createRemoteAppInfoProvider() {
@@ -70,13 +70,9 @@ public class RecordsRestConfiguration {
     @LoadBalanced
     public RestTemplate recordsRestTemplate() {
 
-        RecordsProperties.RestProps microRest = properties.getRest();
-        String rootUri = microRest != null && Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
-
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory.class)
             .additionalInterceptors(authInterceptor)
-            .rootUri(rootUri)
             .build();
     }
 

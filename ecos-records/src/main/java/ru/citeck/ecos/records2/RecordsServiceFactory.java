@@ -33,6 +33,7 @@ import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,6 +59,7 @@ public class RecordsServiceFactory {
     private RecordEvaluatorService recordEvaluatorService;
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
+    private List<RecordsDAO> defaultRecordsDAO;
 
     private RecordsProperties properties;
 
@@ -133,17 +135,37 @@ public class RecordsServiceFactory {
     }
 
     protected RecordsService createRecordsService() {
+
         if (tmpRecordsService != null) {
             return tmpRecordsService;
         }
 
-        RecordsService recordsService = new RecordsServiceImpl(this);
+        RecordsService recordsService;
+        Class<? extends RecordsService> serviceType = getRecordsServiceType();
+        try {
+            Constructor<? extends RecordsService> constructor = serviceType.getConstructor(RecordsServiceFactory.class);
+            recordsService = constructor.newInstance(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         tmpRecordsService = recordsService;
 
-        recordsService.register(new MetaRecordsDAO());
+        getDefaultRecordsDAO().forEach(recordsService::register);
 
         tmpRecordsService = null;
         return recordsService;
+    }
+
+    protected Class<? extends RecordsService> getRecordsServiceType() {
+        return RecordsServiceImpl.class;
+    }
+
+    protected List<RecordsDAO> getDefaultRecordsDAO() {
+        if (defaultRecordsDAO == null) {
+            defaultRecordsDAO = Collections.singletonList(new MetaRecordsDAO());
+        }
+        return defaultRecordsDAO;
     }
 
     public final synchronized RecordsResolver getRecordsResolver() {

@@ -16,13 +16,13 @@ import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.rest.RestApi;
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 
 @Slf4j
 @Configuration
 public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
 
-    private RestApi restApi;
+    private RemoteRecordsRestApi restApi;
     private RecordsProperties properties;
 
     @Value("${spring.application.name:}")
@@ -105,7 +105,7 @@ public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
     }
 
     @Autowired(required = false)
-    public void setConnection(RestApi restApi) {
+    public void setConnection(RemoteRecordsRestApi restApi) {
         this.restApi = restApi;
     }
 

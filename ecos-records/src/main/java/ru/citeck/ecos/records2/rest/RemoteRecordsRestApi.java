@@ -8,17 +8,21 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
-public class RestApi {
+public class RemoteRecordsRestApi {
+
+    private static final Pattern APP_NAME_PATTERN = Pattern.compile("^https?://(.+?)/.*");
 
     private RecordsRestTemplate template;
     private RecordsProperties properties;
     private RemoteAppInfoProvider remoteAppInfoProvider;
 
-    public RestApi(RecordsRestTemplate template,
-                   RemoteAppInfoProvider remoteAppInfoProvider,
-                   RecordsProperties properties) {
+    public RemoteRecordsRestApi(RecordsRestTemplate template,
+                                RemoteAppInfoProvider remoteAppInfoProvider,
+                                RecordsProperties properties) {
 
         this.template = template;
         this.properties = properties;
@@ -59,7 +63,7 @@ public class RestApi {
             RemoteAppInfo appInfo = remoteAppInfoProvider.getAppInfo(appName);
             if (appInfo != null) {
                 targetAppHost = appInfo.getHost() + ":" + appInfo.getPort();
-                targetAppIp = appInfo.getIp() + ":" + appInfo.getIp();
+                targetAppIp = appInfo.getIp() + ":" + appInfo.getPort();
             }
         } catch (Exception appInfoResolveException) {
             log.warn("Application info can't be received: '" + appName + "'", appInfoResolveException);
@@ -115,6 +119,15 @@ public class RestApi {
 
     private String convertUrl(String url) {
 
+        if (!url.startsWith("http")) {
+            String schema = "http:/";
+            RecordsProperties.RestProps microRest = properties.getRest();
+            if (microRest != null) {
+                schema = Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
+            }
+            url = schema + url;
+        }
+
         if (remoteAppInfoProvider == null) {
             return url;
         }
@@ -122,7 +135,12 @@ public class RestApi {
         String baseUrlReplacement;
         String appName = getAppName(url);
 
-        RemoteAppInfo appInfo = remoteAppInfoProvider.getAppInfo(appName);
+        RemoteAppInfo appInfo = null;
+        try {
+            appInfo = remoteAppInfoProvider.getAppInfo(appName);
+        } catch (Exception e) {
+            log.error("App info can't be resolved for '" + appName + "'. Exception msg: '" + e.getMessage() + "'");
+        }
         if (appInfo == null) {
             appInfo = new RemoteAppInfo();
         }
@@ -154,11 +172,10 @@ public class RestApi {
     }
 
     private String getAppName(String url) {
-        int firstSlashIndex = url.indexOf("/");
-        int nextSlashIndex = url.indexOf("/", firstSlashIndex + 1);
-        if (firstSlashIndex != -1 && nextSlashIndex != -1) {
-            return url.substring(firstSlashIndex + 1, nextSlashIndex);
+        Matcher matcher = APP_NAME_PATTERN.matcher(url);
+        if (!matcher.matches()) {
+            return "";
         }
-        return "";
+        return matcher.group(1);
     }
 }

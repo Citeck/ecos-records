@@ -1,32 +1,17 @@
 package ru.citeck.ecos.records.test;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
-import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
-import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
-import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.rest.DeletionBody;
-import ru.citeck.ecos.records2.request.rest.MutationBody;
-import ru.citeck.ecos.records2.request.rest.QueryBody;
-import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.rest.RestApi;
-import ru.citeck.ecos.records2.source.dao.remote.RecordsRestConnection;
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteRecordsResolverTest {
@@ -35,9 +20,9 @@ class RemoteRecordsResolverTest {
 
     static class Factory extends RecordsServiceFactory {
 
-        RestApi restApi;
+        RemoteRecordsRestApi restApi;
 
-        Factory(RestApi connection) {
+        Factory(RemoteRecordsRestApi connection) {
             this.restApi = connection;
         }
 

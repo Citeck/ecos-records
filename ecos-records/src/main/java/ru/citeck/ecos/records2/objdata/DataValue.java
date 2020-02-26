@@ -205,6 +205,9 @@ public final class DataValue implements Iterable<DataValue> {
     }
 
     public String asText() {
+        if (isNull()) {
+            return "";
+        }
         return value.asText();
     }
 

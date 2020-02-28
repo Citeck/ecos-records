@@ -14,6 +14,7 @@ public class MutationBody extends RecordsMutation {
     }
 
     @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSingleRecord() {
         return isSingleRecord;
     }

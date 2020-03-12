@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.meta;
 
-import ru.citeck.ecos.commons.utils.ObjectKeyGenerator;
+import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
 
 import java.util.*;

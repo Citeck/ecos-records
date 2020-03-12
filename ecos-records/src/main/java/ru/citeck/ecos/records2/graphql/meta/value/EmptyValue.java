@@ -16,4 +16,9 @@ public class EmptyValue implements MetaValue {
         }
         return null;
     }
+
+    @Override
+    public String getString() {
+        return null;
+    }
 }

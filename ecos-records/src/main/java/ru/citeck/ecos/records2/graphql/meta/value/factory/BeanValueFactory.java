@@ -104,7 +104,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             try {
                 return PropertyUtils.getProperty(bean, name);
             } catch (NoSuchMethodException e) {
-                log.debug("Property not found", e);
+                log.debug("Property not found: " + e.getMessage());
             }
             return null;
         }

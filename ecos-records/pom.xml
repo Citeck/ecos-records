@@ -11,7 +11,7 @@
     <parent>
         <artifactId>ecos-records-project</artifactId>
         <groupId>ru.citeck.ecos.community</groupId>
-        <version>1.20.0</version>
+        <version>1.20.1</version>
     </parent>
 
     <build>

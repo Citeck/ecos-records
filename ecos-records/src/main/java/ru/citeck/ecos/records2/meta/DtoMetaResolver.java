@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 
@@ -60,7 +61,8 @@ public class DtoMetaResolver {
             new ScalarField<>(ObjectNode.class, "json"),
             new ScalarField<>(ArrayNode.class, "json"),
             new ScalarField<>(ObjectData.class, "json"),
-            new ScalarField<>(DataValue.class, "json")
+            new ScalarField<>(DataValue.class, "json"),
+            new ScalarField<>(RecordRef.class, "id")
         ).forEach(s -> scalars.put(s.getFieldType(), s));
 
         if (LibsUtils.isJacksonPresent()) {

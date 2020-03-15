@@ -4,6 +4,7 @@ import graphql.Scalars;
 import graphql.schema.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
@@ -170,7 +171,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
 
         List<Object> result;
 
-        if (rawValue == null) {
+        if (rawValue == null || rawValue instanceof RecordRef && RecordRef.isEmpty((RecordRef) rawValue)) {
 
             result = Collections.emptyList();
 

@@ -53,7 +53,7 @@ class IdAttTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
         RecordRef testRef = RecordRef.create(ID, "test");
 
         DataValue attribute = recordsService.getAttribute(testRef, "otherRef?str");
-        assertEquals(ValueByRef.class.getName(), attribute.asText());
+        assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
         MetaClass meta = recordsService.getMeta(testRef, MetaClass.class);
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());

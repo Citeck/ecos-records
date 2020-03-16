@@ -237,7 +237,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             MetaField metaField = new MetaFieldImpl(env.getField());
             return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext(), metaField);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
     }
 

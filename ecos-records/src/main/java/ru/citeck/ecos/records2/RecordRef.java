@@ -54,6 +54,14 @@ public class RecordRef implements Serializable {
         );
     }
 
+    public static boolean isNotEmpty(RecordRef ref) {
+        return !isEmpty(ref);
+    }
+
+    public static boolean isEmpty(RecordRef ref) {
+        return ref == null || ref == RecordRef.EMPTY || StringUtils.isBlank(ref.getId());
+    }
+
     public RecordRef addAppName(String appName) {
         String current = toString();
         if (current.contains("@")) {
@@ -173,5 +181,9 @@ public class RecordRef implements Serializable {
             return sourceId + SOURCE_DELIMITER + id;
         }
         return id;
+    }
+
+    public static String toString(RecordRef ref) {
+        return ref == null ? "" : ref.toString();
     }
 }

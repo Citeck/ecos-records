@@ -10,6 +10,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -39,6 +40,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
     private static final String strFieldValueWithPrefix = strFieldPrefixValue + strFieldValue;
     private static final String strFieldValueWithPrefixName = "valueWithPrefix";
 
+    private static final String intField0Name = "intField0";
+    private static final String intField0Title = "intField0Title";
     private static final int intField0Value = 10;
     private static final int intField1Value = 20;
     private static final int intFieldsSum = intField0Value + intField1Value;
@@ -48,6 +51,7 @@ public class AttributesMixinTest extends LocalRecordsDAO
     private static final String finalFieldName = "finalField";
 
     private static final String recordRefAttName = "recId";
+    private static final String recordRefAttTitle = "recRefTitle";
 
     private RecordsService recordsService;
 
@@ -64,6 +68,8 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(ID);
+
+        addAttributesMixin(new MixinForExistingAtt());
 
         String intAtt = intFieldsSumName + "?num";
         String strAtt = strFieldValueWithPrefixName;
@@ -94,6 +100,13 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         DataValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
         assertEquals(new DataValue(REC_META_VALUE_ID), attValue);
+
+        DataValue edgeTitle = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), "#" + recordRefAttName + "?title");
+        assertEquals(new DataValue(recordRefAttTitle), edgeTitle);
+
+        MetaWithEdgeForExistingAtt edgeExMeta = recordsService.getMeta(RecordRef.create(ID, REC_META_VALUE_ID), MetaWithEdgeForExistingAtt.class);
+        assertEquals(intField0Title, edgeExMeta.fieldTitle);
+        assertEquals(intField0Value, edgeExMeta.fieldValue);
     }
 
     private void checkValidComputedAttributes() {
@@ -181,6 +194,47 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
     }
 
+    public static class MixinForExistingAtt implements AttributesMixin<Object, MetaValue> {
+
+        @Override
+        public List<String> getAttributesList() {
+            return Collections.singletonList(intField0Name);
+        }
+
+        @Override
+        public Object getAttribute(String attribute, MetaValue meta, MetaField field) throws Exception {
+            return meta.getAttribute(attribute, field);
+        }
+
+        @Override
+        public MetaEdge getEdge(String attribute, MetaValue meta, MetaField field) {
+            if (attribute.equals(intField0Name)) {
+                return new MetaEdge() {
+                    @Override
+                    public String getName() {
+                        return attribute;
+                    }
+
+                    @Override
+                    public Object getValue(MetaField field) throws Exception {
+                        return getAttribute(attribute, meta, field);
+                    }
+
+                    @Override
+                    public String getTitle() {
+                        return intField0Title;
+                    }
+                };
+            }
+            return null;
+        }
+
+        @Override
+        public Object getMetaToRequest() {
+            return null;
+        }
+    }
+
     public static class MixinWithRecRef implements AttributesMixin<Object, RecordRef> {
 
         @Override
@@ -192,6 +246,29 @@ public class AttributesMixinTest extends LocalRecordsDAO
         public Object getAttribute(String attribute, RecordRef id, MetaField field) {
             if (attribute.equals(recordRefAttName)) {
                 return id.toString();
+            }
+            return null;
+        }
+
+        @Override
+        public MetaEdge getEdge(String attribute, RecordRef meta, MetaField field) {
+            if (attribute.equals(recordRefAttName)) {
+                return new MetaEdge() {
+                    @Override
+                    public String getName() {
+                        return attribute;
+                    }
+
+                    @Override
+                    public Object getValue(MetaField field) throws Exception {
+                        return getAttribute(attribute, meta, field);
+                    }
+
+                    @Override
+                    public String getTitle() {
+                        return recordRefAttTitle;
+                    }
+                };
             }
             return null;
         }
@@ -266,5 +343,13 @@ public class AttributesMixinTest extends LocalRecordsDAO
             private int intField0;
             private int intField1;
         }
+    }
+
+    @Data
+    public static class MetaWithEdgeForExistingAtt {
+        @MetaAtt(".edge(n:\"" + intField0Name + "\"){val{num}}")
+        private int fieldValue;
+        @MetaAtt("#" + intField0Name + "?title")
+        private String fieldTitle;
     }
 }

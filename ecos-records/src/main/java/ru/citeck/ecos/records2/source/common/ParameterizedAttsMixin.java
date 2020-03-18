@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.common;
 
 import lombok.Data;
 import ru.citeck.ecos.commons.utils.ReflectUtils;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.List;
@@ -33,8 +34,13 @@ public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
     }
 
     @Override
-    public Object getAttribute(String attribute, Object meta, MetaField field) {
+    public Object getAttribute(String attribute, Object meta, MetaField field) throws Exception {
         return impl.getAttribute(attribute, meta, field);
+    }
+
+    @Override
+    public MetaEdge getEdge(String attribute, Object meta, MetaField field) {
+        return impl.getEdge(attribute, meta, field);
     }
 
     @Override

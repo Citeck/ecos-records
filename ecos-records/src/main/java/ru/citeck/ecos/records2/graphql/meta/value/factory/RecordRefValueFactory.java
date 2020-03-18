@@ -15,6 +15,7 @@ import java.util.*;
 public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
 
     private static final String ATT_ID = ".id";
+    private static final String ATT_STR = ".str";
 
     private RecordsServiceFactory serviceFactory;
 
@@ -48,6 +49,9 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
             if (Objects.equals(attsMap.get(ATT_ID), ATT_ID)) {
                 attsMap.remove(ATT_ID);
             }
+            if (Objects.equals(attsMap.get(ATT_STR), ATT_STR)) {
+                attsMap.remove(ATT_STR);
+            }
 
             if (attsMap.size() > 0) {
                 this.meta = serviceFactory.getRecordsService().getRawAttributes(ref, attsMap);
@@ -62,7 +66,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
 
         @Override
         public String getString() {
-            return meta.getStringOrNull(".str");
+            return ref.toString();
         }
 
         @Override

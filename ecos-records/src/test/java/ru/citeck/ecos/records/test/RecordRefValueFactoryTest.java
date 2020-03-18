@@ -64,7 +64,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(Val.val0.value, meta.get("att0", ""));
         assertEquals(Val.val2.value, meta.get("att2", ""));
         assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
-        assertEquals(Val.val0.getString(), meta.get("assoc", ""));
+        assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
 
         ArrayNode expected = JsonNodeFactory.instance.arrayNode();
         expected.add(Val.val2.value);

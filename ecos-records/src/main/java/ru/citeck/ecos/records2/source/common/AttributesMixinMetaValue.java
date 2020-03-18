@@ -1,8 +1,10 @@
 package ru.citeck.ecos.records2.source.common;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
@@ -28,26 +30,23 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         this.recordsMetaService = recordsMetaService;
     }
 
-    @Override
-    public Object getAttribute(String name, MetaField field) throws Exception {
-
-        ParameterizedAttsMixin mixin = mixins.get(name);
+    private <R> R doWithMeta(ParameterizedAttsMixin mixin, UncheckedFunction<Object, R> action) throws Exception {
 
         if (mixin == null) {
-            return super.getAttribute(name, field);
+            return null;
         }
 
         Class<?> resMetaType = mixin.getResMetaType();
         if (MetaValue.class.equals(resMetaType)) {
-            return mixin.getAttribute(name, this, field);
+            return action.apply(this);
         } else if (RecordRef.class.equals(resMetaType)) {
-            return mixin.getAttribute(name, RecordRef.valueOf(getId()), field);
+            return action.apply(RecordRef.valueOf(getId()));
         }
 
         Object metaToRequest = mixin.getMetaToRequest();
 
         if (metaToRequest == null || resMetaType == null) {
-            return mixin.getAttribute(name, null, field);
+            return action.apply(null);
         }
 
         if (metaToRequest instanceof Map) {
@@ -71,7 +70,76 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             }
         });
 
-        return mixin.getAttribute(name, requiredMeta, field);
+        return action.apply(requiredMeta);
+    }
+
+    @Override
+    public Object getAttribute(String attribute, MetaField field) throws Exception {
+
+        ParameterizedAttsMixin mixin = mixins.get(attribute);
+
+        if (mixin == null) {
+            return super.getAttribute(attribute, field);
+        }
+        return doWithMeta(mixin, meta -> {
+
+            if (meta == this) {
+
+                MetaValue implMeta = getImpl();
+
+                return mixin.getAttribute(attribute, new MetaValueDelegate(this) {
+                    @Override
+                    public Object getAttribute(String name, MetaField field) throws Exception {
+                        if (attribute.equals(name)) {
+                            return implMeta.getAttribute(name, field);
+                        }
+                        return super.getAttribute(name, field);
+                    }
+                }, field);
+            }
+
+            return mixin.getAttribute(attribute, meta, field);
+        });
+    }
+
+    @Override
+    public MetaEdge getEdge(String attribute, MetaField field) {
+
+        ParameterizedAttsMixin mixin = mixins.get(attribute);
+
+        if (mixin == null) {
+            return super.getEdge(attribute, field);
+        }
+
+        try {
+
+            return doWithMeta(mixin, meta -> {
+
+                if (meta == this) {
+
+                    MetaValue implMeta = getImpl();
+
+                    return mixin.getEdge(attribute, new MetaValueDelegate(this) {
+                        @Override
+                        public MetaEdge getEdge(String name, MetaField field) {
+                            if (attribute.equals(name)) {
+                                return implMeta.getEdge(name, field);
+                            }
+                            return super.getEdge(name, field);
+                        }
+                    }, field);
+                }
+
+                return mixin.getEdge(attribute, meta, field);
+            });
+
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override

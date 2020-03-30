@@ -36,6 +36,10 @@ public class RemoteRecordsRestApi {
         RestRequestEntity requestEntity = new RestRequestEntity();
         requestEntity.setBody(Json.getMapper().toBytes(request));
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.put(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
+        requestEntity.setHeaders(headers);
+
         RestResponseEntity responseEntity;
 
         try {

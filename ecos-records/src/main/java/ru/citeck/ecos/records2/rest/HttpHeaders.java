@@ -8,6 +8,8 @@ import java.util.function.BiConsumer;
 @Data
 public class HttpHeaders {
 
+    public static final String CONTENT_TYPE = "Content-Type";
+
     private final Map<String, List<String>> values = new HashMap<>();
 
     public void forEach(BiConsumer<String, List<String>> action) {

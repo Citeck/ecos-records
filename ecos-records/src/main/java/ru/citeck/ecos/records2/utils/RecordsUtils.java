@@ -157,8 +157,10 @@ public class RecordsUtils {
         Map<String, List<O>> result = new HashMap<>();
         for (I recordData : records) {
             RecordRef record = getRecordRef.apply(recordData);
+            String appName = record.getAppName();
             String sourceId = record.getSourceId();
-            List<O> outList = result.computeIfAbsent(sourceId, key -> new ArrayList<>());
+            String sourceWithApp = StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
+            List<O> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
             outList.add(toOutput.apply(record, recordData));
         }
         return result;

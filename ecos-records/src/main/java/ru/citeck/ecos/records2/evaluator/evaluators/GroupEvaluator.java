@@ -6,35 +6,52 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
-import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetailsImpl;
+import ru.citeck.ecos.records2.evaluator.details.EvalResultCause;
+import ru.citeck.ecos.records2.evaluator.details.RecordEvaluatorWithDetails;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Slf4j
-public class GroupEvaluator implements RecordEvaluator<Map<String, String>, RecordMeta, GroupEvaluator.Config>,
-                                       ServiceFactoryAware {
+public class GroupEvaluator
+    implements RecordEvaluatorWithDetails<Map<String, String>, RecordMeta, GroupEvaluator.Config>,
+              ServiceFactoryAware {
 
     public static final String TYPE = "group";
 
     private RecordEvaluatorService recordEvaluatorService;
 
     @Override
-    public boolean evaluate(RecordMeta meta, Config config) {
+    public EvalDetails evalWithDetails(RecordMeta meta, Config config) {
 
         Stream<RecordEvaluatorDto> evaluators = config.getEvaluators().stream();
-        Predicate<RecordEvaluatorDto> predicate = evaluator -> recordEvaluatorService.evaluateWithMeta(evaluator, meta);
+
+        List<EvalResultCause> causes = new ArrayList<>();
+
+        Predicate<RecordEvaluatorDto> predicate = evaluator -> {
+            EvalDetails evalDetails = recordEvaluatorService.evalDetailsWithMeta(evaluator, meta);
+            boolean result = evalDetails != null && evalDetails.getResult();
+            if (!result && evalDetails != null) {
+                causes.addAll(evalDetails.getCauses());
+            }
+            return result;
+        };
+
+        boolean result = false;
 
         if (JoinType.AND.equals(config.joinBy)) {
-            return evaluators.allMatch(predicate);
+            result = evaluators.allMatch(predicate);
         } else if (JoinType.OR.equals(config.joinBy)) {
-            return evaluators.anyMatch(predicate);
+            result = evaluators.anyMatch(predicate);
         } else {
             log.warn("Unknown join type: " + config.joinBy);
         }
-        return false;
+
+        return new EvalDetailsImpl(result, causes);
     }
 
     @Override

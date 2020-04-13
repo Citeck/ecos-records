@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -21,8 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object>,
                                                                RecordEvaluator<EvaluatorsTest.RequiredMeta,
@@ -41,6 +41,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
 
         RecordEvaluatorService evaluatorsService = factory.getRecordEvaluatorService();
         evaluatorsService.register(this);
+        evaluatorsService.register(new EvaluatorWithDetails());
 
         RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType(ID);
@@ -163,6 +164,34 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
         evaluatorDto = toEvaluatorDto(Predicates.lt("intField2", 15));
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
         assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+
+        String cause0 = "cause0";
+        evaluatorDto = withDetails(false, cause0);
+        EvalDetails evalDetails = evaluatorsService.evalWithDetails(meta0Ref, evaluatorDto);
+        assertFalse(evalDetails.getResult());
+        assertEquals(1, evalDetails.getCauses().size());
+        assertEquals(cause0, evalDetails.getCauses().get(0).getMessage());
+
+        String cause1 = "cause1";
+        evaluatorDto = withDetails(true, cause0, cause1);
+        evalDetails = evaluatorsService.evalWithDetails(meta0Ref, evaluatorDto);
+        assertTrue(evalDetails.getResult());
+        assertEquals(2, evalDetails.getCauses().size());
+        assertEquals(cause0, evalDetails.getCauses().get(0).getMessage());
+        assertEquals(cause1, evalDetails.getCauses().get(1).getMessage());
+    }
+
+    private RecordEvaluatorDto withDetails(boolean result, String... cause) {
+
+        RecordEvaluatorDto evaluatorWithDetails = new RecordEvaluatorDto();
+        evaluatorWithDetails.setType(EvaluatorWithDetails.TYPE);
+
+        EvaluatorWithDetails.Config config = new EvaluatorWithDetails.Config();
+        config.setResult(result);
+        config.setCause(cause);
+
+        evaluatorWithDetails.setConfig(Json.getMapper().convert(config, ObjectData.class));
+        return evaluatorWithDetails;
     }
 
     private RecordEvaluatorDto toEvaluatorDto(Predicate predicate) {

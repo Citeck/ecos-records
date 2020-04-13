@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetailsImpl;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -49,6 +51,8 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         return evaluate(recordRefs, evaluator, Collections.emptyMap());
     }
 
+
+
     @Override
     public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs,
                                             RecordEvaluatorDto evaluator,
@@ -74,6 +78,69 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs,
                                                   List<RecordEvaluatorDto> evaluators,
                                                   Object model) {
+
+        Map<RecordRef, List<EvalDetails>> details = evalWithDetails(recordRefs, evaluators, model);
+        Map<RecordRef, List<Boolean>> result = new HashMap<>();
+
+        details.forEach((k, v) -> {
+            List<Boolean> resultsList = result.computeIfAbsent(k, kk -> new ArrayList<>());
+            v.forEach(d -> resultsList.add(d.getResult()));
+        });
+
+        return result;
+    }
+
+    @Override
+    public EvalDetails evalWithDetails(RecordRef recordRef,
+                                       RecordEvaluatorDto evaluator) {
+        return evalWithDetails(recordRef, evaluator, Collections.emptyMap());
+    }
+
+    @Override
+    public EvalDetails evalWithDetails(RecordRef recordRef,
+                                       RecordEvaluatorDto evaluator,
+                                       Object model) {
+
+        List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
+        List<RecordRef> recordRefs = Collections.singletonList(recordRef);
+
+        Map<RecordRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators, model);
+        return evaluateResult.get(recordRef).get(0);
+    }
+
+
+    @Override
+    public Map<RecordRef, EvalDetails> evalWithDetails(List<RecordRef> recordRefs,
+                                                       RecordEvaluatorDto evaluator) {
+        return evalWithDetails(recordRefs, evaluator, Collections.emptyMap());
+    }
+
+    @Override
+    public Map<RecordRef, EvalDetails> evalWithDetails(List<RecordRef> recordRefs,
+                                                       RecordEvaluatorDto evaluator,
+                                                       Object model) {
+
+        List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
+
+        Map<RecordRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators, model);
+        Map<RecordRef, EvalDetails> result = new HashMap<>();
+
+        evaluateResult.forEach((ref, b) -> result.put(ref, b.get(0)));
+
+        return result;
+    }
+
+    @Override
+    public Map<RecordRef, List<EvalDetails>> evalWithDetails(List<RecordRef> recordRefs,
+                                                             List<RecordEvaluatorDto> evaluators) {
+
+        return evalWithDetails(recordRefs, evaluators, Collections.emptyMap());
+    }
+
+    @Override
+    public Map<RecordRef, List<EvalDetails>> evalWithDetails(List<RecordRef> recordRefs,
+                                                             List<RecordEvaluatorDto> evaluators,
+                                                             Object model) {
 
         if (model == null) {
             model = Collections.emptyMap();
@@ -108,38 +175,47 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
             recordsMeta = recordRefs.stream().map(RecordMeta::new).collect(Collectors.toList());
         }
 
-        Map<RecordRef, List<Boolean>> evalResultsByRecord = new HashMap<>();
+        Map<RecordRef, List<EvalDetails>> evalResultsByRecord = new HashMap<>();
 
         for (int i = 0; i < recordRefs.size(); i++) {
             RecordMeta meta = recordsMeta.get(i);
-            List<Boolean> evalResult = evaluateWithMeta(evaluators, meta, modelMeta);
+            List<EvalDetails> evalResult = evaluateWithMeta(evaluators, meta, modelMeta);
             evalResultsByRecord.put(recordRefs.get(i), evalResult);
         }
 
         return evalResultsByRecord;
     }
 
-    private List<Boolean> evaluateWithMeta(List<RecordEvaluatorDto> evaluators, RecordMeta record, RecordMeta model) {
-        List<Boolean> result = new ArrayList<>();
+    private List<EvalDetails> evaluateWithMeta(List<RecordEvaluatorDto> evaluators,
+                                               RecordMeta record,
+                                               RecordMeta model) {
+
+        List<EvalDetails> result = new ArrayList<>();
         for (RecordEvaluatorDto evaluator : evaluators) {
             if (model != null && model.getAttributes().size() != 0) {
                 RecordMeta recordWithModel = new RecordMeta(record);
                 model.forEach(recordWithModel::set);
                 record = recordWithModel;
             }
-            result.add(evaluateWithMeta(evaluator, record));
+            result.add(evalDetailsWithMeta(evaluator, record));
         }
         return result;
     }
 
     @Override
     public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta) {
+        EvalDetails details = evalDetailsWithMeta(evalDto, fullRecordMeta);
+        return details != null && details.getResult();
+    }
+
+    @Override
+    public EvalDetails evalDetailsWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta) {
 
         ParameterizedRecordEvaluator evaluator = this.evaluators.get(evalDto.getType());
 
         if (evaluator == null) {
             log.warn("Evaluator doesn't found for type " + evalDto.getType() + ". Return false.");
-            return false;
+            return new EvalDetailsImpl();
         }
 
         Object config = Json.getMapper().convert(evalDto.getConfig(), evaluator.getConfigType());
@@ -162,11 +238,14 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         }
 
         try {
-            boolean result = evaluator.evaluate(requiredMeta, config);
-            return evalDto.isInverse() != result;
+            EvalDetails result = evaluator.evalWithDetails(requiredMeta, config);
+            if (evalDto.isInverse()) {
+                result = new EvalDetailsImpl(!result.getResult(), result.getCauses());
+            }
+            return result;
         } catch (Exception e) {
             log.error("Evaluation failed. Dto: " + evalDto + " meta: " + requiredMeta, e);
-            return false;
+            return new EvalDetailsImpl(false, Collections.emptyList());
         }
     }
 
@@ -225,6 +304,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     @Override
     public void register(RecordEvaluator<?, ?, ?> evaluator) {
+
         evaluators.put(evaluator.getType(), new ParameterizedRecordEvaluator(evaluator));
 
         if (evaluator instanceof ServiceFactoryAware) {

@@ -21,6 +21,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -207,7 +208,7 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
 
         @Override
-        public MetaEdge getEdge(String attribute, MetaValue meta, MetaField field) {
+        public MetaEdge getEdge(String attribute, MetaValue meta, Supplier<MetaEdge> base, MetaField field) {
             if (attribute.equals(intField0Name)) {
                 return new MetaEdge() {
                     @Override
@@ -251,7 +252,7 @@ public class AttributesMixinTest extends LocalRecordsDAO
         }
 
         @Override
-        public MetaEdge getEdge(String attribute, RecordRef meta, MetaField field) {
+        public MetaEdge getEdge(String attribute, RecordRef meta, Supplier<MetaEdge> base, MetaField field) {
             if (attribute.equals(recordRefAttName)) {
                 return new MetaEdge() {
                     @Override

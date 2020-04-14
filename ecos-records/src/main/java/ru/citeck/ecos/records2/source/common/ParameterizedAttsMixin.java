@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 @Data
 public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
@@ -39,8 +40,8 @@ public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
     }
 
     @Override
-    public MetaEdge getEdge(String attribute, Object meta, MetaField field) {
-        return impl.getEdge(attribute, meta, field);
+    public MetaEdge getEdge(String attribute, Object meta, Supplier<MetaEdge> base, MetaField field) {
+        return impl.getEdge(attribute, meta, base, field);
     }
 
     @Override

@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.meta.RecordsMetaService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Slf4j
 public class AttributesMixinMetaValue extends MetaValueDelegate {
@@ -115,9 +116,10 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
             return doWithMeta(mixin, meta -> {
 
-                if (meta == this) {
+                MetaValue implMeta = getImpl();
+                Supplier<MetaEdge> edgeSupplier = () -> implMeta.getEdge(attribute, field);
 
-                    MetaValue implMeta = getImpl();
+                if (meta == this) {
 
                     return mixin.getEdge(attribute, new MetaValueDelegate(this) {
                         @Override
@@ -127,10 +129,10 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                             }
                             return super.getEdge(name, field);
                         }
-                    }, field);
+                    }, edgeSupplier, field);
                 }
 
-                return mixin.getEdge(attribute, meta, field);
+                return mixin.getEdge(attribute, meta, edgeSupplier, field);
             });
 
         } catch (Exception e) {

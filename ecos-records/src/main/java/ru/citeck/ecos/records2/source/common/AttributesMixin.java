@@ -1,10 +1,11 @@
 package ru.citeck.ecos.records2.source.common;
 
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdgeDelegate;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Custom attributes for any RecordsDao.
@@ -18,8 +19,8 @@ public interface AttributesMixin<ReqMetaT, ResMetaT> {
 
     Object getAttribute(String attribute, ResMetaT meta, MetaField field) throws Exception;
 
-    default MetaEdge getEdge(String attribute, ResMetaT meta, MetaField field) {
-        return new SimpleMetaEdge(attribute, f -> getAttribute(attribute, meta, f));
+    default MetaEdge getEdge(String attribute, ResMetaT meta, Supplier<MetaEdge> base, MetaField field) {
+        return new MetaEdgeDelegate(base.get(), f -> getAttribute(attribute, meta, f));
     }
 
     /**

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import java.util.*;
@@ -55,5 +56,12 @@ public class RecordsQueryResultTest {
 
         qRes1.addError(new RecordsError("Test2"));
         assertEquals(1, qRes0.getErrors().size());
+    }
+
+    @Test
+    void debugTest() {
+        RecordsQueryResult<Object> res = new RecordsQueryResult<>();
+        res.setDebug(null);
+        assertEquals(new ObjectData(), res.getDebug());
     }
 }

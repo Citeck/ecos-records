@@ -80,7 +80,7 @@ public abstract class DebugResult {
 
     private ObjectNode getNotNullDebug() {
         if (debug == null) {
-            debug = JsonNodeFactory.instance.objectNode();
+            debug = Json.getMapper().newObjectNode();
         }
         return debug;
     }
@@ -90,6 +90,11 @@ public abstract class DebugResult {
     }
 
     public void setDebug(ObjectData attributes) {
-        this.debug = (ObjectNode) Json.getMapper().toJson(attributes);
+        JsonNode node = Json.getMapper().toJson(attributes);
+        if (node instanceof ObjectNode) {
+            debug = (ObjectNode) node;
+        } else {
+            debug = Json.getMapper().newObjectNode();
+        }
     }
 }

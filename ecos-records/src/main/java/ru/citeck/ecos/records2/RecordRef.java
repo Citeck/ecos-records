@@ -59,7 +59,11 @@ public class RecordRef implements Serializable {
     }
 
     public static boolean isEmpty(RecordRef ref) {
-        return ref == null || ref == RecordRef.EMPTY || StringUtils.isBlank(ref.getId());
+        return ref == null
+            || ref == RecordRef.EMPTY
+            || StringUtils.isBlank(ref.getId())
+                && StringUtils.isBlank(ref.getSourceId())
+                && StringUtils.isBlank(ref.getAppName());
     }
 
     public RecordRef addAppName(String appName) {

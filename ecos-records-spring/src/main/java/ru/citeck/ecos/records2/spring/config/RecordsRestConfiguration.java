@@ -28,8 +28,9 @@ public class RecordsRestConfiguration {
     private RecordsAuthInterceptor authInterceptor;
 
     @Bean
-    public RemoteRecordsRestApi remoteRespApi() {
-        return new RemoteRecordsRestApi(this::jsonPost, createRemoteAppInfoProvider(), properties);
+    public RemoteRecordsRestApi remoteRespApi(RestQueryExceptionConverter restQueryExceptionConverter) {
+        return new RemoteRecordsRestApi(this::jsonPost, createRemoteAppInfoProvider(), properties,
+            restQueryExceptionConverter);
     }
 
     private RemoteAppInfoProvider createRemoteAppInfoProvider() {

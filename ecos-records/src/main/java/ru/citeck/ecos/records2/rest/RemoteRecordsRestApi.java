@@ -16,17 +16,27 @@ public class RemoteRecordsRestApi {
 
     private static final Pattern APP_NAME_PATTERN = Pattern.compile("^https?://(.+?)/.*");
 
-    private RecordsRestTemplate template;
-    private RecordsProperties properties;
-    private RemoteAppInfoProvider remoteAppInfoProvider;
+    private final RecordsRestTemplate template;
+    private final RecordsProperties properties;
+    private final RemoteAppInfoProvider remoteAppInfoProvider;
+    private final RestQueryExceptionConverter restQueryExceptionConverter;
+
+    public RemoteRecordsRestApi(RecordsRestTemplate template,
+                                RemoteAppInfoProvider remoteAppInfoProvider,
+                                RecordsProperties properties, RestQueryExceptionConverter restQueryExceptionConverter) {
+        this.template = template;
+        this.properties = properties;
+        this.remoteAppInfoProvider = remoteAppInfoProvider;
+        this.restQueryExceptionConverter = restQueryExceptionConverter;
+    }
 
     public RemoteRecordsRestApi(RecordsRestTemplate template,
                                 RemoteAppInfoProvider remoteAppInfoProvider,
                                 RecordsProperties properties) {
-
         this.template = template;
         this.properties = properties;
         this.remoteAppInfoProvider = remoteAppInfoProvider;
+        this.restQueryExceptionConverter = new RestQueryExceptionConverterDefault();
     }
 
     public <T> T jsonPost(String url, Object request, Class<T> respType) {
@@ -87,11 +97,7 @@ public class RemoteRecordsRestApi {
         logErrorObject("Request body", request != null ? request.getBody() : null);
         logErrorObject("Request resp", response != null ? response.getBody() : null);
 
-        if (e != null) {
-            throw new RestQueryException(msg, e);
-        } else {
-            throw new RestQueryException(msg);
-        }
+        throw restQueryExceptionConverter.convert(msg, e);
     }
 
     private void logErrorObject(String prefix, Object obj) {

@@ -70,7 +70,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         expected.add(Val.val2.value);
         expected.add(Val.val2.value);
 
-        assertEquals(new DataValue(expected), meta.get("att3"));
+        assertEquals(DataValue.create(expected), meta.get("att3"));
     }
 
     @Override

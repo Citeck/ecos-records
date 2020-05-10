@@ -53,7 +53,7 @@ public class ObjectDataTest extends LocalRecordsDAO implements LocalRecordsMetaD
     @Data
     public static class TestData {
 
-        private ObjectData data = new ObjectData(Json.getMapper().read(JSON, Object.class));
+        private ObjectData data = ObjectData.create(Json.getMapper().read(JSON, Object.class));
 
         TestData(RecordRef ref) {
         }

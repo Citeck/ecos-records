@@ -222,7 +222,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
 
-        ObjectData evaluatorMeta = new ObjectData();
+        ObjectData evaluatorMeta = ObjectData.create();
         metaAtts.forEach((k, v) -> evaluatorMeta.set(k, fullRecordMeta.get(v)));
 
         Class<?> resMetaType = evaluator.getResMetaType();

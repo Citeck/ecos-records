@@ -10,7 +10,7 @@ public class CreateVariant {
     private RecordRef recordRef;
     private String formKey;
     private String label;
-    private ObjectData attributes = new ObjectData();
+    private ObjectData attributes = ObjectData.create();
 
     public CreateVariant() {
     }
@@ -40,7 +40,7 @@ public class CreateVariant {
     }
 
     public void setAttributes(ObjectData attributes) {
-        this.attributes = new ObjectData(attributes);
+        this.attributes = ObjectData.create(attributes);
     }
 
     public void setAttribute(String attribute, String value) {

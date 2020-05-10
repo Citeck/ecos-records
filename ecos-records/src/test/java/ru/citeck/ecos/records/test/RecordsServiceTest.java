@@ -129,7 +129,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         DataValue value = recordsService.getAttribute(TEST_REF, "fieldStr0");
 
-        DataValue expected = new DataValue(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
+        DataValue expected = DataValue.create(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -142,7 +142,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         DataValue value = recordsService.getAttribute(TEST_REF, "fieldDate");
 
-        DataValue expected = new DataValue(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
+        DataValue expected = DataValue.create(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
 
         if (!expected.equals(value)) {
             String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
@@ -215,7 +215,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
 
         DataValue dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
 
-        assertEquals(new DataValue(PojoMeta.DISPLAY_NAME), dispValue);
+        assertEquals(DataValue.create(PojoMeta.DISPLAY_NAME), dispValue);
     }
 
     @Test

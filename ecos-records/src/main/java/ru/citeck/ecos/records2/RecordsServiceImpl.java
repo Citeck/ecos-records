@@ -84,7 +84,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (!meta.getRecords().isEmpty()) {
             return meta.getRecords().get(0).getAttribute(attribute);
         }
-        return new DataValue((Object) null);
+        return DataValue.create(null);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
             RecordMeta record = records.get(i);
 
-            ObjectData attributes = new ObjectData();
+            ObjectData attributes = ObjectData.create();
 
             record.forEach((name, value) -> {
 
@@ -223,14 +223,14 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (value.isTextual()) {
             String textValue = value.asText();
             if (mapping.containsKey(textValue)) {
-                return new DataValue(mapping.get(textValue).toString());
+                return DataValue.create(mapping.get(textValue).toString());
             }
         } else if (value.isArray()) {
             List<DataValue> convertedValue = new ArrayList<>();
             for (DataValue node : value) {
                 convertedValue.add(convertAssocValue(node, mapping));
             }
-            return new DataValue(convertedValue);
+            return DataValue.create(convertedValue);
         }
         return value;
     }

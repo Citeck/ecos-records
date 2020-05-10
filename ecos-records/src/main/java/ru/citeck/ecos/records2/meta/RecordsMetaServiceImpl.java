@@ -103,7 +103,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
 
         ObjectData attributes = meta.getAttributes();
-        ObjectData resultAttributes = new ObjectData();
+        ObjectData resultAttributes = ObjectData.create();
         Map<String, String> keysMapping = schema.getKeysMapping();
 
         attributes.forEach((key, value) -> {

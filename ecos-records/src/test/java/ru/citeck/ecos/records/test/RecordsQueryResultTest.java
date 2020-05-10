@@ -62,6 +62,6 @@ public class RecordsQueryResultTest {
     void debugTest() {
         RecordsQueryResult<Object> res = new RecordsQueryResult<>();
         res.setDebug(null);
-        assertEquals(new ObjectData(), res.getDebug());
+        assertEquals(ObjectData.create(), res.getDebug());
     }
 }

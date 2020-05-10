@@ -235,7 +235,7 @@ public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaD
     private RecordEvaluatorDto hasAttEvaluator(String att) {
         RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType("has-attribute");
-        ObjectData attributes = new ObjectData();
+        ObjectData attributes = ObjectData.create();
         attributes.set("attribute", att);
         evaluatorDto.setConfig(attributes);
         return evaluatorDto;

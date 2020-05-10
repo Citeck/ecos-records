@@ -100,10 +100,10 @@ public class AttributesMixinTest extends LocalRecordsDAO
         checkValidComputedAttributes();
 
         DataValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
-        assertEquals(new DataValue(REC_META_VALUE_ID), attValue);
+        assertEquals(DataValue.create(REC_META_VALUE_ID), attValue);
 
         DataValue edgeTitle = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), "#" + recordRefAttName + "?title");
-        assertEquals(new DataValue(recordRefAttTitle), edgeTitle);
+        assertEquals(DataValue.create(recordRefAttTitle), edgeTitle);
 
         MetaWithEdgeForExistingAtt edgeExMeta = recordsService.getMeta(RecordRef.create(ID, REC_META_VALUE_ID), MetaWithEdgeForExistingAtt.class);
         assertEquals(intField0Title, edgeExMeta.fieldTitle);
@@ -124,15 +124,15 @@ public class AttributesMixinTest extends LocalRecordsDAO
 
         result.getRecords().forEach(meta -> {
 
-            assertEquals(new DataValue(finalFieldValue), meta.get(finalFieldName));
+            assertEquals(DataValue.create(finalFieldValue), meta.get(finalFieldName));
 
-            assertEquals(new DataValue(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(new DataValue((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
 
             meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
 
-            assertEquals(new DataValue(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(new DataValue((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
+            assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
         });
     }
 

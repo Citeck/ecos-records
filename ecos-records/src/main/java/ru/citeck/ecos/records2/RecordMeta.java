@@ -16,7 +16,7 @@ public class RecordMeta {
 
     private RecordRef id = RecordRef.EMPTY;
 
-    private ObjectData attributes = new ObjectData();
+    private ObjectData attributes = ObjectData.create();
 
     public RecordMeta() {
     }
@@ -148,7 +148,7 @@ public class RecordMeta {
         if (attributes != null) {
             this.attributes = attributes.deepCopy();
         } else {
-            this.attributes = new ObjectData();
+            this.attributes = ObjectData.create();
         }
     }
 

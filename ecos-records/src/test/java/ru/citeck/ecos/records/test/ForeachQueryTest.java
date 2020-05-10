@@ -31,9 +31,9 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
     private List<RecordsQuery> queries = new ArrayList<>();
 
     private List<DataValue> eachNode = Arrays.asList(
-        new DataValue("firstText"),
-        new DataValue("secondText"),
-        new DataValue("thirdText")
+        DataValue.create("firstText"),
+        DataValue.create("secondText"),
+        DataValue.create("thirdText")
     );
 
     private List<RecordRef> resultRefs = Arrays.asList(

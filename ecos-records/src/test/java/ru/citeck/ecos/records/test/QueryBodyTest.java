@@ -27,7 +27,7 @@ class QueryBodyTest {
 
         QueryBody body3 = Json.getMapper().convert("{\"foreach\":[\"test0\", \"test1\"], \"query\":{\"query\": \"q\"}}", QueryBody.class);
         assertEquals(2, body3.getForeach().size());
-        assertEquals(new DataValue("test0"), body3.getForeach().get(0));
+        assertEquals(DataValue.create("test0"), body3.getForeach().get(0));
 
         ObjectMapper mapper = new ObjectMapper();
 

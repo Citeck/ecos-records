@@ -58,7 +58,7 @@ public class JacksonTest {
         assertEquals(query, res2);
         assertEquals(query, res3);
 
-        ObjectData atts = new ObjectData();
+        ObjectData atts = ObjectData.create();
         atts.set("abc", 2134124);
         atts.set("eeeeee", "adasd");
         atts.set("double", 24.23);

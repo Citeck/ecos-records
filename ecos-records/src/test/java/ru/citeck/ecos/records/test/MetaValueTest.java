@@ -76,7 +76,7 @@ public class MetaValueTest extends LocalRecordsDAO
         assertEquals(MetaVal.DOUBLE_VALUE, meta.getAttribute("num", 0.0));
         assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
         assertEquals(true, meta.getAttribute("has", false));
-        assertEquals(new DataValue(MetaVal.JSON_VALUE), meta.getAttribute("json"));
+        assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAttribute("json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
         assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());

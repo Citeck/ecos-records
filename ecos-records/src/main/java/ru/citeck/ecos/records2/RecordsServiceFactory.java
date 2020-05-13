@@ -31,6 +31,7 @@ import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
 
 import java.lang.reflect.Constructor;
@@ -60,6 +61,8 @@ public class RecordsServiceFactory {
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
     private List<RecordsDAO> defaultRecordsDAO;
+
+    private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
     private RecordsProperties properties;
 
@@ -163,7 +166,7 @@ public class RecordsServiceFactory {
 
     protected List<RecordsDAO> getDefaultRecordsDAO() {
         if (defaultRecordsDAO == null) {
-            defaultRecordsDAO = Collections.singletonList(new MetaRecordsDAO());
+            defaultRecordsDAO = Collections.singletonList(new MetaRecordsDAO(this));
         }
         return defaultRecordsDAO;
     }
@@ -375,5 +378,16 @@ public class RecordsServiceFactory {
             properties = createProperties();
         }
         return properties;
+    }
+
+    protected MetaRecordsDaoAttsProvider createMetaRecordsDaoAttsProvider() {
+        return Collections::emptyMap;
+    }
+
+    public final synchronized MetaRecordsDaoAttsProvider getMetaRecordsDaoAttsProvider() {
+        if (metaRecordsDaoAttsProvider == null) {
+            metaRecordsDaoAttsProvider = createMetaRecordsDaoAttsProvider();
+        }
+        return metaRecordsDaoAttsProvider;
     }
 }

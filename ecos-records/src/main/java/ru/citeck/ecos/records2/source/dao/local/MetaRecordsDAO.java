@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -8,6 +9,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -18,8 +20,14 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
 
     public static final String ID = "meta";
 
-    public MetaRecordsDAO() {
+    private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
+
+    public MetaRecordsDAO(RecordsServiceFactory serviceFactory) {
         setId(ID);
+        metaRecordsDaoAttsProvider = serviceFactory.getMetaRecordsDaoAttsProvider();
+        if (metaRecordsDaoAttsProvider == null) {
+            metaRecordsDaoAttsProvider = Collections::emptyMap;
+        }
     }
 
     @Override
@@ -27,7 +35,7 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
 
         return records.stream().map(r -> {
             if (r.getId().isEmpty()) {
-                return new MetaRoot();
+                return new MetaRoot(metaRecordsDaoAttsProvider);
             } else {
                 return EmptyValue.INSTANCE;
             }
@@ -36,6 +44,12 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
 
     public static class MetaRoot implements MetaValue {
 
+        MetaRecordsDaoAttsProvider attsProvider;
+
+        MetaRoot(MetaRecordsDaoAttsProvider attsProvider) {
+            this.attsProvider = attsProvider;
+        }
+
         @Override
         public Object getAttribute(String name, MetaField field) {
             switch (name) {
@@ -43,6 +57,8 @@ public class MetaRecordsDAO extends LocalRecordsDAO implements LocalRecordsMetaD
                     return new Records();
                 case "time":
                     return new Time();
+                case "attributes":
+                    return attsProvider.getAttributes();
                 default:
                     return null;
             }

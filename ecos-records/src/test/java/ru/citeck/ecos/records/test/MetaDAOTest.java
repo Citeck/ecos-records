@@ -10,9 +10,12 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,9 +26,16 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
     private static final String ID = "123";
     private RecordsService recordsService;
 
+    private final Map<String, Object> metaAtts = Collections.singletonMap("key", "value");
+
     @BeforeAll
     void init() {
-        RecordsServiceFactory factory = new RecordsServiceFactory();
+        RecordsServiceFactory factory = new RecordsServiceFactory() {
+            @Override
+            protected MetaRecordsDaoAttsProvider createMetaRecordsDaoAttsProvider() {
+                return () -> metaAtts;
+            }
+        };
         setId(ID);
         recordsService = factory.getRecordsService();
         recordsService.register(this);
@@ -38,6 +48,9 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
 
         DataValue value = recordsService.getAttribute(ref, "rec.123@VALUE.field");
         assertEquals("VALUE", value.asText());
+
+        String attValue = recordsService.getAttribute(ref, "attributes.key?str").asText();
+        assertEquals(metaAtts.get("key"), attValue);
     }
 
     @Override

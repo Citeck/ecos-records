@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class PredicateJsonSerializer extends StdSerializer<Predicate> {
 
-    // Use new mapper instead of JsonUtils to avoid loop
+    // Use new mapper instead of Json.getMapper() to avoid loop
     private ObjectMapper mapper = new ObjectMapper();
 
     public PredicateJsonSerializer() {

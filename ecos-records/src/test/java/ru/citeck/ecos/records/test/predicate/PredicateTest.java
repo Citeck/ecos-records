@@ -1,14 +1,15 @@
 package ru.citeck.ecos.records.test.predicate;
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PredicateTest {
 
+    @BeforeAll
+    static void before() {
+        new RecordsServiceFactory();
+    }
+
     @Test
     void jsonTest() {
-
-        PredicateService predicateService = new PredicateServiceImpl();
 
         ValuePredicate valuePredicate = new ValuePredicate();
         valuePredicate.setType(ValuePredicate.Type.LIKE);
@@ -88,9 +92,39 @@ class PredicateTest {
             "}";
 
         Predicate predicate = Json.getMapper().convert(pred, Predicate.class);
-        Predicate predicate2 = Json.getMapper().convert((ObjectNode) Json.getMapper().toJson(predicate), Predicate.class);
+        Predicate predicate2 = Json.getMapper().convert(Json.getMapper().toJson(predicate), Predicate.class);
 
         assertEquals(predicate, predicate2);
+    }
+
+    @Test
+    void voidTest() {
+
+        Predicate pred = Predicates.and(
+            Predicates.or(
+                VoidPredicate.INSTANCE,
+                Predicates.or(
+                    Predicates.or(
+                        VoidPredicate.INSTANCE,
+                        VoidPredicate.INSTANCE,
+                        VoidPredicate.INSTANCE
+                    )
+                ),
+                Predicates.and(
+                    Predicates.and(
+                        Predicates.not(
+                            VoidPredicate.INSTANCE
+                        )
+                    )
+                )
+            ),
+            VoidPredicate.INSTANCE,
+            VoidPredicate.INSTANCE
+        );
+
+        Predicate pred2 = Json.getMapper().read(Json.getMapper().toString(pred), Predicate.class);
+
+        assertEquals(VoidPredicate.INSTANCE, pred2);
     }
 
     @Test

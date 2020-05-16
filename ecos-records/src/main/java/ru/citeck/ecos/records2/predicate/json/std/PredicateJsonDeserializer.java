@@ -8,11 +8,8 @@ import ecos.com.fasterxml.jackson210.databind.deser.std.StdDeserializer;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.commons.utils.MandatoryParam;
-import ru.citeck.ecos.records2.predicate.model.AndPredicate;
-import ru.citeck.ecos.records2.predicate.model.NotPredicate;
-import ru.citeck.ecos.records2.predicate.model.OrPredicate;
-import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.predicate.model.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,7 +41,10 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
         ObjectNode predicateNode = mapper.readTree(jp);
 
         String type = predicateNode.path("t").asText();
-        MandatoryParam.checkString("t", type);
+
+        if (StringUtils.isBlank(type)) {
+            return VoidPredicate.INSTANCE;
+        }
 
         boolean inverse = false;
         if (type.startsWith("not-")) {

@@ -167,20 +167,32 @@ public class PredicateUtils {
         if (predicate instanceof ComposedPredicate) {
 
             ComposedPredicate comp = predicate.copy();
+            List<Predicate> predicates = comp.getPredicates();
             result = comp;
 
-            if ((comp instanceof AndPredicate
-                || comp instanceof OrPredicate) && comp.getPredicates().size() == 1) {
+            if (predicates.size() == 0) {
+                return VoidPredicate.INSTANCE;
+            }
 
-                result = optimize(comp.getPredicates().get(0));
+            if (predicates.size() == 1) {
+
+                result = optimize(predicates.get(0));
 
             } else {
 
-                List<Predicate> predicatesToOptimize = comp.getPredicates();
                 comp.setPredicates(null);
 
-                for (Predicate child : predicatesToOptimize) {
-                    comp.addPredicate(optimize(child));
+                for (Predicate child : predicates) {
+                    Predicate optRes = optimize(child);
+                    if (!(optRes instanceof VoidPredicate)) {
+                        comp.addPredicate(optimize(child));
+                    }
+                }
+
+                if (comp.getPredicates().size() == 0) {
+                    result = VoidPredicate.INSTANCE;
+                } else if (comp.getPredicates().size() == 1) {
+                    result = comp.getPredicates().get(0);
                 }
             }
 
@@ -189,6 +201,9 @@ public class PredicateUtils {
         } else if (predicate instanceof NotPredicate) {
 
             NotPredicate not = predicate.copy();
+            if (not.getPredicate() instanceof VoidPredicate) {
+                return VoidPredicate.INSTANCE;
+            }
             not.setPredicate(optimize(not.getPredicate()));
             result = not;
         }

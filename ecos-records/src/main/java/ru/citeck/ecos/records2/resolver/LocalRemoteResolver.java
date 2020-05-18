@@ -2,10 +2,7 @@ package ru.citeck.ecos.records2.resolver;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsProperties;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -14,18 +11,17 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.Collection;
 import java.util.List;
 
 public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry {
 
-    private LocalRecordsResolver local;
-    private RecordsResolver remote;
+    private final LocalRecordsResolver local;
+    private final RecordsResolver remote;
 
-    private String currentApp;
-    private String currentAppSourceIdPrefix;
-    private boolean forceLocalMode;
+    private final String currentAppSourceIdPrefix;
 
     public LocalRemoteResolver(RecordsServiceFactory serviceFactory) {
 
@@ -33,9 +29,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         this.local = serviceFactory.getLocalRecordsResolver();
 
         RecordsProperties props = serviceFactory.getProperties();
-        this.currentApp = props.getAppName();
-        this.currentAppSourceIdPrefix = this.currentApp + "/";
-        this.forceLocalMode = props.isForceLocalMode();
+        this.currentAppSourceIdPrefix = props.getAppName() + "/";
 
         MandatoryParam.check("local", local);
     }
@@ -45,12 +39,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
 
         String sourceId = query.getSourceId();
 
-        if (remote == null
-            || StringUtils.isBlank(sourceId)
-            || !sourceId.contains("/")
-            || sourceId.startsWith(currentAppSourceIdPrefix)
-            || forceLocalMode) {
-
+        if (remote == null || !isRemoteSourceId(sourceId)) {
             return local.queryRecords(query, schema);
         }
         return remote.queryRecords(query, schema);
@@ -61,10 +50,18 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         if (remote == null || records.isEmpty()) {
             return local.getMeta(records, schema);
         }
-        if (isRemoteRef(records.stream().findFirst().get())) {
-            return remote.getMeta(records, schema);
-        }
-        return local.getMeta(records, schema);
+        RecordsResult<RecordMeta> result = new RecordsResult<>();
+        RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
+
+            if (!isRemoteSourceId(sourceId)) {
+                result.merge(local.getMeta(records, schema));
+            } else if (isRemoteRef(records.stream().findFirst().orElse(null))) {
+                result.merge(remote.getMeta(records, schema));
+            } else {
+                result.merge(local.getMeta(records, schema));
+            }
+        });
+        return result;
     }
 
     @Override
@@ -91,12 +88,22 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
         return local.delete(deletion);
     }
 
-    private boolean isRemoteRef(RecordRef ref) {
-        return ref.isRemote() && !ref.getAppName().equals(currentApp) && !forceLocalMode;
-    }
-
     private boolean isRemoteRef(RecordMeta meta) {
         return isRemoteRef(meta.getId());
+    }
+
+    private boolean isRemoteRef(RecordRef ref) {
+        return ref != null && ref.isRemote() && isRemoteSourceId(ref.getAppName() + "/" + ref.getSourceId());
+    }
+
+    private boolean isRemoteSourceId(String sourceId) {
+        if (StringUtils.isBlank(sourceId)) {
+            return false;
+        }
+        if (local.containsDao(sourceId)) {
+            return false;
+        }
+        return sourceId.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix);
     }
 
     @Override

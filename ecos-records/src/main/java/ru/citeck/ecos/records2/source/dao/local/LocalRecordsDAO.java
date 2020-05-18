@@ -53,6 +53,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected RecordsMetaService recordsMetaService;
     protected RecordsMetaGql recordsMetaGql;
     protected MetaValuesConverter metaValuesConverter;
+    protected RecordsServiceFactory serviceFactory;
 
     private boolean addSourceId = true;
     private Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
@@ -92,7 +93,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
             if (addSourceId) {
                 result.setRecords(result.getRecords()
                         .stream()
-                        .map(meta -> new RecordMeta(meta, r -> RecordRef.create(getId(), r)))
+                        .map(meta -> new RecordMeta(meta, r -> RecordRef.valueOf(getId() + "@" + r)))
                         .collect(Collectors.toList()));
             }
 
@@ -112,7 +113,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
             RecordsQueryResult<RecordRef> localRecords = recordsQueryLocalDAO.queryLocalRecords(query);
             if (addSourceId) {
-                return new RecordsQueryResult<>(localRecords, r -> RecordRef.create(getId(), r));
+                return new RecordsQueryResult<>(localRecords, r -> RecordRef.valueOf(getId() + "@" + r));
             }
             return localRecords;
 
@@ -257,6 +258,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
     @Override
     public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
         recordsService = serviceFactory.getRecordsService();
         predicateService = serviceFactory.getPredicateService();
         recordsMetaService = serviceFactory.getRecordsMetaService();
@@ -268,7 +270,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
         ParameterizedAttsMixin paramMixin = new ParameterizedAttsMixin(mixin);
 
-        Set<String> atts = new HashSet(mixin.getAttributesList());
+        Set<String> atts = new HashSet<>(mixin.getAttributesList());
         atts.forEach(a -> {
             if (mixins.containsKey(a)) {
                 log.error("Mixin tries to replace existing attribute. "

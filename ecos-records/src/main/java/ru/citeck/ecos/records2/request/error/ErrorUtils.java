@@ -10,7 +10,7 @@ import java.util.List;
 @Slf4j
 public class ErrorUtils {
 
-    public static RecordsError convertException(Exception exception) {
+    public static RecordsError convertException(Throwable exception) {
 
         MandatoryParam.check("exception", exception);
 

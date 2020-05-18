@@ -103,7 +103,7 @@ public class RecordsUtils {
             return records;
         }
         return records.stream()
-                      .map(n -> new RecordMeta(RecordRef.create(sourceId, n.getId()), n.getAttributes()))
+                      .map(n -> new RecordMeta(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAttributes()))
                       .collect(Collectors.toList());
     }
 
@@ -152,8 +152,8 @@ public class RecordsUtils {
     }
 
     private static <I, O> Map<String, List<O>> groupBySource(Collection<I> records,
-                                                            Function<I, RecordRef> getRecordRef,
-                                                            BiFunction<RecordRef, I, O> toOutput) {
+                                                             Function<I, RecordRef> getRecordRef,
+                                                             BiFunction<RecordRef, I, O> toOutput) {
         Map<String, List<O>> result = new HashMap<>();
         for (I recordData : records) {
             RecordRef record = getRecordRef.apply(recordData);

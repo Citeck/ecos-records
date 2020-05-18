@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.graphql.meta.value.factory;
+package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -7,6 +7,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
+import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -101,12 +102,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
             if (bean instanceof Map) {
                 return ((Map) bean).get(name);
             }
-            try {
-                return PropertyUtils.getProperty(bean, name);
-            } catch (NoSuchMethodException e) {
-                log.debug("Property not found: " + e.getMessage());
-            }
-            return null;
+            return BeanTypeUtils.getTypeContext(bean.getClass()).getProperty(bean, name);
         }
 
         @Override
@@ -136,7 +132,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
     static class BeanEdge extends SimpleMetaEdge {
 
-        private Object bean;
+        private final Object bean;
         private PropertyDescriptor descriptor;
 
         BeanEdge(String name, Value scope) {
@@ -164,11 +160,8 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
                 Type returnType = descriptor.getReadMethod().getGenericReturnType();
 
-                if (returnType != null) {
-
-                    ParameterizedType parameterType = (ParameterizedType) returnType;
-                    return (Class<?>) parameterType.getActualTypeArguments()[0];
-                }
+                ParameterizedType parameterType = (ParameterizedType) returnType;
+                return (Class<?>) parameterType.getActualTypeArguments()[0];
             }
 
             return type;

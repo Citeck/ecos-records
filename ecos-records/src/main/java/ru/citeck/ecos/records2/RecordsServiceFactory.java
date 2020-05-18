@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.evaluator.evaluators.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
+import ru.citeck.ecos.records2.graphql.meta.value.factory.bean.BeanValueFactory;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
@@ -74,6 +75,10 @@ public class RecordsServiceFactory {
     {
         Json.getContext().addDeserializer(getPredicateJsonDeserializer());
         Json.getContext().addSerializer(new PredicateJsonSerializer());
+    }
+
+    public void init() {
+        getLocalRecordsResolver().init();
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

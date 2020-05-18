@@ -30,6 +30,9 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.source.dao.local.job.Job;
+import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
+import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -42,10 +45,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
 
-    private Map<String, RecordsMetaDAO> metaDAO = new ConcurrentHashMap<>();
-    private Map<String, RecordsQueryDAO> queryDAO = new ConcurrentHashMap<>();
-    private Map<String, MutableRecordsDAO> mutableDAO = new ConcurrentHashMap<>();
-    private Map<String, RecordsQueryWithMetaDAO> queryWithMetaDAO = new ConcurrentHashMap<>();
+    private Set<String> allDao = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Map<String, RecordsMetaDAO> metaDao = new ConcurrentHashMap<>();
+    private Map<String, RecordsQueryDAO> queryDao = new ConcurrentHashMap<>();
+    private Map<String, MutableRecordsDAO> mutableDao = new ConcurrentHashMap<>();
+    private Map<String, RecordsQueryWithMetaDAO> queryWithMetaDao = new ConcurrentHashMap<>();
 
     private Map<Class<? extends RecordsDAO>, Map<String, ? extends RecordsDAO>> daoMapByType;
 
@@ -55,6 +59,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private String currentApp;
 
+    private final JobExecutor jobExecutor = new JobExecutor();
+
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
@@ -62,10 +68,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         this.currentApp = serviceFactory.getProperties().getAppName();
 
         daoMapByType = new HashMap<>();
-        daoMapByType.put(RecordsMetaDAO.class, metaDAO);
-        daoMapByType.put(RecordsQueryDAO.class, queryDAO);
-        daoMapByType.put(MutableRecordsDAO.class, mutableDAO);
-        daoMapByType.put(RecordsQueryWithMetaDAO.class, queryWithMetaDAO);
+        daoMapByType.put(RecordsMetaDAO.class, metaDao);
+        daoMapByType.put(RecordsQueryDAO.class, queryDao);
+        daoMapByType.put(MutableRecordsDAO.class, mutableDao);
+        daoMapByType.put(RecordsQueryWithMetaDAO.class, queryWithMetaDao);
+    }
+
+    public void init() {
+        this.jobExecutor.init();
     }
 
     @Override
@@ -508,16 +518,27 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         String id = recordsDao.getId();
         if (id == null) {
-            throw new IllegalArgumentException("id is a mandatory parameter for RecordsDAO");
+            log.error("id is a mandatory parameter for RecordsDAO."
+                + " Type: " + recordsDao.getClass()
+                + " toString: " + recordsDao);
+            return;
         }
 
-        register(metaDAO, RecordsMetaDAO.class, recordsDao);
-        register(queryDAO, RecordsQueryDAO.class, recordsDao);
-        register(mutableDAO, MutableRecordsDAO.class, recordsDao);
-        register(queryWithMetaDAO, RecordsQueryWithMetaDAO.class, recordsDao);
+        allDao.add(id);
+        register(metaDao, RecordsMetaDAO.class, recordsDao);
+        register(queryDao, RecordsQueryDAO.class, recordsDao);
+        register(mutableDao, MutableRecordsDAO.class, recordsDao);
+        register(queryWithMetaDao, RecordsQueryWithMetaDAO.class, recordsDao);
 
         if (recordsDao instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
+        }
+
+        if (recordsDao instanceof JobsProvider) {
+            List<Job> jobs = ((JobsProvider) recordsDao).getJobs();
+            for (Job job : jobs) {
+                jobExecutor.addJob(job);
+            }
         }
     }
 
@@ -547,6 +568,10 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             throw new RecordsSourceNotFoundException(sourceId, type);
         }
         return source.get();
+    }
+
+    public boolean containsDao(String id) {
+        return allDao.contains(id);
     }
 
     private static class DaoWithConvQuery<T extends RecordsQueryBaseDAO> {

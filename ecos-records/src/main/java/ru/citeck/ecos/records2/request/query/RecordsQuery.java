@@ -161,6 +161,15 @@ public class RecordsQuery {
         return sortBy;
     }
 
+    public void addSort(SortBy sort) {
+        if (this.sortBy == null) {
+            this.sortBy = new ArrayList<>();
+        } else if (!(this.sortBy instanceof ArrayList)) {
+            this.sortBy = new ArrayList<>(this.sortBy);
+        }
+        this.sortBy.add(sort);
+    }
+
     public void setSortBy(List<SortBy> sortBy) {
         this.sortBy = sortBy != null ? sortBy : Collections.emptyList();
     }

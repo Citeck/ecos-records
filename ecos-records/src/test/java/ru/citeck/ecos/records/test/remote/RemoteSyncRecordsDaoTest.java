@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RemoteSyncRecordsDaoTest {
 
+    private static final String REMOTE_SOURCE_ID = "remote/remote-source";
     private static final int TOTAL_RECS = 200;
 
     private RecordsService recordsService;
@@ -50,14 +51,16 @@ public class RemoteSyncRecordsDaoTest {
     @BeforeAll
     void setup() {
 
-        RecordsServiceFactory factory = new RecordsServiceFactory() {
+        RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
+
+        RecordsServiceFactory localFactory = new RecordsServiceFactory() {
             @Override
             protected RemoteRecordsResolver createRemoteRecordsResolver() {
             return new RemoteRecordsResolver(this, new RemoteRecordsRestApi() {
                 @Override
                 public <T> T jsonPost(String url, Object request, Class<T> respType) {
                     @SuppressWarnings("unchecked")
-                    T res = (T) getRestHandler().queryRecords(
+                    T res = (T) remoteFactory.getRestHandler().queryRecords(
                         Objects.requireNonNull(Json.getMapper().convert(request, QueryBody.class))
                     );
                     return Json.getMapper().convert(res, respType);
@@ -66,20 +69,22 @@ public class RemoteSyncRecordsDaoTest {
             }
         };
 
-        this.recordsService = factory.getRecordsService();
+        this.recordsService = localFactory.getRecordsService();
+
         recordsWithMetaSource = new RecordsWithMetaSource();
-        this.recordsService.register(recordsWithMetaSource);
-        remoteSyncRecordsDAO = new RemoteSyncRecordsDAO<>("remote/remote-source", ValueDto.class);
+        remoteFactory.getRecordsService().register(recordsWithMetaSource);
+
+        remoteSyncRecordsDAO = new RemoteSyncRecordsDAO<>(REMOTE_SOURCE_ID, ValueDto.class);
         this.recordsService.register(remoteSyncRecordsDAO);
 
-        factory.init();
+        localFactory.init();
     }
 
     @Test
     void test() {
 
         RecordsQuery query = new RecordsQuery();
-        query.setSourceId("remote/remote-source");
+        query.setSourceId(REMOTE_SOURCE_ID);
         query.setQuery(VoidPredicate.INSTANCE);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
@@ -96,13 +101,13 @@ public class RemoteSyncRecordsDaoTest {
         Predicate predicate = Predicates.eq("attributes.attKey?str", origDto.attributes.get("attKey").asText());
         RecordsQuery query1 = new RecordsQuery();
         query1.setLanguage(PredicateService.LANGUAGE_PREDICATE);
-        query1.setSourceId("remote/remote-source");
+        query1.setSourceId(REMOTE_SOURCE_ID);
         query1.setQuery(predicate);
 
         RecordsQueryResult<RecordRef> recs = recordsService.queryRecords(query1);
         assertEquals(0, recs.getErrors().size());
         assertEquals(1, recs.getRecords().size());
-        assertEquals(RecordRef.valueOf("remote/remote-source@id-100"), recs.getRecords().get(0));
+        assertEquals(RecordRef.valueOf(REMOTE_SOURCE_ID + "@id-100"), recs.getRecords().get(0));
 
         RecordsQueryResult<ValueDto> resultWithMeta = recordsService.queryRecords(query1, ValueDto.class);
         assertEquals(0, resultWithMeta.getErrors().size());

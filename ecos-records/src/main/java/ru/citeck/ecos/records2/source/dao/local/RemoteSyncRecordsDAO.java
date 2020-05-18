@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.SortBy;
+import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
@@ -44,6 +45,7 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
 
     private final CompletableFuture<Boolean> firstSyncFuture = new CompletableFuture<>();
     private RemoteRecordsResolver remoteRecordsResolver;
+    private LocalRecordsResolver localRecordsResolver;
 
     private Instant currentSyncDate = Instant.ofEpochMilli(0);
 
@@ -123,7 +125,12 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
         query.setMaxItems(50);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        RecordsQueryResult<RecordMeta> result = remoteRecordsResolver.queryRecords(query, schema.getSchema());
+        RecordsQueryResult<RecordMeta> result;
+        if (getId().contains("/")) {
+            result = remoteRecordsResolver.queryRecords(query, schema.getSchema());
+        } else {
+            result = localRecordsResolver.queryRecords(query, schema.getSchema());
+        }
 
         if (!result.getErrors().isEmpty()) {
             log.warn("Update failed: there are errors in query result. Result: " + result);
@@ -185,8 +192,11 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
         super.setRecordsServiceFactory(serviceFactory);
 
         this.remoteRecordsResolver = serviceFactory.getRemoteRecordsResolver();
-        if (this.remoteRecordsResolver == null) {
-            throw new IllegalStateException("Sync records DAO can't work without RemoteRecordsResolver");
+        this.localRecordsResolver = serviceFactory.getLocalRecordsResolver();
+
+        if (this.getId().contains("/") && this.remoteRecordsResolver == null) {
+            throw new IllegalStateException("Sync records DAO can't work "
+                + "without RemoteRecordsResolver. SourceId: " + getId());
         }
         Map<String, String> attributes = new HashMap<>(recordsMetaService.getAttributes(model));
         attributes.put(MODIFIED_ATT_KEY, RecordConstants.ATT_MODIFIED);

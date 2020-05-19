@@ -29,7 +29,7 @@ public class RecordsRestConfiguration {
 
     @Bean
     public RemoteRecordsRestApi remoteRespApi(RestQueryExceptionConverter restQueryExceptionConverter) {
-        return new RemoteRecordsRestApi(this::jsonPost, createRemoteAppInfoProvider(), properties,
+        return new RemoteRecordsRestApiImpl(this::jsonPost, createRemoteAppInfoProvider(), properties,
             restQueryExceptionConverter);
     }
 

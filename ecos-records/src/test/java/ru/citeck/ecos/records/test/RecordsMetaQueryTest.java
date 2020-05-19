@@ -3,6 +3,8 @@ package ru.citeck.ecos.records.test;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -34,7 +36,7 @@ public class RecordsMetaQueryTest {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(SimplePojo.class);
 
-        assertEquals(11, attributes.size());
+        assertEquals(12, attributes.size());
 
         assertEquals(".att(n:\"jsonArrayNode\"){json}", attributes.get("jsonArrayNode"));
         assertEquals(".att(n:\"jsonObjectNode\"){json}", attributes.get("jsonObjectNode"));
@@ -47,6 +49,7 @@ public class RecordsMetaQueryTest {
         assertEquals(".att(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("status1"));
         assertEquals(".atts(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("statuses"));
         assertEquals(".att(n:\"cm:caseStatus\"){atts(n:\"cm:statusName\"){str}}", attributes.get("statuses1"));
+        assertEquals(".att(n:\"enumField\"){str}", attributes.get("enumField"));
 
         Map<String, String> attributesMap = new TreeMap<>(Comparator.comparingInt(Integer::parseInt));
         attributesMap.put("0", "name.title.field0.field1");
@@ -116,6 +119,9 @@ public class RecordsMetaQueryTest {
         private JsonNode jsonNode;
         private ObjectNode jsonObjectNode;
         private ArrayNode jsonArrayNode;
+
+        @Getter @Setter
+        private EnumType enumField;
 
         public ArrayNode getJsonArrayNode() {
             return jsonArrayNode;
@@ -205,4 +211,6 @@ public class RecordsMetaQueryTest {
             this.someatt = someatt;
         }
     }
+
+    public enum EnumType { FIRST, SECOND }
 }

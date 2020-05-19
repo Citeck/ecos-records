@@ -111,8 +111,9 @@ public class PredicateServiceImpl implements PredicateService {
 
             String attribute = ((EmptyPredicate) predicate).getAttribute();
             return comparator.isEmpty(Json.getMapper().toJava(attributes.getAttribute(attribute)));
-        }
 
-        return false;
+        } else {
+            return predicate instanceof VoidPredicate;
+        }
     }
 }

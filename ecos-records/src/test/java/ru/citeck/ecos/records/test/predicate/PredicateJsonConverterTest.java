@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -14,6 +15,7 @@ public class PredicateJsonConverterTest {
 
     private Predicate createDeepPredicate() {
         return Predicates.and(
+                    VoidPredicate.INSTANCE,
                     Predicates.not(Predicates.empty("att")),
                     Predicates.equal("att", "Val"),
                     Predicates.and(
@@ -25,9 +27,11 @@ public class PredicateJsonConverterTest {
                                 Predicates.and(
                                     Predicates.and(
                                         Predicates.equal("aa", "bb")
-                                    )
+                                    ),
+                                    VoidPredicate.INSTANCE
                                 )
-                            )
+                            ),
+                            VoidPredicate.INSTANCE
                         )
                     )
                 );

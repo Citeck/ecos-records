@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.evaluator.evaluators.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
+import ru.citeck.ecos.records2.graphql.meta.value.factory.bean.BeanValueFactory;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
@@ -38,6 +39,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -71,9 +73,19 @@ public class RecordsServiceFactory {
     private RecordEvaluatorService tmpEvaluatorsService;
     private RecordsService tmpRecordsService;
 
+    private boolean isJobsInitialized = false;
+
     {
         Json.getContext().addDeserializer(getPredicateJsonDeserializer());
         Json.getContext().addSerializer(new PredicateJsonSerializer());
+    }
+
+    public synchronized void initJobs(ScheduledExecutorService executor) {
+        if (!isJobsInitialized) {
+            log.info("Records jobs initialization started. Executor: " + executor);
+            getLocalRecordsResolver().initJobs(executor);
+            isJobsInitialized = true;
+        }
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.LibsUtils;
@@ -21,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -57,6 +59,8 @@ public class DtoMetaResolver {
             new ScalarField<>(Byte.class, "num"),
             new ScalarField<>(byte.class, "num"),
             new ScalarField<>(Date.class, "str"),
+            new ScalarField<>(Instant.class, "str"),
+            new ScalarField<>(MLText.class, "json"),
             new ScalarField<>(JsonNode.class, "json"),
             new ScalarField<>(ObjectNode.class, "json"),
             new ScalarField<>(ArrayNode.class, "json"),
@@ -148,8 +152,12 @@ public class DtoMetaResolver {
 
             if (scalarField == null) {
 
-                Map<String, String> propSchema = getAttributes(propType, visited);
-                schema.append(attributesMeta.createSchema(propSchema, false).getSchema());
+                if (propType.isEnum()) {
+                    schema.append("str");
+                } else {
+                    Map<String, String> propSchema = getAttributes(propType, visited);
+                    schema.append(attributesMeta.createSchema(propSchema, false).getSchema());
+                }
 
             } else {
 
@@ -189,9 +197,7 @@ public class DtoMetaResolver {
             Field field;
             try {
                 field = scope.getDeclaredField(fieldName);
-                if (field != null) {
-                    attInfo = field.getAnnotation(MetaAtt.class);
-                }
+                attInfo = field.getAnnotation(MetaAtt.class);
             } catch (NoSuchFieldException e) {
                 log.error("Field not found: " + fieldName, e);
             }

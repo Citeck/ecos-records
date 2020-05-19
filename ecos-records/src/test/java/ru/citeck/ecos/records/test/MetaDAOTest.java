@@ -51,6 +51,9 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
 
         String attValue = recordsService.getAttribute(ref, "attributes.key?str").asText();
         assertEquals(metaAtts.get("key"), attValue);
+
+        String enumAttValue = recordsService.getAttribute(ref, "rec.123@VALUE.enum").asText();
+        assertEquals("FIRST", enumAttValue);
     }
 
     @Override
@@ -70,8 +73,12 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
         public Object getAttribute(String name, MetaField field) {
             if (name.equals("field")) {
                 return ref.getId();
+            } else if (name.equals("enum")) {
+                return TestEnum.FIRST;
             }
             return null;
         }
     }
+
+    public enum TestEnum { FIRST, SECOND }
 }

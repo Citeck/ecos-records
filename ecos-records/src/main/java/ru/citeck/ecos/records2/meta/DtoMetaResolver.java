@@ -152,8 +152,12 @@ public class DtoMetaResolver {
 
             if (scalarField == null) {
 
-                Map<String, String> propSchema = getAttributes(propType, visited);
-                schema.append(attributesMeta.createSchema(propSchema, false).getSchema());
+                if (propType.isEnum()) {
+                    schema.append("str");
+                } else {
+                    Map<String, String> propSchema = getAttributes(propType, visited);
+                    schema.append(attributesMeta.createSchema(propSchema, false).getSchema());
+                }
 
             } else {
 
@@ -193,9 +197,7 @@ public class DtoMetaResolver {
             Field field;
             try {
                 field = scope.getDeclaredField(fieldName);
-                if (field != null) {
-                    attInfo = field.getAnnotation(MetaAtt.class);
-                }
+                attInfo = field.getAnnotation(MetaAtt.class);
             } catch (NoSuchFieldException e) {
                 log.error("Field not found: " + fieldName, e);
             }

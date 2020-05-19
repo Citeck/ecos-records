@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records.test.remote;
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +76,7 @@ public class RemoteSyncRecordsDaoTest {
         remoteSyncRecordsDAO = new RemoteSyncRecordsDAO<>(REMOTE_SOURCE_ID, ValueDto.class);
         this.recordsService.register(remoteSyncRecordsDAO);
 
-        localFactory.init();
+        localFactory.initJobs(null);
     }
 
     @Test

@@ -39,6 +39,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -77,8 +78,8 @@ public class RecordsServiceFactory {
         Json.getContext().addSerializer(new PredicateJsonSerializer());
     }
 
-    public void init() {
-        getLocalRecordsResolver().init();
+    public void initJobs(ScheduledExecutorService executor) {
+        getLocalRecordsResolver().initJobs(executor);
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

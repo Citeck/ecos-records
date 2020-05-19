@@ -37,6 +37,7 @@ import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -74,8 +75,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         daoMapByType.put(RecordsQueryWithMetaDAO.class, queryWithMetaDao);
     }
 
-    public void init() {
-        this.jobExecutor.init();
+    public void initJobs(ScheduledExecutorService executor) {
+        this.jobExecutor.init(executor);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2.source.dao.local.job;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -18,14 +17,15 @@ import java.util.concurrent.TimeUnit;
 })
 public class JobExecutor {
 
-    @Getter(lazy = true)
-    private final ScheduledExecutorService executorService = createExecutor();
-
     private final List<Job> jobs = new CopyOnWriteArrayList<>();
 
-    public void init() {
+    public void init(ScheduledExecutorService executor) {
+
+        if (executor == null) {
+            executor = Executors.newSingleThreadScheduledExecutor();
+        }
+
         for (Job job : jobs) {
-            ScheduledExecutorService executor = getExecutorService();
             if (job instanceof PeriodicJob) {
                 executor.scheduleAtFixedRate(
                     () -> this.execute(job),
@@ -58,9 +58,5 @@ public class JobExecutor {
         } catch (Exception e) {
             log.error("Job execution error", e);
         }
-    }
-
-    private ScheduledExecutorService createExecutor() {
-        return Executors.newSingleThreadScheduledExecutor();
     }
 }

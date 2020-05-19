@@ -96,6 +96,7 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
     private void waitUntilSyncCompleted() {
         try {
             if (!firstSyncFuture.isDone()) {
+                serviceFactory.initJobs(null);
                 log.warn("!!! Current thread will be blocked until data will be synchronized. "
                        + "SourceId: " + getId() + ". Timeout: 5min !!!");
             }

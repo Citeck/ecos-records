@@ -75,8 +75,6 @@ public class RemoteSyncRecordsDaoTest {
 
         remoteSyncRecordsDAO = new RemoteSyncRecordsDAO<>(REMOTE_SOURCE_ID, ValueDto.class);
         this.recordsService.register(remoteSyncRecordsDAO);
-
-        localFactory.initJobs(null);
     }
 
     @Test

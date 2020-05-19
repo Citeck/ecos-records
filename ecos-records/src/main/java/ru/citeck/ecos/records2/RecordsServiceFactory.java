@@ -73,13 +73,19 @@ public class RecordsServiceFactory {
     private RecordEvaluatorService tmpEvaluatorsService;
     private RecordsService tmpRecordsService;
 
+    private boolean isJobsInitialized = false;
+
     {
         Json.getContext().addDeserializer(getPredicateJsonDeserializer());
         Json.getContext().addSerializer(new PredicateJsonSerializer());
     }
 
-    public void initJobs(ScheduledExecutorService executor) {
-        getLocalRecordsResolver().initJobs(executor);
+    public synchronized void initJobs(ScheduledExecutorService executor) {
+        if (!isJobsInitialized) {
+            log.info("Records jobs initialization started. Executor: " + executor);
+            getLocalRecordsResolver().initJobs(executor);
+            isJobsInitialized = true;
+        }
     }
 
     public final synchronized PredicateTypes getPredicateTypes() {

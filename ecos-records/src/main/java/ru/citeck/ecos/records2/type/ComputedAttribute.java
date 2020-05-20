@@ -11,14 +11,14 @@ import java.util.Map;
 @NoArgsConstructor
 public class ComputedAttribute {
 
-    private String name;
+    private String id;
     private Map<String, String> model;
 
     private String type;
     private ObjectData config;
 
     public ComputedAttribute(ComputedAttribute other) {
-        this.name = other.name;
+        this.id = other.id;
         this.model = DataValue.create(other.model).asMap(String.class, String.class);
         this.type = other.type;
         this.config = ObjectData.deepCopy(other.config);

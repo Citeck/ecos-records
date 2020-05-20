@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.common;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
@@ -12,15 +13,18 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 @Slf4j
+@SuppressFBWarnings({ "NP_BOOLEAN_RETURN_NULL" })
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     private final RecordsMetaService recordsMetaService;
@@ -40,6 +44,31 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         this.metaCache = metaCache;
         this.computedAtts = computedAtts;
         this.recordsMetaService = recordsMetaService;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getStrAttribute(".disp", super::getDisplayName);
+    }
+
+    @Override
+    public String getString() {
+        return getStrAttribute(".str", super::getString);
+    }
+
+    @Override
+    public Double getDouble() {
+        return getDoubleAttribute(".num", super::getDouble);
+    }
+
+    @Override
+    public Boolean getBool() {
+        return getBoolAttribute(".bool", super::getBool);
+    }
+
+    @Override
+    public Object getJson() {
+        return getAttributeImpl(".json", EmptyMetaField.INSTANCE, super::getJson);
     }
 
     private <R, M> R doWithMeta(ParameterizedAttsMixin mixin,
@@ -87,18 +116,69 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     @Override
-    public Object getAttribute(String attribute, MetaField field) throws Exception {
+    public Object getAttribute(String attribute, MetaField field) {
+        return getAttributeImpl(attribute, field, () -> super.getAttribute(attribute, field));
+    }
+
+    private Boolean getBoolAttribute(String attribute, Callable<Object> fallback) {
+        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
+        if (res instanceof Boolean) {
+            return (Boolean) res;
+        } else if (res instanceof String) {
+            return Boolean.parseBoolean((String) res);
+        } else {
+            return null;
+        }
+    }
+
+    private Double getDoubleAttribute(String attribute, Callable<Object> fallback) {
+        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
+        if (res instanceof Double) {
+            return (Double) res;
+        } else {
+            return null;
+        }
+    }
+
+    private String getStrAttribute(String attribute, Callable<Object> fallback) {
+        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
+        if (res instanceof String) {
+            return (String) res;
+        } else {
+            return null;
+        }
+    }
+
+    private Object getAttributeImpl(String attribute, MetaField field, Callable<Object> fallback) {
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
 
-        if (mixin == null) {
-            ComputedAttribute computedAtt = computedAtts.get(attribute);
-            if (computedAtt != null) {
-                return computeAttribute(computedAtt);
-            } else {
-                return super.getAttribute(attribute, field);
+        if (mixin != null) {
+            try {
+                return computeAttribute(mixin, attribute, field);
+            } catch (Exception e) {
+                log.error("mixin error", e);
             }
         }
+
+        ComputedAttribute computedAtt = computedAtts.get(attribute);
+        if (computedAtt != null) {
+            try {
+                return computeAttribute(computedAtt);
+            } catch (Exception e) {
+                log.error("computed attribute error", e);
+            }
+        }
+
+        try {
+            return fallback.call();
+        } catch (Exception e) {
+            ExceptionUtils.throwException(e);
+        }
+        return null;
+    }
+
+    private Object computeAttribute(ParameterizedAttsMixin mixin, String attribute, MetaField field) throws Exception {
 
         return doWithMeta(mixin, meta -> {
 
@@ -194,6 +274,6 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     @Override
     public boolean has(String name) throws Exception {
-        return mixins.containsKey(name) || super.has(name);
+        return mixins.containsKey(name) || computedAtts.containsKey(name) || super.has(name);
     }
 }

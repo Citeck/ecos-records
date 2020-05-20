@@ -21,7 +21,7 @@ public class DateValueFactory implements MetaValueFactory<Date> {
 
     static class DateValue implements MetaValue {
 
-        private Date date;
+        private final Date date;
 
         public DateValue(Date date) {
             this.date = date;

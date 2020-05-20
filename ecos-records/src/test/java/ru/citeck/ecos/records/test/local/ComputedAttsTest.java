@@ -98,7 +98,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
             + "M.get('intField0').asInt() + M.get('intField1').asInt()"
             + "\"}"
         ));
-        intCcmputedAtt.setName(intFieldsSumName);
+        intCcmputedAtt.setId(intFieldsSumName);
 
         computedAttributesType0.add(intCcmputedAtt);
 
@@ -125,7 +125,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
                 + "return 'some-prefix-' + M.get('strField').asText() + '-' + M.get('unknown', 'def')"
                 + "\"}"
         ));
-        strPrefixAtt.setName(strFieldValueWithPrefixName);
+        strPrefixAtt.setId(strFieldValueWithPrefixName);
         String expectedStrPrefixResult = "some-prefix-" + strFieldValue + "-def";
 
         computedAttributesType1.add(strPrefixAtt);
@@ -152,7 +152,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
         model = new HashMap<>();
         model.put("<", "inner.strField");
         innerComputedAtt.setModel(model);
-        innerComputedAtt.setName(innerFieldName);
+        innerComputedAtt.setId(innerFieldName);
 
         computedAttributesType0.add(innerComputedAtt);
 

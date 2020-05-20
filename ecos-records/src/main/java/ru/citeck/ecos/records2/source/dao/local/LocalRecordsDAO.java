@@ -259,7 +259,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
                     computedAttsForType = computedAtts.computeIfAbsent((RecordRef) typeRef, t -> {
                         List<ComputedAttribute> atts = recordTypeService.getComputedAttributes(t);
                         Map<String, ComputedAttribute> attsByName = new HashMap<>();
-                        atts.forEach(a -> attsByName.put(a.getName(), a));
+                        atts.forEach(a -> attsByName.put(a.getId(), a));
                         return attsByName;
                     });
                 }

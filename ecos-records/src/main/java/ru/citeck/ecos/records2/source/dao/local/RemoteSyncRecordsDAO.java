@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
@@ -127,10 +128,15 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
         RecordsQueryResult<RecordMeta> result;
-        if (getId().contains("/")) {
-            result = remoteRecordsResolver.queryRecords(query, schema.getSchema());
-        } else {
-            result = localRecordsResolver.queryRecords(query, schema.getSchema());
+        try {
+            if (getId().contains("/")) {
+                result = remoteRecordsResolver.queryRecords(query, schema.getSchema());
+            } else {
+                result = localRecordsResolver.queryRecords(query, schema.getSchema());
+            }
+        } catch (Exception e) {
+            // target DAO is not ready yet
+            return false;
         }
 
         if (!result.getErrors().isEmpty()) {
@@ -143,11 +149,14 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
 
         for (RecordMeta meta : flatMeta) {
 
+            String modifiedStr = meta.get(MODIFIED_ATT_KEY).asText();
+            if (StringUtils.isBlank(modifiedStr)) {
+                return false;
+            }
+            Instant modified = Instant.parse(modifiedStr);
             T instance = recordsMetaService.instantiateMeta(model, meta);
 
             records.put(meta.getId(), instance);
-
-            Instant modified = Instant.parse(meta.get(MODIFIED_ATT_KEY).asText());
 
             if (modified.isAfter(lastModified)) {
                 lastModified = modified;
@@ -172,12 +181,12 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
 
             @Override
             public long getPeriod() {
-                return 5000;
+                return 10_000;
             }
 
             @Override
             public long getInitDelay() {
-                return 1000;
+                return 2000;
             }
 
             @Override

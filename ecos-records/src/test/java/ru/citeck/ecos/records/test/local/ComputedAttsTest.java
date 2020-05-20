@@ -4,6 +4,7 @@ import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -35,6 +36,8 @@ public class ComputedAttsTest extends LocalRecordsDAO
     private static final int intField0Value = 10;
     private static final int intField1Value = 20;
     private static final String intFieldsSumName = "intFieldsSumName";
+
+    private static final String innerFieldName = "innerFieldData";
 
     private static final String finalFieldValue = "some final value";
     private static final String finalFieldName = "finalField";
@@ -81,6 +84,8 @@ public class ComputedAttsTest extends LocalRecordsDAO
         assertTrue(meta.get(strAtt).isNull());
         assertTrue(meta.get(intAtt).isNull());
 
+        // for int
+
         ComputedAttribute intCcmputedAtt = new ComputedAttribute();
         Map<String, String> model = new HashMap<>();
         model.put("intField0", "intField0?num");
@@ -106,6 +111,8 @@ public class ComputedAttsTest extends LocalRecordsDAO
 
         assertTrue(recMeta1.get(strAtt).isNull());
         assertTrue(recMeta1.get(intAtt).isNull());
+
+        // for string
 
         ComputedAttribute strPrefixAtt = new ComputedAttribute();
         Map<String, String> model1 = new HashMap<>();
@@ -138,6 +145,19 @@ public class ComputedAttsTest extends LocalRecordsDAO
 
         assertEquals(expectedStrPrefixResult, recMeta0.get(strAtt, ""));
         assertEquals(30, recMeta0.get(intAtt).asInt());
+
+        // for inner
+
+        ComputedAttribute innerComputedAtt = new ComputedAttribute();
+        model = new HashMap<>();
+        model.put("<", "inner.strField");
+        innerComputedAtt.setModel(model);
+        innerComputedAtt.setName(innerFieldName);
+
+        computedAttributesType0.add(innerComputedAtt);
+
+        DataValue res = recordsService.getAttribute(RecordRef.create(getId(), "type0"), innerFieldName);
+        assertEquals("some-inner-value", res.asText());
     }
 
     @Override
@@ -148,16 +168,6 @@ public class ComputedAttsTest extends LocalRecordsDAO
     @Override
     public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
         return records.stream().map(r -> new MetaValueRecord(r.getId())).collect(Collectors.toList());
-    }
-
-    @Data
-    public static class Record {
-
-        private String strField = strFieldValue;
-
-        private int intField0 = intField0Value;
-        private int intField1 = intField1Value;
-        private String finalField = finalFieldValue;
     }
 
     public static class MetaValueRecord implements MetaValue {
@@ -182,9 +192,20 @@ public class ComputedAttsTest extends LocalRecordsDAO
                 case "intField0": return intField0Value;
                 case "intField1": return intField1Value;
                 case finalFieldName: return finalFieldValue;
+                case "inner": return new InnerData();
             }
 
             return null;
         }
+    }
+
+    @Data
+    public static class InnerData {
+
+        private String strField = "some-inner-value";
+
+        private int intField0 = intField0Value;
+        private int intField1 = intField1Value;
+        private String finalField = finalFieldValue;
     }
 }

@@ -34,6 +34,8 @@ import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
 import ru.citeck.ecos.records2.source.dao.RecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
+import ru.citeck.ecos.records2.type.DefaultRecordTypeService;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -63,6 +65,7 @@ public class RecordsServiceFactory {
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
     private List<RecordsDAO> defaultRecordsDAO;
+    private RecordTypeService recordTypeService;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
@@ -401,5 +404,16 @@ public class RecordsServiceFactory {
             metaRecordsDaoAttsProvider = createMetaRecordsDaoAttsProvider();
         }
         return metaRecordsDaoAttsProvider;
+    }
+
+    protected RecordTypeService createRecordTypeService() {
+        return new DefaultRecordTypeService();
+    }
+
+    public final synchronized RecordTypeService getRecordTypeService() {
+        if (recordTypeService == null) {
+            recordTypeService = createRecordTypeService();
+        }
+        return recordTypeService;
     }
 }

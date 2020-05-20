@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -22,6 +23,8 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
+import ru.citeck.ecos.records2.type.ComputedAttribute;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -54,9 +57,10 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     protected RecordsMetaGql recordsMetaGql;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
+    protected RecordTypeService recordTypeService;
 
     private boolean addSourceId = true;
-    private Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
+    private final Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
 
     public LocalRecordsDAO() {
     }
@@ -238,15 +242,29 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
     private RecordsResult<RecordMeta> getMetaImpl(List<?> records, String schema) {
 
-        if (mixins.isEmpty()) {
-            return recordsMetaService.getMeta(records, schema);
-        }
-
         Map<Object, Object> metaCache = new ConcurrentHashMap<>();
+        Map<RecordRef, Map<String, ComputedAttribute>> computedAtts = new HashMap<>();
 
         List<?> recordsWithMixin = records.stream()
             .map(r -> metaValuesConverter.toMetaValue(r))
-            .map(r -> new AttributesMixinMetaValue(r, recordsMetaService, mixins, metaCache))
+            .map(r -> {
+                Object typeRef = null;
+                try {
+                    typeRef = r.getAttribute(RecordConstants.ATT_ECOS_TYPE, EmptyMetaField.INSTANCE);
+                } catch (Exception e) {
+                    log.error("Type can't be received", e);
+                }
+                Map<String, ComputedAttribute> computedAttsForType = Collections.emptyMap();
+                if (typeRef instanceof RecordRef) {
+                    computedAttsForType = computedAtts.computeIfAbsent((RecordRef) typeRef, t -> {
+                        List<ComputedAttribute> atts = recordTypeService.getComputedAttributes(t);
+                        Map<String, ComputedAttribute> attsByName = new HashMap<>();
+                        atts.forEach(a -> attsByName.put(a.getName(), a));
+                        return attsByName;
+                    });
+                }
+                return new AttributesMixinMetaValue(r, recordsMetaService, computedAttsForType, mixins, metaCache);
+            })
             .collect(Collectors.toList());
 
         return recordsMetaService.getMeta(recordsWithMixin, schema);
@@ -264,6 +282,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         recordsMetaService = serviceFactory.getRecordsMetaService();
         recordsMetaGql = serviceFactory.getRecordsMetaGql();
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
+        recordTypeService = serviceFactory.getRecordTypeService();
     }
 
     public void addAttributesMixin(AttributesMixin<?, ?> mixin) {
@@ -296,7 +315,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
                 attsToRemove.add(a);
             }
         });
-        attsToRemove.forEach(a -> mixins.remove(a));
+        attsToRemove.forEach(mixins::remove);
     }
 
     @Override

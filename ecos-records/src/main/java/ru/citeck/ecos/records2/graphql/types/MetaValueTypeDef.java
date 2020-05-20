@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.types;
 import graphql.Scalars;
 import graphql.schema.*;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -237,11 +238,8 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             MetaField metaField = new MetaFieldImpl(env.getField());
             return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext(), metaField);
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            } else {
-                throw new RuntimeException(e);
-            }
+            ExceptionUtils.throwException(e);
+            return null;
         }
     }
 

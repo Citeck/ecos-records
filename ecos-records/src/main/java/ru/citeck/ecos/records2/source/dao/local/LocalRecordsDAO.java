@@ -6,7 +6,6 @@ import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -23,7 +22,6 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
-import ru.citeck.ecos.records2.type.ComputedAttribute;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
@@ -69,7 +67,11 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
         this.addSourceId = addSourceId;
     }
 
-    public RecordsMutResult mutate(RecordsMutation mutation) {
+    public final RecordsMutResult mutate(RecordsMutation mutation) {
+        return mutateImpl(mutation);
+    }
+
+    protected RecordsMutResult mutateImpl(RecordsMutation mutation) {
 
         if (this instanceof MutableRecordsLocalDAO) {
 
@@ -222,7 +224,6 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
             List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
             List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, metaField);
 
-
             result = getMetaImpl(metaValues, metaSchema);
 
         } else {
@@ -243,28 +244,16 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
     private RecordsResult<RecordMeta> getMetaImpl(List<?> records, String schema) {
 
         Map<Object, Object> metaCache = new ConcurrentHashMap<>();
-        Map<RecordRef, Map<String, ComputedAttribute>> computedAtts = new HashMap<>();
 
         List<?> recordsWithMixin = records.stream()
             .map(r -> metaValuesConverter.toMetaValue(r))
-            .map(r -> {
-                Object typeRef = null;
-                try {
-                    typeRef = r.getAttribute(RecordConstants.ATT_ECOS_TYPE, EmptyMetaField.INSTANCE);
-                } catch (Exception e) {
-                    log.error("Type can't be received", e);
-                }
-                Map<String, ComputedAttribute> computedAttsForType = Collections.emptyMap();
-                if (typeRef instanceof RecordRef) {
-                    computedAttsForType = computedAtts.computeIfAbsent((RecordRef) typeRef, t -> {
-                        List<ComputedAttribute> atts = recordTypeService.getComputedAttributes(t);
-                        Map<String, ComputedAttribute> attsByName = new HashMap<>();
-                        atts.forEach(a -> attsByName.put(a.getId(), a));
-                        return attsByName;
-                    });
-                }
-                return new AttributesMixinMetaValue(r, recordsMetaService, computedAttsForType, mixins, metaCache);
-            })
+            .map(mv ->
+                new AttributesMixinMetaValue(mv,
+                    recordsMetaService,
+                    recordTypeService,
+                    mixins,
+                    metaCache
+                ))
             .collect(Collectors.toList());
 
         return recordsMetaService.getMeta(recordsWithMixin, schema);

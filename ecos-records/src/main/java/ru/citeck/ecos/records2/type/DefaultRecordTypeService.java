@@ -4,12 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 public class DefaultRecordTypeService implements RecordTypeService {
 
     @NotNull
-    public List<ComputedAttribute> getComputedAttributes(RecordRef type) {
-        return Collections.emptyList();
+    public Map<String, ComputedAttribute> getComputedAttributes(RecordRef type) {
+        return Collections.emptyMap();
     }
 }

@@ -14,9 +14,7 @@ import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,6 +61,13 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         }
         RecordsResult<RecordMeta> meta = getMeta(records, attributes);
         return new RecordsResult<>(meta, m -> instantiateMeta(metaClass, m));
+    }
+
+    @Override
+    public RecordMeta getMeta(Object record, Collection<String> attributes) {
+        Map<String, String> attsMap = new HashMap<>();
+        attributes.forEach(att -> attsMap.put(att, att));
+        return getMeta(record, attsMap);
     }
 
     @Override

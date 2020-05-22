@@ -3,10 +3,10 @@ package ru.citeck.ecos.records2.type;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 
-import java.util.List;
+import java.util.Map;
 
 public interface RecordTypeService {
 
     @NotNull
-    List<ComputedAttribute> getComputedAttributes(RecordRef type);
+    Map<String, ComputedAttribute> getComputedAttributes(RecordRef type);
 }

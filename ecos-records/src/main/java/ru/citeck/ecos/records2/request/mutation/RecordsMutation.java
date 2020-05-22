@@ -16,6 +16,11 @@ public class RecordsMutation {
     public RecordsMutation() {
     }
 
+    public RecordsMutation(RecordsMutation other) {
+        this.debug = other.debug;
+        this.records = new ArrayList<>(other.records);
+    }
+
     public RecordsMutation(RecordsMutation other, Function<RecordMeta, RecordMeta> convert) {
         this.debug = other.debug;
         this.records = other.getRecords()

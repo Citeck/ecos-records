@@ -135,7 +135,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
     }
 
     @Override
-    public RecordsMutResult mutate(RecordsMutation mutation) {
+    protected RecordsMutResult mutateImpl(RecordsMutation mutation) {
 
         for (RecordMeta meta : mutation.getRecords()) {
             meta.forEach((name, value) -> {
@@ -147,7 +147,7 @@ public class RecordsMutationTest extends LocalRecordsDAO
             });
         }
 
-        return super.mutate(mutation);
+        return super.mutateImpl(mutation);
     }
 
     @Override

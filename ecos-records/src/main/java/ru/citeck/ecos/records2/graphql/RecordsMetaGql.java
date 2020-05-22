@@ -32,9 +32,8 @@ public class RecordsMetaGql {
 
     private static final String META_QUERY_TEMPLATE = "{" + GqlMetaQueryDef.META_FIELD + "{%s}}";
 
-    private GraphQL graphQL;
-
-    private RecordsServiceFactory serviceFactory;
+    private final GraphQL graphQL;
+    private final RecordsServiceFactory serviceFactory;
 
     public RecordsMetaGql(RecordsServiceFactory serviceFactory) {
 

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.meta;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,8 @@ public interface RecordsMetaService {
     RecordsResult<RecordMeta> getMeta(List<?> records, String schema);
 
     <T> RecordsResult<T> getMeta(List<?> records, Class<T> metaClass);
+
+    RecordMeta getMeta(Object record, Collection<String> attributes);
 
     RecordMeta getMeta(Object record, Map<String, String> attributes);
 

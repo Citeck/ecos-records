@@ -14,10 +14,7 @@ import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
-import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
-import ru.citeck.ecos.records2.meta.DtoMetaResolver;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records2.meta.*;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonDeserializer;
@@ -66,6 +63,7 @@ public class RecordsServiceFactory {
     private PredicateTypes predicateTypes;
     private List<RecordsDAO> defaultRecordsDAO;
     private RecordTypeService recordTypeService;
+    private RecordsTemplateService recordsTemplateService;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
@@ -415,5 +413,16 @@ public class RecordsServiceFactory {
             recordTypeService = createRecordTypeService();
         }
         return recordTypeService;
+    }
+
+    protected RecordsTemplateService createRecordsTemplateService() {
+        return new RecordsTemplateService(this);
+    }
+
+    public final synchronized RecordsTemplateService getRecordsTemplateService() {
+        if (recordsTemplateService == null) {
+            recordsTemplateService = createRecordsTemplateService();
+        }
+        return recordsTemplateService;
     }
 }

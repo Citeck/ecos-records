@@ -7,6 +7,8 @@ import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.ScriptUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
+import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
@@ -16,6 +18,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,22 +31,39 @@ import java.util.function.Supplier;
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     private final RecordsMetaService recordsMetaService;
+    private final RecordTypeService recordTypeService;
 
     private final Map<String, ParameterizedAttsMixin> mixins;
     private final Map<Object, Object> metaCache;
 
-    private final Map<String, ComputedAttribute> computedAtts;
+    private Map<String, ComputedAttribute> computedAtts = Collections.emptyMap();
 
     public AttributesMixinMetaValue(MetaValue impl,
                                     RecordsMetaService recordsMetaService,
-                                    Map<String, ComputedAttribute> computedAtts,
+                                    RecordTypeService recordTypeService,
                                     Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
         super(impl);
         this.mixins = mixins;
         this.metaCache = metaCache;
-        this.computedAtts = computedAtts;
+        this.recordTypeService = recordTypeService;
         this.recordsMetaService = recordsMetaService;
+    }
+
+    @Override
+    public <T extends QueryContext> void init(T context, MetaField field) {
+        super.init(context, field);
+        computedAtts = recordTypeService.getComputedAttributes(getType());
+    }
+
+    private RecordRef getType() {
+        Object typeRef = RecordRef.EMPTY;
+        try {
+            typeRef = super.getAttribute(RecordConstants.ATT_ECOS_TYPE, EmptyMetaField.INSTANCE);
+        } catch (Exception e) {
+            log.error("Type can't be received", e);
+        }
+        return typeRef instanceof RecordRef ? (RecordRef) typeRef : RecordRef.EMPTY;
     }
 
     @Override

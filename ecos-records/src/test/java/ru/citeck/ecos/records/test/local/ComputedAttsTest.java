@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -44,8 +45,18 @@ public class ComputedAttsTest extends LocalRecordsDAO
 
     private RecordsService recordsService;
 
-    private final List<ComputedAttribute> computedAttributesType0 = new ArrayList<>();
-    private final List<ComputedAttribute> computedAttributesType1 = new ArrayList<>();
+    private final Map<String, ComputedAttribute> computedAttributesType0 = new HashMap<>();
+    private final Map<String, ComputedAttribute> computedAttributesType1 = new HashMap<>();
+
+    private final MLText name0 = DataValue.create("{" +
+        "\"ru\": \"Русский0-${idfield}\", " +
+        "\"en\":\"English0-${idfield}\"" +
+    "}").getAs(MLText.class);
+
+    private final MLText name1 = DataValue.create("{" +
+        "\"ru\": \"Русский1-${idfield}\", " +
+        "\"en\":\"English1-${idfield}\"" +
+        "}").getAs(MLText.class);
 
     @BeforeAll
     void init() {
@@ -100,7 +111,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
         ));
         intCcmputedAtt.setId(intFieldsSumName);
 
-        computedAttributesType0.add(intCcmputedAtt);
+        computedAttributesType0.put(intCcmputedAtt.getId(), intCcmputedAtt);
 
         RecordMeta recMeta0 = recordsService.getAttributes(RecordRef.create(getId(), "type0"), mixinAtts);
 
@@ -128,7 +139,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
         strPrefixAtt.setId(strFieldValueWithPrefixName);
         String expectedStrPrefixResult = "some-prefix-" + strFieldValue + "-def";
 
-        computedAttributesType1.add(strPrefixAtt);
+        computedAttributesType1.put(strPrefixAtt.getId(), strPrefixAtt);
 
         recMeta1 = recordsService.getAttributes(RecordRef.create(getId(), "type1"), mixinAtts);
         assertEquals(expectedStrPrefixResult, recMeta1.get(strAtt, ""));
@@ -139,7 +150,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
         assertTrue(recMeta0.get(strAtt).isNull());
         assertEquals(30, recMeta0.get(intAtt).asInt());
 
-        computedAttributesType0.add(strPrefixAtt);
+        computedAttributesType0.put(strPrefixAtt.getId(), strPrefixAtt);
 
         recMeta0 = recordsService.getAttributes(RecordRef.create(getId(), "type0"), mixinAtts);
 
@@ -154,7 +165,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
         innerComputedAtt.setModel(model);
         innerComputedAtt.setId(innerFieldName);
 
-        computedAttributesType0.add(innerComputedAtt);
+        computedAttributesType0.put(innerComputedAtt.getId(), innerComputedAtt);
 
         DataValue res = recordsService.getAttribute(RecordRef.create(getId(), "type0"), innerFieldName);
         assertEquals("some-inner-value", res.asText());
@@ -193,6 +204,7 @@ public class ComputedAttsTest extends LocalRecordsDAO
                 case "intField1": return intField1Value;
                 case finalFieldName: return finalFieldValue;
                 case "inner": return new InnerData();
+                case "idfield": return id;
             }
 
             return null;

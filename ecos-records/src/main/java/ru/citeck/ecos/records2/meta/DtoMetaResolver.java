@@ -66,7 +66,8 @@ public class DtoMetaResolver {
             new ScalarField<>(ArrayNode.class, "json"),
             new ScalarField<>(ObjectData.class, "json"),
             new ScalarField<>(DataValue.class, "json"),
-            new ScalarField<>(RecordRef.class, "id")
+            new ScalarField<>(RecordRef.class, "id"),
+            new ScalarField<>(Map.class, "json")
         ).forEach(s -> scalars.put(s.getFieldType(), s));
 
         if (LibsUtils.isJacksonPresent()) {

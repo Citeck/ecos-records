@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
+import ru.citeck.ecos.commons.utils.IterUtils;
 import ru.citeck.ecos.commons.utils.ScriptUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
@@ -15,6 +16,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
+import ru.citeck.ecos.records2.graphql.meta.value.factory.RecordRefValueFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
@@ -61,7 +63,18 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         try {
             typeRef = super.getAttribute(RecordConstants.ATT_ECOS_TYPE, EmptyMetaField.INSTANCE);
         } catch (Exception e) {
-            log.error("Type can't be received", e);
+            try {
+                log.error("Type can't be received for " + getId());
+            } catch (Exception ex) {
+                log.error("getId failed");
+            }
+            ExceptionUtils.throwException(e);
+        }
+        if (typeRef instanceof Iterable) {
+            typeRef = IterUtils.first((Iterable<?>) typeRef).orElse(null);
+        }
+        if (typeRef instanceof RecordRefValueFactory.RecordRefValue) {
+            typeRef = ((RecordRefValueFactory.RecordRefValue) typeRef).getRef();
         }
         return typeRef instanceof RecordRef ? (RecordRef) typeRef : RecordRef.EMPTY;
     }

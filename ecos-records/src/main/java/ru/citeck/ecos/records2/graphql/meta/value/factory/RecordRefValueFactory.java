@@ -35,7 +35,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
 
     public class RecordRefValue implements MetaValue {
 
-        private RecordRef ref;
+        private final RecordRef ref;
         private RecordMeta meta;
 
         RecordRefValue(RecordRef recordRef) {
@@ -105,6 +105,10 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
                 return resultList;
             }
             return result.isNotNull() ? new InnerMetaValue(Json.getMapper().toJson(result)) : null;
+        }
+
+        public RecordRef getRef() {
+            return ref;
         }
     }
 }

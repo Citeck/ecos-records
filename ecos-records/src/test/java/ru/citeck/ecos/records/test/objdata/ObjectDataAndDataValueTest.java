@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ObjectDataTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
+public class ObjectDataAndDataValueTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
 
     private static final String JSON = "{\"a\":\"b\"}";
 
@@ -43,6 +43,12 @@ public class ObjectDataTest extends LocalRecordsDAO implements LocalRecordsMetaD
 
         DataValue value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "data.a?str");
         assertEquals("b", value2.asText());
+
+        value = recordsService.getAttribute(RecordRef.valueOf("test"), "dataValue?json");
+        assertEquals("b", value.get("a").asText());
+
+        value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "dataValue.a?str");
+        assertEquals("b", value2.asText());
     }
 
     @Override
@@ -54,6 +60,7 @@ public class ObjectDataTest extends LocalRecordsDAO implements LocalRecordsMetaD
     public static class TestData {
 
         private ObjectData data = ObjectData.create(Json.getMapper().read(JSON, Object.class));
+        private DataValue dataValue = DataValue.create(JSON);
 
         TestData(RecordRef ref) {
         }

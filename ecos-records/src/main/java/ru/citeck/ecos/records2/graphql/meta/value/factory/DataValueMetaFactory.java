@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import java.util.Collections;
 import java.util.List;
 
-public class AttValueFactory implements MetaValueFactory<DataValue> {
+public class DataValueMetaFactory implements MetaValueFactory<DataValue> {
 
     @Override
     public MetaValue getValue(DataValue value) {
@@ -17,9 +17,6 @@ public class AttValueFactory implements MetaValueFactory<DataValue> {
 
             @Override
             public String getString() {
-                if (value.isNull()) {
-                    return null;
-                }
                 if (value.isValueNode()) {
                     return value.asText();
                 }

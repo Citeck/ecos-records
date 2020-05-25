@@ -167,9 +167,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 if (name.charAt(0) != '.') {
 
                     int dotIdx = name.indexOf('.', 1);
+                    int bracketIdx = name.indexOf('{');
 
-                    if (dotIdx > 0) {
-                        simpleName = name.substring(0, dotIdx);
+                    int nameEndIdx = dotIdx;
+                    if (dotIdx == -1 || bracketIdx != -1 && bracketIdx < dotIdx) {
+                        nameEndIdx = bracketIdx;
+                    }
+
+                    if (nameEndIdx > 0) {
+                        simpleName = name.substring(0, nameEndIdx);
                     } else {
                         int questionIdx = name.indexOf('?');
                         if (questionIdx > 0) {
@@ -189,7 +195,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
                 if (StringUtils.isNotBlank(simpleName)) {
 
-                    if (name.endsWith("?assoc") || name.endsWith("{assoc}")) {
+                    if (name.endsWith("?assoc") || name.endsWith("{assoc}") || name.endsWith("{.assoc}")) {
                         value = convertAssocValue(value, aliasToRecordRef);
                     }
 

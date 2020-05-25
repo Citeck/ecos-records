@@ -15,7 +15,18 @@ public class AttributesMetaResolverTest {
         AttributesMetaResolver attsMetaResolver = factory.getAttributesMetaResolver();
 
         String res = attsMetaResolver.convertAttToGqlFormat("field{id,str,config?json}", "str", false);
-
         assertEquals(".att(n:\"field\"){id:att(n:\"id\"){str},str:att(n:\"str\"){str},config:att(n:\"config\"){json}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat("createVariants{attributes?json,recordRef?id}", "str", false);
+        assertEquals(".att(n:\"createVariants\"){attributes:att(n:\"attributes\"){json},recordref:att(n:\"recordRef\"){id}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat("field0{.att(n:\"inner\"){json}}", "str", false);
+        assertEquals(".att(n:\"field0\"){att_inner:att(n:\"inner\"){json}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat("field0{.att(n:\"inn:er\"){json}}", "str", false);
+        assertEquals(".att(n:\"field0\"){att_inn_er:att(n:\"inn:er\"){json}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat("field0{alias:.att(n:\"inn:er\"){json}}", "str", false);
+        assertEquals(".att(n:\"field0\"){alias:att(n:\"inn:er\"){json}}", res);
     }
 }

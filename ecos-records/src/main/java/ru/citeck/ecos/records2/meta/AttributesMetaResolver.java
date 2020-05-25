@@ -132,16 +132,32 @@ public class AttributesMetaResolver {
                 int attsCounter = innerAtts.size() - 1;
                 for (String innerAttWithAlias : innerAtts) {
 
-                    int aliasDelimIdx = innerAttWithAlias.indexOf(':');
-                    String alias;
-                    String innerAtt;
+                    String alias = null;
+                    String innerAtt = null;
 
-                    if (aliasDelimIdx == -1) {
+                    if (innerAttWithAlias.charAt(0) == '.') {
+
+                        int paramNameIdx = innerAttWithAlias.indexOf("(n:\"");
+                        if (paramNameIdx > 0) {
+                            int paramNameEndIdx = innerAttWithAlias.indexOf('"', paramNameIdx + 4);
+                            if (paramNameEndIdx != -1) {
+                                String prefix = innerAttWithAlias.substring(1, paramNameIdx);
+                                String paramName = innerAttWithAlias.substring(paramNameIdx + 4, paramNameEndIdx);
+                                alias = getValidAlias(prefix + "_" + paramName);
+                                innerAtt = innerAttWithAlias;
+                            }
+                        }
+
+                    } else {
+                        int aliasDelimIdx = innerAttWithAlias.indexOf(':');
+                        if (aliasDelimIdx != -1) {
+                            alias = innerAttWithAlias.substring(0, aliasDelimIdx).trim();
+                            innerAtt = innerAttWithAlias.substring(aliasDelimIdx + 1).trim();
+                        }
+                    }
+                    if (alias == null) {
                         alias = getValidAlias(innerAttWithAlias);
                         innerAtt = innerAttWithAlias;
-                    } else {
-                        alias = innerAttWithAlias.substring(0, aliasDelimIdx).trim();
-                        innerAtt = innerAttWithAlias.substring(aliasDelimIdx + 1).trim();
                     }
 
                     innerAtt = convertAttToGqlFormat(innerAtt, defaultScalar, false);

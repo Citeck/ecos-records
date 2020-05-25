@@ -2,22 +2,23 @@ package ru.citeck.ecos.records2.meta;
 
 import ru.citeck.ecos.commons.utils.TmplUtils;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 public class RecordsTemplateService {
 
-    private RecordsMetaService recordsMetaService;
+    private final RecordsService recordsService;
 
     public RecordsTemplateService(RecordsServiceFactory recordsServiceFactory) {
-        recordsMetaService = recordsServiceFactory.getRecordsMetaService();
+        recordsService = recordsServiceFactory.getRecordsService();
     }
 
-    public <T> T resolve(T template, Object record) {
+    public <T> T resolve(T template, RecordRef recordRef) {
 
-        if (template == null || record == null) {
+        if (template == null || recordRef == null) {
             return template;
         }
 
@@ -26,7 +27,7 @@ public class RecordsTemplateService {
             return template;
         }
 
-        RecordMeta meta = recordsMetaService.getMeta(record, new ArrayList<>(atts));
+        RecordMeta meta = recordsService.getAttributes(recordRef, atts);
 
         return TmplUtils.applyAtts(template, meta.getAttributes());
     }

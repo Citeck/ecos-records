@@ -89,6 +89,10 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
         waitUntilSyncCompleted();
         return records.stream().map(this::toGlobalRef).map(this.records::get).collect(Collectors.toList());
     }
+    
+    public T getRecord(RecordRef recordRef) {
+        return records.get(recordRef);
+    }
 
     private RecordRef toGlobalRef(RecordRef ref) {
         return RecordRef.valueOf(getId() + "@" + ref.getId());

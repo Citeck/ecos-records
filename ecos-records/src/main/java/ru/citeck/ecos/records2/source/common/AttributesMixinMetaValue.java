@@ -3,10 +3,8 @@ package ru.citeck.ecos.records2.source.common;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.utils.ExceptionUtils;
-import ru.citeck.ecos.commons.utils.IterUtils;
-import ru.citeck.ecos.commons.utils.ScriptUtils;
-import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.*;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordConstants;
@@ -81,22 +79,22 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     @Override
     public String getDisplayName() {
-        return getStrAttribute(".disp", super::getDisplayName);
+        return getAttributeImpl(".disp", String.class, super::getDisplayName);
     }
 
     @Override
     public String getString() {
-        return getStrAttribute(".str", super::getString);
+        return getAttributeImpl(".str", String.class, super::getString);
     }
 
     @Override
     public Double getDouble() {
-        return getDoubleAttribute(".num", super::getDouble);
+        return getAttributeImpl(".num", Double.class, super::getDouble);
     }
 
     @Override
     public Boolean getBool() {
-        return getBoolAttribute(".bool", super::getBool);
+        return getAttributeImpl(".bool", Boolean.class, super::getBool);
     }
 
     @Override
@@ -153,33 +151,11 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         return getAttributeImpl(attribute, field, () -> super.getAttribute(attribute, field));
     }
 
-    private Boolean getBoolAttribute(String attribute, Callable<Object> fallback) {
-        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
-        if (res instanceof Boolean) {
-            return (Boolean) res;
-        } else if (res instanceof String) {
-            return Boolean.parseBoolean((String) res);
-        } else {
-            return null;
-        }
-    }
-
-    private Double getDoubleAttribute(String attribute, Callable<Object> fallback) {
-        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
-        if (res instanceof Double) {
-            return (Double) res;
-        } else {
-            return null;
-        }
-    }
-
-    private String getStrAttribute(String attribute, Callable<Object> fallback) {
-        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, fallback);
-        if (res instanceof String) {
-            return (String) res;
-        } else {
-            return null;
-        }
+    private <T> T getAttributeImpl(String attribute, Class<T> type, Callable<T> fallback) {
+        @SuppressWarnings("unchecked")
+        Callable<Object> objFallback = (Callable<Object>) fallback;
+        Object res = getAttributeImpl(attribute, EmptyMetaField.INSTANCE, objFallback);
+        return Json.getMapper().convert(res, type);
     }
 
     private Object getAttributeImpl(String attribute, MetaField field, Callable<Object> fallback) {

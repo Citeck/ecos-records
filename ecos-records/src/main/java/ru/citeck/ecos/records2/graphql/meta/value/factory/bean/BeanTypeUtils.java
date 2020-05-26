@@ -56,11 +56,16 @@ public class BeanTypeUtils {
         Method readMethod = descriptor.getReadMethod();
         T annotation = readMethod.getAnnotation(type);
         if (annotation == null) {
-            try {
-                Field field = scope.getDeclaredField(descriptor.getName());
-                annotation = field.getAnnotation(type);
-            } catch (Exception e) {
-                annotation = null;
+            Class<?> scopeIt = scope;
+            while (scopeIt != null) {
+                try {
+                    Field field = scopeIt.getDeclaredField(descriptor.getName());
+                    annotation = field.getAnnotation(type);
+                    break;
+                } catch (Exception e) {
+                    annotation = null;
+                }
+                scopeIt = scopeIt.getSuperclass();
             }
         }
         return annotation;

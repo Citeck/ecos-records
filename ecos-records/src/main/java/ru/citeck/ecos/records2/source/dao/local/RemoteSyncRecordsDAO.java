@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -89,8 +90,9 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
         waitUntilSyncCompleted();
         return records.stream().map(this::toGlobalRef).map(this.records::get).collect(Collectors.toList());
     }
-    
+
     public T getRecord(RecordRef recordRef) {
+        waitUntilSyncCompleted();
         return records.get(recordRef);
     }
 
@@ -106,8 +108,8 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
                        + "SourceId: " + getId() + ". Timeout: 5min !!!");
             }
             firstSyncFuture.get(5, TimeUnit.MINUTES);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            ExceptionUtils.throwException(e);
         }
     }
 

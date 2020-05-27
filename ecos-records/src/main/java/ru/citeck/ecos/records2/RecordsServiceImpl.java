@@ -78,6 +78,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     /* ATTRIBUTES */
 
     @Override
+    public DataValue getAtt(RecordRef record, String attribute) {
+        return getAttribute(record, attribute);
+    }
+
+    @Override
     public DataValue getAttribute(RecordRef record, String attribute) {
         RecordsResult<RecordMeta> meta = getAttributes(Collections.singletonList(record),
                                                        Collections.singletonList(attribute));

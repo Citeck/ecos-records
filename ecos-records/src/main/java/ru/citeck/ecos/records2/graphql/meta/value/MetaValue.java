@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 
 import java.util.Collections;
@@ -68,5 +69,9 @@ public interface MetaValue {
 
     default Object getAs(String type) {
         return null;
+    }
+
+    default RecordRef getRecordType() {
+        return RecordRef.EMPTY;
     }
 }

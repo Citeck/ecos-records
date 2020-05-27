@@ -11,8 +11,6 @@ public final class RecordConstants {
     public static final String ATT_FORM_KEY = "_formKey";
     public static final String ATT_FORM_MODE = "_formMode";
     public static final String ATT_ALIAS = "_alias";
-    public static final String ATT_DASHBOARD_KEY = "_dashboardKey";
-    public static final String ATT_DASHBOARD_TYPE = "_dashboardType";
     public static final String ATT_MODIFIED = "_modified";
     public static final String ATT_MODIFIER = "_modifier";
     public static final String ATT_CREATED = "_created";
@@ -21,15 +19,8 @@ public final class RecordConstants {
     public static final String ATT_ACTIONS = "_actions";
     public static final String ATT_NOT_EXISTS = "_notExists";
     public static final String ATT_DOC_NUM = "_docNum";
-    public static final String ATT_DISP_NAME = "_displayName";
+    public static final String ATT_DISP_NAME = "_dispName";
 
     public static final String FORM_MODE_CREATE = "CREATE";
     public static final String FORM_MODE_EDIT = "EDIT";
-
-    /**
-     * Deprecated attribute.
-     * @deprecated view form defined by mode. Not by this attribute
-     */
-    @Deprecated
-    public static final String ATT_VIEW_FORM_KEY = "_viewFormKey";
 }

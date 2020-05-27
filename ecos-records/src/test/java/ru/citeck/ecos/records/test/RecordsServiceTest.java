@@ -10,7 +10,6 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -424,7 +423,7 @@ public class RecordsServiceTest extends LocalRecordsDAO
             journals.add(attributes);
         }
 
-        @DisplayName
+        @MetaAtt(".disp")
         public String getDisplay() {
             return DISPLAY_NAME;
         }

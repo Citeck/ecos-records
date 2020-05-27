@@ -14,6 +14,10 @@ public class BeanTypeContext {
         this.getters = getters;
     }
 
+    public boolean hasProperty(String name) {
+        return getters.containsKey(name);
+    }
+
     public Object getProperty(Object bean, String name) throws Exception {
         if (bean == null) {
             return null;

@@ -2,16 +2,17 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
-import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -35,14 +36,18 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
     static class Value implements MetaValue {
 
         private final Object bean;
-        private String displayName;
+        private final BeanTypeContext typeCtx;
 
         Value(Object bean) {
             this.bean = bean;
+            typeCtx = BeanTypeUtils.getTypeContext(bean.getClass());
         }
 
         @Override
         public String getId() {
+            if (typeCtx.hasProperty(".id")) {
+                return getAttWithType(".id", String.class);
+            }
             try {
                 Object id = PropertyUtils.getProperty(bean, "id");
                 return id != null ? id.toString() : null;
@@ -52,72 +57,61 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
+        public Double getDouble() {
+            if (typeCtx.hasProperty(".num")) {
+                return getAttWithType(".num", Double.class);
+            }
+            String str = getString();
+            return str != null ? Double.parseDouble(str) : null;
+        }
+
+        @Override
+        public Boolean getBool() {
+            if (typeCtx.hasProperty(".bool")) {
+                return getAttWithType(".bool", Boolean.class);
+            }
+            return Boolean.parseBoolean(getString());
+        }
+
+        @Override
+        public RecordRef getRecordType() {
+            return getAttWithType(".type", RecordRef.class);
+        }
+
+        @Override
         public String getDisplayName() {
-
-            if (displayName != null) {
-                return displayName;
+            if (typeCtx.hasProperty(".disp")) {
+                return getAttWithType(".disp", String.class);
             }
-
-            PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(bean);
-
-            for (PropertyDescriptor descriptor : descriptors) {
-
-                Method readMethod = descriptor.getReadMethod();
-                if (readMethod != null) {
-                    DisplayName annotation = readMethod.getAnnotation(DisplayName.class);
-                    if (annotation != null) {
-                        try {
-                            if (!String.class.equals(readMethod.getReturnType())) {
-                                throw new IllegalStateException("DisplayName getter should return "
-                                                                + "String value. bean: "  + bean);
-                            }
-                            if (readMethod.getParameters().length != 0) {
-                                throw new IllegalStateException("DisplayName getter should not "
-                                                                + "receive any parameters. bean: " + bean);
-                            }
-                            displayName = (String) readMethod.invoke(bean);
-                            break;
-                        } catch (Exception e) {
-                            log.error("Can't get DisplayName", e);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (displayName == null) {
-                displayName = getString();
-            }
-
-            return displayName;
+            return getString();
         }
 
         @Override
         public String getString() {
+            if (typeCtx.hasProperty(".str")) {
+                return getAttWithType(".str", String.class);
+            }
             return bean.toString();
         }
 
         @Override
         public Object getAttribute(String name, MetaField field) throws Exception {
             if (bean instanceof Map) {
-                return ((Map) bean).get(name);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> beanAsMap = (Map<String, Object>) bean;
+                return beanAsMap.get(name);
             }
-            return BeanTypeUtils.getTypeContext(bean.getClass()).getProperty(bean, name);
+            return typeCtx.getProperty(bean, name);
         }
 
         @Override
-        public boolean has(String name) throws Exception {
-            try {
-                return PropertyUtils.getPropertyDescriptor(bean, name) != null;
-            } catch (NoSuchMethodException e) {
-                log.debug("Property not found", e);
-            }
-            return false;
+        public boolean has(String name) {
+            return typeCtx.hasProperty(name);
         }
 
         @Override
         public Object getJson() {
-            return bean;
+            return Json.getMapper().toJson(bean);
         }
 
         Object getBean() {
@@ -127,6 +121,14 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         @Override
         public MetaEdge getEdge(String name, MetaField field) {
             return new BeanEdge(name, this);
+        }
+
+        private <T> T getAttWithType(String name, Class<T> type) {
+            try {
+                return Json.getMapper().convert(getAttribute(name, EmptyMetaField.INSTANCE), type);
+            } catch (Exception e) {
+                return null;
+            }
         }
     }
 

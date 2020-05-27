@@ -147,6 +147,13 @@ public interface RecordsService {
      *
      * @return flat record attribute value
      */
+    DataValue getAtt(RecordRef record, String attribute);
+
+    /**
+     * Get a single record attribute.
+     *
+     * @return flat record attribute value
+     */
     DataValue getAttribute(RecordRef record, String attribute);
 
     /**

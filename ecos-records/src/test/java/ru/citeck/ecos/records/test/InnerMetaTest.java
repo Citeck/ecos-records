@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.meta.annotation.DisplayName;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -136,7 +136,7 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
             this.field1 = field1;
         }
 
-        @DisplayName
+        @MetaAtt(".disp")
         public String getDisplay() {
             return "DISPLAY";
         }

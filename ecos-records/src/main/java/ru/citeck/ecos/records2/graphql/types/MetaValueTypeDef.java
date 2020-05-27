@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.types;
 import graphql.Scalars;
 import graphql.schema.*;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
@@ -34,7 +35,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         return new GraphQLTypeReference(TYPE_NAME);
     }
 
-    private MetaValuesConverter converter;
+    private final MetaValuesConverter converter;
 
     public MetaValueTypeDef(RecordsServiceFactory factory) {
         converter = factory.getMetaValuesConverter();
@@ -101,6 +102,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
                         .name("disp")
                         .description("Display name")
                         .dataFetcher(this::getDisp)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("type")
+                        .description("Record type")
+                        .dataFetcher(this::getRecordType)
                         .type(Scalars.GraphQLString))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("num")
@@ -229,6 +235,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         return metaValue;
     }
 
+    @NotNull
     private List<?> getAtts(DataFetchingEnvironment env) {
 
         MetaValue metaValue = env.getSource();
@@ -239,7 +246,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext(), metaField);
         } catch (Exception e) {
             ExceptionUtils.throwException(e);
-            return null;
+            return Collections.emptyList();
         }
     }
 
@@ -256,6 +263,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     private String getDisp(DataFetchingEnvironment env) {
         MetaValue value = env.getSource();
         return value.getDisplayName();
+    }
+
+    private String getRecordType(DataFetchingEnvironment env) {
+        MetaValue value = env.getSource();
+        return value.getRecordType().toString();
     }
 
     private Double getNum(DataFetchingEnvironment env) {

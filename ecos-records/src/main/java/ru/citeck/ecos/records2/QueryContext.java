@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -13,7 +14,10 @@ public class QueryContext {
     private static final ThreadLocal<QueryContext> current = new ThreadLocal<>();
 
     private List<?> metaValues;
-    private Map<String, Object> contextData = new ConcurrentHashMap<>();
+    private final Map<String, Object> contextData = new ConcurrentHashMap<>();
+
+    @Getter
+    private boolean computedAttsDisabled;
 
     private Locale locale = Locale.ENGLISH;
 
@@ -22,6 +26,25 @@ public class QueryContext {
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
         return (T) current.get();
+    }
+
+    public static <T> T withoutComputedAtts(Supplier<T> callable) {
+
+        QueryContext context = QueryContext.getCurrent();
+
+        if (context == null) {
+            log.warn("Query context is not defined! " + callable);
+            return callable.get();
+        }
+
+        boolean valueBefore = context.computedAttsDisabled;
+        context.computedAttsDisabled = true;
+
+        try {
+            return callable.get();
+        } finally {
+            context.computedAttsDisabled = valueBefore;
+        }
     }
 
     public static <T> T withContext(RecordsServiceFactory serviceFactory, Supplier<T> callable) {

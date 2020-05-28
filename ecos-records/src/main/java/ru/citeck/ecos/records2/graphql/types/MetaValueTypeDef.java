@@ -107,7 +107,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
                         .name("type")
                         .description("Record type")
                         .dataFetcher(this::getRecordType)
-                        .type(Scalars.GraphQLString))
+                        .type(typeRef()))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("num")
                         .description("Number representation")
@@ -192,17 +192,24 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
 
         } else if (rawValue.getClass().isArray()) {
 
-            int length = Array.getLength(rawValue);
+            if (byte[].class.equals(rawValue.getClass())) {
 
-            if (length == 0) {
-
-                result = Collections.emptyList();
+                result = Collections.singletonList(rawValue);
 
             } else {
 
-                result = new ArrayList<>(length);
-                for (int i = 0; i < length; i++) {
-                    result.add(Array.get(rawValue, i));
+                int length = Array.getLength(rawValue);
+
+                if (length == 0) {
+
+                    result = Collections.emptyList();
+
+                } else {
+
+                    result = new ArrayList<>(length);
+                    for (int i = 0; i < length; i++) {
+                        result.add(Array.get(rawValue, i));
+                    }
                 }
             }
 
@@ -265,9 +272,21 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         return value.getDisplayName();
     }
 
-    private String getRecordType(DataFetchingEnvironment env) {
+    private MetaValue getRecordType(DataFetchingEnvironment env) {
+
         MetaValue value = env.getSource();
-        return value.getRecordType().toString();
+        RecordRef typeRef = value.getRecordType();
+
+        if (RecordRef.isEmpty(typeRef)) {
+            return null;
+        }
+
+        MetaValue typeMetaValue = converter.toMetaValue(typeRef);
+
+        MetaField metaField = new MetaFieldImpl(env.getField());
+        typeMetaValue.init(env.getContext(), metaField);
+
+        return typeMetaValue;
     }
 
     private Double getNum(DataFetchingEnvironment env) {

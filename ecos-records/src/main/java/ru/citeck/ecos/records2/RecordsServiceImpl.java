@@ -84,6 +84,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public DataValue getAttribute(RecordRef record, String attribute) {
+
+        if (record == null) {
+            return DataValue.create(null);
+        }
+
         RecordsResult<RecordMeta> meta = getAttributes(Collections.singletonList(record),
                                                        Collections.singletonList(attribute));
         if (!meta.getRecords().isEmpty()) {
@@ -124,9 +129,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
 
+        if (recordRef == null) {
+            return null;
+        }
+
         RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
         if (meta.getRecords().size() == 0) {
-            throw new IllegalStateException("Can't get record metadata. Result: " + meta);
+            throw new IllegalStateException("Can't get record metadata. Ref: " + recordRef + " Result: " + meta);
         }
         return meta.getRecords().get(0);
     }

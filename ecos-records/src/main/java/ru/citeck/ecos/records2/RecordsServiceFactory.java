@@ -312,6 +312,7 @@ public class RecordsServiceFactory {
         List<MetaValueFactory> metaValueFactories = new ArrayList<>();
 
         metaValueFactories.add(new ObjectDataValueFactory());
+        metaValueFactories.add(new ByteArrayValueFactory());
         metaValueFactories.add(new DataValueMetaFactory());
         metaValueFactories.add(new MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());
@@ -405,7 +406,7 @@ public class RecordsServiceFactory {
     }
 
     protected RecordTypeService createRecordTypeService() {
-        return new DefaultRecordTypeService();
+        return new DefaultRecordTypeService(this);
     }
 
     public final synchronized RecordTypeService getRecordTypeService() {

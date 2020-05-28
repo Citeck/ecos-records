@@ -13,6 +13,8 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaValue> {
 
     private static final String ID = "123";
+
+    private static final byte[] BYTES_STR = "one two three".getBytes(StandardCharsets.UTF_8);
+
     private RecordsService recordsService;
 
     private final Map<String, Object> metaAtts = Collections.singletonMap("key", "value");
@@ -54,6 +59,9 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
 
         String enumAttValue = recordsService.getAttribute(ref, "rec.123@VALUE.enum").asText();
         assertEquals("FIRST", enumAttValue);
+
+        String bytesValue = recordsService.getAttribute(ref, "rec.123@VALUE.bytes").asText();
+        assertEquals(Base64.getEncoder().encodeToString(BYTES_STR), bytesValue);
     }
 
     @Override
@@ -75,6 +83,8 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
                 return ref.getId();
             } else if (name.equals("enum")) {
                 return TestEnum.FIRST;
+            } else if (name.equals("bytes")) {
+                return BYTES_STR;
             }
             return null;
         }

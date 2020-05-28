@@ -4,7 +4,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.utils.*;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
+import ru.citeck.ecos.commons.utils.ScriptUtils;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordConstants;
@@ -14,7 +16,6 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.RecordRefValueFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
@@ -22,6 +23,7 @@ import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -36,7 +38,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     private final Map<String, ParameterizedAttsMixin> mixins;
     private final Map<Object, Object> metaCache;
 
-    private Map<String, ComputedAttribute> computedAtts = Collections.emptyMap();
+    private final Map<String, ComputedAttribute> computedAtts = new HashMap<>();
 
     public AttributesMixinMetaValue(MetaValue impl,
                                     RecordsMetaService recordsMetaService,
@@ -53,28 +55,20 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     @Override
     public <T extends QueryContext> void init(T context, MetaField field) {
         super.init(context, field);
-        computedAtts = recordTypeService.getComputedAttributes(getType());
-    }
 
-    private RecordRef getType() {
-        Object typeRef = RecordRef.EMPTY;
-        try {
-            typeRef = super.getAttribute(RecordConstants.ATT_ECOS_TYPE, EmptyMetaField.INSTANCE);
-        } catch (Exception e) {
-            try {
-                log.error("Type can't be received for " + getId());
-            } catch (Exception ex) {
-                log.error("getId failed");
+        RecordRef typeRef = getRecordType();
+
+        if (!RecordRef.isEmpty(typeRef) && !QueryContext.getCurrent().isComputedAttsDisabled()) {
+
+            List<ComputedAttribute> atts = QueryContext.withoutComputedAtts(() ->
+                recordTypeService.getComputedAttributes(typeRef));
+
+            if (atts != null) {
+                for (ComputedAttribute att : atts) {
+                    this.computedAtts.put(att.getId(), att);
+                }
             }
-            ExceptionUtils.throwException(e);
         }
-        if (typeRef instanceof Iterable) {
-            typeRef = IterUtils.first((Iterable<?>) typeRef).orElse(null);
-        }
-        if (typeRef instanceof RecordRefValueFactory.RecordRefValue) {
-            typeRef = ((RecordRefValueFactory.RecordRefValue) typeRef).getRef();
-        }
-        return typeRef instanceof RecordRef ? (RecordRef) typeRef : RecordRef.EMPTY;
     }
 
     @Override
@@ -159,6 +153,12 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     private Object getAttributeImpl(String attribute, MetaField field, Callable<Object> fallback) {
+
+        if (RecordConstants.ATT_ECOS_TYPE.equals(attribute)
+            || RecordConstants.ATT_TYPE.equals(attribute)) {
+
+            return getRecordType();
+        }
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
 

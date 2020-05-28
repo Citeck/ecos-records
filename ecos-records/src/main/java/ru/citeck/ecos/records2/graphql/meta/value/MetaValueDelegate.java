@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import lombok.Getter;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordRef;
 
 public class MetaValueDelegate implements MetaValue {
 
@@ -65,5 +66,10 @@ public class MetaValueDelegate implements MetaValue {
     @Override
     public Object getAs(String type) {
         return impl.getAs(type);
+    }
+
+    @Override
+    public RecordRef getRecordType() {
+        return impl.getRecordType();
     }
 }

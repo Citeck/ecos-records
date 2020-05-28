@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class AttributesMetaResolver {
 
+    private static final String ATT_TYPE = ".type";
     private static final Pattern SUBFIELDS_PATTERN = Pattern.compile("^([^{]+)\\{(.+)}$");
 
     public AttributesSchema createSchema(Map<String, String> attributes) {
@@ -51,6 +52,14 @@ public class AttributesMetaResolver {
     }
 
     public String convertAttToGqlFormat(String att, String defaultScalar, boolean multiple) {
+
+        if (att.startsWith(ATT_TYPE)) {
+            if (att.length() <= ATT_TYPE.length() + 1) {
+                return ATT_TYPE + "{id}";
+            } else if (att.equals(ATT_TYPE + ".disp")) {
+                return ATT_TYPE + "{disp}";
+            }
+        }
 
         if (att.startsWith(".")) {
             return att;

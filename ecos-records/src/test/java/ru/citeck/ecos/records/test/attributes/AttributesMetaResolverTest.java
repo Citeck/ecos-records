@@ -28,5 +28,11 @@ public class AttributesMetaResolverTest {
 
         res = attsMetaResolver.convertAttToGqlFormat("field0{alias:.att(n:\"inn:er\"){json}}", "str", false);
         assertEquals(".att(n:\"field0\"){alias:att(n:\"inn:er\"){json}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat(".type", "str", false);
+        assertEquals(".type{id}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat(".type.disp", "str", false);
+        assertEquals(".type{disp}", res);
     }
 }

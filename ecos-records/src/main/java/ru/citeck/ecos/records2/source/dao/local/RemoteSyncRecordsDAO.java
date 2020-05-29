@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.*;
+import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
@@ -88,7 +89,12 @@ public class RemoteSyncRecordsDAO<T> extends LocalRecordsDAO
     @Override
     public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
         waitUntilSyncCompleted();
-        return records.stream().map(this::toGlobalRef).map(this.records::get).collect(Collectors.toList());
+        @SuppressWarnings("unchecked")
+        T empty = (T) EmptyValue.INSTANCE;
+        return records.stream()
+            .map(this::toGlobalRef)
+            .map(ref -> this.records.getOrDefault(ref, empty))
+            .collect(Collectors.toList());
     }
 
     public T getRecord(RecordRef recordRef) {

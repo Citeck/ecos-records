@@ -10,7 +10,7 @@ public class MetaValueDelegate implements MetaValue {
     private final MetaValue impl;
 
     public MetaValueDelegate(MetaValue impl) {
-        this.impl = impl;
+        this.impl = impl == null ? EmptyValue.INSTANCE : impl;
     }
 
     @Override

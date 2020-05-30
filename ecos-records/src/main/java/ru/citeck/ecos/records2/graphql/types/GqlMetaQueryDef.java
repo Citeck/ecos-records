@@ -5,7 +5,9 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 
 import java.util.List;
@@ -15,7 +17,11 @@ public class GqlMetaQueryDef implements GqlTypeDefinition {
     public static final String TYPE_NAME = "Query";
     public static final String META_FIELD = "meta";
 
-    private MetaValueTypeDef metaValueTypeDef;
+    private final MetaValuesConverter metaValuesConverter;
+
+    public GqlMetaQueryDef(RecordsServiceFactory factory) {
+        this.metaValuesConverter = factory.getMetaValuesConverter();
+    }
 
     @Override
     public GraphQLObjectType getType() {
@@ -31,12 +37,8 @@ public class GqlMetaQueryDef implements GqlTypeDefinition {
 
     private List<MetaValue> values(DataFetchingEnvironment env) {
         QueryContext context = env.getContext();
-        return metaValueTypeDef.getAsMetaValues(context.getMetaValues(),
+        return metaValuesConverter.getAsMetaValues(context.getMetaValues(),
                                                 context,
                                                 new MetaFieldImpl(env.getField()), true);
-    }
-
-    public void setMetaValueTypeDef(MetaValueTypeDef metaValueTypeDef) {
-        this.metaValueTypeDef = metaValueTypeDef;
     }
 }

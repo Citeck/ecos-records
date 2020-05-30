@@ -52,7 +52,7 @@ public class RecordsServiceFactory {
     private PredicateService predicateService;
     private QueryLangService queryLangService;
     private RecordsMetaService recordsMetaService;
-    private List<MetaValueFactory> metaValueFactories;
+    private List<MetaValueFactory<?>> metaValueFactories;
     private LocalRecordsResolver localRecordsResolver;
     private RemoteRecordsResolver remoteRecordsResolver;
     private AttributesMetaResolver attributesMetaResolver;
@@ -280,10 +280,7 @@ public class RecordsServiceFactory {
 
         gqlTypes.add(metaValueTypeDef);
 
-        GqlMetaQueryDef gqlMetaQueryDef = new GqlMetaQueryDef();
-        gqlMetaQueryDef.setMetaValueTypeDef(metaValueTypeDef);
-
-        gqlTypes.add(gqlMetaQueryDef);
+        gqlTypes.add(new GqlMetaQueryDef(this));
         gqlTypes.add(new MetaEdgeTypeDef(metaValueTypeDef));
 
         return gqlTypes;
@@ -300,16 +297,16 @@ public class RecordsServiceFactory {
         return new MetaValuesConverter(this);
     }
 
-    public final synchronized List<MetaValueFactory> getMetaValueFactories() {
+    public final synchronized List<MetaValueFactory<?>> getMetaValueFactories() {
         if (metaValueFactories == null) {
             metaValueFactories = createMetaValueFactories();
         }
         return metaValueFactories;
     }
 
-    protected List<MetaValueFactory> createMetaValueFactories() {
+    protected List<MetaValueFactory<?>> createMetaValueFactories() {
 
-        List<MetaValueFactory> metaValueFactories = new ArrayList<>();
+        List<MetaValueFactory<?>> metaValueFactories = new ArrayList<>();
 
         metaValueFactories.add(new ObjectDataValueFactory());
         metaValueFactories.add(new ByteArrayValueFactory());

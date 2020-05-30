@@ -251,6 +251,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
                 new AttributesMixinMetaValue(mv,
                     recordsMetaService,
                     recordTypeService,
+                    metaValuesConverter,
                     mixins,
                     metaCache
                 ))

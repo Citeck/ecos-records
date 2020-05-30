@@ -12,13 +12,9 @@ import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * MetaValue GraphQL type definition.
@@ -26,7 +22,6 @@ import java.util.stream.Collectors;
  * @author Pavel Simonov
  */
 @Slf4j
-@SuppressWarnings("unchecked")
 public class MetaValueTypeDef implements GqlTypeDefinition {
 
     public static final String TYPE_NAME = "MetaValue";
@@ -155,7 +150,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
         Object value = source.getAs(type);
 
         MetaField metaField = new MetaFieldImpl(env.getField());
-        return getAsMetaValue(value, env.getContext(), metaField, false);
+        return converter.getAsMetaValue(value, env.getContext(), metaField, false);
     }
 
     private String getId(DataFetchingEnvironment env) {
@@ -168,78 +163,7 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     }
 
     public List<MetaValue> getAsMetaValues(Object rawValue, QueryContext context, MetaField metaField) {
-        return getAsMetaValues(rawValue, context, metaField, false);
-    }
-
-    public List<MetaValue> getAsMetaValues(Object rawValue,
-                                           QueryContext context,
-                                           MetaField metaField,
-                                           boolean forceInit) {
-
-        List<Object> result;
-
-        if (rawValue == null || rawValue instanceof RecordRef && RecordRef.isEmpty((RecordRef) rawValue)) {
-
-            result = Collections.emptyList();
-
-        } else if (rawValue instanceof HasCollectionView) {
-
-            result = new ArrayList<>(((HasCollectionView<?>) rawValue).getCollectionView());
-
-        } else if (rawValue instanceof Collection<?>) {
-
-            result = new ArrayList<>((Collection<?>) rawValue);
-
-        } else if (rawValue.getClass().isArray()) {
-
-            if (byte[].class.equals(rawValue.getClass())) {
-
-                result = Collections.singletonList(rawValue);
-
-            } else {
-
-                int length = Array.getLength(rawValue);
-
-                if (length == 0) {
-
-                    result = Collections.emptyList();
-
-                } else {
-
-                    result = new ArrayList<>(length);
-                    for (int i = 0; i < length; i++) {
-                        result.add(Array.get(rawValue, i));
-                    }
-                }
-            }
-
-        } else {
-
-            result = Collections.singletonList(rawValue);
-        }
-
-        return result.stream()
-                     .map(v -> getAsMetaValue(v, context, metaField, forceInit))
-                     .collect(Collectors.toList());
-    }
-
-    private MetaValue getAsMetaValue(Object value,
-                                     QueryContext context,
-                                     MetaField metaField,
-                                     boolean forceInit) {
-
-        if (value instanceof MetaValue) {
-            MetaValue metaValue = (MetaValue) value;
-            if (forceInit) {
-                metaValue.init(context, metaField);
-            }
-            return metaValue;
-        }
-
-        MetaValue metaValue = converter.toMetaValue(value);
-        metaValue.init(context, metaField);
-
-        return metaValue;
+        return converter.getAsMetaValues(rawValue, context, metaField, false);
     }
 
     @NotNull

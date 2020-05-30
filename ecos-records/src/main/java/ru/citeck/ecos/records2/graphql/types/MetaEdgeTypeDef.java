@@ -13,7 +13,7 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
 
     public static final String TYPE_NAME = "MetaEdge";
 
-    private MetaValueTypeDef metaValueTypeDef;
+    private final MetaValueTypeDef metaValueTypeDef;
 
     public MetaEdgeTypeDef(MetaValueTypeDef metaValueTypeDef) {
         this.metaValueTypeDef = metaValueTypeDef;
@@ -138,12 +138,12 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
         MetaField field = new MetaFieldImpl(env.getField());
         return metaValueTypeDef.getAsMetaValues(edge.getValue(field), env.getContext(), field);
     }
-    
+
     private boolean isMultiple(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         return edge.isMultiple();
     }
-    
+
     private String getJavaClass(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         Class<?> javaClass = edge.getJavaClass();

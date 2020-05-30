@@ -57,11 +57,18 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     @Override
     public <T extends QueryContext> void init(T context, MetaField field) {
+        initImpl(context, field, true);
+    }
+
+    private void initImpl(QueryContext context, MetaField field, boolean initSuper) {
 
         if (initialized) {
             return;
         }
-        super.init(context, field);
+
+        if (initSuper) {
+            super.init(context, field);
+        }
 
         this.context = context;
 
@@ -167,7 +174,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                     mixins,
                     null
                 );
-                att.init(context, field);
+                att.initImpl(context, field, false);
                 return att;
             }).collect(Collectors.toList());
     }

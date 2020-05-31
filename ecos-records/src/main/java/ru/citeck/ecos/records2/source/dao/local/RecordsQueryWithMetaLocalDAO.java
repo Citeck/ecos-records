@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
 /**
  * Query records with metadata.
  * @deprecated use interface from v2 package instead:
- *             ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO
+ *             ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao
  */
 @Deprecated
 public interface RecordsQueryWithMetaLocalDAO<T> extends LocalRecordsQueryWithMetaDAO<T> {

@@ -27,10 +27,10 @@ import ru.citeck.ecos.records2.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records2.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
-import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
-import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDAO;
 import ru.citeck.ecos.records2.type.DefaultRecordTypeService;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 
@@ -61,7 +61,7 @@ public class RecordsServiceFactory {
     private RecordEvaluatorService recordEvaluatorService;
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
-    private List<RecordsDAO> defaultRecordsDAO;
+    private List<RecordsDao> defaultRecordsDao;
     private RecordTypeService recordTypeService;
     private RecordsTemplateService recordsTemplateService;
 
@@ -167,7 +167,7 @@ public class RecordsServiceFactory {
 
         tmpRecordsService = recordsService;
 
-        getDefaultRecordsDAO().forEach(recordsService::register);
+        getDefaultRecordsDao().forEach(recordsService::register);
 
         tmpRecordsService = null;
         return recordsService;
@@ -177,11 +177,11 @@ public class RecordsServiceFactory {
         return RecordsServiceImpl.class;
     }
 
-    protected List<RecordsDAO> getDefaultRecordsDAO() {
-        if (defaultRecordsDAO == null) {
-            defaultRecordsDAO = Collections.singletonList(new MetaRecordsDAO(this));
+    protected List<RecordsDao> getDefaultRecordsDao() {
+        if (defaultRecordsDao == null) {
+            defaultRecordsDao = Collections.singletonList(new MetaRecordsDao(this));
         }
-        return defaultRecordsDAO;
+        return defaultRecordsDao;
     }
 
     public final synchronized RecordsResolver getRecordsResolver() {
@@ -209,7 +209,7 @@ public class RecordsServiceFactory {
     public final synchronized LocalRecordsResolver getLocalRecordsResolver() {
         if (localRecordsResolver == null) {
             localRecordsResolver = createLocalRecordsResolver();
-            createDefaultRecordsDAO().forEach(localRecordsResolver::register);
+            createDefaultRecordsDao().forEach(localRecordsResolver::register);
         }
         return localRecordsResolver;
     }
@@ -218,8 +218,8 @@ public class RecordsServiceFactory {
         return new LocalRecordsResolver(this);
     }
 
-    protected List<RecordsDAO> createDefaultRecordsDAO() {
-        return Collections.singletonList(new RecordsGroupDAO());
+    protected List<RecordsDao> createDefaultRecordsDao() {
+        return Collections.singletonList(new RecordsGroupDao());
     }
 
     public final synchronized QueryLangService getQueryLangService() {

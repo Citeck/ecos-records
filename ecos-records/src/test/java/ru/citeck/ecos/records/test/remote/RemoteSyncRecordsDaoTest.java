@@ -88,7 +88,7 @@ public class RemoteSyncRecordsDaoTest {
         RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
         assertEquals(TOTAL_RECS, result.getTotalCount());
 
-        assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDAO.getRecords()));
+        assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDAO.getRecords().values()));
 
         ValueDto dto = recordsService.getMeta(RecordRef.create("remote", "remote-source", "id-100"), ValueDto.class);
         ValueDto origDto = recordsWithMetaSource.values.stream().filter(v -> v.getId().equals("id-100")).findFirst().orElse(null);

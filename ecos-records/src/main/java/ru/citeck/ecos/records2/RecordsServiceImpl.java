@@ -14,9 +14,9 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.resolver.RecordsDAORegistry;
+import ru.citeck.ecos.records2.resolver.RecordsDaoRegistry;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
-import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -282,15 +282,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     @Override
-    public void register(RecordsDAO recordsSource) {
+    public void register(RecordsDao recordsSource) {
 
         String id = recordsSource.getId();
         if (id == null) {
-            throw new IllegalArgumentException("id is a mandatory parameter for RecordsDAO");
+            throw new IllegalArgumentException("id is a mandatory parameter for RecordsDao");
         }
 
-        if (recordsResolver instanceof RecordsDAORegistry) {
-            ((RecordsDAORegistry) recordsResolver).register(recordsSource);
+        if (recordsResolver instanceof RecordsDaoRegistry) {
+            ((RecordsDaoRegistry) recordsResolver).register(recordsSource);
         } else {
             log.warn("Records resolver doesn't support source registration. "
                      + "Source: " + id + " " + recordsSource.getClass());

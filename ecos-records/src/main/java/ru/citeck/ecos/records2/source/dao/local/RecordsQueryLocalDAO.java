@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO;
 /**
  * Interface to get records by query.
  * @deprecated use interface from v2 package instead:
- *             ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDAO
+ *             ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao
  */
 @Deprecated
 public interface RecordsQueryLocalDAO extends LocalRecordsQueryDAO {

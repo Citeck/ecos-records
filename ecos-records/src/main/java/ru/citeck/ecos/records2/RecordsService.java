@@ -11,7 +11,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.Optional;
  * <p>There are three levels of abstraction for retrieving metadata: <br>
  * <b>DTO Class > Attributes > Schema</b> <br>
  *
- * <p>Each level converts to a schema and sends to RecordsMetaDAO or RecordsQueryWithMetaDAO.
+ * <p>Each level converts to a schema and sends to RecordsMetaDao or RecordsQueryWithMetaDao.
  * RecordsMetaService can be used to retrieve data by schema from MetaValue or any other java objects. <br><br>
  *
  * <p>A result of each method to request attributes converts data to a flat view.
@@ -267,5 +267,5 @@ public interface RecordsService {
     /**
      * Register the RecordsDAO. It must return valid id from method "getId()" to call this method.
      */
-    void register(RecordsDAO recordsSource);
+    void register(RecordsDao recordsSource);
 }

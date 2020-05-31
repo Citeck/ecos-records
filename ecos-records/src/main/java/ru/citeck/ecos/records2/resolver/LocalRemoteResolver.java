@@ -10,13 +10,13 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.Collection;
 import java.util.List;
 
-public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry {
+public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry {
 
     private final LocalRecordsResolver local;
     private final RecordsResolver remote;
@@ -107,7 +107,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDAORegistry 
     }
 
     @Override
-    public void register(RecordsDAO recordsDao) {
+    public void register(RecordsDao recordsDao) {
         local.register(recordsDao);
     }
 }

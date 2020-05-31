@@ -4,39 +4,39 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.source.dao.RecordsDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Slf4j
 @Component
-public class RecordsDAORegistrar {
+public class RecordsDaoRegistrar {
 
-    private RecordsService recordsService;
-    private List<RecordsDAO> sources;
+    private final RecordsService recordsService;
+    private List<RecordsDao> sources;
 
     @Autowired
-    public RecordsDAORegistrar(RecordsService recordsService) {
+    public RecordsDaoRegistrar(RecordsService recordsService) {
         this.recordsService = recordsService;
     }
 
     @PostConstruct
     public void register() {
-        log.info("========================== RecordsDAORegistrar ==========================");
+        log.info("========================== RecordsDaoRegistrar ==========================");
         if (sources != null) {
             sources.forEach(this::register);
         }
-        log.info("========================= /RecordsDAORegistrar ==========================");
+        log.info("========================= /RecordsDaoRegistrar ==========================");
     }
 
-    private void register(RecordsDAO dao) {
+    private void register(RecordsDao dao) {
         log.info("Register: \"" + dao.getId() + "\" with class " + dao.getClass().getName());
         recordsService.register(dao);
     }
 
     @Autowired(required = false)
-    public void setSources(List<RecordsDAO> sources) {
+    public void setSources(List<RecordsDao> sources) {
         this.sources = sources;
     }
 }

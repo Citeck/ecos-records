@@ -28,7 +28,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.common.group.RecordsGroupDAO;
+import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
@@ -41,24 +41,22 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry {
+public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry {
 
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
 
-    private Set<String> allDao = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private Map<String, RecordsMetaDAO> metaDao = new ConcurrentHashMap<>();
-    private Map<String, RecordsQueryDAO> queryDao = new ConcurrentHashMap<>();
-    private Map<String, MutableRecordsDAO> mutableDao = new ConcurrentHashMap<>();
-    private Map<String, RecordsQueryWithMetaDAO> queryWithMetaDao = new ConcurrentHashMap<>();
+    private final Set<String> allDao = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Map<String, RecordsMetaDao> metaDao = new ConcurrentHashMap<>();
+    private final Map<String, RecordsQueryDao> queryDao = new ConcurrentHashMap<>();
+    private final Map<String, MutableRecordsDao> mutableDao = new ConcurrentHashMap<>();
+    private final Map<String, RecordsQueryWithMetaDao> queryWithMetaDao = new ConcurrentHashMap<>();
 
-    private Map<Class<? extends RecordsDAO>, Map<String, ? extends RecordsDAO>> daoMapByType;
+    private final Map<Class<? extends RecordsDao>, Map<String, ? extends RecordsDao>> daoMapByType;
 
-    private QueryLangService queryLangService;
-
-    private RecordsServiceFactory serviceFactory;
-
-    private String currentApp;
+    private final QueryLangService queryLangService;
+    private final RecordsServiceFactory serviceFactory;
+    private final String currentApp;
 
     private final JobExecutor jobExecutor = new JobExecutor();
 
@@ -69,10 +67,10 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         this.currentApp = serviceFactory.getProperties().getAppName();
 
         daoMapByType = new HashMap<>();
-        daoMapByType.put(RecordsMetaDAO.class, metaDao);
-        daoMapByType.put(RecordsQueryDAO.class, queryDao);
-        daoMapByType.put(MutableRecordsDAO.class, mutableDao);
-        daoMapByType.put(RecordsQueryWithMetaDAO.class, queryWithMetaDao);
+        daoMapByType.put(RecordsMetaDao.class, metaDao);
+        daoMapByType.put(RecordsQueryDao.class, queryDao);
+        daoMapByType.put(MutableRecordsDao.class, mutableDao);
+        daoMapByType.put(RecordsQueryWithMetaDao.class, queryWithMetaDao);
     }
 
     public void initJobs(ScheduledExecutorService executor) {
@@ -101,13 +99,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         if (!query.getGroupBy().isEmpty()) {
 
-            RecordsQueryBaseDAO dao = getRecordsDAO(sourceId,
-                                                    RecordsQueryWithMetaDAO.class).orElse(null);
+            RecordsQueryBaseDao dao = getRecordsDao(sourceId,
+                                                    RecordsQueryWithMetaDao.class).orElse(null);
 
             if (dao == null || !dao.isGroupingSupported()) {
 
-                RecordsQueryWithMetaDAO groupsSource = needRecordsDAO(RecordsGroupDAO.ID,
-                                                                      RecordsQueryWithMetaDAO.class);
+                RecordsQueryWithMetaDao groupsSource = needRecordsDao(RecordsGroupDao.ID,
+                                                                      RecordsQueryWithMetaDao.class);
 
                 RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
 
@@ -125,11 +123,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         if (recordsResult == null && DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
 
-            Optional<RecordsQueryWithMetaDAO> recordsDAO = getRecordsDAO(sourceId, RecordsQueryWithMetaDAO.class);
-            Optional<RecordsQueryDAO> recordsQueryDAO = getRecordsDAO(sourceId, RecordsQueryDAO.class);
+            Optional<RecordsQueryWithMetaDao> recordsDao = getRecordsDao(sourceId, RecordsQueryWithMetaDao.class);
+            Optional<RecordsQueryDao> recordsQueryDao = getRecordsDao(sourceId, RecordsQueryDao.class);
 
-            List<String> languages = recordsDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
-                    .orElse(recordsQueryDAO.map(RecordsQueryBaseDAO::getSupportedLanguages)
+            List<String> languages = recordsDao.map(RecordsQueryBaseDao::getSupportedLanguages)
+                    .orElse(recordsQueryDao.map(RecordsQueryBaseDao::getSupportedLanguages)
                     .orElse(Collections.emptyList()));
 
             if (!languages.contains(DistinctQuery.LANGUAGE)) {
@@ -222,7 +220,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         }).collect(Collectors.toList());
     }
 
-    private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDAO dao) {
+    private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDao dao) {
 
         if (dao == null) {
             return null;
@@ -309,8 +307,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private RecordsQueryResult<RecordMeta> queryRecordsWithMeta(RecordsQuery query, String schema) {
 
-        DaoWithConvQuery<RecordsQueryWithMetaDAO> daoWithQuery = getDaoWithQuery(query,
-                                                                                 RecordsQueryWithMetaDAO.class);
+        DaoWithConvQuery<RecordsQueryWithMetaDao> daoWithQuery = getDaoWithQuery(query,
+                                                                                 RecordsQueryWithMetaDao.class);
 
         if (log.isDebugEnabled()) {
             log.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
@@ -333,7 +331,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
     private RecordsQueryResult<RecordRef> queryRecordsWithoutMeta(RecordsQuery query) {
 
-        DaoWithConvQuery<RecordsQueryDAO> daoWithQuery = getDaoWithQuery(query, RecordsQueryDAO.class);
+        DaoWithConvQuery<RecordsQueryDao> daoWithQuery = getDaoWithQuery(query, RecordsQueryDao.class);
 
         if (log.isDebugEnabled()) {
             log.debug("Start records query: " + daoWithQuery.query.getQuery());
@@ -396,12 +394,12 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
-            Optional<RecordsMetaDAO> recordsDAO = getRecordsDAO(sourceId, RecordsMetaDAO.class);
+            Optional<RecordsMetaDao> recordsDao = getRecordsDao(sourceId, RecordsMetaDao.class);
             RecordsResult<RecordMeta> meta;
 
-            if (recordsDAO.isPresent()) {
+            if (recordsDao.isPresent()) {
 
-                meta = recordsDAO.get().getMeta(new ArrayList<>(records), schema);
+                meta = recordsDao.get().getMeta(new ArrayList<>(records), schema);
 
             } else {
 
@@ -434,7 +432,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
                 record = new RecordMeta(record, newId);
             }
 
-            MutableRecordsDAO dao = needRecordsDAO(record.getId().getSourceId(), MutableRecordsDAO.class);
+            MutableRecordsDao dao = needRecordsDao(record.getId().getSourceId(), MutableRecordsDao.class);
             RecordsMutation sourceMut = new RecordsMutation();
             sourceMut.setRecords(Collections.singletonList(record));
             sourceMut.setDebug(mutation.isDebug());
@@ -463,7 +461,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
 
         RecordsUtils.groupRefBySource(deletion.getRecords()).forEach((sourceId, sourceRecords) -> {
 
-            MutableRecordsDAO source = needRecordsDAO(sourceId, MutableRecordsDAO.class);
+            MutableRecordsDao source = needRecordsDao(sourceId, MutableRecordsDao.class);
 
             RecordsDeletion sourceDeletion = new RecordsDeletion();
             sourceDeletion.setRecords(sourceRecords.stream().map(ref -> {
@@ -492,7 +490,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         return result;
     }
 
-    private <T extends RecordsQueryBaseDAO> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {
+    private <T extends RecordsQueryBaseDao> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {
 
         String sourceId = query.getSourceId();
         int sourceDelimIdx = sourceId.indexOf(RecordRef.SOURCE_DELIMITER);
@@ -502,7 +500,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
             sourceId = sourceId.substring(0, sourceDelimIdx);
         }
 
-        T dao = needRecordsDAO(sourceId, daoType);
+        T dao = needRecordsDao(sourceId, daoType);
         RecordsQuery convertedQuery = updateQueryLanguage(query, dao);
 
         if (convertedQuery == null) {
@@ -515,21 +513,21 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         return new DaoWithConvQuery<>(dao, convertedQuery);
     }
 
-    public void register(RecordsDAO recordsDao) {
+    public void register(RecordsDao recordsDao) {
 
         String id = recordsDao.getId();
         if (id == null) {
-            log.error("id is a mandatory parameter for RecordsDAO."
+            log.error("id is a mandatory parameter for RecordsDao."
                 + " Type: " + recordsDao.getClass()
                 + " toString: " + recordsDao);
             return;
         }
 
         allDao.add(id);
-        register(metaDao, RecordsMetaDAO.class, recordsDao);
-        register(queryDao, RecordsQueryDAO.class, recordsDao);
-        register(mutableDao, MutableRecordsDAO.class, recordsDao);
-        register(queryWithMetaDao, RecordsQueryWithMetaDAO.class, recordsDao);
+        register(metaDao, RecordsMetaDao.class, recordsDao);
+        register(queryDao, RecordsQueryDao.class, recordsDao);
+        register(mutableDao, MutableRecordsDao.class, recordsDao);
+        register(queryWithMetaDao, RecordsQueryWithMetaDao.class, recordsDao);
 
         if (recordsDao instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
@@ -543,7 +541,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         }
     }
 
-    private <T extends RecordsDAO> void register(Map<String, T> map, Class<T> type, RecordsDAO value) {
+    private <T extends RecordsDao> void register(Map<String, T> map, Class<T> type, RecordsDao value) {
         if (type.isAssignableFrom(value.getClass())) {
             @SuppressWarnings("unchecked")
             T dao = (T) value;
@@ -552,19 +550,19 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends RecordsDAO> Optional<T> getRecordsDAO(String sourceId, Class<T> type) {
+    private <T extends RecordsDao> Optional<T> getRecordsDao(String sourceId, Class<T> type) {
         if (sourceId == null) {
             sourceId = "";
         }
-        Map<String, ? extends RecordsDAO> daoMap = daoMapByType.get(type);
+        Map<String, ? extends RecordsDao> daoMap = daoMapByType.get(type);
         if (daoMap == null) {
             return Optional.empty();
         }
         return Optional.ofNullable((T) daoMap.get(sourceId));
     }
 
-    private <T extends RecordsDAO> T needRecordsDAO(String sourceId, Class<T> type) {
-        Optional<T> source = getRecordsDAO(sourceId, type);
+    private <T extends RecordsDao> T needRecordsDao(String sourceId, Class<T> type) {
+        Optional<T> source = getRecordsDao(sourceId, type);
         if (!source.isPresent()) {
             throw new RecordsSourceNotFoundException(sourceId, type);
         }
@@ -575,7 +573,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDAORegistry
         return allDao.contains(id);
     }
 
-    private static class DaoWithConvQuery<T extends RecordsQueryBaseDAO> {
+    private static class DaoWithConvQuery<T extends RecordsQueryBaseDao> {
 
         final T dao;
         final RecordsQuery query;

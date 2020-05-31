@@ -23,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IdAttTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
 
-    private static String ID = "test";
+    private static final String ID = "test";
 
     private RecordsService recordsService;
 
-    private Map<RecordRef, Object> metaValues = new HashMap<>();
+    private final Map<RecordRef, Object> metaValues = new HashMap<>();
 
     @BeforeAll
     void init() {

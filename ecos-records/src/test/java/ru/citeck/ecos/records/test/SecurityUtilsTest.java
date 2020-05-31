@@ -38,7 +38,7 @@ public class SecurityUtilsTest implements RecordsQueryDAO {
 
         for (RecordsError error : result.getErrors()) {
             String msg = error.getMsg();
-            assertTrue(msg.contains("rcersdRQDAO") || msg.contains("rcersdRQWMDAO"), msg);
+            assertTrue(msg.contains("rcersdRQD") || msg.contains("rcersdRQWMD"), msg);
         }
 
         query.setSourceId(ID);

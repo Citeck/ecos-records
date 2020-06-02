@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,15 @@ public class JsonNodeValueFactory implements MetaValueFactory<JsonNode> {
 
             @Override
             public Object getAttribute(String name, MetaField field) {
-                return value.get(name);
+                JsonNode node = value.get(name);
+                if (node != null && node.isArray()) {
+                    List<JsonNode> result = new ArrayList<>();
+                    for (JsonNode element : node) {
+                        result.add(element);
+                    }
+                    return result;
+                }
+                return node;
             }
         };
     }

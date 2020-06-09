@@ -245,7 +245,7 @@ public abstract class LocalRecordsDAO extends AbstractRecordsDAO implements Serv
 
         List<?> recordsWithMixin = records.stream()
             .map(r -> metaValuesConverter.toMetaValue(r))
-            .map(r -> new AttributesMixinMetaValue(r, recordsMetaService, mixins, metaCache))
+            .map(r -> new AttributesMixinMetaValue(r, recordsMetaService, metaValuesConverter, mixins, metaCache))
             .collect(Collectors.toList());
 
         return recordsMetaService.getMeta(recordsWithMixin, schema);

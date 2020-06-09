@@ -1,50 +1,80 @@
 package ru.citeck.ecos.records2.source.common;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValueDelegate;
+import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Slf4j
+@SuppressFBWarnings({"NP_BOOLEAN_RETURN_NULL"})
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
-    private Map<String, ParameterizedAttsMixin> mixins;
-    private RecordsMetaService recordsMetaService;
-    private Map<Object, Object> metaCache;
+    private final RecordsMetaService recordsMetaService;
+
+    private final Map<String, ParameterizedAttsMixin> mixins;
+    private final Map<Object, Object> metaCache;
+
+    private final MetaValuesConverter metaValuesConverter;
+    private QueryContext context;
+
+    private boolean initialized = false;
 
     public AttributesMixinMetaValue(MetaValue impl,
                                     RecordsMetaService recordsMetaService,
+                                    MetaValuesConverter metaValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
         super(impl);
         this.mixins = mixins;
-        this.metaCache = metaCache;
         this.recordsMetaService = recordsMetaService;
+        this.metaValuesConverter = metaValuesConverter;
+        this.metaCache = metaCache != null ? metaCache : new ConcurrentHashMap<>();
     }
 
-    private <R> R doWithMeta(ParameterizedAttsMixin mixin, UncheckedFunction<Object, R> action) throws Exception {
+    @Override
+    public <T extends QueryContext> void init(T context, MetaField field) {
+        initImpl(context, field, true);
+    }
 
-        if (mixin == null) {
-            return null;
+    private void initImpl(QueryContext context, MetaField field, boolean initSuper) {
+
+        if (initialized) {
+            return;
         }
 
-        Class<?> resMetaType = mixin.getResMetaType();
+        if (initSuper) {
+            super.init(context, field);
+        }
+
+        this.context = context;
+
+        initialized = true;
+    }
+
+    private <R, M> R doWithMeta(ParameterizedAttsMixin mixin,
+                                UncheckedFunction<Object, R> action) throws Exception {
+
+        return doWithMeta(mixin.getMetaToRequest(), mixin.getResMetaType(), action);
+    }
+
+    private <R> R doWithMeta(Object metaToRequest,
+                             Class<?> resMetaType,
+                             UncheckedFunction<Object, R> action) throws Exception {
+
         if (MetaValue.class.equals(resMetaType)) {
             return action.apply(this);
         } else if (RecordRef.class.equals(resMetaType)) {
             return action.apply(RecordRef.valueOf(getId()));
         }
-
-        Object metaToRequest = mixin.getMetaToRequest();
 
         if (metaToRequest == null || resMetaType == null) {
             return action.apply(null);
@@ -76,6 +106,25 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     @Override
     public Object getAttribute(String attribute, MetaField field) throws Exception {
+        Object result = getAttributeImpl(attribute, field);
+        if (result instanceof RecordRef) {
+            return result;
+        }
+        List<MetaValue> metaValues = metaValuesConverter.getAsMetaValues(result, context, field, false);
+        return metaValues.stream()
+            .map(value -> {
+                AttributesMixinMetaValue att = new AttributesMixinMetaValue(value,
+                    recordsMetaService,
+                    metaValuesConverter,
+                    mixins,
+                    null
+                );
+                att.initImpl(context, field, false);
+                return att;
+            }).collect(Collectors.toList());
+    }
+
+    private Object getAttributeImpl(String attribute, MetaField field) throws Exception {
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
 

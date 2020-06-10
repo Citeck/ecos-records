@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaValue> {
@@ -60,6 +60,12 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
 
         attribute = recordsService.getAttribute(ref, "innerField1Disp");
         assertEquals("FIELD1", attribute.asText());
+
+        attribute = recordsService.getAttribute(ref, "innerHasTrue?bool");
+        assertTrue(attribute.isBoolean() && attribute.asBoolean());
+
+        attribute = recordsService.getAttribute(ref, "innerHasFalse?bool");
+        assertTrue(attribute.isBoolean() && !attribute.asBoolean());
     }
 
     @Override
@@ -84,6 +90,8 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
             atts.put("innerStr", ".str");
             atts.put("innerField1", "inner.field1");
             atts.put("innerField1Disp", "inner.field1?disp");
+            atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
+            atts.put("innerHasFalse", ".att(n:\"inner2\"){has(n:\"has_false\")}");
             attributes = recordsService.getRawAttributes(RecordRef.create(ID, "inner"), atts);
         }
 
@@ -96,6 +104,7 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
     class InnerMeta implements MetaValue {
 
         InnerInnerMeta inner = new InnerInnerMeta();
+        InnerInnerMeta2 inner2 = new InnerInnerMeta2();
 
         @Override
         public String getId() {
@@ -109,6 +118,8 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
                     return "field0";
                 case "inner":
                     return inner;
+                case "inner2":
+                    return inner2;
             }
             return null;
         }
@@ -121,6 +132,19 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
         @Override
         public String getString() {
             return "INNER_STR";
+        }
+    }
+
+    public class InnerInnerMeta2 implements MetaValue {
+
+        @Override
+        public boolean has(String name) {
+            if ("has_true".equals(name)) {
+                return true;
+            } else if ("has_false".equals(name)) {
+                return false;
+            }
+            throw new IllegalStateException("Unknown param: " + name);
         }
     }
 

@@ -54,6 +54,10 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
         attsToRequest.put("att2", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.VALUE_FIELD + "?str");
         attsToRequest.put("att3", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + "." + Val.VAL2_FIELD + "." + Val.ARR_VALUE_FIELD + "[]?str");
+
+        attsToRequest.put("has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){has(n:\"has_true\")}}");
+        attsToRequest.put("has_false", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){has(n:\"has_false\")}}");
+
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
         attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
@@ -65,6 +69,9 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(Val.val2.value, meta.get("att2", ""));
         assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
         assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
+
+        assertEquals(new DataValue(true), meta.get("has_true"));
+        assertEquals(new DataValue(false), meta.get("has_false"));
 
         ArrayNode expected = JsonNodeFactory.instance.arrayNode();
         expected.add(Val.val2.value);
@@ -128,6 +135,16 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         @Override
         public String getString() {
             return "STR OF " + ref;
+        }
+
+        @Override
+        public boolean has(String name) {
+            if (name.equals("has_true")) {
+                return true;
+            } else if (name.equals("has_false")) {
+                return false;
+            }
+            throw new IllegalArgumentException("Unknown name: " + name);
         }
 
         @Override

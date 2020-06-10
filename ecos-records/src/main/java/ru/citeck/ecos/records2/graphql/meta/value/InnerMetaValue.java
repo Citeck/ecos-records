@@ -55,6 +55,11 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
+    public boolean has(String name) {
+        return getScalar(value, "has").asBoolean();
+    }
+
+    @Override
     public String getDisplayName() {
         return getScalar(value, "disp").asText();
     }

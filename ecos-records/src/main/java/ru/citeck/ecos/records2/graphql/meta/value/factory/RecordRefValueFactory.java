@@ -90,6 +90,11 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
+        public boolean has(String name) {
+            return meta.getAttribute(".has").asBoolean();
+        }
+
+        @Override
         public String getId() {
             return ref.toString();
         }

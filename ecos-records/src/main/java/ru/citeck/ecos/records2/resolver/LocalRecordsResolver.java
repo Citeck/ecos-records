@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2.resolver;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -28,8 +30,10 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records2.source.dao.*;
+import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
@@ -46,7 +50,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
 
-    private final Set<String> allDao = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Map<String, RecordsDao> allDao = new ConcurrentHashMap<>();
     private final Map<String, RecordsMetaDao> metaDao = new ConcurrentHashMap<>();
     private final Map<String, RecordsQueryDao> queryDao = new ConcurrentHashMap<>();
     private final Map<String, MutableRecordsDao> mutableDao = new ConcurrentHashMap<>();
@@ -348,8 +352,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return recordRefs;
     }
 
+    @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records, String schema) {
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
@@ -416,8 +421,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return results;
     }
 
+    @NotNull
     @Override
-    public RecordsMutResult mutate(RecordsMutation mutation) {
+    public RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
 
         RecordsMutResult result = new RecordsMutResult();
 
@@ -452,8 +458,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return result;
     }
 
+    @NotNull
     @Override
-    public RecordsDelResult delete(RecordsDeletion deletion) {
+    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
 
         RecordsDelResult result = new RecordsDelResult();
 
@@ -523,7 +530,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             return;
         }
 
-        allDao.add(id);
+        allDao.put(id, recordsDao);
         register(metaDao, RecordsMetaDao.class, recordsDao);
         register(queryDao, RecordsQueryDao.class, recordsDao);
         register(mutableDao, MutableRecordsDao.class, recordsDao);
@@ -549,6 +556,51 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
     }
 
+    @Nullable
+    @Override
+    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+
+        RecordsDao recordsDao = allDao.get(sourceId);
+        if (recordsDao == null) {
+            return null;
+        }
+
+        RecordsSourceInfo recordsSourceInfo = new RecordsSourceInfo();
+        recordsSourceInfo.setSourceId(sourceId);
+
+        if (recordsDao instanceof RecordsQueryBaseDao) {
+            RecordsQueryBaseDao queryDao = (RecordsQueryBaseDao) recordsDao;
+            List<String> languages = queryDao.getSupportedLanguages();
+            recordsSourceInfo.setSupportedLanguages(languages != null ? languages : Collections.emptyList());
+            recordsSourceInfo.setQuerySupported(true);
+            if (recordsDao instanceof RecordsQueryWithMetaDao) {
+                recordsSourceInfo.setQueryWithMetaSupported(true);
+            }
+        }
+        if (recordsDao instanceof MutableRecordsDao) {
+            recordsSourceInfo.setMutationSupported(true);
+        }
+        if (recordsDao instanceof RecordsMetaDao) {
+            recordsSourceInfo.setMetaSupported(true);
+        }
+
+        ColumnsSourceId columnsSourceId = recordsDao.getClass().getAnnotation(ColumnsSourceId.class);
+        if (columnsSourceId != null && StringUtils.isNotBlank(columnsSourceId.value())) {
+            recordsSourceInfo.setColumnsSourceId(columnsSourceId.value());
+        }
+
+        return recordsSourceInfo;
+    }
+
+    @NotNull
+    @Override
+    public List<RecordsSourceInfo> getSourceInfo() {
+        return allDao.keySet()
+            .stream()
+            .map(this::getSourceInfo)
+            .collect(Collectors.toList());
+    }
+
     @SuppressWarnings("unchecked")
     private <T extends RecordsDao> Optional<T> getRecordsDao(String sourceId, Class<T> type) {
         if (sourceId == null) {
@@ -570,7 +622,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     public boolean containsDao(String id) {
-        return allDao.contains(id);
+        return allDao.containsKey(id);
     }
 
     private static class DaoWithConvQuery<T extends RecordsQueryBaseDao> {

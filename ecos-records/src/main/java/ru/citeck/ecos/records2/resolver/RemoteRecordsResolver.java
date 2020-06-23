@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2.resolver;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -16,6 +18,7 @@ import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
+import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
@@ -113,6 +116,20 @@ public class RemoteRecordsResolver implements RecordsResolver {
         );
     }
 
+    @Nullable
+    @Override
+    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+        //todo
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public List<RecordsSourceInfo> getSourceInfo() {
+        //todo
+        return Collections.emptyList();
+    }
+
     private RecordMeta addAppName(RecordMeta meta, String app) {
         return new RecordMeta(meta, r -> r.addAppName(app));
     }
@@ -121,8 +138,9 @@ public class RemoteRecordsResolver implements RecordsResolver {
         return new RecordMeta(meta, RecordRef::removeAppName);
     }
 
+    @NotNull
     @Override
-    public RecordsDelResult delete(RecordsDeletion deletion) {
+    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
         return execRecordsAppRequest(
             deletion.getRecords(),
             DELETE_URL,

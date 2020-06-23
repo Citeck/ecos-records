@@ -160,7 +160,7 @@ public class RecordsRestApi {
             + "```"
     )
     @PostMapping(value = "/query", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public byte[] recordsQuery(@ApiParam(value = "query text") @RequestBody byte[] body) {
+    public byte[] recordsQuery(@ApiParam(value = "query") @RequestBody byte[] body) {
 
         QueryBody queryBody = convertRequest(body, QueryBody.class);
 

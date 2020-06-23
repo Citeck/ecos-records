@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2.resolver;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.*;
@@ -11,8 +13,10 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -64,8 +68,9 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return result;
     }
 
+    @NotNull
     @Override
-    public RecordsMutResult mutate(RecordsMutation mutation) {
+    public RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
         List<RecordMeta> records = mutation.getRecords();
         if (remote == null || records.isEmpty()) {
             return local.mutate(mutation);
@@ -76,8 +81,9 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return local.mutate(mutation);
     }
 
+    @NotNull
     @Override
-    public RecordsDelResult delete(RecordsDeletion deletion) {
+    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
         List<RecordRef> records = deletion.getRecords();
         if (remote == null || records.isEmpty()) {
             return local.delete(deletion);
@@ -86,6 +92,23 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
             return remote.delete(deletion);
         }
         return local.delete(deletion);
+    }
+
+    @Nullable
+    @Override
+    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+        if (isRemoteSourceId(sourceId)) {
+            return remote.getSourceInfo(sourceId);
+        }
+        return local.getSourceInfo(sourceId);
+    }
+
+    @NotNull
+    @Override
+    public List<RecordsSourceInfo> getSourceInfo() {
+        List<RecordsSourceInfo> result = new ArrayList<>(local.getSourceInfo());
+        result.addAll(remote.getSourceInfo());
+        return result;
     }
 
     private boolean isRemoteRef(RecordMeta meta) {

@@ -23,4 +23,6 @@ public final class RecordConstants {
 
     public static final String FORM_MODE_CREATE = "CREATE";
     public static final String FORM_MODE_EDIT = "EDIT";
+
+    public static final String LANG_COLUMNS_META = "columns-meta";
 }

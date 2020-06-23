@@ -31,11 +31,13 @@ import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
+import ru.citeck.ecos.records2.source.dao.local.source.RecordsSourceRecordsDao;
 import ru.citeck.ecos.records2.type.DefaultRecordTypeService;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -179,7 +181,10 @@ public class RecordsServiceFactory {
 
     protected List<RecordsDao> getDefaultRecordsDao() {
         if (defaultRecordsDao == null) {
-            defaultRecordsDao = Collections.singletonList(new MetaRecordsDao(this));
+            defaultRecordsDao = Arrays.asList(
+                new MetaRecordsDao(this),
+                new RecordsSourceRecordsDao()
+            );
         }
         return defaultRecordsDao;
     }

@@ -17,6 +17,7 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.RecordsDaoRegistry;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -279,6 +280,16 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         }
 
         return result;
+    }
+
+    @Override
+    public RecordsSourceInfo getSourceInfo(String sourceId) {
+        return recordsResolver.getSourceInfo(sourceId);
+    }
+
+    @Override
+    public List<RecordsSourceInfo> getSourcesInfo() {
+        return recordsResolver.getSourceInfo();
     }
 
     @Override

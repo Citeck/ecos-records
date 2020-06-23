@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -268,4 +269,14 @@ public interface RecordsService {
      * Register the RecordsDAO. It must return valid id from method "getId()" to call this method.
      */
     void register(RecordsDao recordsSource);
+
+    /**
+     * Add info about RecordsDao with specified Id.
+     */
+    RecordsSourceInfo getSourceInfo(String sourceId);
+
+    /**
+     * Get info about all registered RecordsDao.
+     */
+    List<RecordsSourceInfo> getSourcesInfo();
 }

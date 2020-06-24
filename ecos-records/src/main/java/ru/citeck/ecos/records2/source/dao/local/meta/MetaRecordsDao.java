@@ -1,15 +1,15 @@
-package ru.citeck.ecos.records2.source.dao.local;
+package ru.citeck.ecos.records2.source.dao.local.meta;
 
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -20,14 +20,11 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
 
     public static final String ID = "meta";
 
-    private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
+    private final MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
     public MetaRecordsDao(RecordsServiceFactory serviceFactory) {
         setId(ID);
         metaRecordsDaoAttsProvider = serviceFactory.getMetaRecordsDaoAttsProvider();
-        if (metaRecordsDaoAttsProvider == null) {
-            metaRecordsDaoAttsProvider = Collections::emptyMap;
-        }
     }
 
     @Override

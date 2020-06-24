@@ -566,7 +566,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
 
         RecordsSourceInfo recordsSourceInfo = new RecordsSourceInfo();
-        recordsSourceInfo.setSourceId(sourceId);
+        recordsSourceInfo.setId(sourceId);
 
         if (recordsDao instanceof RecordsQueryBaseDao) {
             RecordsQueryBaseDao queryDao = (RecordsQueryBaseDao) recordsDao;

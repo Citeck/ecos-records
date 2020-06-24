@@ -29,8 +29,9 @@ import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl;
 import ru.citeck.ecos.records2.source.dao.local.source.RecordsSourceRecordsDao;
 import ru.citeck.ecos.records2.type.DefaultRecordTypeService;
 import ru.citeck.ecos.records2.type.RecordTypeService;
@@ -397,7 +398,7 @@ public class RecordsServiceFactory {
     }
 
     protected MetaRecordsDaoAttsProvider createMetaRecordsDaoAttsProvider() {
-        return Collections::emptyMap;
+        return new MetaRecordsDaoAttsProviderImpl();
     }
 
     public final synchronized MetaRecordsDaoAttsProvider getMetaRecordsDaoAttsProvider() {

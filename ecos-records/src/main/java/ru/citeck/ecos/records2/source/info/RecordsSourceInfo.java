@@ -12,7 +12,7 @@ import java.util.List;
 public class RecordsSourceInfo {
 
     @NotNull
-    private String sourceId = "";
+    private String id = "";
     @NotNull
     private List<String> supportedLanguages = Collections.emptyList();
 

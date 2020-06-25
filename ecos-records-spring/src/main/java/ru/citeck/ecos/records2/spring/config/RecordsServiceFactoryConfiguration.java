@@ -17,6 +17,7 @@ import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.RecordsResolver;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider;
 
 @Slf4j
 @Configuration
@@ -97,6 +98,12 @@ public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
     @Override
     protected MetaValuesConverter createMetaValuesConverter() {
         return super.createMetaValuesConverter();
+    }
+
+    @Bean
+    @Override
+    protected MetaRecordsDaoAttsProvider createMetaRecordsDaoAttsProvider() {
+        return super.createMetaRecordsDaoAttsProvider();
     }
 
     @Override

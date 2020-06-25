@@ -10,14 +10,11 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.MetaRecordsDaoAttsProvider;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaAttributesSupplier;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,12 +32,17 @@ class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaVal
 
     @BeforeAll
     void init() {
-        RecordsServiceFactory factory = new RecordsServiceFactory() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        factory.getMetaRecordsDaoAttsProvider().register(new MetaAttributesSupplier() {
             @Override
-            protected MetaRecordsDaoAttsProvider createMetaRecordsDaoAttsProvider() {
-                return () -> metaAtts;
+            public List<String> getAttributesList() {
+                return new ArrayList<>(metaAtts.keySet());
             }
-        };
+            @Override
+            public Object getAttribute(String attribute, MetaField field) throws Exception {
+                return metaAtts.get(attribute);
+            }
+        });
         setId(ID);
         recordsService = factory.getRecordsService();
         recordsService.register(this);

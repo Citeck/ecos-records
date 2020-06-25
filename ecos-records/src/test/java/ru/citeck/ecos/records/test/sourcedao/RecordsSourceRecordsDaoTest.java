@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records.test.sourcedao;
 
 import lombok.Data;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -16,7 +15,6 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,7 +52,7 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
         assertEquals(SUPPORTED_LANGUAGES, meta.getSupportedLanguages());
 
         SourceFlagsMetaInfo meta2 = recordsService.getMeta(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
-        assertEquals("meta", meta2.sourceId);
+        assertEquals("meta", meta2.id);
         assertTrue(meta2.metaSupported);
         assertFalse(meta2.mutationSupported);
         assertFalse(meta2.queryWithMetaSupported);
@@ -68,7 +66,7 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
 
     @Data
     public static class SourceFlagsMetaInfo {
-        private String sourceId = "";
+        private String id = "";
         private Boolean queryWithMetaSupported;
         private Boolean querySupported;
         private Boolean metaSupported;

@@ -38,7 +38,7 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
 
         @Override
         public Object getAttribute(String name, MetaField field) {
-            return value.getClosestValue(new Locale(name));
+            return value.get(new Locale(name));
         }
 
         @Override

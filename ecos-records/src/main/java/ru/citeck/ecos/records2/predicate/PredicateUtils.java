@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.predicate;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.predicate.model.*;
 
 import java.beans.PropertyDescriptor;
@@ -54,6 +55,7 @@ public class PredicateUtils {
         try {
             dto = type.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
+            ExceptionUtils.throwException(e);
             throw new RuntimeException(e);
         }
 

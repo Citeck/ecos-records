@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
@@ -165,6 +166,7 @@ public class RecordsServiceFactory {
             Constructor<? extends RecordsService> constructor = serviceType.getConstructor(RecordsServiceFactory.class);
             recordsService = constructor.newInstance(this);
         } catch (Exception e) {
+            ExceptionUtils.throwException(e);
             throw new RuntimeException(e);
         }
 

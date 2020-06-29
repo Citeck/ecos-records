@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.predicate.json.std;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.predicate.model.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class PredicateTypes {
 
-    private Map<String, Class<? extends Predicate>> predicateTypes = new ConcurrentHashMap<>();
+    private final Map<String, Class<? extends Predicate>> predicateTypes = new ConcurrentHashMap<>();
 
     public PredicateTypes() {
         register(OrPredicate.class);
@@ -56,7 +57,7 @@ public class PredicateTypes {
             );
 
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwException(e);
         }
     }
 }

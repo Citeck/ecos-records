@@ -1,7 +1,10 @@
 package ru.citeck.ecos.records2.meta;
 
+import org.jetbrains.annotations.Nullable;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -12,6 +15,7 @@ public class AttributesMetaResolver {
 
     private static final String ATT_TYPE = ".type";
     private static final Pattern SUBFIELDS_PATTERN = Pattern.compile("^([^{]+)\\{(.+)}$");
+    private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+)\\((.*)\\)");
 
     public AttributesSchema createSchema(Map<String, String> attributes) {
         return createSchema(attributes, true);
@@ -26,13 +30,26 @@ public class AttributesMetaResolver {
         StringBuilder schema = new StringBuilder();
         ObjectKeyGenerator keys = new ObjectKeyGenerator();
 
-        Map<String, String> keysMapping = new HashMap<>();
+        Map<String, AttSchemaInfo> attsInfo = new HashMap<>();
 
         attributes.forEach((name, path) -> {
 
+            AttSchemaInfo attSchemaInfo = new AttSchemaInfo();
+            attSchemaInfo.setOriginalKey(name);
+
+            int lastCloseBracketIdx = path.indexOf('}');
+            int pipeDelimIdx = path.indexOf('|');
+            if (pipeDelimIdx > 0 && lastCloseBracketIdx < pipeDelimIdx) {
+                AttProcessorDef processor = parseProcessor(path.substring(pipeDelimIdx + 1));
+                if (processor != null) {
+                    attSchemaInfo.setProcessors(Collections.singletonList(processor));
+                }
+                path = path.substring(0, pipeDelimIdx);
+            }
+
             String key = generateKeys ? keys.incrementAndGet() : name;
 
-            keysMapping.put(key, name);
+            attsInfo.put(key, attSchemaInfo);
             schema.append(key).append(":");
 
             if (path.charAt(0) != '.') {
@@ -44,7 +61,38 @@ public class AttributesMetaResolver {
         });
         schema.setLength(schema.length() - 1);
 
-        return new AttributesSchema(schema.toString(), keysMapping);
+        return new AttributesSchema(schema.toString(), attsInfo);
+    }
+
+    @Nullable
+    private AttProcessorDef parseProcessor(String processorStr) {
+        if (StringUtils.isBlank(processorStr)) {
+            return null;
+        }
+        Matcher matcher = PROCESSOR_PATTERN.matcher(processorStr);
+        if (matcher.matches()) {
+            String type = matcher.group(1).trim();
+            List<DataValue> args = parseArgs(matcher.group(2).trim());
+            return new AttProcessorDef(type, args);
+        }
+        return null;
+    }
+
+    private List<DataValue> parseArgs(String argsStr) {
+
+        List<DataValue> result = new ArrayList<>();
+
+        if (StringUtils.isBlank(argsStr)) {
+            return result;
+        }
+
+        argsStr = argsStr.replace("'", "\"");
+        Arrays.stream(argsStr.split(","))
+            .map(String::trim)
+            .map(DataValue::create)
+            .forEach(result::add);
+
+        return result;
     }
 
     private String getValidSchemaParamName(String name) {

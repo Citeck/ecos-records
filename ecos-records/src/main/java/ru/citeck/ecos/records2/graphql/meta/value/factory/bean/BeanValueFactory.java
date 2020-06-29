@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -176,7 +177,8 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
                 } catch (NoSuchMethodException e) {
                     log.debug("Descriptor not found", e);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
+                    ExceptionUtils.throwException(e);
+                    throw new RuntimeException(e); // never executed
                 }
             }
             return descriptor;

@@ -5,11 +5,11 @@ import java.util.Map;
 public class AttributesSchema {
 
     private String schema;
-    private Map<String, String> keysMapping;
+    private Map<String, AttSchemaInfo> attsInfo;
 
-    public AttributesSchema(String schema, Map<String, String> keysMapping) {
+    public AttributesSchema(String schema, Map<String, AttSchemaInfo> attsInfo) {
         this.schema = schema;
-        this.keysMapping = keysMapping;
+        this.attsInfo = attsInfo;
     }
 
     public String getSchema() {
@@ -20,11 +20,12 @@ public class AttributesSchema {
         this.schema = schema;
     }
 
-    public Map<String, String> getKeysMapping() {
-        return keysMapping;
+    public Map<String, AttSchemaInfo> getAttsInfo() {
+        return attsInfo;
     }
 
-    public void setKeysMapping(Map<String, String> keysMapping) {
-        this.keysMapping = keysMapping;
+    public void setAttsInfo(Map<String, AttSchemaInfo> attsInfo) {
+        this.attsInfo = attsInfo;
     }
+
 }

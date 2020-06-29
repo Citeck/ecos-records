@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.spring.web;
 
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import ru.citeck.ecos.commons.utils.ExceptionUtils;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -21,6 +22,7 @@ public class SkipSslVerificationHttpRequestFactory extends SimpleClientHttpReque
                 ((HttpsURLConnection) connection).setSSLSocketFactory(
                     this.createSslSocketFactory());
             } catch (Exception e) {
+                ExceptionUtils.throwException(e);
                 throw new RuntimeException(e);
             }
         }

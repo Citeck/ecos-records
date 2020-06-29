@@ -139,7 +139,8 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
             log.error("Failed to get attribute " + name, e);
             return false;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwException(e);
+            return false;
         }
     }
 

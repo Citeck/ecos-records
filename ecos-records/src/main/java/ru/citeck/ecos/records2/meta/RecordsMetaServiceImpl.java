@@ -5,29 +5,38 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.meta.attproc.AttProcessor;
+import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
+import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class RecordsMetaServiceImpl implements RecordsMetaService {
 
-    private RecordsMetaGql graphQLService;
-    private AttributesMetaResolver attributesMetaResolver;
-    private DtoMetaResolver dtoMetaResolver;
+    private final RecordsMetaGql graphQLService;
+    private final AttributesMetaResolver attributesMetaResolver;
+    private final DtoMetaResolver dtoMetaResolver;
+
+    private final Map<String, AttProcessor> attProcessors = new ConcurrentHashMap<>();
 
     public RecordsMetaServiceImpl(RecordsServiceFactory serviceFactory) {
         graphQLService = serviceFactory.getRecordsMetaGql();
         dtoMetaResolver = serviceFactory.getDtoMetaResolver();
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
+
+        register(new FormatAttProcessor());
     }
 
     @Override
@@ -109,16 +118,35 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
         ObjectData attributes = meta.getAttributes();
         ObjectData resultAttributes = ObjectData.create();
-        Map<String, String> keysMapping = schema.getKeysMapping();
+        Map<String, AttSchemaInfo> attsInfo = schema.getAttsInfo();
 
         attributes.forEach((key, value) -> {
 
-            String resultKey = keysMapping.get(key);
+            AttSchemaInfo attInfo = attsInfo.get(key);
+            String resultKey = attInfo.getOriginalKey();
             if (resultKey != null) {
+
                 if (resultKey.equals(".json") || !flat) {
                     resultAttributes.set(resultKey, value);
+
                 } else {
-                    resultAttributes.set(resultKey, toFlatNode(Json.getMapper().toJson(value)));
+
+                    JsonNode flatValue = toFlatNode(Json.getMapper().toJson(value));
+
+                    if (flatValue != null
+                            && !flatValue.isNull()
+                            && !flatValue.isMissingNode()
+                            && !attInfo.getProcessors().isEmpty()) {
+
+                        DataValue processedValue = DataValue.create(flatValue);
+                        for (AttProcessorDef procDef : attInfo.getProcessors()) {
+                            AttProcessor processor = attProcessors.get(procDef.getType());
+                            Object procResult = processor.process(processedValue, procDef.getArguments());
+                            processedValue = DataValue.create(procResult);
+                        }
+                        flatValue = processedValue.getValue();
+                    }
+                    resultAttributes.set(resultKey, flatValue);
                 }
             }
         });
@@ -182,5 +210,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         }
 
         return node;
+    }
+
+    private void register(AttProcessor processor) {
+        attProcessors.put(processor.getType(), processor);
     }
 }

@@ -2,6 +2,8 @@ package ru.citeck.ecos.records2;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 
@@ -49,6 +51,7 @@ public class RecordMeta {
         setAttributes(attributes);
     }
 
+    @NotNull
     public RecordMeta withId(RecordRef recordRef) {
         if (getId().equals(recordRef)) {
             return this;
@@ -56,12 +59,14 @@ public class RecordMeta {
         return new RecordMeta(recordRef, attributes);
     }
 
+    @NotNull
     public RecordMeta withDefaultAppName(String appName) {
         RecordRef currId = getId();
         RecordRef newId = currId.withDefaultAppName(appName);
         return newId == currId ? this : new RecordMeta(this, newId);
     }
 
+    @NotNull
     public RecordRef getId() {
         return id;
     }
@@ -79,6 +84,7 @@ public class RecordMeta {
         attributes.forEach(consumer);
     }
 
+    @NotNull
     public ObjectData getAttributes() {
         return attributes;
     }
@@ -91,11 +97,13 @@ public class RecordMeta {
         return attributes.has(name);
     }
 
-    public String fmtDate(String name, String format) {
+    @NotNull
+    public String fmtDate(@NotNull String name, @NotNull String format) {
         return fmtDate(name, format, "");
     }
 
-    public String fmtDate(String name, String format, String orElse) {
+    @NotNull
+    public String fmtDate(@NotNull String name, @NotNull String format, @NotNull String orElse) {
         Date date = getDateOrNull(name);
         if (date != null) {
             SimpleDateFormat dateFormat = new SimpleDateFormat(format);
@@ -104,35 +112,43 @@ public class RecordMeta {
         return orElse;
     }
 
+    @Nullable
     public Date getDateOrNull(String name) {
         return attributes.get(name, Date.class, null);
     }
 
+    @Nullable
     public String getStringOrNull(String name) {
         return attributes.get(name, String.class, null);
     }
 
+    @Nullable
     public Double getDoubleOrNull(String name) {
         return attributes.get(name, Double.class);
     }
 
+    @Nullable
     public Boolean getBoolOrNull(String name) {
         return attributes.get(name, Boolean.class);
     }
 
+    @NotNull
     public DataValue get(String name) {
         return getAttribute(name);
     }
 
-    public <T> T get(String name, T orElse) {
+    @NotNull
+    public <T> T get(String name, @NotNull T orElse) {
         return getAttribute(name, orElse);
     }
 
+    @NotNull
     public DataValue getAttribute(String name) {
         return attributes.get(name);
     }
 
-    public <T> T getAttribute(String name, T orElse) {
+    @NotNull
+    public <T> T getAttribute(String name, @NotNull T orElse) {
         return attributes.get(name, orElse);
     }
 

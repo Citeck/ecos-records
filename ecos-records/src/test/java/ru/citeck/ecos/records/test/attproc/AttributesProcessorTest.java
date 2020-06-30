@@ -42,6 +42,9 @@ class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMet
         attribute = recordsService.getAttribute(ref, "doubleNum?num|fmt('000000.00000')");
         assertEquals("000123.32000", attribute.asText());
 
+        attribute = recordsService.getAttribute(ref, "doubleNum?num|fmt('0.0')");
+        assertEquals("123.3", attribute.asText());
+
         attribute = recordsService.getAttribute(ref, "date|fmt('YYYY')");
         assertEquals("2020", attribute.asText());
 

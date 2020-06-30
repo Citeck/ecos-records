@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.annotation.JsonValue;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.StringUtils;
 
 import java.io.Serializable;
@@ -35,14 +36,17 @@ public class RecordRef implements Serializable {
         this.sourceId = StringUtils.isNotBlank(sourceId) ? sourceId : "";
     }
 
+    @NotNull
     public static RecordRef create(String sourceId, RecordRef id) {
         return create(sourceId, id.toString());
     }
 
+    @NotNull
     public static RecordRef create(String sourceId, String id) {
         return create("", sourceId, id);
     }
 
+    @NotNull
     public static RecordRef create(String appName, String sourceId, String id) {
         if (StringUtils.isBlank(appName) && StringUtils.isBlank(sourceId) && isBlankId(id)) {
             return EMPTY;
@@ -66,6 +70,7 @@ public class RecordRef implements Serializable {
                 && StringUtils.isBlank(ref.getAppName());
     }
 
+    @NotNull
     public RecordRef addAppName(String appName) {
         String current = toString();
         if (current.contains("@")) {
@@ -75,6 +80,7 @@ public class RecordRef implements Serializable {
         }
     }
 
+    @NotNull
     public RecordRef withDefaultAppName(String appName) {
         if (StringUtils.isBlank(appName)) {
             return this;
@@ -82,6 +88,7 @@ public class RecordRef implements Serializable {
         return !this.appName.isEmpty() ? this : addAppName(appName);
     }
 
+    @NotNull
     public RecordRef removeAppName() {
         if (appName.isEmpty()) {
             return this;
@@ -89,6 +96,7 @@ public class RecordRef implements Serializable {
         return create(sourceId, id);
     }
 
+    @NotNull
     @JsonCreator
     @com.fasterxml.jackson.annotation.JsonCreator
     public static RecordRef valueOf(String recordRefStr) {
@@ -125,18 +133,22 @@ public class RecordRef implements Serializable {
         return create(appName, sourceId, id);
     }
 
+    @NotNull
     public static RecordRef valueOf(RecordRef ref) {
         return ref != null ? ref : EMPTY;
     }
 
+    @NotNull
     public String getSourceId() {
         return sourceId;
     }
 
+    @NotNull
     public String getId() {
         return id;
     }
 
+    @NotNull
     public String getAppName() {
         return appName;
     }

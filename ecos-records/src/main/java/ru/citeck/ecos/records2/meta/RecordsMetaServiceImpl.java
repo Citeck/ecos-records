@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessor;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
+import ru.citeck.ecos.records2.meta.attproc.PrefixSuffixAttProcessor;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -37,6 +38,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
 
         register(new FormatAttProcessor());
+        register(new PrefixSuffixAttProcessor());
     }
 
     @Override
@@ -141,8 +143,15 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                         DataValue processedValue = DataValue.create(flatValue);
                         for (AttProcessorDef procDef : attInfo.getProcessors()) {
                             AttProcessor processor = attProcessors.get(procDef.getType());
-                            Object procResult = processor.process(processedValue, procDef.getArguments());
-                            processedValue = DataValue.create(procResult);
+                            if (processor == null) {
+                                log.error("Attribute processor '"
+                                    + procDef.getType()
+                                    + "' is not found! Result will be null");
+                                processedValue = DataValue.NULL;
+                            } else {
+                                Object procResult = processor.process(processedValue, procDef.getArguments());
+                                processedValue = DataValue.create(procResult);
+                            }
                         }
                         flatValue = processedValue.getValue();
                     }

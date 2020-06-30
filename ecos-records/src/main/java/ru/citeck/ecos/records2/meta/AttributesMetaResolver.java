@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.meta;
 
-import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
@@ -40,10 +39,7 @@ public class AttributesMetaResolver {
             int lastCloseBracketIdx = path.indexOf('}');
             int pipeDelimIdx = path.indexOf('|');
             if (pipeDelimIdx > 0 && lastCloseBracketIdx < pipeDelimIdx) {
-                AttProcessorDef processor = parseProcessor(path.substring(pipeDelimIdx + 1));
-                if (processor != null) {
-                    attSchemaInfo.setProcessors(Collections.singletonList(processor));
-                }
+                attSchemaInfo.setProcessors(parseProcessor(path.substring(pipeDelimIdx + 1)));
                 path = path.substring(0, pipeDelimIdx);
             }
 
@@ -64,18 +60,21 @@ public class AttributesMetaResolver {
         return new AttributesSchema(schema.toString(), attsInfo);
     }
 
-    @Nullable
-    private AttProcessorDef parseProcessor(String processorStr) {
+    private List<AttProcessorDef> parseProcessor(String processorStr) {
         if (StringUtils.isBlank(processorStr)) {
-            return null;
+            return Collections.emptyList();
         }
-        Matcher matcher = PROCESSOR_PATTERN.matcher(processorStr);
-        if (matcher.matches()) {
-            String type = matcher.group(1).trim();
-            List<DataValue> args = parseArgs(matcher.group(2).trim());
-            return new AttProcessorDef(type, args);
+        List<AttProcessorDef> result = new ArrayList<>();
+
+        for (String proc : processorStr.split("\\|")) {
+            Matcher matcher = PROCESSOR_PATTERN.matcher(proc);
+            if (matcher.matches()) {
+                String type = matcher.group(1).trim();
+                List<DataValue> args = parseArgs(matcher.group(2).trim());
+                result.add(new AttProcessorDef(type, args));
+            }
         }
-        return null;
+        return result;
     }
 
     private List<DataValue> parseArgs(String argsStr) {

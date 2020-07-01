@@ -148,9 +148,9 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
 
         MetaValue source = env.getSource();
         String type = getParameter(env, "n");
-        Object value = source.getAs(type);
-
         MetaField metaField = new MetaFieldImpl(env.getField());
+        Object value = source.getAs(type, metaField);
+
         return converter.getAsMetaValue(value, env.getContext(), metaField, false);
     }
 

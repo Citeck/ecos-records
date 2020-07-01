@@ -67,6 +67,11 @@ public interface MetaValue {
         return getString();
     }
 
+    default Object getAs(String type, MetaField field) {
+        return getAs(type);
+    }
+
+    @Deprecated
     default Object getAs(String type) {
         return null;
     }

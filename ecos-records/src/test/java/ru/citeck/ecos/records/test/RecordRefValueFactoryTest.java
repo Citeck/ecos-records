@@ -58,6 +58,11 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         attsToRequest.put("has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){has(n:\"has_true\")}}");
         attsToRequest.put("has_false", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){has(n:\"has_false\")}}");
 
+        attsToRequest.put("as_has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){as(n:\"abc\"){has(n:\"has_true\")}}}");
+        attsToRequest.put("as_has_false", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){as(n:\"abc\"){has(n:\"has_false\")}}}");
+
+        attsToRequest.put("as_with_alias_has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){alias_for_as:as(n:\"abc\"){has(n:\"has_true\")}}}");
+
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
         attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
@@ -72,6 +77,11 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
 
         assertEquals(DataValue.TRUE, meta.get("has_true"));
         assertEquals(DataValue.FALSE, meta.get("has_false"));
+
+        assertEquals(DataValue.TRUE, meta.get("as_has_true"));
+        assertEquals(DataValue.FALSE, meta.get("as_has_false"));
+
+        assertEquals(DataValue.TRUE, meta.get("as_with_alias_has_true"));
 
         ArrayNode expected = JsonNodeFactory.instance.arrayNode();
         expected.add(Val.val2.value);
@@ -145,6 +155,11 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
                 return false;
             }
             throw new IllegalArgumentException("Unknown name: " + name);
+        }
+
+        @Override
+        public Object getAs(String name) {
+            return this;
         }
 
         @Override

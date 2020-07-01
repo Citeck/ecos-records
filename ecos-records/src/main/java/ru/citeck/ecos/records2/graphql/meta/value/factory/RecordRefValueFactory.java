@@ -95,6 +95,11 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
+        public Object getAs(String type, MetaField field) {
+            return new InnerMetaValue(meta.getAttribute(".as"));
+        }
+
+        @Override
         public String getId() {
             return ref.toString();
         }

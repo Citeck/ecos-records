@@ -69,6 +69,11 @@ public class MetaValueDelegate implements MetaValue {
     }
 
     @Override
+    public Object getAs(String type, MetaField field) {
+        return impl.getAs(type, field);
+    }
+
+    @Override
     public RecordRef getRecordType() {
         return impl.getRecordType();
     }

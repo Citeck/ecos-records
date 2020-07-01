@@ -102,9 +102,13 @@ public class MetaValuesConverter {
     }
 
     public MetaValue getAsMetaValue(Object value,
-                                     QueryContext context,
-                                     MetaField metaField,
-                                     boolean forceInit) {
+                                    QueryContext context,
+                                    MetaField metaField,
+                                    boolean forceInit) {
+
+        if (value == null) {
+            return null;
+        }
 
         if (value instanceof MetaValue) {
             MetaValue metaValue = (MetaValue) value;

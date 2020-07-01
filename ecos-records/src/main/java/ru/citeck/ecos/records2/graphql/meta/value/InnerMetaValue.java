@@ -43,6 +43,22 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
+    public Object getAs(String type, MetaField field) {
+
+        String fieldName = field.getAlias();
+        if (fieldName == null) {
+            fieldName = "as";
+        }
+
+        return new InnerMetaValue(value.path(fieldName));
+    }
+
+    @Override
+    public Object getAs(String type) {
+        return new InnerMetaValue(value.path("as"));
+    }
+
+    @Override
     public Collection<InnerMetaValue> getCollectionView() {
         if (value instanceof ArrayNode) {
             List<InnerMetaValue> result = new ArrayList<>();

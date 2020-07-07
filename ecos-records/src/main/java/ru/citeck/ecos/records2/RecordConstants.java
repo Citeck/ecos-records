@@ -9,6 +9,7 @@ public final class RecordConstants {
     public static final String ATT_TYPE = "_type";
     public static final String ATT_ECOS_TYPE = "_etype";
     public static final String ATT_FORM_KEY = "_formKey";
+    public static final String ATT_FORM_REF = "_formRef";
     public static final String ATT_FORM_MODE = "_formMode";
     public static final String ATT_ALIAS = "_alias";
     public static final String ATT_MODIFIED = "_modified";

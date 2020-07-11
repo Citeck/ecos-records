@@ -57,11 +57,16 @@ public class FormatAttProcessor implements AttProcessor {
 
         } else if (value.isNumber() || value.isTextual()) {
 
-            DecimalFormat format = new DecimalFormat(
-                arguments.get(0).asText(),
-                DecimalFormatSymbols.getInstance(locale)
-            );
-            return format.format(value.asDouble());
+            double parsed = value.asDouble(Double.NaN);
+            if (!Double.isNaN(parsed)) {
+
+                DecimalFormat format = new DecimalFormat(
+                    arguments.get(0).asText(),
+                    DecimalFormatSymbols.getInstance(locale)
+                );
+
+                return format.format(parsed);
+            }
         }
         return value;
     }

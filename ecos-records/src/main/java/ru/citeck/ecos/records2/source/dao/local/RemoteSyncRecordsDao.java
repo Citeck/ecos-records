@@ -47,20 +47,23 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         this.model = model;
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
         waitUntilSyncCompleted();
         return super.queryLocalRecords(query);
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
         waitUntilSyncCompleted();
         return super.queryLocalRecords(query, field);
     }
 
+    @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         waitUntilSyncCompleted();
         return super.getLocalRecordsMeta(records, metaField);
     }

@@ -299,12 +299,16 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         if (id == null) {
             throw new IllegalArgumentException("id is a mandatory parameter for RecordsDao");
         }
+        register(id, recordsSource);
+    }
 
+    @Override
+    public void register(String sourceId, RecordsDao recordsSource) {
         if (recordsResolver instanceof RecordsDaoRegistry) {
-            ((RecordsDaoRegistry) recordsResolver).register(recordsSource);
+            ((RecordsDaoRegistry) recordsResolver).register(sourceId, recordsSource);
         } else {
             log.warn("Records resolver doesn't support source registration. "
-                     + "Source: " + id + " " + recordsSource.getClass());
+                + "Source: " + sourceId + " " + recordsSource.getClass());
         }
     }
 }

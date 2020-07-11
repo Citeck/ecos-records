@@ -8,6 +8,9 @@ import java.util.List;
 
 @Data
 public class AttSchemaInfo {
+
     private String originalKey;
     private List<AttProcessorDef> processors = Collections.emptyList();
+    private List<String> orElseAtts = Collections.emptyList();
+    private Class<?> type;
 }

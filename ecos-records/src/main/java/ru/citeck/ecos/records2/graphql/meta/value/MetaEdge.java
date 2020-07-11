@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 public interface MetaEdge {
@@ -17,6 +19,13 @@ public interface MetaEdge {
     }
 
     default boolean isSearchable() {
+        return true;
+    }
+
+    /**
+     * Can client read value of this attribute or not.
+     */
+    default boolean canBeRead() {
         return true;
     }
 
@@ -57,5 +66,5 @@ public interface MetaEdge {
 
     String getName();
 
-    Object getValue(MetaField field) throws Exception;
+    Object getValue(@NotNull MetaField field) throws Exception;
 }

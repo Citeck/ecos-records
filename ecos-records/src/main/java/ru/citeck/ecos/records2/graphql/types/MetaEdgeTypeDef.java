@@ -54,6 +54,10 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::isProtected)
                         .type(Scalars.GraphQLBoolean))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("canBeRead")
+                        .dataFetcher(this::canBeRead)
+                        .type(Scalars.GraphQLBoolean))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("multiple")
                         .dataFetcher(this::isMultiple)
                         .type(Scalars.GraphQLBoolean))
@@ -153,6 +157,11 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
     private boolean isProtected(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
         return edge.isProtected();
+    }
+
+    private boolean canBeRead(DataFetchingEnvironment env) {
+        MetaEdge edge = env.getSource();
+        return edge.canBeRead();
     }
 
     private String getTitle(DataFetchingEnvironment env) {

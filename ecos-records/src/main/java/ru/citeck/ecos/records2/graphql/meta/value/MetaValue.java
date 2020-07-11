@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
@@ -18,7 +19,7 @@ public interface MetaValue {
     /**
      * Initialize value with context before execute other methods.
      */
-    default <T extends QueryContext> void init(T context, MetaField field) {
+    default <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
     }
 
     /**
@@ -42,15 +43,15 @@ public interface MetaValue {
     /**
      * Get value attribute.
      */
-    default Object getAttribute(String name, MetaField field) throws Exception {
+    default Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
         return Collections.emptyList();
     }
 
-    default MetaEdge getEdge(String name, MetaField field) {
+    default MetaEdge getEdge(@NotNull String name, @NotNull MetaField field) {
         return new SimpleMetaEdge(name, this);
     }
 
-    default boolean has(String name) throws Exception {
+    default boolean has(@NotNull String name) throws Exception {
         return false;
     }
 
@@ -67,12 +68,12 @@ public interface MetaValue {
         return getString();
     }
 
-    default Object getAs(String type, MetaField field) {
+    default Object getAs(@NotNull String type, @NotNull MetaField field) {
         return getAs(type);
     }
 
     @Deprecated
-    default Object getAs(String type) {
+    default Object getAs(@NotNull String type) {
         return null;
     }
 

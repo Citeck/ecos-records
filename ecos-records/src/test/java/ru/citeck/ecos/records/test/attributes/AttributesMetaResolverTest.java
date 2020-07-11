@@ -35,4 +35,16 @@ public class AttributesMetaResolverTest {
         res = attsMetaResolver.convertAttToGqlFormat(".type.disp", "str", false);
         assertEquals(".type{disp}", res);
     }
+
+    @Test
+    void testInner() {
+
+        AttributesMetaResolver attsMetaResolver = new RecordsServiceFactory().getAttributesMetaResolver();
+
+        String res = attsMetaResolver.convertAttToGqlFormat("field?as('abc').field0", "str", false);
+        assertEquals(".att(n:\"field\"){as('abc'){att(n:\"field0\"){str}}}", res);
+
+        res = attsMetaResolver.convertAttToGqlFormat("field?has('edf')", "str", false);
+        assertEquals(".att(n:\"field\"){has('edf')}", res);
+    }
 }

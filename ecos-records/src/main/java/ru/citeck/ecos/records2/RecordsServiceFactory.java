@@ -217,7 +217,7 @@ public class RecordsServiceFactory {
     public final synchronized LocalRecordsResolver getLocalRecordsResolver() {
         if (localRecordsResolver == null) {
             localRecordsResolver = createLocalRecordsResolver();
-            createDefaultRecordsDao().forEach(localRecordsResolver::register);
+            createDefaultRecordsDao().forEach(dao -> localRecordsResolver.register(dao.getId(), dao));
         }
         return localRecordsResolver;
     }

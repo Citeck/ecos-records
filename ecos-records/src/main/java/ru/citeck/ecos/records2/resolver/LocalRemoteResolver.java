@@ -130,7 +130,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @Override
-    public void register(RecordsDao recordsDao) {
-        local.register(recordsDao);
+    public void register(String sourceId, RecordsDao recordsDao) {
+        local.register(sourceId, recordsDao);
     }
 }

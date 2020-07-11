@@ -2,6 +2,7 @@ package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -164,8 +165,9 @@ public class RecordsMutationTest extends LocalRecordsDAO
         return super.mutateImpl(mutation);
     }
 
+    @NotNull
     @Override
-    public List<TestDto> getValuesToMutate(List<RecordRef> records) {
+    public List<TestDto> getValuesToMutate(@NotNull List<RecordRef> records) {
         return records.stream().map(r -> {
             RecordRef ref = RecordRef.create(getId(), r);
             TestDto testDto = valuesToMutate.get(ref);
@@ -173,8 +175,9 @@ public class RecordsMutationTest extends LocalRecordsDAO
         }).collect(Collectors.toList());
     }
 
+    @NotNull
     @Override
-    public RecordsMutResult save(List<TestDto> values) {
+    public RecordsMutResult save(@NotNull List<TestDto> values) {
 
         RecordsMutResult result = new RecordsMutResult();
         List<RecordMeta> records = new ArrayList<>();

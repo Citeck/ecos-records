@@ -36,37 +36,72 @@ public class AttributesMetaResolver {
             AttSchemaInfo attSchemaInfo = new AttSchemaInfo();
             attSchemaInfo.setOriginalKey(name);
 
-            int lastCloseBracketIdx = path.indexOf('}');
-            int pipeDelimIdx = path.indexOf('|');
-            if (pipeDelimIdx > 0 && lastCloseBracketIdx < pipeDelimIdx) {
-                attSchemaInfo.setProcessors(parseProcessor(path.substring(pipeDelimIdx + 1)));
+            int pipeDelimIdx = AttStrUtils.indexOf(path, '|');
+            if (pipeDelimIdx > 0) {
+                attSchemaInfo.setProcessors(parseProcessors(path.substring(pipeDelimIdx + 1)));
                 path = path.substring(0, pipeDelimIdx);
+            }
+            List<String> orElseAtts = AttStrUtils.split(path, '!');
+            if (orElseAtts.size() > 1) {
+                List<String> orElseAttKeys = new ArrayList<>();
+                for (int i = 1; i < orElseAtts.size(); i++) {
+                    String orElseAtt = orElseAtts.get(i).trim();
+                    if (orElseAtt.charAt(0) != '\'' && orElseAtt.charAt(0) != '"') {
+                        String key = keys.incrementAndGet();
+                        orElseAttKeys.add(key);
+                        addAttToSchema(key, orElseAtt, schema);
+                    } else {
+                        orElseAttKeys.add(orElseAtt);
+                    }
+                }
+                attSchemaInfo.setOrElseAtts(orElseAttKeys);
+                path = orElseAtts.get(0);
             }
 
             String key = generateKeys ? keys.incrementAndGet() : name;
-
             attsInfo.put(key, attSchemaInfo);
-            schema.append(key).append(":");
 
-            if (path.charAt(0) != '.') {
-                path = convertAttToGqlFormat(path, "disp", false);
-            }
-
-            schema.append(path, 1, path.length());
-            schema.append(",");
+            attSchemaInfo.setType(addAttToSchema(key, path, schema));
         });
         schema.setLength(schema.length() - 1);
 
         return new AttributesSchema(schema.toString(), attsInfo);
     }
 
-    private List<AttProcessorDef> parseProcessor(String processorStr) {
+    private Class<?> addAttToSchema(String key, String attribute, StringBuilder schema) {
+
+        schema.append(key).append(":");
+
+        if (attribute.charAt(0) != '.') {
+            attribute = convertAttToGqlFormat(attribute, "disp", false);
+        }
+        attribute = attribute.replace("'", "\"");
+        attribute = attribute.replace("(\"", "(n:\"");
+
+        schema.append(attribute, 1, attribute.length());
+        schema.append(",");
+
+        if (attribute.contains("{bool}") || attribute.contains("has(")) {
+            return Boolean.class;
+        } else if (attribute.contains("{num}")) {
+            return Double.class;
+        } else if (attribute.contains("{str}")
+                || attribute.contains("{disp}")
+                || attribute.contains("{assoc}")
+                || attribute.contains("{id}")) {
+
+            return String.class;
+        }
+        return null;
+    }
+
+    private List<AttProcessorDef> parseProcessors(String processorStr) {
         if (StringUtils.isBlank(processorStr)) {
             return Collections.emptyList();
         }
         List<AttProcessorDef> result = new ArrayList<>();
 
-        for (String proc : processorStr.split("\\|")) {
+        for (String proc : AttStrUtils.split(processorStr, '|')) {
             Matcher matcher = PROCESSOR_PATTERN.matcher(proc);
             if (matcher.matches()) {
                 String type = matcher.group(1).trim();
@@ -230,7 +265,15 @@ public class AttributesMetaResolver {
                 }
 
             } else if (scalarField != null) {
-                sb.append("{").append(scalarField).append("}");
+                sb.append("{");
+                int dotIdx = AttStrUtils.indexOf(scalarField, '.');
+                if (dotIdx > 0) {
+                    sb.append(scalarField.substring(0, dotIdx)).append("{");
+                    String innerAtt = convertAttToGqlFormat(scalarField.substring(dotIdx + 1), defaultScalar, multiple);
+                    sb.append(innerAtt, 1, innerAtt.length()).append("}}");
+                } else {
+                    sb.append(scalarField).append("}");
+                }
                 for (int i = 0; i < attsPath.length - 1; i++) {
                     sb.append("}");
                 }

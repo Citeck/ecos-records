@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.source.dao.MutableRecordsDao;
@@ -8,7 +9,9 @@ import java.util.List;
 
 public interface MutableRecordsLocalDao<T> extends MutableRecordsDao {
 
-    List<T> getValuesToMutate(List<RecordRef> records);
+    @NotNull
+    List<T> getValuesToMutate(@NotNull List<RecordRef> records);
 
-    RecordsMutResult save(List<T> values);
+    @NotNull
+    RecordsMutResult save(@NotNull List<T> values);
 }

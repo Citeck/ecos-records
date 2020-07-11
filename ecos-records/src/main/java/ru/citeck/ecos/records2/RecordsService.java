@@ -266,9 +266,14 @@ public interface RecordsService {
     /* OTHER */
 
     /**
-     * Register the RecordsDAO. It must return valid id from method "getId()" to call this method.
+     * Register the RecordsDao. It must return valid id from method "getId()" to call this method.
      */
     void register(RecordsDao recordsSource);
+
+    /**
+     * Register the RecordsDao with specified sourceId.
+     */
+    void register(String sourceId, RecordsDao recordsSource);
 
     /**
      * Add info about RecordsDao with specified Id.

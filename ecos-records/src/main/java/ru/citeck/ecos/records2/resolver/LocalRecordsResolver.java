@@ -520,21 +520,20 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return new DaoWithConvQuery<>(dao, convertedQuery);
     }
 
-    public void register(RecordsDao recordsDao) {
+    public void register(String sourceId, RecordsDao recordsDao) {
 
-        String id = recordsDao.getId();
-        if (id == null) {
+        if (sourceId == null) {
             log.error("id is a mandatory parameter for RecordsDao."
                 + " Type: " + recordsDao.getClass()
                 + " toString: " + recordsDao);
             return;
         }
 
-        allDao.put(id, recordsDao);
-        register(metaDao, RecordsMetaDao.class, recordsDao);
-        register(queryDao, RecordsQueryDao.class, recordsDao);
-        register(mutableDao, MutableRecordsDao.class, recordsDao);
-        register(queryWithMetaDao, RecordsQueryWithMetaDao.class, recordsDao);
+        allDao.put(sourceId, recordsDao);
+        register(sourceId, metaDao, RecordsMetaDao.class, recordsDao);
+        register(sourceId, queryDao, RecordsQueryDao.class, recordsDao);
+        register(sourceId, mutableDao, MutableRecordsDao.class, recordsDao);
+        register(sourceId, queryWithMetaDao, RecordsQueryWithMetaDao.class, recordsDao);
 
         if (recordsDao instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
@@ -548,11 +547,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
     }
 
-    private <T extends RecordsDao> void register(Map<String, T> map, Class<T> type, RecordsDao value) {
+    private <T extends RecordsDao> void register(String id, Map<String, T> map, Class<T> type, RecordsDao value) {
         if (type.isAssignableFrom(value.getClass())) {
             @SuppressWarnings("unchecked")
             T dao = (T) value;
-            map.put(value.getId(), dao);
+            map.put(id, dao);
         }
     }
 

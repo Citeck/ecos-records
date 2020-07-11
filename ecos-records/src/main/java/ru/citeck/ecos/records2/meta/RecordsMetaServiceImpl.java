@@ -1,9 +1,7 @@
 package ru.citeck.ecos.records2.meta;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
@@ -122,48 +120,85 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         ObjectData resultAttributes = ObjectData.create();
         Map<String, AttSchemaInfo> attsInfo = schema.getAttsInfo();
 
-        attributes.forEach((key, value) -> {
-
-            AttSchemaInfo attInfo = attsInfo.get(key);
-            String resultKey = attInfo.getOriginalKey();
-            if (resultKey != null) {
-
-                if (resultKey.equals(".json") || !flat) {
-                    resultAttributes.set(resultKey, value);
-
-                } else {
-
-                    JsonNode flatValue = toFlatNode(Json.getMapper().toJson(value));
-
-                    if (flatValue != null
-                            && !flatValue.isNull()
-                            && !flatValue.isMissingNode()
-                            && !attInfo.getProcessors().isEmpty()) {
-
-                        DataValue processedValue = DataValue.create(flatValue);
-                        for (AttProcessorDef procDef : attInfo.getProcessors()) {
-                            AttProcessor processor = attProcessors.get(procDef.getType());
-                            if (processor == null) {
-                                log.error("Attribute processor '"
-                                    + procDef.getType()
-                                    + "' is not found! Result will be null");
-                                processedValue = DataValue.NULL;
-                            } else {
-                                Object procResult = processor.process(processedValue, procDef.getArguments());
-                                processedValue = DataValue.create(procResult);
-                            }
-                        }
-                        flatValue = processedValue.getValue();
-                    }
-                    resultAttributes.set(resultKey, flatValue);
-                }
-            }
-        });
+        Iterator<String> fieldsIt = attributes.fieldNames();
+        while (fieldsIt.hasNext()) {
+            processAttribute(fieldsIt.next(), attsInfo, attributes, resultAttributes, flat);
+        }
 
         RecordMeta recordMeta = new RecordMeta(meta.getId());
         recordMeta.setAttributes(resultAttributes);
 
         return recordMeta;
+    }
+
+    private void processAttribute(String key,
+                                  Map<String, AttSchemaInfo> attsInfo,
+                                  ObjectData attributes,
+                                  ObjectData resultAttributes,
+                                  boolean flat) {
+
+        AttSchemaInfo attInfo = attsInfo.get(key);
+        if (attInfo == null) {
+            return;
+        }
+        String resultKey = attInfo.getOriginalKey();
+        if (StringUtils.isBlank(attInfo.getOriginalKey())) {
+            return;
+        }
+
+        DataValue value = attributes.get(key);
+
+        if (resultKey.equals(".json") || !flat) {
+
+            resultAttributes.set(resultKey, value);
+
+        } else {
+
+            JsonNode flatValue = toFlatNode(value.getValue());
+
+            if (flatValue.isNull()) {
+                List<String> orElseAtts = attInfo.getOrElseAtts();
+                for (String orElseAtt : orElseAtts) {
+                    char firstChar = orElseAtt.charAt(0);
+                    if (firstChar == '"' || firstChar == '\'') {
+                        orElseAtt = orElseAtt.substring(1, orElseAtt.length() - 1);
+                        if (attInfo.getType() != null && !String.class.equals(attInfo.getType())) {
+                            flatValue = Json.getMapper().toJson(
+                                DataValue.createStr(orElseAtt).getAs(attInfo.getType())
+                            );
+                        } else {
+                            flatValue = TextNode.valueOf(orElseAtt);
+                        }
+                        break;
+                    } else {
+                        JsonNode orElseValue = toFlatNode(attributes.get(orElseAtt).getValue());
+                        if (!orElseValue.isNull()) {
+                            flatValue = orElseValue;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!flatValue.isNull() && !attInfo.getProcessors().isEmpty()) {
+
+                DataValue processedValue = DataValue.create(flatValue);
+                for (AttProcessorDef procDef : attInfo.getProcessors()) {
+                    AttProcessor processor = attProcessors.get(procDef.getType());
+                    if (processor == null) {
+                        log.error("Attribute processor '"
+                            + procDef.getType()
+                            + "' is not found! Result will be null");
+                        processedValue = DataValue.NULL;
+                    } else {
+                        Object procResult = processor.process(processedValue, procDef.getArguments());
+                        processedValue = DataValue.create(procResult);
+                    }
+                }
+                flatValue = processedValue.getValue();
+            }
+            resultAttributes.set(resultKey, flatValue);
+        }
     }
 
     @Override
@@ -182,6 +217,10 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     }
 
     private JsonNode toFlatNode(JsonNode input) {
+
+        if (input == null || input.isMissingNode() || input.isNull()) {
+            return NullNode.getInstance();
+        }
 
         JsonNode node = input;
 

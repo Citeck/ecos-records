@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
@@ -107,7 +108,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         return new RecordsMutResult();
     }
 
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    @NotNull
+    public RecordsQueryResult<RecordRef> queryRecords(@NotNull RecordsQuery query) {
 
         if (this instanceof LocalRecordsQueryDao) {
 
@@ -131,7 +133,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         return new RecordsQueryResult<>();
     }
 
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
+    @NotNull
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull String metaSchema) {
 
         RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
@@ -147,21 +150,16 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
             RecordsQueryResult<?> values = withMeta.queryLocalRecords(query, metaField);
 
-            if (values != null) {
+            queryResult.merge(values);
+            queryResult.setHasMore(values.getHasMore());
+            queryResult.setTotalCount(values.getTotalCount());
 
-                queryResult.merge(values);
-                queryResult.setHasMore(values.getHasMore());
-                queryResult.setTotalCount(values.getTotalCount());
-
-                for (Object record : values.getRecords()) {
-                    if (record instanceof RecordRef) {
-                        recordRefs.add((RecordRef) record);
-                    } else {
-                        rawMetaValues.add(record);
-                    }
+            for (Object record : values.getRecords()) {
+                if (record instanceof RecordRef) {
+                    recordRefs.add((RecordRef) record);
+                } else {
+                    rawMetaValues.add(record);
                 }
-            } else {
-                writeWarn("getMetaValues(query) return null");
             }
 
         } else if (this instanceof RecordsQueryDao) {
@@ -207,7 +205,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         return queryResult;
     }
 
-    public RecordsResult<RecordMeta> getMeta(List<RecordRef> records, String metaSchema) {
+    @NotNull
+    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull String metaSchema) {
 
         RecordsResult<RecordMeta> result;
 

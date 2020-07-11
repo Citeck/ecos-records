@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -47,8 +48,9 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
         return Optional.ofNullable(records.get(toGlobalRef(recordRef)));
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
 
         Predicate predicate = query.getQuery(Predicate.class);
 
@@ -65,13 +67,15 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
         return result;
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
         return new RecordsQueryResult<>(queryLocalRecords(query), ref -> records.get(toGlobalRef(ref)));
     }
 
+    @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         @SuppressWarnings("unchecked")
         T empty = (T) EmptyValue.INSTANCE;
         return records.stream()
@@ -88,6 +92,7 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
         }
     }
 
+    @NotNull
     @Override
     public List<String> getSupportedLanguages() {
         return SUPPORTED_LANGUAGES;

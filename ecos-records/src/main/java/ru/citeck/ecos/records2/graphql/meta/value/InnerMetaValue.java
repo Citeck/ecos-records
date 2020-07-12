@@ -5,12 +5,14 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaValue> {
 
@@ -29,7 +31,7 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
-    public Object getAttribute(String name, MetaField field) {
+    public Object getAttribute(@NotNull String name, MetaField field) {
 
         String fieldName = field.getAlias();
         if (fieldName == null) {
@@ -43,7 +45,7 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
-    public Object getAs(String type, MetaField field) {
+    public Object getAs(@NotNull String type, MetaField field) {
 
         String fieldName = field.getAlias();
         if (fieldName == null) {
@@ -54,7 +56,7 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
-    public Object getAs(String type) {
+    public Object getAs(@NotNull String type) {
         return new InnerMetaValue(value.path("as"));
     }
 
@@ -71,48 +73,56 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
-    public boolean has(String name) {
-        return getScalar(value, "has").asBoolean();
+    public boolean has(@NotNull String name) {
+        return getScalarNode(value, "has").asBoolean();
     }
 
     @Override
     public String getDisplayName() {
-        return getScalar(value, "disp").asText();
+        return getScalar(value, "disp", JsonNode::asText);
     }
 
     @Override
     public String getString() {
-        return getScalar(value, "str").asText();
+        return getScalar(value, "str", JsonNode::asText);
     }
 
     @Override
     public String getId() {
-        return getScalar(value, "id").asText();
+        return getScalar(value, "id", JsonNode::asText);
     }
 
     @Override
     public Double getDouble() {
-        return getScalar(value, "num").asDouble();
+        return getScalar(value, "num", JsonNode::asDouble);
     }
 
     @Override
     public Boolean getBool() {
-        return getScalar(value, "bool").asBoolean();
+        return getScalar(value, "bool", JsonNode::asBoolean);
     }
 
     @Override
     public Object getJson() {
-        return getScalar(value, "json");
+        return getScalarNode(value, "json");
     }
 
-    private static JsonNode getScalar(JsonNode node, String name) {
+    private static <T> T getScalar(JsonNode node, String name, Function<JsonNode, T> mapper) {
+        JsonNode scalar = getScalarNode(node, name);
+        if (scalar.isNull() || scalar.isMissingNode()) {
+            return null;
+        }
+        return mapper.apply(scalar);
+    }
+
+    private static JsonNode getScalarNode(JsonNode node, String name) {
         if (node.isValueNode()) {
             return node;
         }
         if (node.isArray()) {
             ArrayNode array = JsonNodeFactory.instance.arrayNode();
             for (int i = 0; i < node.size(); i++) {
-                array.add(getScalar(node.get(i), name));
+                array.add(getScalarNode(node.get(i), name));
             }
             return array;
         }
@@ -130,7 +140,7 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
             }
         }
         if (att != null) {
-            return getScalar(att, name);
+            return getScalarNode(att, name);
         }
         return NullNode.getInstance();
     }

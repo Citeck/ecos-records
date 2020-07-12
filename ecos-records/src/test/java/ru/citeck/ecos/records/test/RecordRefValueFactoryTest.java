@@ -90,6 +90,23 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(DataValue.create(expected), meta.get("att3"));
     }
 
+    @Test
+    void test2() {
+
+        RecordsQuery query = new RecordsQuery();
+        query.setSourceId(ID);
+
+        Map<String, String> attsToRequest = new HashMap<>();
+        attsToRequest.put("null_0", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + ".unknown?str");
+
+        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
+
+        assertEquals(1, result.getRecords().size());
+        RecordMeta meta = result.getRecords().get(0);
+
+        assertEquals(DataValue.NULL, meta.get("null_0"));
+    }
+
     @Override
     public RecordsQueryResult<MetaValue> getMetaValues(RecordsQuery query) {
         RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();

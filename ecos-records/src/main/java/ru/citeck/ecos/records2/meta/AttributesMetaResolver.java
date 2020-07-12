@@ -121,7 +121,7 @@ public class AttributesMetaResolver {
         }
 
         argsStr = argsStr.replace("'", "\"");
-        Arrays.stream(argsStr.split(","))
+        AttStrUtils.split(argsStr, ",").stream()
             .map(String::trim)
             .map(DataValue::create)
             .forEach(result::add);

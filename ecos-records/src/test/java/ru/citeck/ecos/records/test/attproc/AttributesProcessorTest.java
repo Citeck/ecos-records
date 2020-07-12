@@ -57,6 +57,9 @@ class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMet
         attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
         assertEquals("2020.01.01___08", attribute.asText());
 
+        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY,MM.DD___HH','','GMT+7:00')");
+        assertEquals("2020,01.01___08", attribute.asText());
+
         attribute = recordsService.getAttribute(ref, "datee!'_____'|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
         assertEquals("_____", attribute.asText());
     }

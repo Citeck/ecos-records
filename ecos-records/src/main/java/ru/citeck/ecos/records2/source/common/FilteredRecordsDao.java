@@ -44,9 +44,4 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
     public void setTargetDao(RecordsQueryDao targetDao) {
         this.targetDao = targetDao;
     }
-
-    @Deprecated
-    public void setTargetDAO(RecordsQueryDao targetDao) {
-        setTargetDao(targetDao);
-    }
 }

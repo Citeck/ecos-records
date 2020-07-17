@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -9,8 +10,8 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaValue> {
+class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaValue> {
 
     private static String ID = "";
     private RecordsService recordsService;
@@ -68,8 +69,9 @@ class InnerMetaTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<MetaV
         assertTrue(attribute.isBoolean() && !attribute.asBoolean());
     }
 
+    @NotNull
     @Override
-    public List<MetaValue> getMetaValues(List<RecordRef> records) {
+    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream().map(r -> {
             if (r.getId().contains("inner")) {
                 return new InnerMeta();

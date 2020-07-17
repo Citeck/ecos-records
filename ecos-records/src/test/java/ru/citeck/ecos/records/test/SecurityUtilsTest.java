@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.RecordsQueryDAO;
+import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
 
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SecurityUtilsTest implements RecordsQueryDAO {
+public class SecurityUtilsTest implements RecordsQueryDao {
 
     private static final String ID = "test";
 

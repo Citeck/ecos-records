@@ -2,6 +2,7 @@ package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -13,8 +14,8 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -26,16 +27,17 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaValueTest extends LocalRecordsDAO
-                           implements RecordsMetaLocalDAO<Object> {
+public class MetaValueTest extends LocalRecordsDao
+                           implements LocalRecordsMetaDao<Object> {
 
     private static final String SOURCE_ID = "test-source";
 
     private RecordsService recordsService;
     private String innerSchema;
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return Collections.singletonList(new MetaVal(s -> innerSchema = s));
     }
 

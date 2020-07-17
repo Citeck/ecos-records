@@ -12,8 +12,8 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 
@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class InnerMixinTest extends LocalRecordsDAO
-                            implements LocalRecordsMetaDAO<Object> {
+public class InnerMixinTest extends LocalRecordsDao
+                            implements LocalRecordsMetaDao<Object> {
 
     private static final String ID = "mixinSourceId";
     private static final RecordRef DTO_REC_REF = RecordRef.create(ID, "test");

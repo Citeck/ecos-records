@@ -11,8 +11,8 @@ import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsMutationTest extends LocalRecordsDAO
-                                implements MutableRecordsLocalDAO<RecordsMutationTest.TestDto> {
+public class RecordsMutationTest extends LocalRecordsDao
+                                implements MutableRecordsLocalDao<RecordsMutationTest.TestDto> {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");

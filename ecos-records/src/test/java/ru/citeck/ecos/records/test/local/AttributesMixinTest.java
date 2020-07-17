@@ -16,9 +16,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class AttributesMixinTest extends LocalRecordsDAO
-                                 implements LocalRecordsQueryWithMetaDAO<Object>,
-                                            LocalRecordsMetaDAO<Object> {
+public class AttributesMixinTest extends LocalRecordsDao
+                                 implements LocalRecordsQueryWithMetaDao<Object>,
+                                            LocalRecordsMetaDao<Object> {
 
     private static final String ID = "mixinSourceId";
     private static final String REC_ID = "rec-id";

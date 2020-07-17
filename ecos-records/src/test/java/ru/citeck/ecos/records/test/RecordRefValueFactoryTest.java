@@ -2,6 +2,7 @@ package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,9 +15,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,9 +28,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RecordRefValueFactoryTest extends LocalRecordsDAO
-                                implements RecordsMetaLocalDAO<MetaValue>,
-                                           RecordsQueryWithMetaLocalDAO<MetaValue> {
+class RecordRefValueFactoryTest extends LocalRecordsDao
+                                implements LocalRecordsMetaDao<MetaValue>,
+                                           LocalRecordsQueryWithMetaDao<MetaValue> {
 
     private static final String ID = "sourceId";
 
@@ -107,15 +108,17 @@ class RecordRefValueFactoryTest extends LocalRecordsDAO
         assertEquals(DataValue.NULL, meta.get("null_0"));
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<MetaValue> getMetaValues(RecordsQuery query) {
+    public RecordsQueryResult<MetaValue> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
         RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();
         result.addRecord(Val.val0);
         return result;
     }
 
+    @NotNull
     @Override
-    public List<MetaValue> getMetaValues(List<RecordRef> records) {
+    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream().map(r -> {
             if (r.equals(RecordRef.valueOf(Val.val0.getId()))) {
                 return Val.val0;

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -8,15 +9,16 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.*;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,9 +28,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RecordsGroupTest extends LocalRecordsDAO
-                       implements RecordsQueryLocalDAO,
-                                  RecordsQueryWithMetaLocalDAO<Object> {
+class RecordsGroupTest extends LocalRecordsDao
+                       implements LocalRecordsQueryDao,
+                                  LocalRecordsQueryWithMetaDao<Object> {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -78,8 +80,10 @@ class RecordsGroupTest extends LocalRecordsDAO
         recordsService.register(this);
     }
 
+
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> getLocalRecords(RecordsQuery recordsQuery) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
 
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
         result.setRecords(Collections.singletonList(RecordRef.valueOf("One")));
@@ -177,8 +181,9 @@ class RecordsGroupTest extends LocalRecordsDAO
         return pred;
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<Object> getMetaValues(RecordsQuery recordsQuery) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
 
         RecordsQueryResult<Object> result = new RecordsQueryResult<>();
 

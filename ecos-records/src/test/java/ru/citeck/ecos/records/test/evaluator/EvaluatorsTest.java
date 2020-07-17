@@ -15,8 +15,8 @@ import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluatorsTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object>,
+public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object>,
                                                                RecordEvaluator<EvaluatorsTest.RequiredMeta,
                                                                    EvaluatorsTest.RequiredMeta,
                                                                    Object> {

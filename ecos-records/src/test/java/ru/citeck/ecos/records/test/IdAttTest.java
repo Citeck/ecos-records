@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -10,8 +11,8 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class IdAttTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
+class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
     private static final String ID = "test";
 
@@ -59,8 +60,9 @@ class IdAttTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
     }
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream().map(metaValues::get).collect(Collectors.toList());
     }
 

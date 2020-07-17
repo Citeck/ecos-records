@@ -26,9 +26,9 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -45,7 +45,7 @@ public class RemoteSyncRecordsDaoTest {
 
     private RecordsService recordsService;
     private RecordsWithMetaSource recordsWithMetaSource;
-    private RemoteSyncRecordsDAO<ValueDto> remoteSyncRecordsDAO;
+    private RemoteSyncRecordsDao<ValueDto> remoteSyncRecordsDao;
 
     @BeforeAll
     void setup() {
@@ -73,8 +73,8 @@ public class RemoteSyncRecordsDaoTest {
         recordsWithMetaSource = new RecordsWithMetaSource();
         remoteFactory.getRecordsService().register(recordsWithMetaSource);
 
-        remoteSyncRecordsDAO = new RemoteSyncRecordsDAO<>(REMOTE_SOURCE_ID, ValueDto.class);
-        this.recordsService.register(remoteSyncRecordsDAO);
+        remoteSyncRecordsDao = new RemoteSyncRecordsDao<>(REMOTE_SOURCE_ID, ValueDto.class);
+        this.recordsService.register(remoteSyncRecordsDao);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class RemoteSyncRecordsDaoTest {
         RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
         assertEquals(TOTAL_RECS, result.getTotalCount());
 
-        assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDAO.getRecords().values()));
+        assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDao.getRecords().values()));
 
         ValueDto dto = recordsService.getMeta(RecordRef.create("remote", "remote-source", "id-100"), ValueDto.class);
         ValueDto origDto = recordsWithMetaSource.values.stream().filter(v -> v.getId().equals("id-100")).findFirst().orElse(null);
@@ -112,8 +112,8 @@ public class RemoteSyncRecordsDaoTest {
         assertEquals(origDto, resultWithMeta.getRecords().get(0));
     }
 
-    static class RecordsWithMetaSource extends LocalRecordsDAO
-        implements LocalRecordsQueryWithMetaDAO<ValueDto> {
+    static class RecordsWithMetaSource extends LocalRecordsDao
+        implements LocalRecordsQueryWithMetaDao<ValueDto> {
 
         static final String ID = "remote-source";
 

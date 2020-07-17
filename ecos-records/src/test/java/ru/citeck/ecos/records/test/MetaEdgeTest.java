@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -16,8 +17,8 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,16 +28,17 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaEdgeTest extends LocalRecordsDAO
-                          implements RecordsMetaLocalDAO<Object> {
+public class MetaEdgeTest extends LocalRecordsDao
+                          implements LocalRecordsMetaDao<Object> {
 
     private static final String SOURCE_ID = "test-source";
     private static final String EDGE_FIELD_NAME = "test00";
 
     private RecordsService recordsService;
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return Collections.singletonList(new MetaTestVal());
     }
 

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,8 +15,8 @@ import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordPredicateElementTest extends LocalRecordsDAO implements RecordsMetaLocalDAO<Object> {
+public class RecordPredicateElementTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
     private PredicateService predicates;
     private RecordsService recordsService;
@@ -144,8 +145,9 @@ public class RecordPredicateElementTest extends LocalRecordsDAO implements Recor
         assertEquals(RecordRef.valueOf("6"), filtered.get(1).getRecordRef());
     }
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream()
                       .map(TestValue::new)
                       .collect(Collectors.toList());

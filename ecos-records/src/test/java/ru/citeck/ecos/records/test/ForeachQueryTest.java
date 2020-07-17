@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,8 +13,8 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +24,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLocalDAO {
+public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     private static final String ID = "";
     private RecordsService recordsService;
@@ -93,8 +94,9 @@ public class ForeachQueryTest extends LocalRecordsDAO implements RecordsQueryLoc
         }
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> getLocalRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
         result.setRecords(Collections.singletonList(resultRefs.get(queries.size())));
         queries.add(query);

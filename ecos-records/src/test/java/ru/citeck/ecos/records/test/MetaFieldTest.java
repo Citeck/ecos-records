@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -9,8 +10,8 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.*;
 
@@ -18,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaFieldTest extends LocalRecordsDAO
-                           implements RecordsMetaLocalDAO<Object>, MetaValue {
+public class MetaFieldTest extends LocalRecordsDao
+                           implements LocalRecordsMetaDao<Object>, MetaValue {
 
     private static final String SOURCE_ID = "test-source";
     private static final RecordRef RECORD_REF = RecordRef.create(SOURCE_ID, "test");
@@ -28,8 +29,9 @@ public class MetaFieldTest extends LocalRecordsDAO
 
     private boolean assertsPassed = false;
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return Collections.singletonList(this);
     }
 

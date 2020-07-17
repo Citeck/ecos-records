@@ -12,9 +12,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 import ru.citeck.ecos.records2.type.ComputedAttribute;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 
@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ComputedAttsTest extends LocalRecordsDAO
-    implements LocalRecordsQueryWithMetaDAO<Object>,
-    LocalRecordsMetaDAO<Object> {
+public class ComputedAttsTest extends LocalRecordsDao
+    implements LocalRecordsQueryWithMetaDao<Object>,
+    LocalRecordsMetaDao<Object> {
 
     private static final String ID = "mixinSourceId";
 

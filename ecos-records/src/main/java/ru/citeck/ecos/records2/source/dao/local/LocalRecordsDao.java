@@ -128,7 +128,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         }
 
         writeWarn("RecordsDao doesn't implement neither "
-                  + "RecordsQueryLocalDao nor RecordsQueryWithMetaLocalDao");
+                  + "LocalRecordsQueryDao nor LocalRecordsQueryWithMetaDao");
 
         return new RecordsQueryResult<>();
     }
@@ -188,7 +188,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                 RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
                 queryResult.merge(meta);
             } else {
-                writeWarn("RecordsDao implements neither RecordsMetaLocalDao "
+                writeWarn("RecordsDao implements neither LocalRecordsMetaDao "
                           + "nor RecordsMetaDao. We can't receive metadata");
                 recordRefs.stream().map(RecordMeta::new).forEach(queryResult::addRecord);
             }
@@ -223,7 +223,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
         } else {
 
-            writeWarn("RecordsDao doesn't implement RecordsMetaLocalDao. We can't receive metadata");
+            writeWarn("RecordsDao doesn't implement LocalRecordsMetaDao. We can't receive metadata");
 
             result = new RecordsResult<>();
             records.stream().map(RecordMeta::new).forEach(result::addRecord);

@@ -9,9 +9,9 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaAttributesSupplier;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MetaDAOTest extends LocalRecordsDAO implements LocalRecordsMetaDAO<MetaValue> {
+class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaValue> {
 
     private static final String ID = "123";
 

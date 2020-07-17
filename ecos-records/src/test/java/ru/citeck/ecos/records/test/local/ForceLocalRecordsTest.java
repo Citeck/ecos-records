@@ -8,8 +8,8 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,7 +38,7 @@ public class ForceLocalRecordsTest {
         private List<RecordRef> parents;
     }
 
-    public static class TypesDao extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
+    public static class TypesDao extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
         public static final String ID = "emodel/type";
 

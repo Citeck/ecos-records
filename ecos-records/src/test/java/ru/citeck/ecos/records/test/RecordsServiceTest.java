@@ -2,6 +2,7 @@ package ru.citeck.ecos.records.test;
 
 import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import ecos.com.fasterxml.jackson210.databind.util.ISO8601Utils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,12 +12,13 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsMetaLocalDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryLocalDAO;
-import ru.citeck.ecos.records2.source.dao.local.RecordsQueryWithMetaLocalDAO;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,10 +26,10 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsServiceTest extends LocalRecordsDAO
-                                implements RecordsQueryLocalDAO,
-                                           RecordsQueryWithMetaLocalDAO<Object>,
-                                           RecordsMetaLocalDAO<Object> {
+public class RecordsServiceTest extends LocalRecordsDao
+                                implements LocalRecordsQueryDao,
+                                           LocalRecordsQueryWithMetaDao<Object>,
+                                           LocalRecordsMetaDao<Object> {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
@@ -44,13 +46,15 @@ public class RecordsServiceTest extends LocalRecordsDAO
         recordsService.register(this);
     }
 
+    @NotNull
     @Override
-    public List<Object> getMetaValues(List<RecordRef> records) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream().map(r -> new PojoMeta(r.toString())).collect(Collectors.toList());
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> getLocalRecords(RecordsQuery recordsQuery) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
@@ -66,16 +70,17 @@ public class RecordsServiceTest extends LocalRecordsDAO
         return result;
     }
 
+    @NotNull
     @Override
-    public RecordsQueryResult<Object> getMetaValues(RecordsQuery recordsQuery) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
         RecordsQueryResult<Object> result = new RecordsQueryResult<>();
-        result.setRecords(getMetaValues(query.getIds()
+        result.setRecords(getLocalRecordsMeta(query.getIds()
                                              .stream()
                                              .map(RecordRef::valueOf)
-                                             .collect(Collectors.toList())));
+                                             .collect(Collectors.toList()), field));
 
         result.setHasMore(false);
         result.setTotalCount(query.getIds().size());

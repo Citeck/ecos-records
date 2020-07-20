@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -15,7 +16,7 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
 
     @Override
     public MetaValue getValue(MLText value) {
-        return new Value(value);
+        return new Value(value, false);
     }
 
     @Override
@@ -26,9 +27,11 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
     static class Value implements MetaValue {
 
         private final MLText value;
+        private final boolean closest;
 
-        Value(MLText value) {
+        Value(MLText value, boolean closest) {
             this.value = value;
+            this.closest = closest;
         }
 
         @Override
@@ -37,8 +40,15 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
-            return value.get(new Locale(name));
+        public Object getAttribute(@NotNull String name, @NotNull MetaField field) {
+            if (name.equals("closest")) {
+                return new Value(value, true);
+            }
+            if (name.equals("exact")) {
+                return new Value(value, false);
+            }
+            Locale locale = new Locale(name);
+            return closest ? value.getClosestValue(locale) : value.get(locale);
         }
 
         @Override

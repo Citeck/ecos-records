@@ -64,11 +64,13 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         this.addSourceId = addSourceId;
     }
 
-    public final RecordsMutResult mutate(RecordsMutation mutation) {
+    @NotNull
+    public final RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
         return mutateImpl(mutation);
     }
 
-    protected RecordsMutResult mutateImpl(RecordsMutation mutation) {
+    @NotNull
+    protected RecordsMutResult mutateImpl(@NotNull RecordsMutation mutation) {
 
         if (this instanceof MutableRecordsLocalDao) {
 

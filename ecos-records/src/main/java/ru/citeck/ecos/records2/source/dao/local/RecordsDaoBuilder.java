@@ -23,6 +23,11 @@ public class RecordsDaoBuilder {
         return this;
     }
 
+    public RecordsDaoBuilder addRecord(String recordRef, Object value) {
+        addRecord(RecordRef.valueOf(recordRef), value);
+        return this;
+    }
+
     public RecordsDaoBuilder addRecord(RecordRef recordRef, Object value) {
         this.records.put(recordRef, value);
         return this;

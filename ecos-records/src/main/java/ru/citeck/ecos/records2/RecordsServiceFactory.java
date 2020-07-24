@@ -18,6 +18,7 @@ import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import ru.citeck.ecos.records2.meta.*;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
+import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonDeserializer;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonSerializer;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateTypes;
@@ -186,7 +187,8 @@ public class RecordsServiceFactory {
         if (defaultRecordsDao == null) {
             defaultRecordsDao = Arrays.asList(
                 new MetaRecordsDao(this),
-                new RecordsSourceRecordsDao()
+                new RecordsSourceRecordsDao(),
+                new PredicateRecords()
             );
         }
         return defaultRecordsDao;

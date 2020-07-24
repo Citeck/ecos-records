@@ -9,6 +9,5 @@ import java.util.List;
 
 public interface LocalRecordsMetaDao<T> extends RecordsMetaDao {
 
-    @NotNull
     List<T> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField);
 }

@@ -8,6 +8,5 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 
 public interface LocalRecordsQueryDao extends RecordsQueryDao {
 
-    @NotNull
     RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query);
 }

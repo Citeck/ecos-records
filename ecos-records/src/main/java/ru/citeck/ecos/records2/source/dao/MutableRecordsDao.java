@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.dao;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -7,7 +8,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 
 public interface MutableRecordsDao extends RecordsDao {
 
-    RecordsMutResult mutate(RecordsMutation mutation);
+    RecordsMutResult mutate(@NotNull RecordsMutation mutation);
 
-    RecordsDelResult delete(RecordsDeletion deletion);
+    RecordsDelResult delete(@NotNull RecordsDeletion deletion);
 }

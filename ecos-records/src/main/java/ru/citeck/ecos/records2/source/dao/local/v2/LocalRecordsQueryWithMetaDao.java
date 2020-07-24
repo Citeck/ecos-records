@@ -8,6 +8,5 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDao;
 
 public interface LocalRecordsQueryWithMetaDao<T> extends RecordsQueryWithMetaDao {
 
-    @NotNull
-    RecordsQueryResult<T> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field);
+    RecordsQueryResult<T> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field);
 }

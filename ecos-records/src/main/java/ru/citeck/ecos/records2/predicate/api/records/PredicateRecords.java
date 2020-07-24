@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.predicate.api.records;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressFBWarnings(value = {
+    "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"
+})
 public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao<Object> {
 
     public static final String ID = "predicate";

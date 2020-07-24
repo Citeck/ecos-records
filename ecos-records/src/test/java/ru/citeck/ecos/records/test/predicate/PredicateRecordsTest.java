@@ -14,10 +14,12 @@ import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PredicateRecordsTest {
@@ -54,28 +56,47 @@ public class PredicateRecordsTest {
         assertTrue(check("bbb", Predicates.gt("intField", -10)));
         assertFalse(check("bbb", Predicates.gt("intField", 100)));
         assertTrue(check("bbb", Predicates.lt("intField", 102)));
+
+        List<ResultDto> multiRes = check(
+            Arrays.asList("aaa", "bbb"),
+            Arrays.asList(
+                Predicates.eq("strField", "str-value"),
+                Predicates.eq("strField", "str2-value")
+            )
+        );
+
+        assertEquals(2, multiRes.size());
+        assertEquals(2, multiRes.get(0).result.size());
+        assertEquals(2, multiRes.get(1).result.size());
+
+        assertTrue(multiRes.get(0).result.get(0));
+        assertFalse(multiRes.get(0).result.get(1));
+
+        assertFalse(multiRes.get(1).result.get(0));
+        assertTrue(multiRes.get(1).result.get(1));
     }
 
     private boolean check(String id, Predicate predicate) {
+        return check(Collections.singletonList(id), Collections.singletonList(predicate)).get(0).getResult().get(0);
+    }
+
+    private List<ResultDto> check(List<String> id, List<Predicate> predicates) {
 
         RecordsQuery query = new RecordsQuery();
 
         PredicateRecords.PredicateCheckQuery checkQuery = new PredicateRecords.PredicateCheckQuery();
-        checkQuery.setPredicate(predicate);
-        checkQuery.setRecord(RecordRef.valueOf("test@" + id));
+        checkQuery.setPredicates(predicates);
+        checkQuery.setRecords(id.stream().map(i -> RecordRef.valueOf("test@" + i)).collect(Collectors.toList()));
         query.setQuery(checkQuery);
         query.setSourceId("predicate");
 
-        Optional<ResultDto> queryRes = recordsService.queryRecord(query, ResultDto.class);
-
-        assertTrue(queryRes.isPresent(), "id: " + id + " predicate: " + predicate);
-        return queryRes.get().result;
+        return recordsService.queryRecords(query, ResultDto.class).getRecords();
     }
 
     @Data
     public static class ResultDto {
         private RecordRef record;
-        private Boolean result;
+        private List<Boolean> result;
     }
 
     @Data

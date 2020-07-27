@@ -92,6 +92,13 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
     }
 
     @Test
+    void test3() {
+
+        String id = recordsService.getAttribute(Val.val0.ref, "globalRef?localId").asText();
+        assertEquals(Val.globalRef.getId(), id);
+    }
+
+    @Test
     void test2() {
 
         RecordsQuery query = new RecordsQuery();
@@ -143,6 +150,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
         static final Val val0 = new Val(RecordRef.create(ID, "val0"));
         static final Val val1 = new Val(RecordRef.create(ID, "val1"));
         static final Val val2 = new Val(RecordRef.create(ID, "val2"));
+        static final RecordRef globalRef = RecordRef.create("global", "local", "ref");
 
         final RecordRef ref;
         final String value;
@@ -195,6 +203,8 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
                     return value;
                 case ARR_VALUE_FIELD:
                     return Arrays.asList(value, value);
+                case "globalRef":
+                    return globalRef;
                 default:
                     return null;
             }

@@ -15,7 +15,7 @@ public class AttributesMetaResolver {
 
     private static final String ATT_TYPE = ".type";
     private static final Pattern SUBFIELDS_PATTERN = Pattern.compile("^([^{]+)\\{(.+)}$");
-    private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+)\\((.*)\\)");
+    private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
     public AttributesSchema createSchema(Map<String, String> attributes) {
         return createSchema(attributes, true);

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.QueryContext;
@@ -17,7 +18,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
     private static final String ATT_ID = ".id";
     private static final String ATT_STR = ".str";
 
-    private RecordsServiceFactory serviceFactory;
+    private final RecordsServiceFactory serviceFactory;
 
     public RecordRefValueFactory(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
@@ -43,7 +44,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
-        public <T extends QueryContext> void init(T context, MetaField field) {
+        public <T extends QueryContext> void init(@NotNull T context, MetaField field) {
 
             Map<String, String> attsMap = field.getInnerAttributesMap();
             if (Objects.equals(attsMap.get(ATT_ID), ATT_ID)) {
@@ -90,12 +91,12 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             return meta.getAttribute(".has").asBoolean();
         }
 
         @Override
-        public Object getAs(String type, MetaField field) {
+        public Object getAs(@NotNull String type, @NotNull MetaField field) {
             return new InnerMetaValue(meta.getAttribute(".as"));
         }
 
@@ -105,7 +106,12 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public String getLocalId() {
+            return ref.getId();
+        }
+
+        @Override
+        public Object getAttribute(@NotNull String name, @NotNull MetaField field) {
             DataValue result = meta.get(name);
             if (result.isArray()) {
                 List<InnerMetaValue> resultList = new ArrayList<>();

@@ -48,6 +48,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
                         .dataFetcher(this::getId)
                         .type(Scalars.GraphQLID))
                 .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("localId")
+                        .description("Local identifier")
+                        .dataFetcher(this::getLocalId)
+                        .type(Scalars.GraphQLString))
+                .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("att")
                         .description("Attribute")
                         .dataFetcher(this::getAtt)
@@ -157,6 +162,11 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     private String getId(DataFetchingEnvironment env) {
         MetaValue value = env.getSource();
         return value.getId();
+    }
+
+    private String getLocalId(DataFetchingEnvironment env) {
+        MetaValue value = env.getSource();
+        return value.getLocalId();
     }
 
     private Object getAtt(DataFetchingEnvironment env) {

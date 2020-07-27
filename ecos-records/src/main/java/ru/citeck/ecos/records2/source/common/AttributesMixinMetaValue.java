@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.common;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
@@ -56,7 +57,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     @Override
-    public <T extends QueryContext> void init(T context, MetaField field) {
+    public <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
         initImpl(context, field, true);
     }
 

@@ -93,6 +93,11 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
     }
 
     @Override
+    public String getLocalId() {
+        return getScalar(value, "localId", JsonNode::asText);
+    }
+
+    @Override
     public Double getDouble() {
         return getScalar(value, "num", JsonNode::asDouble);
     }

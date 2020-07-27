@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 
@@ -14,7 +15,7 @@ public class MetaValueDelegate implements MetaValue {
     }
 
     @Override
-    public <T extends QueryContext> void init(T context, MetaField field) {
+    public <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
         impl.init(context, field);
     }
 
@@ -31,6 +32,11 @@ public class MetaValueDelegate implements MetaValue {
     @Override
     public String getId() {
         return impl.getId();
+    }
+
+    @Override
+    public String getLocalId() {
+        return impl.getLocalId();
     }
 
     @Override

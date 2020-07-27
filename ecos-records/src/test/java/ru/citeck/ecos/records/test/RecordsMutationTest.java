@@ -93,6 +93,20 @@ public class RecordsMutationTest extends LocalRecordsDao
         assertEquals("test1__", valuesToMutate.get(TEST_REF).getField1());
         assertTrue(valuesToMutate.get(TEST_REF).isBool());
 
+        meta = new RecordMeta(TEST_REF);
+        meta.set(".att(\"field\"){str}", "test____");
+        meta.set(".att(\"field0\"){json}", "test0____");
+        meta.set(".att('field1'){disp}", "test1____");
+        meta.set(".att('bool'){bool}", false);
+        mutation.setRecords(Collections.singletonList(meta));
+
+        recordsService.mutate(mutation);
+
+        assertEquals("test____", valuesToMutate.get(TEST_REF).getField());
+        assertEquals("test0____", valuesToMutate.get(TEST_REF).getField0());
+        assertEquals("test1____", valuesToMutate.get(TEST_REF).getField1());
+        assertFalse(valuesToMutate.get(TEST_REF).isBool());
+
         assertEquals(0, newValues.size());
 
         mutation = new RecordsMutation();

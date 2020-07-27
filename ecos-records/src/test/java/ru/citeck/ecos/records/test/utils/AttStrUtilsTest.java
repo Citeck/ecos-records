@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test.utils;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.meta.AttStrUtils;
+import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

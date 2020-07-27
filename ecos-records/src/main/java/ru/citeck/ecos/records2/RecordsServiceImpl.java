@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
@@ -27,10 +29,10 @@ import java.util.regex.Pattern;
 @Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
-    private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\(n:\"([^\"]+)\"\\).+");
+    private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\((n:)?[\"']([^\"']+)[\"']\\).+");
 
-    private RecordsResolver recordsResolver;
-    private RecordsMetaService recordsMetaService;
+    private final RecordsResolver recordsResolver;
+    private final RecordsMetaService recordsMetaService;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
@@ -40,6 +42,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* QUERY */
 
+    @NotNull
     @Override
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
@@ -48,6 +51,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         });
     }
 
+    @NotNull
     @Override
     public <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass) {
 
@@ -61,6 +65,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return new RecordsQueryResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
 
@@ -71,6 +76,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return records;
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
         return handleRecordsQuery(() -> recordsResolver.queryRecords(query, schema));
@@ -78,11 +84,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* ATTRIBUTES */
 
+    @NotNull
     @Override
     public DataValue getAtt(RecordRef record, String attribute) {
         return getAttribute(record, attribute);
     }
 
+    @NotNull
     @Override
     public DataValue getAttribute(RecordRef record, String attribute) {
 
@@ -98,6 +106,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return DataValue.create(null);
     }
 
+    @NotNull
     @Override
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Map<String, String> attributes) {
@@ -105,11 +114,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return getAttributesImpl(records, attributes, true);
     }
 
+    @NotNull
     @Override
     public RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes) {
         return getAttributesImpl(records, attributes, false);
     }
 
+    @NotNull
     private RecordsResult<RecordMeta> getAttributesImpl(Collection<RecordRef> records,
                                                         Map<String, String> attributes,
                                                         boolean flatAttributes) {
@@ -127,12 +138,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* META */
 
+    @NotNull
     @Override
-    public <T> T getMeta(RecordRef recordRef, Class<T> metaClass) {
-
-        if (recordRef == null) {
-            return null;
-        }
+    public <T> T getMeta(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
 
         RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
         if (meta.getRecords().size() == 0) {
@@ -141,8 +149,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return meta.getRecords().get(0);
     }
 
+    @NotNull
     @Override
-    public <T> RecordsResult<T> getMeta(Collection<RecordRef> records, Class<T> metaClass) {
+    public <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
 
         Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
         if (attributes.isEmpty()) {
@@ -154,6 +163,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
     }
 
+    @NotNull
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
         return handleRecordsRead(() -> recordsResolver.getMeta(records, schema), RecordsResult::new);
@@ -161,6 +171,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* MODIFICATION */
 
+    @NotNull
     @Override
     public RecordsMutResult mutate(RecordsMutation mutation) {
 
@@ -202,7 +213,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
                     Matcher matcher = ATT_PATTERN.matcher(name);
                     if (matcher.matches()) {
-                        simpleName = matcher.group(1);
+                        simpleName = matcher.group(2);
                     } else {
                         simpleName = null;
                     }
@@ -256,6 +267,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return value;
     }
 
+    @NotNull
     @Override
     public RecordsDelResult delete(RecordsDeletion deletion) {
         return recordsResolver.delete(deletion);
@@ -282,11 +294,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return result;
     }
 
+    @Nullable
     @Override
     public RecordsSourceInfo getSourceInfo(String sourceId) {
         return recordsResolver.getSourceInfo(sourceId);
     }
 
+    @NotNull
     @Override
     public List<RecordsSourceInfo> getSourcesInfo() {
         return recordsResolver.getSourceInfo();

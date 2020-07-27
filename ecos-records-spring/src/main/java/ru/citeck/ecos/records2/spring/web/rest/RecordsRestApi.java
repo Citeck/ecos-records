@@ -27,6 +27,8 @@ import ru.citeck.ecos.records2.spring.utils.web.exception.ResponseHandlingExcept
 import ru.citeck.ecos.records2.utils.SecurityUtils;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",
@@ -41,6 +43,8 @@ public class RecordsRestApi {
 
     private boolean isProdProfile = true;
     private Environment environment;
+
+    private Map<String, Object> contextAttributes = new ConcurrentHashMap<>();
 
     @Autowired
     public RecordsRestApi(RestHandler restHandler) {
@@ -172,7 +176,7 @@ public class RecordsRestApi {
                 Locale currentLocale = LocaleContextHolder.getLocale();
                 QueryContext.getCurrent().setLocale(currentLocale);
                 return encodeResponse(restHandler.queryRecords(queryBody));
-            });
+            }, contextAttributes);
         }
     }
 
@@ -278,6 +282,10 @@ public class RecordsRestApi {
             log.error("Jackson cannot write response body as bytes", jpe);
             throw new ResponseHandlingException(jpe);
         }
+    }
+
+    public void addContextAttribute(String key, Object value) {
+        this.contextAttributes.put(key, value);
     }
 
     @Autowired(required = false)

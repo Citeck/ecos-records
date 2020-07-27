@@ -7,6 +7,8 @@ import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetailsImpl;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.meta.util.AttModelUtils;
+import ru.citeck.ecos.records2.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.*;
@@ -16,12 +18,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
-    private RecordsService recordsService;
-    private RecordsMetaService recordsMetaService;
+    private final RecordsService recordsService;
+    private final RecordsMetaService recordsMetaService;
 
-    private Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
+    private final Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 
-    private RecordsServiceFactory factory;
+    private final RecordsServiceFactory factory;
 
     public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
         this.factory = factory;
@@ -151,25 +153,17 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         metaAttributes.forEach(atts -> attsToRequest.addAll(atts.values()));
 
-        Set<String> recordAttsToRequest = new HashSet<>();
-        Map<String, String> modelAttsToRequest = new HashMap<>();
-
-        attsToRequest.forEach(att -> {
-            if (att.charAt(0) == '$' || att.startsWith(".att(n:\"$") || att.startsWith(".atts(n:\"$")) {
-                modelAttsToRequest.put(att, att.replaceFirst("\\$", ""));
-            } else {
-                recordAttsToRequest.add(att);
-            }
-        });
+        RecordModelAtts recordModelAtts = AttModelUtils.splitModelAttributes(attsToRequest);
 
         RecordMeta modelMeta = null;
-        if (!modelAttsToRequest.isEmpty()) {
-            modelMeta = recordsMetaService.getMeta(model, modelAttsToRequest);
+        if (!recordModelAtts.getModelAtts().isEmpty()) {
+            modelMeta = recordsMetaService.getMeta(model, recordModelAtts.getModelAtts());
         }
 
         List<RecordMeta> recordsMeta;
         if (!attsToRequest.isEmpty()) {
-            RecordsResult<RecordMeta> recordsRes = recordsService.getAttributes(recordRefs, recordAttsToRequest);
+            RecordsResult<RecordMeta> recordsRes = recordsService.getAttributes(recordRefs,
+                                                                                recordModelAtts.getRecordAtts());
             recordsMeta = recordsRes.getRecords();
         } else {
             recordsMeta = recordRefs.stream().map(RecordMeta::new).collect(Collectors.toList());

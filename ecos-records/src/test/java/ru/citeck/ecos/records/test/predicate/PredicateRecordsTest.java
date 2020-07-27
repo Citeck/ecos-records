@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -14,9 +15,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,16 +24,18 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PredicateRecordsTest {
 
     private RecordsService recordsService;
+    private RecordsServiceFactory recordsServiceFactory;
 
     @BeforeAll
     void init() {
 
-        RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsServiceFactory = new RecordsServiceFactory();
+        recordsService = recordsServiceFactory.getRecordsService();
 
         recordsService.register(RecordsDaoBuilder.create("test")
             .addRecord("aaa", new DataDto("str-value", 0))
             .addRecord("bbb", new DataDto("str2-value", 100))
+            .addRecord("ccc", new DataDto("str3-value", 0))
             .build());
     }
 
@@ -74,6 +75,32 @@ public class PredicateRecordsTest {
 
         assertFalse(multiRes.get(1).result.get(0));
         assertTrue(multiRes.get(1).result.get(1));
+    }
+
+    @Test
+    void contextAttsTest() {
+
+        Map<String, Object> ctxAtts = new HashMap<>();
+        ctxAtts.put("ctxatt", RecordRef.valueOf("test@ccc"));
+
+        QueryContext.withContext(recordsServiceFactory, () -> {
+
+            assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
+
+            Map<String, Object> newAtts = new HashMap<>();
+            newAtts.put("ctxatt", RecordRef.valueOf("test@aaa"));
+            newAtts.put("ctxatt2", RecordRef.valueOf("test@bbb"));
+
+            QueryContext.withAttributes(newAtts, () -> {
+                assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
+                assertTrue(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
+            });
+
+            assertNull(QueryContext.getCurrent().getAttributes().get("ctxatt2"));
+            assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
+            assertFalse(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
+
+        }, ctxAtts);
     }
 
     private boolean check(String id, Predicate predicate) {

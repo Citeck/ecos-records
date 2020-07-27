@@ -26,9 +26,8 @@ import ru.citeck.ecos.records2.spring.utils.web.exception.RequestHandlingExcepti
 import ru.citeck.ecos.records2.spring.utils.web.exception.ResponseHandlingException;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
 
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Api(
     description = "Service for universal querying an arbitrary data set (record) from any available data source",
@@ -39,12 +38,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/api/records")
 public class RecordsRestApi {
 
-    private RestHandler restHandler;
+    private final RestHandler restHandler;
 
     private boolean isProdProfile = true;
     private Environment environment;
 
-    private Map<String, Object> contextAttributes = new ConcurrentHashMap<>();
+    private List<ContextAttributesSupplier> ctxAttsSuppliers = new CopyOnWriteArrayList<>();
 
     @Autowired
     public RecordsRestApi(RestHandler restHandler) {
@@ -172,11 +171,18 @@ public class RecordsRestApi {
         if (recordsServiceFactory == null) {
             return encodeResponse(restHandler.queryRecords(queryBody));
         } else {
+            Map<String, Object> ctxAtts = new HashMap<>();
+            ctxAttsSuppliers.forEach(s -> {
+                Map<String, Object> atts = s.getAttributes();
+                if (atts != null && !atts.isEmpty()) {
+                    ctxAtts.putAll(atts);
+                }
+            });
             return QueryContext.withContext(recordsServiceFactory, () -> {
                 Locale currentLocale = LocaleContextHolder.getLocale();
                 QueryContext.getCurrent().setLocale(currentLocale);
                 return encodeResponse(restHandler.queryRecords(queryBody));
-            }, contextAttributes);
+            }, ctxAtts);
         }
     }
 
@@ -284,8 +290,8 @@ public class RecordsRestApi {
         }
     }
 
-    public void addContextAttribute(String key, Object value) {
-        this.contextAttributes.put(key, value);
+    public void registerContextAttsSupplier(ContextAttributesSupplier supplier) {
+        this.ctxAttsSuppliers.add(supplier);
     }
 
     @Autowired(required = false)

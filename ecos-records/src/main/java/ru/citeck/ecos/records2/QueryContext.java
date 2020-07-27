@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -15,6 +16,7 @@ public class QueryContext {
 
     private List<?> metaValues;
     private final Map<String, Object> contextData = new ConcurrentHashMap<>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
     @Getter
     private boolean computedAttsDisabled;
@@ -47,7 +49,76 @@ public class QueryContext {
         }
     }
 
+    public static void withAttributes(Map<String, Object> contextAttributes, Runnable runnable) {
+        withAttributes(contextAttributes, () -> {
+            runnable.run();
+            return null;
+        });
+    }
+
+    public static <T> T withAttributes(Map<String, Object> contextAttributes, Supplier<T> callable) {
+
+        QueryContext context = QueryContext.getCurrent();
+        if (context == null) {
+            throw new IllegalStateException("Query context is not defined! Attributes: " + contextAttributes);
+        }
+
+        Map<String, Object> before = new HashMap<>();
+        Map<String, Object> contextAtts = context.attributes;
+        contextAttributes.forEach((k, v) -> {
+            before.put(k, contextAtts.get(k));
+            contextAtts.put(k, v);
+        });
+
+        try {
+            return callable.get();
+        } finally {
+            before.forEach((k, v) -> {
+                if (v != null) {
+                    contextAtts.put(k, v);
+                } else {
+                    contextAtts.remove(k);
+                }
+            });
+        }
+    }
+
+    public static <T> T withContext(RecordsServiceFactory serviceFactory,
+                                    Supplier<T> callable,
+                                    Map<String, Object> contextAttributes) {
+
+        return withContext(serviceFactory, currentCtx -> {
+
+            currentCtx.attributes.putAll(contextAttributes);
+            try {
+                return callable.get();
+            } finally {
+                currentCtx.attributes.clear();
+            }
+        });
+    }
+
+    public static void withContext(RecordsServiceFactory serviceFactory,
+                                    Runnable runnable,
+                                    Map<String, Object> contextAttributes) {
+
+        withContext(serviceFactory, currentCtx -> {
+
+            currentCtx.attributes.putAll(contextAttributes);
+            try {
+                runnable.run();
+            } finally {
+                currentCtx.attributes.clear();
+            }
+            return null;
+        });
+    }
+
     public static <T> T withContext(RecordsServiceFactory serviceFactory, Supplier<T> callable) {
+        return withContext(serviceFactory, ctx -> callable.get());
+    }
+
+    public static <T> T withContext(RecordsServiceFactory serviceFactory, Function<QueryContext, T> callable) {
 
         QueryContext context = QueryContext.getCurrent();
         boolean isContextOwner = false;
@@ -60,7 +131,7 @@ public class QueryContext {
         T result;
 
         try {
-            result = callable.get();
+            result = callable.apply(context);
         } finally {
             if (isContextOwner) {
                 QueryContext.removeCurrent();
@@ -166,5 +237,9 @@ public class QueryContext {
 
     public RecordsService getRecordsService() {
         return serviceFactory.getRecordsService();
+    }
+
+    public Map<String, Object> getAttributes() {
+        return Collections.unmodifiableMap(attributes);
     }
 }

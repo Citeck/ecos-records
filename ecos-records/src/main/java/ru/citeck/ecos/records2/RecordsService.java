@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records2;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -54,6 +56,7 @@ public interface RecordsService {
      *
      * @see RecordsService#queryRecords(RecordsQuery)
      */
+    @NotNull
     Optional<RecordRef> queryRecord(RecordsQuery query);
 
     /**
@@ -61,6 +64,7 @@ public interface RecordsService {
      *
      * @see RecordsService#queryRecords(RecordsQuery, Class)
      */
+    @NotNull
     <T> Optional<T> queryRecord(RecordsQuery query, Class<T> metaClass);
 
     /**
@@ -68,6 +72,7 @@ public interface RecordsService {
      *
      * @see RecordsService#queryRecords(RecordsQuery, Collection)
      */
+    @NotNull
     Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes);
 
     /**
@@ -75,6 +80,7 @@ public interface RecordsService {
      *
      * @see RecordsService#queryRecords(RecordsQuery, Map)
      */
+    @NotNull
     Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes);
 
     /* QUERY RECORDS */
@@ -84,8 +90,10 @@ public interface RecordsService {
      *
      * @return list of records, page info and debug info if query.isDebug() returns true
      */
+    @NotNull
     RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
 
+    @NotNull
     RecordsQueryResult<List<RecordRef>> queryRecords(List<DataValue> foreach, RecordsQuery query);
 
     /**
@@ -100,8 +108,10 @@ public interface RecordsService {
      *
      * @see MetaAtt
      */
+    @NotNull
     <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass);
 
+    @NotNull
     <T> RecordsQueryResult<List<T>> queryRecords(List<DataValue> foreach, RecordsQuery query, Class<T> metaClass);
 
     /**
@@ -111,8 +121,10 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
 
+    @NotNull
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Collection<String> attributes);
@@ -125,8 +137,10 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
+    @NotNull
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Map<String, String> attributes);
@@ -137,8 +151,10 @@ public interface RecordsService {
      *
      * @param schema GraphQL schema of metadata to receive
      */
+    @NotNull
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
 
+    @NotNull
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach, RecordsQuery query, String schema);
 
     /* ATTRIBUTES */
@@ -148,6 +164,7 @@ public interface RecordsService {
      *
      * @return flat record attribute value
      */
+    @NotNull
     DataValue getAtt(RecordRef record, String attribute);
 
     /**
@@ -155,6 +172,7 @@ public interface RecordsService {
      *
      * @return flat record attribute value
      */
+    @NotNull
     DataValue getAttribute(RecordRef record, String attribute);
 
     /**
@@ -164,6 +182,7 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordMeta getAttributes(RecordRef record, Collection<String> attributes);
 
     /**
@@ -174,6 +193,7 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordMeta getAttributes(RecordRef record, Map<String, String> attributes);
 
     /**
@@ -183,6 +203,7 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Collection<String> attributes);
 
     /**
@@ -193,6 +214,7 @@ public interface RecordsService {
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
+    @NotNull
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
     /**
@@ -201,6 +223,7 @@ public interface RecordsService {
      * @param attributes map, where a key is a pseudonym for a result value
      *                   and value is an attribute which value we want to request.
      */
+    @NotNull
     RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes);
 
     /**
@@ -209,6 +232,7 @@ public interface RecordsService {
      * @param attributes map, where a key is a pseudonym for a result value
      *                   and value is an attribute which value we want to request.
      */
+    @NotNull
     RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
     /* META */
@@ -224,7 +248,8 @@ public interface RecordsService {
      *
      * @see MetaAtt
      */
-    <T> T getMeta(RecordRef recordRef, Class<T> metaClass);
+    @NotNull
+    <T> T getMeta(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass);
 
     /**
      * Get records metadata. Specified class will be used to determine
@@ -237,7 +262,8 @@ public interface RecordsService {
      *
      * @see MetaAtt
      */
-    <T> RecordsResult<T> getMeta(Collection<RecordRef> records, Class<T> metaClass);
+    @NotNull
+    <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass);
 
     /**
      * Low-level method to get records metadata.
@@ -247,6 +273,7 @@ public interface RecordsService {
      *
      * @return records metadata
      */
+    @NotNull
     RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema);
 
     /* MODIFICATION */
@@ -254,13 +281,16 @@ public interface RecordsService {
     /**
      * Create or change records.
      */
+    @NotNull
     RecordsMutResult mutate(RecordsMutation mutation);
 
+    @NotNull
     RecordMeta mutate(RecordMeta meta);
 
     /**
      * Delete records.
      */
+    @NotNull
     RecordsDelResult delete(RecordsDeletion deletion);
 
     /* OTHER */
@@ -278,10 +308,12 @@ public interface RecordsService {
     /**
      * Add info about RecordsDao with specified Id.
      */
+    @Nullable
     RecordsSourceInfo getSourceInfo(String sourceId);
 
     /**
      * Get info about all registered RecordsDao.
      */
+    @NotNull
     List<RecordsSourceInfo> getSourcesInfo();
 }

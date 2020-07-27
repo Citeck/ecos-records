@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class RecordElement implements Element {
 
-    private RecordRef recordRef;
+    private final RecordRef recordRef;
     private RecordsService recordsService;
     private RecordMeta meta;
 

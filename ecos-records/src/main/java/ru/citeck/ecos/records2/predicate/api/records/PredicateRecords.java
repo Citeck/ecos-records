@@ -4,18 +4,22 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.meta.util.AttModelUtils;
+import ru.citeck.ecos.records2.meta.util.RecordModelAtts;
+import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
+import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @SuppressFBWarnings(value = {
     "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"
@@ -39,16 +43,37 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
 
         RecordsQueryResult<Object> queryResult = new RecordsQueryResult<>();
 
-        for (RecordRef record : query.getRecords()) {
+        Set<String> attributes = new HashSet<>();
+        for (Predicate predicate : query.getPredicates()) {
+            attributes.addAll(PredicateUtils.getAllPredicateAttributes(predicate));
+        }
+
+        RecordModelAtts recordModelAtts = AttModelUtils.splitModelAttributes(attributes);
+
+        RecordsResult<RecordMeta> resolvedAtts = recordsService.getAttributes(
+            query.getRecords(),
+            recordModelAtts.getRecordAtts()
+        );
+        if (!recordModelAtts.getModelAtts().isEmpty()) {
+            RecordMeta modelAtts = recordsMetaService.getMeta(
+                QueryContext.getCurrent().getAttributes(),
+                recordModelAtts.getModelAtts()
+            );
+            resolvedAtts.getRecords().forEach(rec -> modelAtts.forEach(rec::set));
+        }
+
+        int idx = 0;
+        for (RecordMeta record : resolvedAtts.getRecords()) {
 
             List<Boolean> checkResult = new ArrayList<>();
-            RecordElement element = new RecordElement(recordsService, record);
+            RecordElement element = new RecordElement(record);
 
             for (Predicate predicate : query.getPredicates()) {
                 checkResult.add(predicateService.isMatch(element, predicate));
             }
 
-            queryResult.addRecord(new PredicateCheckResult(record, checkResult));
+            RecordRef recordRef = query.getRecords().get(idx++);
+            queryResult.addRecord(new PredicateCheckResult(recordRef, checkResult));
         }
 
         return queryResult;

@@ -4,6 +4,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
+import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;

@@ -69,7 +69,8 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
             RecordElement element = new RecordElement(record);
 
             for (Predicate predicate : query.getPredicates()) {
-                checkResult.add(predicateService.isMatch(element, predicate));
+                Predicate resolved = PredicateUtils.resolvePredicateWithAttributes(predicate, record.getAttributes());
+                checkResult.add(predicateService.isMatch(element, resolved));
             }
 
             RecordRef recordRef = query.getRecords().get(idx++);

@@ -94,6 +94,7 @@ public class PredicateRecordsTest {
             QueryContext.withAttributes(newAtts, () -> {
                 assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
+                assertTrue(check("aaa", Predicates.eq("$ctxatt2.intField", "${$ctxatt2.intField}")));
             });
 
             assertNull(QueryContext.getCurrent().getAttributes().get("ctxatt2"));

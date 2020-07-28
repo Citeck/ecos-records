@@ -38,6 +38,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         MandatoryParam.check("local", local);
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
 
@@ -49,8 +50,9 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return remote.queryRecords(query, schema);
     }
 
+    @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records, String schema) {
         if (remote == null || records.isEmpty()) {
             return local.getMeta(records, schema);
         }

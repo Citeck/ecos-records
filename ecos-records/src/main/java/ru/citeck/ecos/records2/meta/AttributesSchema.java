@@ -1,31 +1,26 @@
 package ru.citeck.ecos.records2.meta;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
+
+import java.util.Collections;
 import java.util.Map;
 
+@Data
+@AllArgsConstructor
 public class AttributesSchema {
 
-    private String schema;
+    private String gqlSchema;
     private Map<String, AttSchemaInfo> attsInfo;
+    private MetaField metaField;
+    private Map<String, String> attributes;
 
-    public AttributesSchema(String schema, Map<String, AttSchemaInfo> attsInfo) {
-        this.schema = schema;
-        this.attsInfo = attsInfo;
+    public AttributesSchema() {
+        this.gqlSchema = "";
+        this.attsInfo = Collections.emptyMap();
+        this.metaField = EmptyMetaField.INSTANCE;
+        this.attributes = Collections.emptyMap();
     }
-
-    public String getSchema() {
-        return schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
-    public Map<String, AttSchemaInfo> getAttsInfo() {
-        return attsInfo;
-    }
-
-    public void setAttsInfo(Map<String, AttSchemaInfo> attsInfo) {
-        this.attsInfo = attsInfo;
-    }
-
 }

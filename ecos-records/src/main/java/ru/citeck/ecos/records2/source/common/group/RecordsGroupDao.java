@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.common.group;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
@@ -9,11 +10,11 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 
-public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao {
+public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     public static final String ID = "group";
 
@@ -24,11 +25,12 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
     }
 
     @Override
-    public RecordsQueryResult queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query,
+                                                   @NotNull MetaField field) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {
-            return new RecordsQueryResult();
+            return new RecordsQueryResult<>();
         }
 
         RecordsQuery groupsBaseQuery = new RecordsQuery(query);
@@ -53,7 +55,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
             List<DistinctValue> values = getDistinctValues(query.getSourceId(), basePredicate, groupAtt, max);
 
             if (values.isEmpty()) {
-                return new RecordsQueryResult();
+                return new RecordsQueryResult<>();
             }
 
             distinctValues.add(values);

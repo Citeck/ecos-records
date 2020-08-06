@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaFieldTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao<Object>, MetaValue {
+                           implements LocalRecordsMetaDao, MetaValue {
 
     private static final String SOURCE_ID = "test-source";
     private static final RecordRef RECORD_REF = RecordRef.create(SOURCE_ID, "test");
@@ -48,31 +47,26 @@ public class MetaFieldTest extends LocalRecordsDao
     @Test
     void test() {
 
-        String schema = "att(n:\"test\"){" +
-                "field0:att(n:\"one\") {" +
-                    "innerOneAlias: att(n:\"innerOne\"){" +
-                        "str" +
-                    "}," +
-                    "innerTwoAlias: atts(n:\"innerTwo\"){" +
-                        "att(n:\"innerInnerTest\"){json}" +
-                    "}," +
-                    "disp" +
-                "}," +
-                "field1:att(n:\"two\"){num}" +
-            "}";
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("att", ".att(n:\"test\"){" +
+                    "field0:att(n:\"one\") {" +
+                        "innerOneAlias: att(n:\"innerOne\"){" +
+                            "str" +
+                        "}," +
+                        "innerTwoAlias: atts(n:\"innerTwo\"){" +
+                            "att(n:\"innerInnerTest\"){json}" +
+                        "}," +
+                        "disp" +
+                    "}}");
+        attributes.put("field1", "att(n:\"two\"){num}");
 
         assertsPassed = false;
-        recordsService.getMeta(Collections.singletonList(RECORD_REF), schema);
+        recordsService.getAttributes(Collections.singletonList(RECORD_REF), attributes);
         assertTrue(assertsPassed);
     }
 
     @Override
-    public <T extends QueryContext> void init(T context, MetaField field) {
-
-    }
-
-    @Override
-    public Object getAttribute(String name, MetaField field) {
+    public Object getAttribute(@NotNull String name, MetaField field) {
 
         if ("field0".equals(field.getAlias())) {
 

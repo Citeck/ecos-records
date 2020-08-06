@@ -132,7 +132,7 @@ public interface RecordsService {
     /**
      * Query records and its attributes.
      *
-     * @param attributes map, where a key is a pseudonym for a result value
+     * @param attributes map, where a key is a alias for a result value
      *                   and value is an attribute which value we want to request.
      *
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
@@ -144,18 +144,6 @@ public interface RecordsService {
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Map<String, String> attributes);
-
-    /**
-     * Low-level method to search records and receive its metadata.
-     * Usually, you should not use this method because it has a set of disadvantages against other methods.
-     *
-     * @param schema GraphQL schema of metadata to receive
-     */
-    @NotNull
-    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema);
-
-    @NotNull
-    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach, RecordsQuery query, String schema);
 
     /* ATTRIBUTES */
 
@@ -264,17 +252,6 @@ public interface RecordsService {
      */
     @NotNull
     <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass);
-
-    /**
-     * Low-level method to get records metadata.
-     * Usually, you should not use this method because it has a set of disadvantages against other methods.
-     *
-     * @param schema GraphQL schema of metadata to receive
-     *
-     * @return records metadata
-     */
-    @NotNull
-    RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema);
 
     /* MODIFICATION */
 

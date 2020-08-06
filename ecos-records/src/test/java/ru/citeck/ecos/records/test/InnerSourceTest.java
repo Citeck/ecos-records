@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -17,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InnerSourceTest extends LocalRecordsDao implements LocalRecordsQueryDao {
 
-    private static String ID = "first";
-    private static String INNER_ID = "inner";
+    private static final String ID = "first";
+    private static final String INNER_ID = "inner";
 
     private RecordsService recordsService;
 
@@ -39,7 +40,8 @@ class InnerSourceTest extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query,
+                                                           @NotNull MetaField metaField) {
         assertEquals(INNER_ID, query.getSourceId());
         return new RecordsQueryResult<>();
     }

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaNumberTest extends LocalRecordsDao
-                            implements LocalRecordsMetaDao<Object> {
+                            implements LocalRecordsMetaDao {
 
     RecordsService recordsService;
 
@@ -44,9 +44,9 @@ public class MetaNumberTest extends LocalRecordsDao
         return records.stream().map(TestValue::new).collect(Collectors.toList());
     }
 
-    class TestValue implements MetaValue {
+    static class TestValue implements MetaValue {
 
-        private RecordRef ref;
+        private final RecordRef ref;
 
         public TestValue(RecordRef ref) {
             this.ref = ref;

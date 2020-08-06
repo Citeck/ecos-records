@@ -14,14 +14,8 @@ import java.util.List;
 @Slf4j
 public class RestHandler {
 
-    private RecordsService recordsService;
-    private RecordsServiceFactory factory;
-
-    @Deprecated
-    public RestHandler(RecordsService recordsService) {
-        log.error("Constructor with recordsService is deprecated");
-        this.recordsService = recordsService;
-    }
+    private final RecordsService recordsService;
+    private final RecordsServiceFactory factory;
 
     public RestHandler(RecordsServiceFactory factory) {
         this.factory = factory;
@@ -33,10 +27,6 @@ public class RestHandler {
         if (body.getQuery() != null && body.getRecords() != null) {
             log.warn("There must be one of 'records' or 'query' field "
                    + "but found both. 'records' field will be ignored");
-        }
-        if (body.getAttributes() != null && body.getSchema() != null) {
-            log.warn("There must be one of 'attributes' or 'schema' field "
-                   + "but found both. 'schema' field will be ignored");
         }
 
         RecordsResult<?> recordsResult;
@@ -52,14 +42,6 @@ public class RestHandler {
                     recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
                 }
 
-            } else if (body.getSchema() != null) {
-
-                if (foreach != null) {
-                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getSchema());
-                } else {
-                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
-                }
-
             } else {
 
                 if (foreach != null) {
@@ -73,18 +55,10 @@ public class RestHandler {
             if (body.getRecords() == null) {
                 throw new IllegalArgumentException("At least 'records' or 'query' must be specified");
             }
-            if (body.getSchema() == null && body.getAttributes() == null) {
-                throw new IllegalArgumentException("You must specify 'schema' or 'attributes' for records");
-            }
-
             if (body.getAttributes() == null) {
-
-                recordsResult = recordsService.getMeta(body.getRecords(), body.getSchema());
-
-            } else {
-
-                recordsResult = recordsService.getAttributes(body.getRecords(), body.getAttributes());
+                throw new IllegalArgumentException("You must specify 'attributes' for records");
             }
+            recordsResult = recordsService.getAttributes(body.getRecords(), body.getAttributes());
         }
 
         ErrorUtils.logErrorsWithBody(recordsResult, body);

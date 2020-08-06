@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records2.graphql.meta.value.field;
 
 import graphql.language.*;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.*;
@@ -8,9 +10,17 @@ import java.util.*;
 public class MetaFieldImpl implements MetaField {
 
     private final Field field;
+    @Getter
+    private final MetaField parent;
+
+    public MetaFieldImpl(Field field, MetaField parent) {
+        this.field = field;
+        this.parent = parent;
+    }
 
     public MetaFieldImpl(Field field) {
         this.field = field;
+        this.parent = EmptyMetaField.INSTANCE;
     }
 
     @Override
@@ -31,6 +41,21 @@ public class MetaFieldImpl implements MetaField {
     @Override
     public String getAttributeSchema(String fieldName) {
         return getFieldSchema(getInnerAttFields().get(fieldName));
+    }
+
+    @NotNull
+    @Override
+    public Map<String, MetaField> getSubFields() {
+
+        Map<String, MetaField> subFields = new HashMap<>();
+
+        List<Field> innerFields = getInnerFields(field);
+        innerFields.forEach(f -> {
+            MetaField field = new MetaFieldImpl(f, this);
+            subFields.put(field.getKey(), field);
+        });
+
+        return subFields;
     }
 
     private String getFieldSchema(Field field) {
@@ -74,7 +99,7 @@ public class MetaFieldImpl implements MetaField {
 
                 sb.append(arg.getName()).append(":");
 
-                Value value = arg.getValue();
+                Value<?> value = arg.getValue();
                 if (value instanceof StringValue) {
                     String strArg = ((StringValue) value).getValue();
                     strArg = strArg.replace("\"", "\\\"");

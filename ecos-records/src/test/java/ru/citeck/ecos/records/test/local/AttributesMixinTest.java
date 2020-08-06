@@ -18,7 +18,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AttributesMixinTest extends LocalRecordsDao
-                                 implements LocalRecordsQueryWithMetaDao<Object>,
-                                            LocalRecordsMetaDao<Object> {
+                                 implements LocalRecordsQueryDao,
+                                            LocalRecordsMetaDao {
 
     private static final String ID = "mixinSourceId";
     private static final String REC_ID = "rec-id";

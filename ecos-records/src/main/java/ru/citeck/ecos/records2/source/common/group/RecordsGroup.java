@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.common.group;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
@@ -24,13 +25,13 @@ public class RecordsGroup implements MetaValue {
     public static final String FIELD_SUM = "sum";
     public static final String FIELD_COUNT = "count";
 
-    private Predicate predicate;
-    private RecordsQuery query;
-    private Map<String, ValueWrapper> attributes;
+    private final Predicate predicate;
+    private final RecordsQuery query;
+    private final Map<String, ValueWrapper> attributes;
 
-    private RecordsService recordsService;
+    private final RecordsService recordsService;
 
-    private String id;
+    private final String id;
 
     public RecordsGroup(RecordsQuery query,
                         Map<String, DistinctValue> attributes,
@@ -57,7 +58,7 @@ public class RecordsGroup implements MetaValue {
     }
 
     @Override
-    public Object getAttribute(String name, MetaField field) {
+    public Object getAttribute(String name, @NotNull MetaField field) {
 
         switch (name) {
             case FIELD_PREDICATE:
@@ -72,8 +73,8 @@ public class RecordsGroup implements MetaValue {
 
             case FIELD_VALUES:
 
-                String schema = field.getInnerSchema();
-                RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, schema);
+                Map<String, String> innerAttributes = field.getInnerAttributesMap();
+                RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, innerAttributes);
 
                 return records.getRecords().stream().map(r -> {
                     ObjectData atts = r.getAttributes();
@@ -104,7 +105,7 @@ public class RecordsGroup implements MetaValue {
             sumQuery.setGroupBy(null);
             RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(sumQuery, attributes);
 
-            Double sum = 0.0;
+            double sum = 0.0;
             for (RecordMeta record : result.getRecords()) {
                 sum += record.get(attribute, 0.0);
             }

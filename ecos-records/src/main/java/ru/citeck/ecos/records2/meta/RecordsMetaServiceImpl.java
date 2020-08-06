@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.meta;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -10,6 +11,8 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessor;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
@@ -101,7 +104,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         }
 
         AttributesSchema schema = createSchema(attributes);
-        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
+        RecordsResult<RecordMeta> meta = getMeta(records, schema.getGqlSchema());
         meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
 
         return meta;
@@ -114,15 +117,26 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                    .collect(Collectors.toList());
     }
 
-    private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
+    @Override
+    public RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
 
         ObjectData attributes = meta.getAttributes();
         ObjectData resultAttributes = ObjectData.create();
         Map<String, AttSchemaInfo> attsInfo = schema.getAttsInfo();
 
+        Map<String, MetaField> subFields = schema.getMetaField().getSubFields();
+
         Iterator<String> fieldsIt = attributes.fieldNames();
         while (fieldsIt.hasNext()) {
-            processAttribute(fieldsIt.next(), attsInfo, attributes, resultAttributes, flat);
+            String nextFieldName = fieldsIt.next();
+            processAttribute(
+                nextFieldName,
+                attsInfo,
+                attributes,
+                resultAttributes,
+                flat,
+                subFields.getOrDefault(nextFieldName, EmptyMetaField.INSTANCE)
+            );
         }
 
         RecordMeta recordMeta = new RecordMeta(meta.getId());
@@ -135,7 +149,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                                   Map<String, AttSchemaInfo> attsInfo,
                                   ObjectData attributes,
                                   ObjectData resultAttributes,
-                                  boolean flat) {
+                                  boolean flat,
+                                  MetaField metaField) {
 
         AttSchemaInfo attInfo = attsInfo.get(key);
         if (attInfo == null) {
@@ -148,13 +163,13 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
         DataValue value = attributes.get(key);
 
-        if (resultKey.equals(".json") || !flat) {
+        if (metaField.getName().equals("json") || !flat) {
 
             resultAttributes.set(resultKey, value);
 
         } else {
 
-            JsonNode flatValue = toFlatNode(value.getValue());
+            JsonNode flatValue = toFlatNode(value.getValue(), metaField);
 
             if (flatValue.isNull()) {
                 List<String> orElseAtts = attInfo.getOrElseAtts();
@@ -171,7 +186,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                         }
                         break;
                     } else {
-                        JsonNode orElseValue = toFlatNode(attributes.get(orElseAtt).getValue());
+                        MetaField orElseAttField = metaField.getParent().getSubFields().get(orElseAtt);
+                        JsonNode orElseValue = toFlatNode(attributes.get(orElseAtt).getValue(), orElseAttField);
                         if (!orElseValue.isNull()) {
                             flatValue = orElseValue;
                             break;
@@ -216,34 +232,44 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         return attributesMetaResolver.createSchema(attributes);
     }
 
-    private JsonNode toFlatNode(JsonNode input) {
+    private JsonNode toFlatNode(JsonNode input, @Nullable MetaField metaField) {
 
         if (input == null || input.isMissingNode() || input.isNull()) {
             return NullNode.getInstance();
         }
 
+        if (metaField == null || metaField == EmptyMetaField.INSTANCE) {
+            return input;
+        }
+
         JsonNode node = input;
 
-        if (node.isObject() && node.size() > 1) {
+        if (node.isObject()) {
 
-            ObjectNode objNode = JsonNodeFactory.instance.objectNode();
-            final JsonNode finalNode = node;
+            Map<String, MetaField> subFields = metaField.getSubFields();
 
-            node.fieldNames().forEachRemaining(name ->
-                objNode.set(name, toFlatNode(finalNode.get(name)))
-            );
+            if (node.size() > 1) {
 
-            node = objNode;
+                ObjectNode objNode = JsonNodeFactory.instance.objectNode();
+                final JsonNode finalNode = node;
 
-        } else if (node.isObject() && node.size() == 1) {
+                node.fieldNames().forEachRemaining(name ->
+                    objNode.set(name, toFlatNode(finalNode.get(name), subFields.get(name)))
+                );
 
-            String fieldName = node.fieldNames().next();
-            JsonNode value = node.get(fieldName);
+                node = objNode;
 
-            if ("json".equals(fieldName)) {
-                node = value;
-            } else {
-                node = toFlatNode(value);
+            } else if (node.size() == 1) {
+
+                String fieldName = node.fieldNames().next();
+                JsonNode value = node.get(fieldName);
+                MetaField subField = subFields.get(fieldName);
+
+                if (subField == null || "json".equals(subField.getName())) {
+                    node = value;
+                } else {
+                    node = toFlatNode(value, subField);
+                }
             }
 
         } else if (node.isArray()) {
@@ -251,7 +277,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             ArrayNode newArr = JsonNodeFactory.instance.arrayNode();
 
             for (JsonNode n : node) {
-                newArr.add(toFlatNode(n));
+                newArr.add(toFlatNode(n, metaField));
             }
 
             node = newArr;

@@ -1,13 +1,14 @@
 package ru.citeck.ecos.records2.source.dao.remote;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaResult;
-import ru.citeck.ecos.records2.request.query.typed.RecordsRefsQueryResult;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.*;
@@ -19,7 +20,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RemoteRecordsDao extends AbstractRecordsDao
                               implements RecordsMetaDao,
-                                         RecordsQueryWithMetaDao,
                                          RecordsQueryDao {
 
     private boolean enabled = true;
@@ -29,36 +29,16 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     private String recordsMethod = "/api/ecos/records";
     private String remoteSourceId = null;
 
+    @NotNull
     @Override
-    public RecordsRefsQueryResult queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttributesSchema schema) {
 
         QueryBody request = new QueryBody();
 
         if (enabled) {
 
             prepareQueryBody(request, query);
-
-            RecordsRefsQueryResult result = restConnection.jsonPost(recordsMethod,
-                                                                    request,
-                                                                    RecordsRefsQueryResult.class);
-            if (result != null) {
-                return result.addSourceId(getId());
-            } else {
-                log.error("[" + getId() + "] queryRecords will return nothing. " + request);
-            }
-        }
-        return new RecordsRefsQueryResult();
-    }
-
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
-
-        QueryBody request = new QueryBody();
-
-        if (enabled) {
-
-            prepareQueryBody(request, query);
-            request.setSchema(metaSchema);
+            request.setAttributes(schema.getAttributes());
 
             RecordsMetaQueryResult result = restConnection.jsonPost(recordsMethod,
                                                                     request,
@@ -84,8 +64,9 @@ public class RemoteRecordsDao extends AbstractRecordsDao
         }
     }
 
+    @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(List<RecordRef> records, String gqlSchema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttributesSchema schema) {
 
         List<RecordRef> recordsRefs = records.stream()
                                              .map(RecordRef::getId)
@@ -93,7 +74,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
                                              .collect(Collectors.toList());
 
         QueryBody request = new QueryBody();
-        request.setSchema(gqlSchema);
+        request.setAttributes(schema.getAttributes());
         request.setRecords(recordsRefs);
 
         RecordsMetaResult nodesResult = restConnection.jsonPost(recordsMethod, request, RecordsMetaResult.class);
@@ -127,5 +108,10 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     public RecordsRestConnection getRestConnection() {
         return restConnection;
+    }
+
+    @Override
+    public boolean isRawAttributesProvided() {
+        return false;
     }
 }

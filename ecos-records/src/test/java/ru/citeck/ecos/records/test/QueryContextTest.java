@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String SOURCE_ID = "test-source-id";
 

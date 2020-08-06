@@ -1,14 +1,15 @@
 package ru.citeck.ecos.records2.source.common;
 
+import org.jetbrains.annotations.NotNull;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RecordsDao to union multiple sources.
@@ -19,12 +20,13 @@ public class MultiRecordsDao extends AbstractRecordsDao
                              implements RecordsQueryDao {
 
     private List<RecordsQueryDao> recordsDao;
-    private Map<String, RecordsQueryDao> daoBySource = new ConcurrentHashMap<>();
 
+    @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
+                                                       @NotNull AttributesSchema schema) {
 
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
+        RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
 
         RecordsQuery localQuery = new RecordsQuery(query);
 
@@ -41,7 +43,7 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
             localQuery.setMaxItems(query.getMaxItems() - result.getRecords().size());
             RecordsQueryDao recordsDao = this.recordsDao.get(sourceIdx);
-            RecordsQueryResult<RecordRef> daoRecords = recordsDao.queryRecords(localQuery);
+            RecordsQueryResult<RecordMeta> daoRecords = recordsDao.queryRecords(localQuery, schema);
 
             result.merge(daoRecords);
 
@@ -67,6 +69,5 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
     public void setRecordsDao(List<RecordsQueryDao> records) {
         this.recordsDao = records;
-        records.forEach(r -> daoBySource.put(r.getId(), r));
     }
 }

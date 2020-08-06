@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaEdgeTest extends LocalRecordsDao
-                          implements LocalRecordsMetaDao<Object> {
+                          implements LocalRecordsMetaDao {
 
     private static final String SOURCE_ID = "test-source";
     private static final String EDGE_FIELD_NAME = "test00";
@@ -53,11 +52,11 @@ public class MetaEdgeTest extends LocalRecordsDao
     }
 
     @Test
-    void test() throws JsonProcessingException {
+    void test() {
 
-        String schema = "edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json}}";
+        String att = ".edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json}}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
-        RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
+        RecordsResult<RecordMeta> result = recordsService.getAttributes(records, Collections.singletonMap("edge", att));
 
         RecordMeta meta = result.getRecords().get(0);
 
@@ -67,7 +66,7 @@ public class MetaEdgeTest extends LocalRecordsDao
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
         assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
-        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants/0/json"), CreateVariant.class);
+        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants/0"), CreateVariant.class);
         assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());
@@ -155,7 +154,7 @@ public class MetaEdgeTest extends LocalRecordsDao
             "opt_third"
         );
 
-        private String name;
+        private final String name;
 
         MetaTestEdge(String name) {
             this.name = name;
@@ -167,7 +166,7 @@ public class MetaEdgeTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getValue(MetaField field) {
+        public Object getValue(@NotNull MetaField field) {
             return new MetaTestVal();
         }
 

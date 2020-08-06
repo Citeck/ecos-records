@@ -348,7 +348,7 @@ public class RecordsServiceFactory {
     }
 
     protected AttributesMetaResolver createAttributesMetaResolver() {
-        return new AttributesMetaResolver();
+        return new AttributesMetaResolver(this);
     }
 
     public final synchronized DtoMetaResolver getDtoMetaResolver() {

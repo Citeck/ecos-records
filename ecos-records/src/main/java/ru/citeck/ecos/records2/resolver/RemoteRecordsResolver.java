@@ -34,10 +34,10 @@ public class RemoteRecordsResolver implements RecordsResolver {
     public static final String MUTATE_URL = BASE_URL + "mutate";
     public static final String DELETE_URL = BASE_URL + "delete";
 
-    private RemoteRecordsRestApi restApi;
+    private final RemoteRecordsRestApi restApi;
     private String defaultAppName = "";
 
-    private Map<String, String> sourceIdMapping = new HashMap<>();
+    private final Map<String, String> sourceIdMapping = new HashMap<>();
 
     public RemoteRecordsResolver(RecordsServiceFactory factory, RemoteRecordsRestApi restApi) {
         this.restApi = restApi;
@@ -49,7 +49,9 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
+                                                       @NotNull Map<String, String> attributes,
+                                                       boolean flat) {
 
         String sourceId = query.getSourceId();
         if (sourceId.indexOf('/') == -1) {
@@ -71,7 +73,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
         QueryBody queryBody = new QueryBody();
 
         queryBody.setQuery(appQuery);
-        queryBody.setSchema(schema == null ? "" : schema);
+        queryBody.setAttributes(attributes);
 
         RecordsMetaQueryResult appResult = restApi.jsonPost(url, queryBody, RecordsMetaQueryResult.class);
 
@@ -79,7 +81,9 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @Override
-    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
+                                             @NotNull Map<String, String> attributes,
+                                             boolean flat) {
         return execRecordsAppRequest(
             records,
             QUERY_URL,
@@ -89,7 +93,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
             appRecords -> {
                 QueryBody queryBody = new QueryBody();
                 queryBody.setRecords(appRecords);
-                queryBody.setSchema(schema);
+                queryBody.setAttributes(attributes);
                 return queryBody;
             },
             RecordsMetaQueryResult.class

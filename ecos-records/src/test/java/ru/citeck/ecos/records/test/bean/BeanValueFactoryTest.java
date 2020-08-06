@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BeanValueFactoryTest extends LocalRecordsDao
-    implements LocalRecordsMetaDao<Object> {
+    implements LocalRecordsMetaDao {
 
     private static final String ID = "test";
     private RecordsService recordsService;

@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecordsUtilsTest extends LocalRecordsDao
-    implements LocalRecordsMetaDao<Object> {
+    implements LocalRecordsMetaDao {
 
     private static final String SOURCE_ID = "test-source";
 

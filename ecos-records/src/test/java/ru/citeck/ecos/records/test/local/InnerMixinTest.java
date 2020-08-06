@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class InnerMixinTest extends LocalRecordsDao
-                            implements LocalRecordsMetaDao<Object> {
+                            implements LocalRecordsMetaDao {
 
     private static final String ID = "mixinSourceId";
     private static final RecordRef DTO_REC_REF = RecordRef.create(ID, "test");

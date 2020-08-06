@@ -38,7 +38,7 @@ public class ForceLocalRecordsTest {
         private List<RecordRef> parents;
     }
 
-    public static class TypesDao extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+    public static class TypesDao extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         public static final String ID = "emodel/type";
 

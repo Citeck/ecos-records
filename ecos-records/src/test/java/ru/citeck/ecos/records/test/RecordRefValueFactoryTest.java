@@ -17,7 +17,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecordRefValueFactoryTest extends LocalRecordsDao
-                                implements LocalRecordsMetaDao<MetaValue>,
-                                           LocalRecordsQueryWithMetaDao<MetaValue> {
+                                implements LocalRecordsMetaDao,
+                                           LocalRecordsQueryDao {
 
     private static final String ID = "sourceId";
 

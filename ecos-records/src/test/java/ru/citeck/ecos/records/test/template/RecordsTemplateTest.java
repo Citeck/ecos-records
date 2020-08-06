@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsTemplateTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class RecordsTemplateTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String ID = "first";
 

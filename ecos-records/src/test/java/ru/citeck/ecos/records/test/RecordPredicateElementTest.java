@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordPredicateElementTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class RecordPredicateElementTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private PredicateService predicates;
     private RecordsService recordsService;

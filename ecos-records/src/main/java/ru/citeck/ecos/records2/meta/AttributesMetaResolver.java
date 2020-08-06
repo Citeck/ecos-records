@@ -3,6 +3,9 @@ package ru.citeck.ecos.records2.meta;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
@@ -17,6 +20,12 @@ public class AttributesMetaResolver {
     private static final Pattern SUBFIELDS_PATTERN = Pattern.compile("^([^{]+)\\{(.+)}$");
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
+    private final RecordsMetaGql recordsMetaGql;
+
+    public AttributesMetaResolver(RecordsServiceFactory serviceFactory) {
+        this.recordsMetaGql = serviceFactory.getRecordsMetaGql();
+    }
+
     public AttributesSchema createSchema(Map<String, String> attributes) {
         return createSchema(attributes, true);
     }
@@ -24,15 +33,18 @@ public class AttributesMetaResolver {
     public AttributesSchema createSchema(Map<String, String> attributes, boolean generateKeys) {
 
         if (attributes.isEmpty()) {
-            return new AttributesSchema("", Collections.emptyMap());
+            return new AttributesSchema();
         }
 
         StringBuilder schema = new StringBuilder();
         ObjectKeyGenerator keys = new ObjectKeyGenerator();
 
         Map<String, AttSchemaInfo> attsInfo = new HashMap<>();
+        Map<String, String> schemaAtts = new HashMap<>();
 
-        attributes.forEach((name, path) -> {
+        attributes.forEach((name, attribute) -> {
+
+            String path = attribute;
 
             AttSchemaInfo attSchemaInfo = new AttSchemaInfo();
             attSchemaInfo.setOriginalKey(name);
@@ -61,12 +73,22 @@ public class AttributesMetaResolver {
 
             String key = generateKeys ? keys.incrementAndGet() : name;
             attsInfo.put(key, attSchemaInfo);
+            schemaAtts.put(key, attribute);
 
             attSchemaInfo.setType(addAttToSchema(key, path, schema));
         });
         schema.setLength(schema.length() - 1);
 
-        return new AttributesSchema(schema.toString(), attsInfo);
+        String strSchema = schema.toString();
+
+        MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(strSchema);
+
+        return new AttributesSchema(
+            schema.toString(),
+            attsInfo,
+            metaField,
+            schemaAtts
+        );
     }
 
     private Class<?> addAttToSchema(String key, String attribute, StringBuilder schema) {

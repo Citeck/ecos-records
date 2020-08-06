@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -25,6 +24,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
@@ -46,7 +46,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
-            RecordsQueryResult<RecordMeta> metaResult = recordsResolver.queryRecords(query, "");
+            RecordsQueryResult<RecordMeta> metaResult = recordsResolver.queryRecords(query,
+                Collections.emptyMap(), true);
             return new RecordsQueryResult<>(metaResult, RecordMeta::getId);
         });
     }
@@ -69,17 +70,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
 
-        AttributesSchema schema = recordsMetaService.createSchema(attributes);
-        RecordsQueryResult<RecordMeta> records = queryRecords(query, schema.getSchema());
-        records.setRecords(recordsMetaService.convertMetaResult(records.getRecords(), schema, true));
+        RecordsQueryResult<RecordMeta> result = handleRecordsQuery(() ->
+            recordsResolver.queryRecords(query, attributes, true));
 
-        return records;
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-        return handleRecordsQuery(() -> recordsResolver.queryRecords(query, schema));
+        if (result == null) {
+            result = new RecordsQueryResult<>();
+        }
+        return result;
     }
 
     /* ATTRIBUTES */
@@ -129,10 +126,12 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             return new RecordsResult<>(new ArrayList<>(records), RecordMeta::new);
         }
 
-        AttributesSchema schema = recordsMetaService.createSchema(attributes);
-        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
-        meta.setRecords(recordsMetaService.convertMetaResult(meta.getRecords(), schema, flatAttributes));
+        RecordsResult<RecordMeta> meta = handleRecordsRead(() ->
+            recordsResolver.getMeta(records, attributes, flatAttributes), RecordsResult::new);
 
+        if (meta == null) {
+            meta = new RecordsResult<>();
+        }
         return meta;
     }
 
@@ -161,12 +160,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
 
         return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
-    }
-
-    @NotNull
-    @Override
-    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
-        return handleRecordsRead(() -> recordsResolver.getMeta(records, schema), RecordsResult::new);
     }
 
     /* MODIFICATION */
@@ -234,6 +227,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             RecordsMutation sourceMut = new RecordsMutation();
             sourceMut.setRecords(Collections.singletonList(record));
             RecordsMutResult recordMutResult = recordsResolver.mutate(sourceMut);
+            if (recordMutResult == null) {
+                recordMutResult = new RecordsMutResult();
+                recordMutResult.setRecords(sourceMut.getRecords()
+                    .stream()
+                    .map(r -> new RecordMeta(r.getId()))
+                    .collect(Collectors.toList()));
+            }
 
             if (i == 0) {
                 result.merge(recordMutResult);
@@ -270,7 +270,12 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsDelResult delete(RecordsDeletion deletion) {
-        return recordsResolver.delete(deletion);
+        RecordsDelResult result = recordsResolver.delete(deletion);
+        if (result == null) {
+            result = new RecordsDelResult();
+            result.setRecords(deletion.getRecords().stream().map(RecordMeta::new).collect(Collectors.toList()));
+        }
+        return result;
     }
 
     /* OTHER */
@@ -279,7 +284,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return handleRecordsRead(supplier, RecordsQueryResult::new);
     }
 
-    private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
+    private <T extends RecordsResult<?>> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
 
         T result;
 

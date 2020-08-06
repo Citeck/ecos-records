@@ -17,14 +17,14 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 
 @SuppressFBWarnings(value = {
     "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"
 })
-public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao<Object> {
+public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     public static final String ID = "predicate";
 
@@ -33,7 +33,7 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
 
         PredicateCheckQuery query = recordsQuery.getQuery(PredicateCheckQuery.class);
 

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordTypeTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class RecordTypeTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String ID = "test";
 

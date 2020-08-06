@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaValue> {
+class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static String ID = "";
     private RecordsService recordsService;

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String ID = "test";
 

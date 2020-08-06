@@ -6,6 +6,7 @@ import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
@@ -25,7 +26,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     protected RecordsServiceFactory serviceFactory;
 
-    private JsonMapper mapper = Json.getMapper();
+    private final JsonMapper mapper = Json.getMapper();
 
     AbstractRecordsService(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
@@ -33,36 +34,43 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     /* QUERY */
 
+    @NotNull
     @Override
     public Optional<RecordRef> queryRecord(RecordsQuery query) {
         return queryRecords(query).getRecords().stream().findFirst();
     }
 
+    @NotNull
     @Override
     public <T> Optional<T> queryRecord(RecordsQuery query, Class<T> metaClass) {
         return queryRecords(query, metaClass).getRecords().stream().findFirst();
     }
 
+    @NotNull
     @Override
     public Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes) {
         return queryRecords(query, attributes).getRecords().stream().findFirst();
     }
 
+    @NotNull
     @Override
     public Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes) {
         return queryRecords(query, attributes).getRecords().stream().findFirst();
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes) {
         return queryRecords(query, toAttributesMap(attributes));
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<List<RecordRef>> queryRecords(List<DataValue> foreach, RecordsQuery query) {
         return queryForEach(foreach, query, this::queryRecords);
     }
 
+    @NotNull
     @Override
     public <T> RecordsQueryResult<List<T>> queryRecords(List<DataValue> foreach,
                                                         RecordsQuery query,
@@ -71,6 +79,7 @@ public abstract class AbstractRecordsService implements RecordsService {
         return queryForEach(foreach, query, q -> queryRecords(q, metaClass));
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                              RecordsQuery query,
@@ -79,20 +88,13 @@ public abstract class AbstractRecordsService implements RecordsService {
         return queryForEach(foreach, query, q -> queryRecords(q, attributes));
     }
 
+    @NotNull
     @Override
     public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                              RecordsQuery query,
                                                              Map<String, String> attributes) {
 
         return queryForEach(foreach, query, q -> queryRecords(q, attributes));
-    }
-
-    @Override
-    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
-                                                             RecordsQuery query,
-                                                             String schema) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, schema));
     }
 
     private <T> RecordsQueryResult<List<T>> queryForEach(List<DataValue> foreach,
@@ -167,6 +169,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     /* ATTRIBUTES */
 
+    @NotNull
     @Override
     public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
                                                    Collection<String> attributes) {
@@ -174,16 +177,19 @@ public abstract class AbstractRecordsService implements RecordsService {
         return getAttributes(records, toAttributesMap(attributes));
     }
 
+    @NotNull
     @Override
     public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
         return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
     }
 
+    @NotNull
     @Override
     public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
         return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
     }
 
+    @NotNull
     @Override
     public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
         return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
@@ -191,6 +197,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     /* MUTATE */
 
+    @NotNull
     @Override
     public RecordMeta mutate(RecordMeta meta) {
 

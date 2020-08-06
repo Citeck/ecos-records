@@ -18,17 +18,14 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaValueTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao<Object> {
+                           implements LocalRecordsMetaDao {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -56,20 +53,22 @@ public class MetaValueTest extends LocalRecordsDao
 
         String testInnerSchema = "a:att(n:\"test\"){str},b:att(n:\"number\"){num}";
 
-        String schema = "str," +
-                        "disp," +
-                        "id," +
-                        "has(n:\"One\")," +
-                        "num," +
-                        "bool," +
-                        "json," +
-                        "schema:att(n:\"schema\"){" + testInnerSchema + "}," +
-                        "asNum:as(n:\"num\"){num}," +
-                        "asStr:as(n:\"str\"){str}," +
-                        "date:att(n:\"date\"){str}";
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("str", ".str");
+        attributes.put("disp", ".disp");
+        attributes.put("id", ".id");
+        attributes.put("localId", ".localId");
+        attributes.put("has", ".has(n:\"One\")");
+        attributes.put("num", ".num");
+        attributes.put("bool", ".bool");
+        attributes.put(".json", ".json");
+        attributes.put("schema", ".att(n:\"schema\"){" + testInnerSchema + "}");
+        attributes.put("asNum", ".as(n:\"num\"){num}");
+        attributes.put("asStr", ".as(n:\"str\"){str}");
+        attributes.put("date", ".att(n:\"date\"){str}");
 
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
-        RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
+        RecordsResult<RecordMeta> result = recordsService.getAttributes(records, attributes);
 
         RecordMeta meta = result.getRecords().get(0);
 
@@ -78,15 +77,15 @@ public class MetaValueTest extends LocalRecordsDao
         assertEquals(MetaVal.DOUBLE_VALUE, meta.getAttribute("num", 0.0));
         assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
         assertEquals(true, meta.getAttribute("has", false));
-        assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAttribute("json"));
+        assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAttribute(".json"));
         assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
-        assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
-        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());
+        assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").asInt(0));
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").asText());
 
         String format = "yyyyy.MMMMM.dd GGG hh:mm aaa";
         String targetDate = (new SimpleDateFormat(format)).format(MetaVal.DATE_VALUE);
-        assertEquals(targetDate, meta.fmtDate("/date/str", format, "-"));
-        assertEquals(new Date((MetaVal.DATE_VALUE.getTime() / 1000) * 1000), meta.getDateOrNull("/date/str"));
+        assertEquals(targetDate, meta.fmtDate("/date", format, "-"));
+        assertEquals(new Date((MetaVal.DATE_VALUE.getTime() / 1000) * 1000), meta.getDateOrNull("/date"));
         assertEquals("--", meta.fmtDate("date1", format, "--"));
 
         assertEquals(testInnerSchema, innerSchema);
@@ -157,7 +156,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(String name, @NotNull MetaField field) {
             if (name.equals("schema")) {
                 schemaConsumer.accept(field.getInnerSchema());
             }

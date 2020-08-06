@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ObjectDataAndDataValueTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class ObjectDataAndDataValueTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String JSON = "{\"a\":\"b\"}";
 
@@ -60,6 +60,14 @@ public class ObjectDataAndDataValueTest extends LocalRecordsDao implements Local
         assertEquals(DataValue.NULL, value2);
     }
 
+    @Test
+    void dtoTest() {
+
+        TestDataMeta dtoValue = recordsService.getMeta(RecordRef.valueOf("test"), TestDataMeta.class);
+        TestDataMeta expected = new TestDataMeta(new TestData(RecordRef.valueOf("test")));
+        assertEquals(expected, dtoValue);
+    }
+
     @NotNull
     @Override
     public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
@@ -73,6 +81,21 @@ public class ObjectDataAndDataValueTest extends LocalRecordsDao implements Local
         private DataValue dataValue = DataValue.create(JSON);
 
         TestData(RecordRef ref) {
+        }
+    }
+
+    @Data
+    public static class TestDataMeta {
+
+        private ObjectData data;
+        private DataValue dataValue;
+
+        public TestDataMeta(TestData data) {
+            this.data = data.data;
+            this.dataValue = data.dataValue;
+        }
+
+        public TestDataMeta() {
         }
     }
 }

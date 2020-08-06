@@ -15,19 +15,24 @@ import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface RecordsResolver {
 
-    @NotNull
-    RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, String schema);
+    @Nullable
+    RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
+                                                @NotNull Map<String, String> attributes,
+                                                boolean flat);
 
-    @NotNull
-    RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records, String schema);
+    @Nullable
+    RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
+                                      @NotNull Map<String, String> attributes,
+                                      boolean flat);
 
-    @NotNull
+    @Nullable
     RecordsMutResult mutate(@NotNull RecordsMutation mutation);
 
-    @NotNull
+    @Nullable
     RecordsDelResult delete(@NotNull RecordsDeletion deletion);
 
     @Nullable

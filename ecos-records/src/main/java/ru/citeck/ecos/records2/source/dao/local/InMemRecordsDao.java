@@ -11,15 +11,13 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class InMemRecordsDao<T> extends LocalRecordsDao
-                                implements LocalRecordsQueryWithMetaDao<Object>,
-                                           LocalRecordsMetaDao<Object>,
+                                implements LocalRecordsMetaDao,
                                            LocalRecordsQueryDao {
 
     private static final List<String> SUPPORTED_LANGUAGES = Collections.singletonList(
@@ -50,7 +48,7 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
 
         Predicate predicate = query.getQuery(Predicate.class);
 
@@ -69,18 +67,16 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
-        return new RecordsQueryResult<>(queryLocalRecords(query), ref -> records.get(toGlobalRef(ref)));
-    }
-
-    @NotNull
-    @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
-        @SuppressWarnings("unchecked")
-        T empty = (T) EmptyValue.INSTANCE;
+    public List<?> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream()
             .map(this::toGlobalRef)
-            .map(ref -> this.records.getOrDefault(ref, empty))
+            .map(ref -> {
+                Object res = this.records.get(ref);
+                if (res == null) {
+                    res = EmptyValue.INSTANCE;
+                }
+                return res;
+            })
             .collect(Collectors.toList());
     }
 

@@ -28,7 +28,7 @@ import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -113,7 +113,7 @@ public class RemoteSyncRecordsDaoTest {
     }
 
     static class RecordsWithMetaSource extends LocalRecordsDao
-        implements LocalRecordsQueryWithMetaDao<ValueDto> {
+        implements LocalRecordsQueryDao {
 
         static final String ID = "remote-source";
 
@@ -150,7 +150,7 @@ public class RemoteSyncRecordsDaoTest {
         }
 
         @Override
-        public RecordsQueryResult<ValueDto> queryLocalRecords(RecordsQuery query, MetaField field) {
+        public RecordsQueryResult<ValueDto> queryLocalRecords(RecordsQuery query, @NotNull MetaField field) {
 
             if (!query.getLanguage().equals(PredicateService.LANGUAGE_PREDICATE)) {
                 throw new IllegalArgumentException("Language is not supported! " + query.getLanguage());

@@ -87,7 +87,7 @@ public class RecordsMetaQueryTest {
             + "n:att(n:\"name\"){att(n:\"title\"){att(n:\"other\"){att(n:\"deep\"){aa:att(n:\"inner\"){json}}}}},"
             + "o:att(n:\"name\"){aa:att(n:\"inner\"){att(n:\"and\"){att(n:\"more\"){bool}}},bb:att(n:\"inner2\"){disp}},"
             + "p:att(n:\"name\"){aa:atts(n:\"inner\"){array:att(n:\"array\"){disp}}}",
-            schema.getSchema());
+            schema.getGqlSchema());
     }
 
     public static class SimplePojo {

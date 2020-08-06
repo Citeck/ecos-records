@@ -10,6 +10,7 @@ import ru.citeck.ecos.records2.QueryConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -29,15 +30,15 @@ public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQue
     private static final String ID = "";
     private RecordsService recordsService;
 
-    private List<RecordsQuery> queries = new ArrayList<>();
+    private final List<RecordsQuery> queries = new ArrayList<>();
 
-    private List<DataValue> eachNode = Arrays.asList(
+    private final List<DataValue> eachNode = Arrays.asList(
         DataValue.create("firstText"),
         DataValue.create("secondText"),
         DataValue.create("thirdText")
     );
 
-    private List<RecordRef> resultRefs = Arrays.asList(
+    private final List<RecordRef> resultRefs = Arrays.asList(
         RecordRef.valueOf("first"),
         RecordRef.valueOf("second"),
         RecordRef.valueOf("third")
@@ -96,7 +97,7 @@ public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQue
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField metaField) {
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
         result.setRecords(Collections.singletonList(resultRefs.get(queries.size())));
         queries.add(query);

@@ -19,6 +19,7 @@ import ru.citeck.ecos.records2.utils.RecordsUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry {
 
@@ -38,39 +39,44 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         MandatoryParam.check("local", local);
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
+                                                       @NotNull Map<String, String> attributes,
+                                                       boolean flat) {
 
         String sourceId = query.getSourceId();
 
         if (remote == null || !isRemoteSourceId(sourceId)) {
-            return local.queryRecords(query, schema);
+            return local.queryRecords(query, attributes, flat);
         }
-        return remote.queryRecords(query, schema);
+        return remote.queryRecords(query, attributes, flat);
     }
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records, String schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
+                                             @NotNull Map<String, String> attributes,
+                                             boolean flat) {
+
         if (remote == null || records.isEmpty()) {
-            return local.getMeta(records, schema);
+            return local.getMeta(records, attributes, flat);
         }
         RecordsResult<RecordMeta> result = new RecordsResult<>();
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
             if (!isRemoteSourceId(sourceId)) {
-                result.merge(local.getMeta(records, schema));
+                result.merge(local.getMeta(records, attributes, flat));
             } else if (isRemoteRef(records.stream().findFirst().orElse(null))) {
-                result.merge(remote.getMeta(records, schema));
+                result.merge(remote.getMeta(records, attributes, flat));
             } else {
-                result.merge(local.getMeta(records, schema));
+                result.merge(local.getMeta(records, attributes, flat));
             }
         });
         return result;
     }
 
-    @NotNull
+    @Nullable
     @Override
     public RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
         List<RecordMeta> records = mutation.getRecords();

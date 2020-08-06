@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,14 +12,14 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao<Object> {
+public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     private static final String ID = "test";
 
@@ -34,7 +35,7 @@ public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalReco
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery query, MetaField field) {
 
         List<String> atts = field.getInnerAttributes();
         assertEquals(6, atts.size());

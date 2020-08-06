@@ -28,8 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
-    implements JobsProvider {
+public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsProvider {
 
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
 
@@ -49,21 +48,14 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
-        waitUntilSyncCompleted();
-        return super.queryLocalRecords(query);
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
         waitUntilSyncCompleted();
         return super.queryLocalRecords(query, field);
     }
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<?> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         waitUntilSyncCompleted();
         return super.getLocalRecordsMeta(records, metaField);
     }
@@ -110,16 +102,16 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         RecordsQueryResult<RecordMeta> result;
         try {
             if (getId().contains("/")) {
-                result = remoteRecordsResolver.queryRecords(query, schema.getSchema());
+                result = remoteRecordsResolver.queryRecords(query, schema.getAttributes(), true);
             } else {
-                result = localRecordsResolver.queryRecords(query, schema.getSchema());
+                result = localRecordsResolver.queryRecords(query, schema.getAttributes(), true);
             }
         } catch (Exception e) {
             // target DAO is not ready yet
             return false;
         }
 
-        if (!result.getErrors().isEmpty()) {
+        if (result == null || !result.getErrors().isEmpty()) {
             log.warn("Update failed: there are errors in query result. Result: " + result);
             return false;
         }

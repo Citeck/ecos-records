@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final Instant STARTED_TIME = Instant.now();
 

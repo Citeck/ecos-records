@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object>,
+public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaDao,
                                                                RecordEvaluator<EvaluatorsTest.RequiredMeta,
                                                                    EvaluatorsTest.RequiredMeta,
                                                                    Object> {

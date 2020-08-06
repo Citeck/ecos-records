@@ -14,7 +14,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +74,7 @@ class LocalRecordsTest {
         }
     }
 
-    static class RecordsSource extends LocalRecordsDao implements LocalRecordsMetaDao<RecordsSource.Meta> {
+    static class RecordsSource extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         static String ID = "recs-source";
 
@@ -118,7 +118,7 @@ class LocalRecordsTest {
     }
 
     static class RecordsWithMetaSource extends LocalRecordsDao
-        implements LocalRecordsQueryWithMetaDao<RecordsWithMetaSource.Meta> {
+        implements LocalRecordsQueryDao {
 
         static final String ID = "with-meta";
 

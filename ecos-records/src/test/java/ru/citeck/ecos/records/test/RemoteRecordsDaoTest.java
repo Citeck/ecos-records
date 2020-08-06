@@ -1,9 +1,11 @@
 package ru.citeck.ecos.records.test;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
@@ -58,12 +60,14 @@ class RemoteRecordsDaoTest {
 
         Map<String, String> atts = new HashMap<>();
         atts.put("field", "field");
+        atts.put("data", "data?json");
         RecordMeta attValues = recordsService.getAttributes(RecordRef.valueOf(REMOTE_SOURCE_ID + "@@"), atts);
 
         assertEquals(TestDto.FIELD_VALUE, attValues.get("field", ""));
+        assertEquals(TestDto.OBJ_DATA_VALUE.getData(), attValues.get("data"));
     }
 
-    public static class TestSource extends LocalRecordsDao implements LocalRecordsMetaDao<TestDto> {
+    public static class TestSource extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         static final String ID = "";
 
@@ -83,8 +87,12 @@ class RemoteRecordsDaoTest {
     public static class TestDto {
 
         static final String FIELD_VALUE = "TestFieldValue";
+        static final ObjectData OBJ_DATA_VALUE = ObjectData.create("{\"a\":\"b\"}");
 
         private String id;
+
+        @Getter
+        private final ObjectData data = OBJ_DATA_VALUE;
 
         TestDto(String id) {
             this.id = id;

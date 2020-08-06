@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String ID = "test";
     private RecordsService recordsService;

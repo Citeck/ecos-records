@@ -21,8 +21,8 @@ public class QueryBody {
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;
     @Getter @Setter private List<DataValue> foreach;
+    @Getter @Setter private Boolean flat;
 
-    @Getter @Setter private String schema;
     @Getter private Map<String, String> attributes;
 
     private boolean isSingleRecord = false;
@@ -100,7 +100,6 @@ public class QueryBody {
             && isSingleAttribute == queryBody.isSingleAttribute
             && Objects.equals(records, queryBody.records)
             && Objects.equals(query, queryBody.query)
-            && Objects.equals(schema, queryBody.schema)
             && Objects.equals(attributes, queryBody.attributes)
             && Objects.equals(foreach, queryBody.foreach);
     }
@@ -110,7 +109,6 @@ public class QueryBody {
         return Objects.hash(
             records,
             query,
-            schema,
             attributes,
             isSingleRecord,
             isSingleAttribute,
@@ -123,7 +121,6 @@ public class QueryBody {
         return "QueryBody{"
             + "records=" + records
             + ", query=" + query
-            + ", schema='" + schema + '\''
             + ", attributes=" + attributes
             + ", isSingleRecord=" + isSingleRecord
             + ", isSingleAttribute=" + isSingleAttribute

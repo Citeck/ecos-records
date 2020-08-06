@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value.field;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.Collections;
@@ -11,6 +12,12 @@ public class EmptyMetaField implements MetaField {
     public static final MetaField INSTANCE = new EmptyMetaField();
 
     private EmptyMetaField() {
+    }
+
+    @NotNull
+    @Override
+    public Map<String, MetaField> getSubFields() {
+        return Collections.emptyMap();
     }
 
     @Override

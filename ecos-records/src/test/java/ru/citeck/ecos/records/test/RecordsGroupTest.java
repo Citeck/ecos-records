@@ -18,7 +18,6 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.io.IOException;
 import java.util.*;
@@ -29,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecordsGroupTest extends LocalRecordsDao
-                       implements LocalRecordsQueryDao,
-                                  LocalRecordsQueryWithMetaDao<Object> {
+                       implements LocalRecordsQueryDao {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -62,7 +60,6 @@ class RecordsGroupTest extends LocalRecordsDao
     }
 
     private RecordsServiceImpl recordsService;
-    private PredicateService predicateService;
     private QueryLangService queryLangService;
 
     @BeforeAll
@@ -78,18 +75,6 @@ class RecordsGroupTest extends LocalRecordsDao
 
         setId(SOURCE_ID);
         recordsService.register(this);
-    }
-
-
-    @NotNull
-    @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
-
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
-        result.setRecords(Collections.singletonList(RecordRef.valueOf("One")));
-        result.setHasMore(false);
-
-        return result;
     }
 
     private java.util.function.Predicate<PojoMeta> buildPred(Predicate predicate) {
@@ -260,7 +245,7 @@ class RecordsGroupTest extends LocalRecordsDao
                 .filter(v -> v.strVal.equals(value))
                 .count();
 
-            assertEquals(expectedCount, (long) result.getValues().size());
+            assertEquals(expectedCount, result.getValues().size());
         }
     }
 

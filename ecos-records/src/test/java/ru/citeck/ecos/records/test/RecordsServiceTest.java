@@ -18,7 +18,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsServiceTest extends LocalRecordsDao
                                 implements LocalRecordsQueryDao,
-                                           LocalRecordsQueryWithMetaDao<Object>,
-                                           LocalRecordsMetaDao<Object> {
+                                           LocalRecordsMetaDao {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
@@ -50,24 +49,6 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Override
     public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
         return records.stream().map(r -> new PojoMeta(r.toString())).collect(Collectors.toList());
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
-
-        ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
-
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
-        result.setRecords(query.getIds()
-                               .stream()
-                               .map(RecordRef::valueOf)
-                               .collect(Collectors.toList()));
-
-        result.setHasMore(false);
-        result.setTotalCount(query.getIds().size());
-
-        return result;
     }
 
     @NotNull

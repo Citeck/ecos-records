@@ -1,9 +1,12 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -62,7 +65,8 @@ public class SecurityUtilsTest implements RecordsQueryDao {
     }
 
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
+                                                       @NotNull AttributesSchema schema) {
         throw new RuntimeException("Exception while query");
     }
 

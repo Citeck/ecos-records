@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     private static final String MSG = "SomeMessage";
 
@@ -40,7 +40,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
     void test() {
 
         List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
-        RecordsResult<RecordMeta> res = recordsService.getMeta(refs, "str");
+        RecordsResult<RecordMeta> res = recordsService.getAttributes(refs, Collections.singletonList("str"));
 
         List<RecordsError> errors = res.getErrors();
 

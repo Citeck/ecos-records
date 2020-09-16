@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.QueryContext;
+import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.CustomGqlScalars;
@@ -170,7 +171,10 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     }
 
     private Object getAtt(DataFetchingEnvironment env) {
-        return getAtts(env).stream().findFirst().orElse(null);
+        return getAtts(env)
+            .stream()
+            .findFirst()
+            .orElse(null);
     }
 
     public List<MetaValue> getAsMetaValues(Object rawValue, QueryContext context, MetaField metaField) {
@@ -180,16 +184,45 @@ public class MetaValueTypeDef implements GqlTypeDefinition {
     @NotNull
     private List<?> getAtts(DataFetchingEnvironment env) {
 
+        MetaField metaField = new MetaFieldImpl(env.getField());
+
         MetaValue metaValue = env.getSource();
         String name = getParameter(env, "n");
 
-        try {
-            MetaField metaField = new MetaFieldImpl(env.getField());
-            return getAsMetaValues(metaValue.getAttribute(name, metaField), env.getContext(), metaField);
-        } catch (Exception e) {
-            ExceptionUtils.throwException(e);
-            return Collections.emptyList();
+        Object value = Collections.emptyList();
+
+        switch (name) {
+            case RecordConstants.ATT_TYPE:
+            case RecordConstants.ATT_ECOS_TYPE:
+                value = metaValue.getRecordType();
+                break;
+            case RecordConstants.ATT_EDGE:
+                value = new MetaEdgeValue(metaValue.getEdge(name, metaField));
+                break;
+            case RecordConstants.ATT_AS:
+                value = new AttFuncValue(metaValue::getAs);
+                break;
+            case RecordConstants.ATT_HAS:
+                value = new AttFuncValue((attName, field) -> {
+                    try {
+                        return metaValue.has(attName);
+                    } catch (Exception e) {
+                        ExceptionUtils.throwException(e);
+                        return false;
+                    }
+                });
+                break;
+            default:
+                try {
+                    if (name.startsWith("\\_")) {
+                        name = name.substring(1);
+                    }
+                    value = metaValue.getAttribute(name, metaField);
+                } catch (Exception e) {
+                    ExceptionUtils.throwException(e);
+                }
         }
+        return getAsMetaValues(value, env.getContext(), metaField);
     }
 
     private Boolean getBool(DataFetchingEnvironment env) {

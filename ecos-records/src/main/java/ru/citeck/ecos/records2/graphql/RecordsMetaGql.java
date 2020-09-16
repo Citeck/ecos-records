@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsMetaGql {
 
-    private static final String META_QUERY_TEMPLATE = "{" + GqlMetaQueryDef.META_FIELD + "{%s}}";
 
     private final GraphQL graphQL;
     private final RecordsServiceFactory serviceFactory;
@@ -73,9 +72,9 @@ public class RecordsMetaGql {
         graphQL = GraphQL.newGraphQL(graphQLSchema).build();
     }
 
-    public List<RecordMeta> getMeta(List<?> metaValues, String schema) {
+    public List<RecordMeta> getMeta(List<?> metaValues, Map<String, String> attributes) {
 
-        String query = String.format(META_QUERY_TEMPLATE, schema);
+        /*String query = String.format(META_QUERY_TEMPLATE, schema);
 
         ExecutionResult result = QueryContext.withContext(serviceFactory, () -> {
             QueryContext context = QueryContext.getCurrent();
@@ -83,32 +82,10 @@ public class RecordsMetaGql {
             return executeImpl(query, context);
         });
 
-        return convertMeta(result, metaValues);
+        return convertMeta(result, metaValues);*/
+        return Collections.emptyList();
     }
 
-    public MetaField getMetaFieldFromSchema(String schema) {
-
-        if (schema == null || schema.isEmpty()) {
-            return EmptyMetaField.INSTANCE;
-        }
-
-        String query = String.format(META_QUERY_TEMPLATE, schema);
-
-        Parser parser = new Parser();
-
-        Field field;
-        try {
-            Document document = parser.parseDocument(query);
-            field = (Field) ((SelectionSet) document.getDefinitions()
-                                                    .get(0)
-                                                    .getChildren()
-                                                    .get(0)).getSelections().get(0);
-        } catch (Exception e) {
-            throw new GqlParseException("Meta field can't be received from schema", schema, e);
-        }
-
-        return new MetaFieldImpl(field);
-    }
 
     private List<RecordMeta> convertMeta(ExecutionResult executionResult,
                                          List<?> metaValues) {

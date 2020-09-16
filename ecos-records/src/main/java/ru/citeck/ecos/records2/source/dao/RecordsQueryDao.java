@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.source.dao;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
@@ -19,7 +19,7 @@ public interface RecordsQueryDao extends RecordsDao {
 
     @Nullable
     RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                @NotNull AttributesSchema schema);
+                                                @NotNull AttsSchema schema);
 
     /**
      * Get query languages which can be used to query records in this DAO.

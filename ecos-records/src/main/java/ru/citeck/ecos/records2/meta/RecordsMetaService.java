@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.meta;
 
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
 import java.util.Collection;
@@ -13,11 +14,11 @@ public interface RecordsMetaService {
 
     <T> T instantiateMeta(Class<T> metaClass, RecordMeta flatMeta);
 
-    AttributesSchema createSchema(Map<String, String> attributes);
+    AttsSchema createSchema(Map<String, String> attributes);
 
-    List<RecordMeta> convertMetaResult(List<RecordMeta> nodes, AttributesSchema schema, boolean flat);
+    List<RecordMeta> convertMetaResult(List<RecordMeta> nodes, AttsSchema schema, boolean flat);
 
-    RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat);
+    RecordMeta convertMetaResult(RecordMeta meta, AttsSchema schema, boolean flat);
 
     RecordsResult<RecordMeta> getMeta(List<?> records, String schema);
 

@@ -21,7 +21,7 @@ public class QueryBody {
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;
     @Getter @Setter private List<DataValue> foreach;
-    @Getter @Setter private Boolean flat;
+    @Getter @Setter private boolean flatAttributes = true;
 
     @Getter private Map<String, String> attributes;
 

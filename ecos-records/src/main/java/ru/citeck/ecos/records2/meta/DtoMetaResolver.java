@@ -157,7 +157,7 @@ public class DtoMetaResolver {
                     schema.append("str");
                 } else {
                     Map<String, String> propSchema = getAttributes(propType, visited);
-                    schema.append(attributesMeta.createSchema(propSchema, false).getGqlSchema());
+                    //schema.append(attributesMeta.createSchema(propSchema, false).getGqlSchema());
                 }
 
             } else {
@@ -222,10 +222,11 @@ public class DtoMetaResolver {
                     schema = att;
                 }
             } else {
-                schema = attributesMeta.convertAttToGqlFormat(att, null, multiple);
+                //schema = attributesMeta.convertAttToGqlFormat(att, null, multiple);
             }
         }
-        return schema.replaceAll("'", "\"");
+        //return schema.replaceAll("'", "\"");
+        return "";
     }
 
     @AllArgsConstructor

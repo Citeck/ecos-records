@@ -2,14 +2,15 @@ package ru.citeck.ecos.records2.meta.attproc;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.records2.RecordMeta;
 
 import java.util.List;
 
-public class PrefixSuffixAttProcessor implements AttProcessor {
+public class AttPrefixSuffixProcessor implements AttProcessor {
 
     @NotNull
     @Override
-    public Object process(@NotNull DataValue value, @NotNull List<DataValue> arguments) {
+    public Object process(@NotNull RecordMeta meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
 
         String prefix = "";
         String suffix = "";

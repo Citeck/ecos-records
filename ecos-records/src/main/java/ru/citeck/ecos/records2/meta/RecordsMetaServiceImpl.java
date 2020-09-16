@@ -4,9 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
@@ -14,9 +12,9 @@ import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessor;
-import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
-import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
-import ru.citeck.ecos.records2.meta.attproc.PrefixSuffixAttProcessor;
+import ru.citeck.ecos.records2.meta.attproc.AttFormatProcessor;
+import ru.citeck.ecos.records2.meta.attproc.AttPrefixSuffixProcessor;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 
@@ -38,8 +36,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         dtoMetaResolver = serviceFactory.getDtoMetaResolver();
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
 
-        register(new FormatAttProcessor());
-        register(new PrefixSuffixAttProcessor());
+        register(new AttFormatProcessor());
+        register(new AttPrefixSuffixProcessor());
     }
 
     @Override
@@ -47,7 +45,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         if (StringUtils.isBlank(schema)) {
             schema = "id";
         }
-        return new RecordsResult<>(graphQLService.getMeta(records, schema));
+        //return new RecordsResult<>(graphQLService.getMeta(records, schema));
+        return null;
     }
 
     @Override
@@ -103,26 +102,27 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             throw new IllegalArgumentException("Attributes is empty. Records: " + records);
         }
 
-        AttributesSchema schema = createSchema(attributes);
-        RecordsResult<RecordMeta> meta = getMeta(records, schema.getGqlSchema());
-        meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
+        //AttsSchemaImpl schema = createSchema(attributes);
+        //RecordsResult<RecordMeta> meta = getMeta(records, schema.getGqlSchema());
+        //meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
 
-        return meta;
+        //return meta;
+        return null;
     }
 
     @Override
-    public List<RecordMeta> convertMetaResult(List<RecordMeta> meta, AttributesSchema schema, boolean flat) {
+    public List<RecordMeta> convertMetaResult(List<RecordMeta> meta, AttsSchema schema, boolean flat) {
         return meta.stream()
                    .map(m -> convertMetaResult(m, schema, flat))
                    .collect(Collectors.toList());
     }
 
     @Override
-    public RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
+    public RecordMeta convertMetaResult(RecordMeta meta, AttsSchema schema, boolean flat) {
 
-        ObjectData attributes = meta.getAttributes();
+       /* ObjectData attributes = meta.getAttributes();
         ObjectData resultAttributes = ObjectData.create();
-        Map<String, AttSchemaInfo> attsInfo = schema.getAttsInfo();
+        Map<String, AttributesSchema> attsInfo = schema.getAttsInfo();
 
         Map<String, MetaField> subFields = schema.getMetaField().getSubFields();
 
@@ -142,17 +142,18 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
         RecordMeta recordMeta = new RecordMeta(meta.getId());
         recordMeta.setAttributes(resultAttributes);
 
-        return recordMeta;
+        return recordMeta;*/
+        return null;
     }
 
     private void processAttribute(String key,
-                                  Map<String, AttSchemaInfo> attsInfo,
+                                  Map<String, AttsSchema> attsInfo,
                                   ObjectData attributes,
                                   ObjectData resultAttributes,
                                   boolean flat,
                                   MetaField metaField) {
 
-        AttSchemaInfo attInfo = attsInfo.get(key);
+        /*AttributesSchema attInfo = attsInfo.get(key);
         if (attInfo == null) {
             return;
         }
@@ -214,7 +215,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
                 flatValue = processedValue.getValue();
             }
             resultAttributes.set(resultKey, flatValue);
-        }
+        }*/
+        return;
     }
 
     @Override
@@ -228,8 +230,9 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     }
 
     @Override
-    public AttributesSchema createSchema(Map<String, String> attributes) {
-        return attributesMetaResolver.createSchema(attributes);
+    public AttsSchema createSchema(Map<String, String> attributes) {
+        //return attributesMetaResolver.createAttsSchema(attributes);
+        return null;
     }
 
     private JsonNode toFlatNode(JsonNode input, @Nullable MetaField metaField) {

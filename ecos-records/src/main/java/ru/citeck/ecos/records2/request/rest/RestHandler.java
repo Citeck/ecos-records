@@ -37,9 +37,18 @@ public class RestHandler {
             if (body.getAttributes() != null) {
 
                 if (foreach != null) {
-                    recordsResult = recordsService.queryRecords(foreach, body.getQuery(), body.getAttributes());
+                    recordsResult = recordsService.queryRecords(
+                        foreach,
+                        body.getQuery(),
+                        body.getAttributes(),
+                        body.isFlatAttributes()
+                    );
                 } else {
-                    recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                    recordsResult = recordsService.queryRecords(
+                        body.getQuery(),
+                        body.getAttributes(),
+                        body.isFlatAttributes()
+                    );
                 }
 
             } else {
@@ -58,7 +67,11 @@ public class RestHandler {
             if (body.getAttributes() == null) {
                 throw new IllegalArgumentException("You must specify 'attributes' for records");
             }
-            recordsResult = recordsService.getAttributes(body.getRecords(), body.getAttributes());
+            recordsResult = recordsService.getAttributes(
+                body.getRecords(),
+                body.getAttributes(),
+                body.isFlatAttributes()
+            );
         }
 
         ErrorUtils.logErrorsWithBody(recordsResult, body);

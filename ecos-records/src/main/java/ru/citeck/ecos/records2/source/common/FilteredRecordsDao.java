@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.source.common;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
@@ -19,7 +19,7 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
 
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                       @NotNull AttributesSchema schema) {
+                                                       @NotNull AttsSchema schema) {
 
         RecordsQuery localQuery = new RecordsQuery(query);
         int maxItems = localQuery.getMaxItems();

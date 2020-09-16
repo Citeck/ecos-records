@@ -4,18 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
-import ru.citeck.ecos.records2.request.query.typed.RecordsMetaResult;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RemoteRecordsDao extends AbstractRecordsDao
@@ -31,9 +27,9 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttributesSchema schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttsSchema schema) {
 
-        QueryBody request = new QueryBody();
+        /*QueryBody request = new QueryBody();
 
         if (enabled) {
 
@@ -49,7 +45,8 @@ public class RemoteRecordsDao extends AbstractRecordsDao
                 log.error("[" + getId() + "] queryRecords will return nothing. " + request);
             }
         }
-        return new RecordsMetaQueryResult();
+        return new RecordsMetaQueryResult();*/
+        return null;
     }
 
     private void prepareQueryBody(QueryBody body, RecordsQuery query) {
@@ -66,9 +63,9 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttributesSchema schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttsSchema schema) {
 
-        List<RecordRef> recordsRefs = records.stream()
+       /* List<RecordRef> recordsRefs = records.stream()
                                              .map(RecordRef::getId)
                                              .map(RecordRef::valueOf)
                                              .collect(Collectors.toList());
@@ -87,7 +84,8 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
         nodesResult.setRecords(meta);
 
-        return nodesResult;
+        return nodesResult;*/
+        return null;
     }
 
     public void setRecordsMethod(String recordsMethod) {

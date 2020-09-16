@@ -78,10 +78,26 @@ public interface RecordsService {
     /**
      * Query single record.
      *
+     * @see RecordsService#queryRecords(RecordsQuery, Collection)
+     */
+    @NotNull
+    Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes, boolean flatAttributes);
+
+    /**
+     * Query single record.
+     *
      * @see RecordsService#queryRecords(RecordsQuery, Map)
      */
     @NotNull
     Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes);
+
+    /**
+     * Query single record.
+     *
+     * @see RecordsService#queryRecords(RecordsQuery, Map)
+     */
+    @NotNull
+    Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes, boolean flatAttributes);
 
     /* QUERY RECORDS */
 
@@ -124,10 +140,27 @@ public interface RecordsService {
     @NotNull
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes);
 
+    /**
+     * Query records and its attributes.
+     *
+     * @param attributes collection of attributes which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query,
+                                                Collection<String> attributes,
+                                                boolean flatAttributes);
+
     @NotNull
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Collection<String> attributes);
+    @NotNull
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
+                                                      RecordsQuery query,
+                                                      Collection<String> attributes,
+                                                      boolean flatAttributes);
 
     /**
      * Query records and its attributes.
@@ -140,10 +173,28 @@ public interface RecordsService {
     @NotNull
     RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes);
 
+    /**
+     * Query records and its attributes.
+     *
+     * @param attributes map, where a key is a alias for a result value
+     *                   and value is an attribute which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query,
+                                                Map<String, String> attributes,
+                                                boolean flatAttributes);
+
     @NotNull
     RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
                                                       RecordsQuery query,
                                                       Map<String, String> attributes);
+    @NotNull
+    RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach,
+                                                      RecordsQuery query,
+                                                      Map<String, String> attributes,
+                                                      boolean flatAttributes);
 
     /* ATTRIBUTES */
 
@@ -176,6 +227,16 @@ public interface RecordsService {
     /**
      * Get record attributes.
      *
+     * @param attributes collection of attributes which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordMeta getAttributes(RecordRef record, Collection<String> attributes, boolean flatAttributes);
+
+    /**
+     * Get record attributes.
+     *
      * @param attributes map, where a key is a pseudonym for a result value
      *                   and value is an attribute which value we want to request.
      *
@@ -183,6 +244,17 @@ public interface RecordsService {
      */
     @NotNull
     RecordMeta getAttributes(RecordRef record, Map<String, String> attributes);
+
+    /**
+     * Get record attributes.
+     *
+     * @param attributes map, where a key is a pseudonym for a result value
+     *                   and value is an attribute which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordMeta getAttributes(RecordRef record, Map<String, String> attributes, boolean flatAttributes);
 
     /**
      * Get records attributes.
@@ -197,6 +269,18 @@ public interface RecordsService {
     /**
      * Get records attributes.
      *
+     * @param attributes collection of attributes which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+                                            Collection<String> attributes,
+                                            boolean flatAttributes);
+
+    /**
+     * Get records attributes.
+     *
      * @param attributes map, where a key is a pseudonym for a result value
      *                   and value is an attribute which value we want to request.
      *
@@ -206,12 +290,26 @@ public interface RecordsService {
     RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
     /**
+     * Get records attributes.
+     *
+     * @param attributes map, where a key is a pseudonym for a result value
+     *                   and value is an attribute which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+                                            Map<String, String> attributes,
+                                            boolean flatAttributes);
+
+    /**
      * Get raw (not flat) record meta attributes.
      *
      * @param attributes map, where a key is a pseudonym for a result value
      *                   and value is an attribute which value we want to request.
      */
     @NotNull
+    @Deprecated
     RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes);
 
     /**
@@ -221,6 +319,7 @@ public interface RecordsService {
      *                   and value is an attribute which value we want to request.
      */
     @NotNull
+    @Deprecated
     RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes);
 
     /* META */

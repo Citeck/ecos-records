@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 
 import java.util.List;
@@ -73,7 +74,7 @@ public class MetaEdgeDelegate implements MetaEdge {
         return impl.getName();
     }
 
-    public Object getValue(MetaField field) throws Exception {
+    public Object getValue(@NotNull MetaField field) throws Exception {
         if (getValue != null) {
             return getValue.apply(field);
         }

@@ -40,6 +40,66 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         recordsMetaService = serviceFactory.getRecordsMetaService();
     }
 
+    @NotNull
+    @Override
+    public Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes, boolean flatAttributes) {
+        return Optional.empty();
+    }
+
+    @NotNull
+    @Override
+    public Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes, boolean flatAttributes) {
+        return Optional.empty();
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach, RecordsQuery query, Collection<String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryResult<List<RecordMeta>> queryRecords(List<DataValue> foreach, RecordsQuery query, Map<String, String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Collection<String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes, boolean flatAttributes) {
+        return null;
+    }
+
     /* QUERY */
 
     @NotNull

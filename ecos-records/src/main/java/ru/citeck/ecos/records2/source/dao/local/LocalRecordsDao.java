@@ -6,8 +6,8 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
@@ -15,12 +15,10 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
-import ru.citeck.ecos.records2.source.common.AttributesMixinMetaValue;
 import ru.citeck.ecos.records2.source.common.ParameterizedAttsMixin;
 import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.source.dao.local.v2.*;
 import ru.citeck.ecos.records2.type.RecordTypeService;
-import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,9 +108,9 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttributesSchema schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttsSchema schema) {
 
-        RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
+        /*RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
         List<RecordRef> recordRefs = new ArrayList<>();
         List<Object> rawMetaValues = new ArrayList<>();
@@ -161,13 +159,14 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             queryResult.setRecords(RecordsUtils.convertToRefs(getId(), queryResult.getRecords()));
         }
 
-        return queryResult;
+        return queryResult;*/
+        return null;
     }
 
     @NotNull
-    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttributesSchema schema) {
+    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttsSchema schema) {
 
-        RecordsResult<RecordMeta> result;
+        /*RecordsResult<RecordMeta> result;
 
         if (this instanceof LocalRecordsMetaDao) {
 
@@ -190,12 +189,14 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             result.setRecords(RecordsUtils.convertToRefs(getId(), result.getRecords()));
         }
 
-        return result;
+        return result;*/
+
+        return null;
     }
 
-    private RecordsResult<RecordMeta> getMetaImpl(List<?> records, AttributesSchema schema) {
+    private RecordsResult<RecordMeta> getMetaImpl(List<?> records, AttsSchema schema) {
 
-        Map<Object, Object> metaCache = new ConcurrentHashMap<>();
+        /*Map<Object, Object> metaCache = new ConcurrentHashMap<>();
 
         List<?> recordsWithMixin = records.stream()
             .map(r -> metaValuesConverter.toMetaValue(r))
@@ -209,7 +210,9 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                 ))
             .collect(Collectors.toList());
 
-        return recordsMetaService.getMeta(recordsWithMixin, schema.getGqlSchema());
+        return recordsMetaService.getMeta(recordsWithMixin, schema.getGqlSchema());*/
+
+        return null;
     }
 
     protected void writeWarn(String msg) {

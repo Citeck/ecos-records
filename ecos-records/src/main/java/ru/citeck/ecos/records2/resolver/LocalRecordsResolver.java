@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
@@ -16,8 +14,8 @@ import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;
 import ru.citeck.ecos.records2.exception.RecordsSourceNotFoundException;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
 import ru.citeck.ecos.records2.predicate.model.OrPredicate;
@@ -91,7 +89,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
                                                        @NotNull Map<String, String> attributes,
-                                                       boolean flat) {
+                                                       boolean flatAttributes) {
 
         String sourceId = query.getSourceId();
         int appDelimIdx = sourceId.indexOf('/');
@@ -124,10 +122,10 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                     String errorMsg = "GroupBy is not supported by language: "
                                       + query.getLanguage() + ". Query: " + query;
                     log.warn(errorMsg);
-                    recordsResult = queryWithSchema(finalQuery, attributes, flat);
+                    recordsResult = queryWithSchema(finalQuery, attributes, flatAttributes);
                     recordsResult.addError(new RecordsError(errorMsg));
                 } else {
-                    recordsResult = doWithSchema(attributes, flat,
+                    recordsResult = doWithSchema(attributes, flatAttributes,
                         schema -> groupsSource.queryRecords(convertedQuery, schema));
                 }
             }
@@ -146,7 +144,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                 recordsResult = new RecordsQueryResult<>();
 
                 String finalSourceId = sourceId;
-                recordsResult.setRecords(doWithSchema(attributes, flat, schema ->
+                recordsResult.setRecords(doWithSchema(attributes, flatAttributes, schema ->
                     new RecordsResult<>(getDistinctValues(finalSourceId,
                         distinctQuery,
                         finalQuery.getMaxItems(),
@@ -158,7 +156,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
 
         if (recordsResult == null) {
-            recordsResult = queryWithSchema(finalQuery, attributes, flat);
+            recordsResult = queryWithSchema(finalQuery, attributes, flatAttributes);
         }
 
         return RecordsUtils.metaWithDefaultApp(recordsResult, currentApp);
@@ -167,7 +165,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private List<RecordMeta> getDistinctValues(String sourceId,
                                                DistinctQuery distinctQuery,
                                                int max,
-                                               AttributesSchema schema) {
+                                               AttsSchema schema) {
 
         if (max == -1) {
             max = 50;
@@ -198,7 +196,9 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         String distinctValueAlias = "_distinctValue";
         String distinctValueIdAlias = "_distinctValueId";
 
-        Map<String, String> innerAttributes = new HashMap<>(schema.getAttributes());
+        return null;
+
+        /*Map<String, String> innerAttributes = new HashMap<>(schema.getAttributes());
         innerAttributes.put(distinctValueAlias, ".str");
         innerAttributes.put(distinctValueIdAlias, ".id");
 
@@ -244,7 +244,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             atts.remove(distinctValueIdAlias);
 
             return new RecordMeta(ref, atts);
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toList());*/
     }
 
     private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryDao dao) {
@@ -274,7 +274,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return null;
     }
 
-    private QueryResult queryRecordsImpl(RecordsQuery query, AttributesSchema schema) {
+    private QueryResult queryRecordsImpl(RecordsQuery query, AttsSchema schema) {
 
         QueryResult records = null;
         List<RecordsException> exceptions = new ArrayList<>();
@@ -304,7 +304,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return records;
     }
 
-    private QueryResult queryRecordsWithMeta(RecordsQuery query, AttributesSchema schema) {
+    private QueryResult queryRecordsWithMeta(RecordsQuery query, AttsSchema schema) {
 
         DaoWithConvQuery daoWithQuery = getDaoWithQuery(query);
 
@@ -334,7 +334,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     @Override
     public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
                                              @NotNull Map<String, String> attributes,
-                                             boolean flat) {
+                                             boolean flatAttributes) {
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta start.\nRecords: " + records + " attributes: " + attributes);
@@ -352,7 +352,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }).collect(Collectors.toList());
 
         Collection<RecordRef> finalRecords = records;
-        RecordsResult<RecordMeta> results = doWithSchema(attributes, flat, schema -> getMetaImpl(finalRecords, schema));
+        RecordsResult<RecordMeta> results = doWithSchema(
+            attributes,
+            flatAttributes,
+            schema -> getMetaImpl(finalRecords, schema)
+        );
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta end.\nRecords: " + records + " attributes: " + attributes);
@@ -370,7 +374,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return results;
     }
 
-    private RecordsResult<RecordMetaWithDao> getMetaImpl(Collection<RecordRef> records, AttributesSchema schema) {
+    private RecordsResult<RecordMetaWithDao> getMetaImpl(Collection<RecordRef> records, AttsSchema schema) {
 
         RecordsResult<RecordMetaWithDao> results = new RecordsResult<>();
         if (schema.getAttributes().isEmpty()) {
@@ -414,8 +418,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private <T extends RecordsResult<?>,
              R extends RecordsResult<RecordMeta>> R queryWithSchema(RecordsQuery query,
                                                                     Map<String, String> attributes,
-                                                                    boolean flat) {
-        return doWithSchema(attributes, flat, schema -> {
+                                                                    boolean flatAttributes) {
+        return doWithSchema(attributes, flatAttributes, schema -> {
 
             QueryResult queryResult = queryRecordsImpl(query, schema);
             if (queryResult.getRecordsDao() != null) {
@@ -428,10 +432,10 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
     private <T extends RecordsResult<?>,
              R extends RecordsResult<RecordMeta>> R doWithSchema(Map<String, String> attributes,
-                                                                 boolean flat,
-                                                                 Function<AttributesSchema, T> action) {
+                                                                 boolean flatAttributes,
+                                                                 Function<AttsSchema, T> action) {
 
-        AttributesSchema schema = recordsMetaService.createSchema(attributes);
+        AttsSchema schema = recordsMetaService.createSchema(attributes);
         T metaRes = action.apply(schema);
         List<RecordMeta> metaList = new ArrayList<>();
 
@@ -443,14 +447,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             if (record instanceof RecordMetaWithDao) {
 
                 RecordMetaWithDao metaWithDao = (RecordMetaWithDao) record;
-                flattingRequired = flat
+                flattingRequired = flatAttributes
                     && metaWithDao.getDao() != null
                     && metaWithDao.getDao().isRawAttributesProvided();
                 meta = metaWithDao.getMeta();
 
             } else if (record instanceof RecordMeta) {
 
-                flattingRequired = flat;
+                flattingRequired = flatAttributes;
                 meta = (RecordMeta) record;
 
             } else {

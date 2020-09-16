@@ -22,12 +22,12 @@ public interface RecordsResolver {
     @Nullable
     RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
                                                 @NotNull Map<String, String> attributes,
-                                                boolean flat);
+                                                boolean flatAttributes);
 
     @Nullable
     RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
                                       @NotNull Map<String, String> attributes,
-                                      boolean flat);
+                                      boolean flatAttributes);
 
     @Nullable
     RecordsMutResult mutate(@NotNull RecordsMutation mutation);

@@ -9,7 +9,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
+import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
@@ -33,7 +33,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
 
     private final Class<T> model;
-    private AttributesSchema schema;
+    private AttsSchema schema;
 
     private final CompletableFuture<Boolean> firstSyncFuture = new CompletableFuture<>();
     private RemoteRecordsResolver remoteRecordsResolver;

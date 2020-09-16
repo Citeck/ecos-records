@@ -51,7 +51,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
                                                        @NotNull Map<String, String> attributes,
-                                                       boolean flat) {
+                                                       boolean flatAttributes) {
 
         String sourceId = query.getSourceId();
         if (sourceId.indexOf('/') == -1) {
@@ -74,6 +74,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
 
         queryBody.setQuery(appQuery);
         queryBody.setAttributes(attributes);
+        queryBody.setFlatAttributes(flatAttributes);
 
         RecordsMetaQueryResult appResult = restApi.jsonPost(url, queryBody, RecordsMetaQueryResult.class);
 
@@ -83,7 +84,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
     @Override
     public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
                                              @NotNull Map<String, String> attributes,
-                                             boolean flat) {
+                                             boolean flatAttributes) {
         return execRecordsAppRequest(
             records,
             QUERY_URL,
@@ -94,6 +95,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
                 QueryBody queryBody = new QueryBody();
                 queryBody.setRecords(appRecords);
                 queryBody.setAttributes(attributes);
+                queryBody.setFlatAttributes(flatAttributes);
                 return queryBody;
             },
             RecordsMetaQueryResult.class

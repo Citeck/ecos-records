@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.meta.attproc;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.RecordMeta;
 
 import java.sql.Date;
 import java.text.DecimalFormat;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class FormatAttProcessor implements AttProcessor {
+public class AttFormatProcessor implements AttProcessor {
 
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
     private static final TimeZone DEFAULT_TIMEZONE = TimeZone.getTimeZone("UTC");
@@ -23,7 +24,7 @@ public class FormatAttProcessor implements AttProcessor {
 
     @NotNull
     @Override
-    public Object process(@NotNull DataValue value, @NotNull List<DataValue> arguments) {
+    public Object process(@NotNull RecordMeta meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
 
         Locale locale = DEFAULT_LOCALE;
         if (arguments.size() > LOCALE_ARG_IDX) {

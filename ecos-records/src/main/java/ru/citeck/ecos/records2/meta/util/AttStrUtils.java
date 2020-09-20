@@ -63,7 +63,7 @@ public class AttStrUtils {
 
     public static int indexOf(String str, String subString, int fromIdx) {
 
-        if (hasOpenContextChar(subString)) {
+        if (subString.length() > 1 && hasOpenContextChar(subString)) {
             return -1;
         }
 
@@ -74,13 +74,16 @@ public class AttStrUtils {
             if (openContextChar != ' ') {
                 if (isCloseContextChar(openContextChar, currentChar)) {
                     openContextChar = ' ';
+                    if (containsAt(str, idx, subString)) {
+                        return idx;
+                    }
                 }
                 continue;
             }
-            if (isOpenContextChar(currentChar)) {
-                openContextChar = currentChar;
-            } else if (containsAt(str, idx, subString)) {
+            if (containsAt(str, idx, subString)) {
                 return idx;
+            } else if (isOpenContextChar(currentChar)) {
+                openContextChar = currentChar;
             }
         }
         return -1;

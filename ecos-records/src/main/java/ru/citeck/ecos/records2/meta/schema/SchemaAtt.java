@@ -18,7 +18,7 @@ public class SchemaAtt {
     private final List<AttProcessorDef> processors;
 
     public SchemaAtt(String name) {
-        this.alias = name;
+        this.alias = "";
         this.name = name;
         this.multiple = false;
         this.inner = Collections.emptyList();

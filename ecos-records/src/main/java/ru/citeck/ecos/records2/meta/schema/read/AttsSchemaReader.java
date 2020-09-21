@@ -8,10 +8,12 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.schema.AttsSchema;
+import ru.citeck.ecos.records2.meta.schema.GqlKeyUtils;
 import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class AttsSchemaReader {
+
+    private static final String KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final String GQL_ONE_ARG_ATT = "^%s\\((n:)?['\"](.+?)['\"]\\)";
     private static final String GQL_ONE_ARG_ATT_WITH_INNER = GQL_ONE_ARG_ATT + "\\{(.+)}";
@@ -109,26 +113,43 @@ public class AttsSchemaReader {
                                           boolean dotContext,
                                           BiFunction<String, String, SchemaAtt> parserFunc) {
 
-        return AttStrUtils.split(innerAtts, ",")
+        List<String> innerAttsList = AttStrUtils.split(innerAtts, ",");
+        boolean multipleAtts = innerAttsList.size() > 1;
+        AtomicInteger idx = new AtomicInteger(0);
+
+        return innerAttsList
             .stream()
-            .map(att -> readInnerAtt(att, dotContext, parserFunc))
+            .map(att -> readInnerAtt(att, dotContext, multipleAtts, idx.getAndIncrement(), parserFunc))
             .collect(Collectors.toList());
     }
 
     private SchemaAtt readInnerAtt(String innerAtt,
                                    boolean dotContext,
+                                   boolean multipleAtts,
+                                   int idx,
                                    BiFunction<String, String, SchemaAtt> parserFunc) {
 
-        innerAtt = innerAtt.trim();
+        String att = innerAtt.trim();
+        int aliasDelimIdx = AttStrUtils.indexOf(att, ":");
 
-        int aliasDelimIdx = AttStrUtils.indexOf(innerAtt, ":");
-        String att = innerAtt;
         String alias = "";
         if (aliasDelimIdx > 0) {
-            alias = att.substring(0, aliasDelimIdx);
+            alias = GqlKeyUtils.unescape(att.substring(0, aliasDelimIdx));
             att = att.substring(aliasDelimIdx + 1);
         }
-
+        att = removeQuotes(att);
+        if (alias.isEmpty() && multipleAtts) {
+            if (dotContext) {
+                alias = "" + KEYS.charAt(idx);
+            } else {
+                int questionIdx = att.indexOf('?');
+                if (questionIdx >= 0) {
+                    alias = att.substring(0, questionIdx);
+                } else {
+                    alias = att;
+                }
+            }
+        }
         return parserFunc.apply(alias, dotContext ? "." + att : att);
     }
 
@@ -160,16 +181,30 @@ public class AttsSchemaReader {
 
         return new SchemaAtt(
             alias,
-            attribute.substring(0, openBraceIdx),
+            removeQuotes(attribute.substring(0, openBraceIdx)),
             isMultiple,
             readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readAttribute),
             processors
         );
     }
 
+    private String removeQuotes(String att) {
+        if (att.length() < 2) {
+            return att;
+        }
+        char firstChar = att.charAt(0);
+        if (firstChar == att.charAt(att.length() - 1)) {
+            if (firstChar == '"' || firstChar == '\'') {
+                return att.substring(1, att.length() - 1);
+            }
+        }
+        return att;
+    }
+
     private SchemaAtt readSimpleAtt(String alias, String attribute, List<AttProcessorDef> processors) {
 
         List<String> dotPath = AttStrUtils.split(attribute, '.');
+
         String lastPathElem = dotPath.get(dotPath.size() - 1);
 
         SchemaAtt schemaAtt = readLastSimpleAtt(
@@ -287,9 +322,16 @@ public class AttsSchemaReader {
 
         List<String> innerAtts = AttStrUtils.split(attInner, ",");
         List<SchemaAtt> schemaInnerAtts = new ArrayList<>();
+        boolean multipleAtts = innerAtts.size() > 1;
 
+        int idx = 0;
         for (String innerAttWithAlias : innerAtts) {
-            schemaInnerAtts.add(readInnerAtt(innerAttWithAlias, false, this::parseEdgeInnerAtt));
+            schemaInnerAtts.add(readInnerAtt(
+                innerAttWithAlias,
+                false,
+                multipleAtts,
+                idx++, this::parseEdgeInnerAtt
+            ));
         }
 
         return new SchemaAtt(

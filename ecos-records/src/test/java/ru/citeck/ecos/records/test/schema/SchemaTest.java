@@ -32,69 +32,94 @@ public class SchemaTest {
         assertEdgeScalar("editorKey", "str");
         assertEdgeScalar("type", "str");
 
-        assertAtt(".att(n:\"_edge\"){a:att(n:\"cm:name\"){a:att(n:\"protected\"){a:bool}}}",
+        assertAtt(".att(n:\"_edge\"){att(n:\"cm:name\"){att(n:\"protected\"){bool}}}",
             ".edge(n:\"cm:name\"){protected}");
     }
 
     private void assertEdgeMetaVal(String inner, boolean multiple) {
         String edgeName = "cm:name";
-        String innerInner = "att(n:\"title\"){a:disp}";
-        assertAtt(".att(n:\"_edge\"){a:att(n:\"" + edgeName + "\"){a:att"
-                + (multiple ? "s" : "") + "(n:\"" + inner + "\"){a:" + innerInner + "}}}",
-            ".edge(n:\"" + edgeName + "\"){a:" + inner + "{a:" + innerInner + "}}");
+        String innerInner = "att(n:\"title\"){disp}";
+        assertAtt(".att(n:\"_edge\"){att(n:\"" + edgeName + "\"){att"
+                + (multiple ? "s" : "") + "(n:\"" + inner + "\"){" + innerInner + "}}}",
+            ".edge(n:\"" + edgeName + "\"){" + inner + "{" + innerInner + "}}");
     }
 
     private void assertEdgeScalar(String inner, String innerInner) {
         String edgeName = "cm:name";
-        assertAtt(".att(n:\"_edge\"){a:att(n:\"" + edgeName + "\"){a:att(n:\"" + inner + "\"){a:" + innerInner + "}}}",
-            ".edge(n:\"" + edgeName + "\"){a:" + inner + "}");
+        assertAtt(".att(n:\"_edge\"){att(n:\"" + edgeName + "\"){att(n:\"" + inner + "\"){" + innerInner + "}}}",
+            ".edge(n:\"" + edgeName + "\"){" + inner + "}");
     }
 
     @Test
     public void edgeSimpleTest() {
-        assertAtt(".att(n:\"_edge\"){a:att(n:\"cm:name\"){a:att(n:\"protected\"){a:bool}}}",
+        assertAtt(".att(n:\"_edge\"){att(n:\"cm:name\"){att(n:\"protected\"){bool}}}",
             "#cm:name?protected");
     }
 
     @Test
     public void hasAttTest() {
-        assertAtt(".att(n:\"permissions\"){a:att(n:\"_has\"){a:att(n:\"Write\"){a:bool}}}", "permissions?has('Write')");
+        assertAtt(".att(n:\"permissions\"){att(n:\"_has\"){att(n:\"Write\"){bool}}}", "permissions?has('Write')");
     }
 
     @Test
     public void asAttTest() {
         assertAtt(".att(n:\"permissions\"){" +
-            "a:att(n:\"_as\"){a:att(n:\"NodeRef\"){" +
-            "a:att(n:\"inner\"){" +
-            "a:att(n:\"att\"){a:str}" +
-        "}}}}", ".att(n:\"permissions\"){a:as('NodeRef'){a:att('inner'){a:att('att'){str}}}}");
+            "att(n:\"_as\"){att(n:\"NodeRef\"){" +
+                "att(n:\"inner\"){" +
+                    "att(n:\"att\"){str}" +
+        "}}}}", ".att(n:\"permissions\"){as('NodeRef'){att('inner'){att('att'){str}}}}");
     }
 
     @Test
     public void objAttTest() {
-        assertAtt(".att(n:\"cm:name\"){a:att(n:\"first\"){a:num},b:att(n:\"second\"){a:str}}", "cm:name{first?num,second?str}");
+        assertAtt(".att(n:\"cm:name\"){" +
+            "first:att(n:\"first\"){num}," +
+            "second:att(n:\"second\"){str}," +
+            "third:att(n:\"third\"){disp}" +
+        "}", "cm:name{first?num,second?str,third}");
     }
 
     @Test
     public void attTest() {
 
-        assertAtt(".att(n:\"cm:name\"){a:str}", ".att(n:\"cm:name\"){str}");
+        assertAtt(".att(n:\"cm:title\"){att(n:\"cm:name\"){str}}", "cm:title.cm:name?str");
 
-        assertAtt(".att(n:\"cm:title\"){a:att(n:\"cm:name\"){a:str}}", "cm:title.cm:name?str");
-        assertAtt(".att(n:\"cm:title\"){a:att(n:\"cm:name\"){a:att(n:\"deep\"){a:att(n:\"field\"){a:disp}}}}",
+        assertAtt(".att(n:\"cm:name\"){str}", ".att(n:\"cm:name\"){str}");
+        assertAtt(".att(n:\"cm:title\"){att(n:\"cm:name\"){att(n:\"deep\"){att(n:\"field\"){disp}}}}",
             "cm:title.cm:name.deep.field?disp");
 
-        assertAtt(".att(n:\"cm:name\"){a:disp}", "cm:name");
-        assertAtt(".att(n:\"cm:name\"){a:att(n:\"cm:title\"){a:disp}}", "cm:name.cm:title");
-        assertAtt(".att(n:\"cm:name\"){al:att(n:\"title\"){a:disp}}", "cm:name{al:title}");
+        assertAtt(".att(n:\"cm:name\"){disp}", "cm:name");
+        assertAtt(".att(n:\"cm:name\"){att(n:\"cm:title\"){disp}}", "cm:name.cm:title");
+        assertAtt(".att(n:\"cm:name\"){al:att(n:\"title\"){disp}}", "cm:name{al:title}");
 
-        assertAtt(".atts(n:\"cm:name\"){al:att(n:\"title\"){a:disp}}", "cm:name[]{al:title}");
-        assertAtt(".atts(n:\"cm:name\"){al:atts(n:\"title\"){a:disp}}", "cm:name[]{al:title[]}");
-        assertAtt(".att(n:\"cm:name\"){al:atts(n:\"title\"){a:disp}}", "cm:name{al:title[]}");
+        assertAtt(".atts(n:\"cm:name\"){al:att(n:\"title\"){disp}}", "cm:name[]{al:title}");
+        assertAtt(".atts(n:\"cm:name\"){al:atts(n:\"title\"){disp}}", "cm:name[]{al:title[]}");
+        assertAtt(".att(n:\"cm:name\"){al:atts(n:\"title\"){disp}}", "cm:name{al:title[]}");
 
-        assertAtt(".atts(n:\"cm:name\"){a:att(n:\"cm:title\"){a:disp}}", "cm:name[].cm:title");
-        assertAtt(".atts(n:\"cm:name\"){a:atts(n:\"cm:title\"){a:disp}}", "cm:name[].cm:title[]");
-        assertAtt(".att(n:\"cm:name\"){a:atts(n:\"cm:title\"){a:disp}}", "cm:name.cm:title[]");
+        assertAtt(".atts(n:\"cm:name\"){att(n:\"cm:title\"){disp}}", "cm:name[].cm:title");
+        assertAtt(".atts(n:\"cm:name\"){atts(n:\"cm:title\"){disp}}", "cm:name[].cm:title[]");
+        assertAtt(".att(n:\"cm:name\"){atts(n:\"cm:title\"){disp}}", "cm:name.cm:title[]");
+
+        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
+        assertAtt(".att(n:\"cm:name\"){disp:disp,_u002E_str:str}", "cm:name{disp:.disp,.str}");
+        assertAtt(".att(n:\"cm:name\"){name:att(n:\"name\"){disp},displayName:att(n:\"displayName\"){disp}}",
+            "cm:name{name,displayName}");
+
+        assertAtt(".atts(n:\"cm:name\"){" +
+            "cm_u003A_name:att(n:\"cm:name\"){disp}," +
+            "cm_u003A_title:att(n:\"cm:title\"){disp}" +
+        "}", "cm:name[]{'cm:name','cm:title'}");
+
+        assertAtt(".att(n:\"cm:name\"){disp}", "cm:name");
+        assertAtt(".att(n:\"cm:na.me\"){disp}", "'cm:na.me'");
+        assertAtt(".att(n:\"cm:na\"){att(n:\"me\"){disp}}", "cm:na.me");
+
+    }
+
+    @Test
+    public void testInnerAliases() {
+        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
+        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{'.disp',\".str\"}");
     }
 
     private void assertAtt(String expected, String source) {

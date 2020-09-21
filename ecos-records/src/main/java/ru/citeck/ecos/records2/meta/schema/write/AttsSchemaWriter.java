@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.meta.schema.write;
 
 import ru.citeck.ecos.records2.meta.schema.AttsSchema;
+import ru.citeck.ecos.records2.meta.schema.GqlKeyUtils;
 import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
 
 import java.util.HashMap;
@@ -8,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 public class AttsSchemaWriter {
-
-    private static final String KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public Map<String, String> writeToMap(AttsSchema schema) {
 
@@ -27,20 +26,15 @@ public class AttsSchemaWriter {
     }
 
     private void writeToString(SchemaAtt attribute, StringBuilder sb) {
-        writeToString(attribute, sb, 0);
-    }
 
-    private void writeToString(SchemaAtt attribute, StringBuilder sb, int idx) {
+        String alias = attribute.getAlias();
+        String name = attribute.getName();
 
-        if (sb.length() > 0) {
-            String alias = attribute.getAlias();
-            if (alias.length() == 0) {
-                alias = "" + KEYS.charAt(idx);
-            }
-            sb.append(alias).append(":");
+        if (sb.length() > 0 && !alias.isEmpty()) {
+            sb.append(GqlKeyUtils.escape(alias)).append(":");
         }
-        if (attribute.getName().startsWith(".")) {
-            sb.append(attribute.getName().substring(1));
+        if (name.startsWith(".")) {
+            sb.append(name.substring(1));
             return;
         }
         sb.append("att");
@@ -48,12 +42,12 @@ public class AttsSchemaWriter {
             sb.append("s");
         }
         sb.append("(n:\"")
-            .append(attribute.getName())
+            .append(name)
             .append("\"){");
 
         List<SchemaAtt> inner = attribute.getInner();
         for (int i = 0; i < inner.size(); i++) {
-            writeToString(inner.get(i), sb, i);
+            writeToString(inner.get(i), sb);
             if (i < inner.size() - 1) {
                 sb.append(",");
             }

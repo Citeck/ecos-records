@@ -114,6 +114,13 @@ public class SchemaTest {
         assertAtt(".att(n:\"cm:na.me\"){disp}", "'cm:na.me'");
         assertAtt(".att(n:\"cm:na\"){att(n:\"me\"){disp}}", "cm:na.me");
 
+        assertAtt(".att(n:\"cm:name[]\"){disp}", "\"cm:name[]\"");
+        assertAtt(".att(n:\"cm:name[]\"){disp}", "'cm:name[]'");
+        assertAtt(".atts(n:\"cm:name\"){disp}", "cm:name[]");
+        assertAtt(".att(n:\"cm:name[]?str\"){disp}", "'cm:name[]?str'");
+        assertAtt(".atts(n:\"cm:name\"){str}", "cm:name[]?str");
+
+        assertAtt(".att(n:\"cm:name\"){strange_u0020_alias_u0020_name:disp,_u002E_str:str}", "cm:name{'strange alias name':.disp,.str}");
     }
 
     @Test

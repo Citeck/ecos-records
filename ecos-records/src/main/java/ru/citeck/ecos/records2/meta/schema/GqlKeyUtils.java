@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class GqlKeyUtils {
 
-    private static final String SPECIAL_CHARS = ":{}(),.?-+\"'";
+    private static final String SPECIAL_CHARS = ":{}(),.?-+\"' ";
     private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("_u([A-Fa-f\\d]{4})_");
 
     private static String toHex(char ch) {

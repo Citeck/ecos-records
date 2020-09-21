@@ -137,7 +137,7 @@ public class AttsSchemaReader {
             alias = GqlKeyUtils.unescape(att.substring(0, aliasDelimIdx));
             att = att.substring(aliasDelimIdx + 1);
         }
-        att = removeQuotes(att);
+
         if (alias.isEmpty() && multipleAtts) {
             if (dotContext) {
                 alias = "" + KEYS.charAt(idx);
@@ -181,25 +181,13 @@ public class AttsSchemaReader {
 
         return new SchemaAtt(
             alias,
-            removeQuotes(attribute.substring(0, openBraceIdx)),
+            attribute.substring(0, openBraceIdx),
             isMultiple,
             readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readAttribute),
             processors
         );
     }
 
-    private String removeQuotes(String att) {
-        if (att.length() < 2) {
-            return att;
-        }
-        char firstChar = att.charAt(0);
-        if (firstChar == att.charAt(att.length() - 1)) {
-            if (firstChar == '"' || firstChar == '\'') {
-                return att.substring(1, att.length() - 1);
-            }
-        }
-        return att;
-    }
 
     private SchemaAtt readSimpleAtt(String alias, String attribute, List<AttProcessorDef> processors) {
 

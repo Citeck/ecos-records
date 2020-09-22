@@ -43,6 +43,17 @@ public class SchemaAtt {
         this.processors = processors;
     }
 
+    public boolean isScalar() {
+        return name.charAt(0) == '.';
+    }
+
+    public String getAliasForValue() {
+        if (alias.isEmpty()) {
+            return name;
+        }
+        return alias;
+    }
+
     private String removeQuotes(String att) {
         if (att.length() < 2) {
             return att;

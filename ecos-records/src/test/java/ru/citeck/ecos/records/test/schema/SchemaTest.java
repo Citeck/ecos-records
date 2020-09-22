@@ -1,15 +1,15 @@
 package ru.citeck.ecos.records.test.schema;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.meta.schema.read.AttsSchemaReader;
-import ru.citeck.ecos.records2.meta.schema.write.AttsSchemaWriter;
+import ru.citeck.ecos.records2.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records2.meta.schema.write.AttSchemaWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SchemaTest {
 
-    private final AttsSchemaReader reader = new AttsSchemaReader();
-    private final AttsSchemaWriter writer = new AttsSchemaWriter();
+    private final AttSchemaReader reader = new AttSchemaReader();
+    private final AttSchemaWriter writer = new AttSchemaWriter();
 
     @Test
     public void edgeGqlTest() {

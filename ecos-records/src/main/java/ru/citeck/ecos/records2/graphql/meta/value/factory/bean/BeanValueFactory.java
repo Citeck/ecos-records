@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.RecordRef;
@@ -112,6 +113,9 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
 
         @Override
         public Object getJson() {
+            if (typeCtx.hasProperty(".json")) {
+                return getAttWithType(".json", DataValue.class);
+            }
             return Json.getMapper().toJson(bean);
         }
 

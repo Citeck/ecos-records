@@ -80,15 +80,37 @@ public class AttSchemaResolver {
     }
 
     private Object toFlatObj(Object data, SchemaAtt schema) {
+        return toFlatObj(data, schema, schema.isMultiple());
+    }
 
-        List<SchemaAtt> innerAtts = schema.getInner();
-        if (innerAtts.size() != 1 || !(data instanceof Map)) {
-            return data;
+    private Object toFlatObj(Object data, SchemaAtt schema, boolean multiple) {
+
+        if (multiple && data instanceof Collection) {
+            List<Object> res = new ArrayList<>();
+            for (Object value : (Collection<?>) data) {
+                res.add(toFlatObj(value, schema, false));
+            }
+            return res;
         }
 
-        SchemaAtt innerAtt = innerAtts.get(0);
+        List<SchemaAtt> innerAtts = schema.getInner();
+
+        if (!(data instanceof Map)) {
+            return data;
+        }
         Map<?, ?> dataMap = (Map<?, ?>) data;
-        return toFlatObj(dataMap.get(innerAtt.getAliasForValue()), innerAtt);
+        if (innerAtts.size() > 1) {
+            Map<String, Object> resMap = new LinkedHashMap<>();
+            for (SchemaAtt att : innerAtts) {
+                String alias = att.getAliasForValue();
+                resMap.put(alias, toFlatObj(dataMap.get(alias), att));
+            }
+            return resMap;
+        } else if (innerAtts.size() == 1) {
+            SchemaAtt innerAtt = innerAtts.get(0);
+            return toFlatObj(dataMap.get(innerAtt.getAliasForValue()), innerAtt);
+        }
+        return data;
     }
 
     private List<Map<String, Object>> resolve(List<ValueContext> values,

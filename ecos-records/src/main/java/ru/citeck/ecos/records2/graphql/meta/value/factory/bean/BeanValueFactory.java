@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
@@ -97,7 +98,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) throws Exception {
+        public Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
             if (bean instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> beanAsMap = (Map<String, Object>) bean;
@@ -107,7 +108,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             return typeCtx.hasProperty(name);
         }
 
@@ -124,7 +125,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public MetaEdge getEdge(String name, MetaField field) {
+        public MetaEdge getEdge(@NotNull String name, @NotNull MetaField field) {
             return new BeanEdge(name, this);
         }
 

@@ -26,6 +26,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AttSchemaResolver {
 
+    private static final List<Class<?>> FORCE_CACHE_TYPES = Arrays.asList(
+        String.class,
+        RecordRef.class
+    );
+
     private final MetaValuesConverter metaValuesConverter;
 
     public AttSchemaResolver(RecordsServiceFactory factory) {
@@ -308,6 +313,7 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ResolveContext {
 
+        private final Map<Object, MetaValue> forceMetaValueCache = new HashMap<>();
         private final Map<Object, MetaValue> metaValueCache = new IdentityHashMap<>();
         private final Map<MetaValue, ValueContext> valueContextCache = new IdentityHashMap<>();
 
@@ -317,6 +323,9 @@ public class AttSchemaResolver {
         MetaValue toMetaValue(@NotNull Object value) {
             if (value instanceof MetaValue) {
                 return (MetaValue) value;
+            }
+            if (FORCE_CACHE_TYPES.contains(value.getClass())) {
+                return forceMetaValueCache.computeIfAbsent(value, converter::toMetaValue);
             }
             return metaValueCache.computeIfAbsent(value, converter::toMetaValue);
         }

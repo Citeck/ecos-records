@@ -1,15 +1,21 @@
 package ru.citeck.ecos.records2.meta.schema.read;
 
+import ecos.com.fasterxml.jackson210.databind.JavaType;
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.type.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.meta.schema.GqlKeyUtils;
 import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records2.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
 import java.util.*;
@@ -34,6 +40,8 @@ public class AttSchemaReader {
 
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
+    private static final TypeFactory typeFactory = new ObjectMapper().getTypeFactory();
+
     @NotNull
     public AttsSchema read(@Nullable Map<String, String> attributes) {
 
@@ -41,19 +49,20 @@ public class AttSchemaReader {
             return new AttsSchema();
         }
 
-        List<SchemaAtt> schemaAtts = new ArrayList<>();
-        attributes.forEach((k, v) -> schemaAtts.add(readAttribute(k, v)));
+        List<SchemaRootAtt> schemaAtts = new ArrayList<>();
+        attributes.forEach((k, v) -> schemaAtts.add(readRoot(k, v)));
 
         return new AttsSchema(attributes, schemaAtts);
     }
 
-    @Nullable
-    public SchemaAtt readAttribute(String attribute) {
-        return readAttribute("", attribute);
+    /**
+     * @throws AttReadException when attribute can't be read
+     */
+    public SchemaRootAtt read(String attribute) {
+        return readRoot("", attribute);
     }
 
-    @Nullable
-    public SchemaAtt readAttribute(String alias, String attribute) {
+    private SchemaRootAtt readRoot(String alias, String attribute) {
 
         if (StringUtils.isBlank(attribute)) {
             throw new AttReadException(alias, attribute, "Empty attribute");
@@ -103,10 +112,53 @@ public class AttSchemaReader {
             att = ".edge(n:\"" + attribute.substring(1, questionIdx) + "\"){"
                 + attribute.substring(questionIdx + 1) + "}";
         }
-        if (att.charAt(0) == '.') {
-            return readDotAtt(alias, att.substring(1), processors);
+
+        SchemaAtt schemaAtt = readInner(alias, att);
+        return new SchemaRootAtt(schemaAtt, processors, getFlatAttributeType(schemaAtt));
+    }
+
+    private JavaType getFlatAttributeType(SchemaAtt att) {
+        return getFlatAttributeType(att, att.isMultiple());
+    }
+
+    private JavaType getFlatAttributeType(SchemaAtt att, boolean multiple) {
+
+        if (multiple) {
+            return typeFactory.constructCollectionType(ArrayList.class, getFlatAttributeType(att, false));
         }
-        return readSimpleAtt(alias, att, processors);
+
+        String name = att.getName();
+
+        if (name.charAt(0) == '.') {
+            switch (name) {
+                case ".json":
+                    return typeFactory.constructType(JsonNode.class);
+                case ".bool":
+                    return typeFactory.constructType(Boolean.class);
+                case ".num":
+                    return typeFactory.constructType(Double.class);
+                default:
+                    return typeFactory.constructType(String.class);
+            }
+        }
+
+        List<SchemaAtt> inner = att.getInner();
+
+        if (inner.size() == 0) {
+            throw new AttReadException(att.getAlias(), att.getName(),
+                "Attribute is not a scalar and doesn't have inner attributes");
+        } else if (inner.size() == 1) {
+            return getFlatAttributeType(inner.get(0));
+        } else {
+            return typeFactory.constructType(ObjectData.class);
+        }
+    }
+
+    private SchemaAtt readInner(String alias, String attribute) {
+        if (attribute.charAt(0) == '.') {
+            return readDotAtt(alias, attribute.substring(1));
+        }
+        return readSimpleAtt(alias, attribute);
     }
 
     private List<SchemaAtt> readInnerAtts(String innerAtts,
@@ -153,7 +205,7 @@ public class AttSchemaReader {
         return parserFunc.apply(alias, dotContext ? "." + att : att);
     }
 
-    private SchemaAtt readLastSimpleAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt readLastSimpleAtt(String alias, String attribute) {
 
         String att = attribute;
         int questionIdx = AttStrUtils.indexOf(att, "?");
@@ -183,23 +235,17 @@ public class AttSchemaReader {
             alias,
             attribute.substring(0, openBraceIdx),
             isMultiple,
-            readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readAttribute),
-            processors
+            readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readInner)
         );
     }
 
-
-    private SchemaAtt readSimpleAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt readSimpleAtt(String alias, String attribute) {
 
         List<String> dotPath = AttStrUtils.split(attribute, '.');
 
         String lastPathElem = dotPath.get(dotPath.size() - 1);
 
-        SchemaAtt schemaAtt = readLastSimpleAtt(
-            dotPath.size() == 1 ? alias : "",
-            lastPathElem,
-            processors
-        );
+        SchemaAtt schemaAtt = readLastSimpleAtt(dotPath.size() == 1 ? alias : "", lastPathElem);
 
         for (int i = dotPath.size() - 2; i >= 0; i--) {
 
@@ -226,13 +272,13 @@ public class AttSchemaReader {
     /**
      * @param attribute - attribute without dot
      */
-    private SchemaAtt readDotAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt readDotAtt(String alias, String attribute) {
 
         if (attribute.startsWith("att")) {
-            return parseGqlAtt(alias, attribute, processors);
+            return parseGqlAtt(alias, attribute);
         }
         if (attribute.startsWith("edge")) {
-            return readEdgeAtt(alias, attribute, processors);
+            return readEdgeAtt(alias, attribute);
         }
 
         int braceIdx = AttStrUtils.indexOf(attribute, '(');
@@ -241,17 +287,17 @@ public class AttSchemaReader {
         }
 
         if (attribute.startsWith("as")) {
-            return parseAsAtt(alias, attribute, processors);
+            return parseAsAtt(alias, attribute);
         }
 
         if (attribute.startsWith("has")) {
-            return parseHasAtt(alias, attribute, processors);
+            return parseHasAtt(alias, attribute);
         }
 
         throw new AttReadException(alias, attribute, "Unknown dot attribute");
     }
 
-    private SchemaAtt parseAsAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt parseAsAtt(String alias, String attribute) {
 
         Matcher matcher = GQL_AS_PATTERN.matcher(attribute);
         if (!matcher.matches()) {
@@ -269,13 +315,12 @@ public class AttSchemaReader {
                 "",
                 attName,
                 false,
-                readInnerAtts(attInner, true, this::readAttribute),
-                processors
+                readInnerAtts(attInner, true, this::readInner)
             ))
         );
     }
 
-    private SchemaAtt parseHasAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt parseHasAtt(String alias, String attribute) {
 
         Matcher matcher = GQL_HAS_PATTERN.matcher(attribute);
         if (!matcher.matches()) {
@@ -292,13 +337,12 @@ public class AttSchemaReader {
                 "",
                 attName,
                 false,
-                Collections.singletonList(new SchemaAtt(".bool")),
-                processors
+                Collections.singletonList(new SchemaAtt(".bool"))
             ))
         );
     }
 
-    private SchemaAtt readEdgeAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt readEdgeAtt(String alias, String attribute) {
 
         Matcher matcher = GQL_EDGE_PATTERN.matcher(attribute);
         if (!matcher.matches()) {
@@ -326,8 +370,7 @@ public class AttSchemaReader {
             alias,
             RecordConstants.ATT_EDGE,
             false,
-            Collections.singletonList(new SchemaAtt("", attName, false, schemaInnerAtts)),
-            processors
+            Collections.singletonList(new SchemaAtt("", attName, false, schemaInnerAtts))
         );
     }
 
@@ -344,8 +387,7 @@ public class AttSchemaReader {
                     alias,
                     attribute,
                     false,
-                    Collections.singletonList(new SchemaAtt(".str")),
-                    Collections.emptyList()
+                    Collections.singletonList(new SchemaAtt(".str"))
                 );
             case "protected":
             case "canBeRead":
@@ -355,8 +397,7 @@ public class AttSchemaReader {
                     alias,
                     attribute,
                     false,
-                    Collections.singletonList(new SchemaAtt(".bool")),
-                    Collections.emptyList()
+                    Collections.singletonList(new SchemaAtt(".bool"))
                 );
         }
 
@@ -381,15 +422,14 @@ public class AttSchemaReader {
                     alias,
                     attWithoutInner,
                     multiple,
-                    readInnerAtts(innerAtts, true, this::readAttribute),
-                    Collections.emptyList()
+                    readInnerAtts(innerAtts, true, this::readInner)
                 );
         }
 
         throw new AttReadException(alias, attribute, "Unknown 'edge inner' attribute");
     }
 
-    private SchemaAtt parseGqlAtt(String alias, String attribute, List<AttProcessorDef> processors) {
+    private SchemaAtt parseGqlAtt(String alias, String attribute) {
 
         Matcher matcher = GQL_ATT_PATTERN.matcher(attribute);
         if (!matcher.matches()) {
@@ -399,9 +439,9 @@ public class AttSchemaReader {
 
         String attName  = matcher.group(2);
         boolean multiple = attribute.startsWith("atts");
-        List<SchemaAtt> innerAtts = readInnerAtts(matcher.group(3), true, this::readAttribute);
+        List<SchemaAtt> innerAtts = readInnerAtts(matcher.group(3), true, this::readInner);
 
-        return new SchemaAtt(alias, attName, multiple, innerAtts, processors);
+        return new SchemaAtt(alias, attName, multiple, innerAtts);
     }
 
     private List<AttProcessorDef> parseProcessors(String processorStr) {

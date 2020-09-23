@@ -1,9 +1,10 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,7 @@ public class DataValueMetaFactory implements MetaValueFactory<DataValue> {
             }
 
             @Override
-            public Object getAttribute(String name, MetaField field) {
+            public Object getAttribute(@NotNull String name) {
                 return value.get(name);
             }
         };

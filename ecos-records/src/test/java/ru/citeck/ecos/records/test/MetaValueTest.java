@@ -11,7 +11,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -34,7 +33,7 @@ public class MetaValueTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return Collections.singletonList(new MetaVal(s -> innerSchema = s));
     }
 
@@ -125,7 +124,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             return HAS_VARIANTS.contains(name);
         }
 
@@ -145,7 +144,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAs(String type) {
+        public Object getAs(@NotNull String type) {
             switch (type) {
                 case "num":
                     return getDouble();
@@ -156,9 +155,10 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String name, @NotNull MetaField field) {
+        public Object getAttribute(String name) {
             if (name.equals("schema")) {
-                schemaConsumer.accept(field.getInnerSchema());
+                //todo
+                //schemaConsumer.accept(field.getInnerSchema());
             }
             if (name.equals("date")) {
                 return DATE_VALUE;

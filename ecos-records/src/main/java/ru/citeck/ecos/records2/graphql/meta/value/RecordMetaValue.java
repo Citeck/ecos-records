@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 
 public class RecordMetaValue implements MetaValue {
@@ -21,7 +22,7 @@ public class RecordMetaValue implements MetaValue {
     }
 
     @Override
-    public Object getAttribute(String name, MetaField field) {
+    public Object getAttribute(@NotNull String name) {
         return meta.get(name);
     }
 }

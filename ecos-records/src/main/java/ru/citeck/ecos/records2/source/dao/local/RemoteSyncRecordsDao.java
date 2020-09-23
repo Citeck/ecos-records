@@ -4,11 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
@@ -48,16 +44,16 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
 
     @NotNull
     @Override
-    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryRecords(@NotNull RecordsQuery query) {
         waitUntilSyncCompleted();
-        return super.queryLocalRecords(query, field);
+        return super.queryRecords(query);
     }
 
     @NotNull
     @Override
-    public List<?> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<?> getRecordsMeta(@NotNull List<RecordRef> records) {
         waitUntilSyncCompleted();
-        return super.getLocalRecordsMeta(records, metaField);
+        return super.getRecordsMeta(records);
     }
 
     @Override
@@ -102,9 +98,9 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
         RecordsQueryResult<RecordMeta> result;
         try {
             if (getId().contains("/")) {
-                result = remoteRecordsResolver.queryRecords(query, schema.getAttributes(), true);
+                result = remoteRecordsResolver.queryRecords(query, schema.getSourceAtts(), true);
             } else {
-                result = localRecordsResolver.queryRecords(query, schema.getAttributes(), true);
+                result = localRecordsResolver.queryRecords(query, schema.getSourceAtts(), true);
             }
         } catch (Exception e) {
             // target DAO is not ready yet

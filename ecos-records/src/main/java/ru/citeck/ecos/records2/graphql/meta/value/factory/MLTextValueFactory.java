@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,7 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name, @NotNull MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             if (name.equals("closest")) {
                 return new Value(value, true);
             }
@@ -57,7 +57,7 @@ public class MLTextValueFactory implements MetaValueFactory<MLText> {
         }
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             return value.has(new Locale(name));
         }
     }

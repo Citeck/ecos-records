@@ -13,14 +13,14 @@ public class MetaEdgeValue implements MetaValue {
     private final MetaEdge edge;
 
     @Override
-    public Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
+    public Object getAttribute(@NotNull String name) throws Exception {
         switch (name) {
             case "name":
                 return edge.getName();
             case "val":
-                return edge.getValue(field);
+                return edge.getValue();
             case "vals":
-                Object value = edge.getValue(field);
+                Object value = edge.getValue();
                 if (value == null) {
                     return Collections.emptyList();
                 }

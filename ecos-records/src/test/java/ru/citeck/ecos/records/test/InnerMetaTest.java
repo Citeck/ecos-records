@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
@@ -71,7 +70,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     @NotNull
     @Override
-    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return records.stream().map(r -> {
             if (r.getId().contains("inner")) {
                 return new InnerMeta();
@@ -84,8 +83,9 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         private RecordMeta attributes;
 
-        @Override
-        public <T extends QueryContext> void init(T context, MetaField field) {
+        //todo
+        /*@Override
+        public <T extends QueryContext> void init(T context, SchemaAtt field) {
             Map<String, String> atts = field.getInnerAttributesMap();
             atts.put("display", "inner?disp");
             atts.put("innerDisp", ".disp");
@@ -95,10 +95,10 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
             atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
             atts.put("innerHasFalse", ".att(n:\"inner2\"){has(n:\"has_false\")}");
             attributes = recordsService.getRawAttributes(RecordRef.create(ID, "inner"), atts);
-        }
+        }*/
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             return new InnerMetaValue(attributes.get(name));
         }
     }
@@ -114,7 +114,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             switch (name) {
                 case "field0" :
                     return "field0";
@@ -140,7 +140,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
     public class InnerInnerMeta2 implements MetaValue {
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             if ("has_true".equals(name)) {
                 return true;
             } else if ("has_false".equals(name)) {

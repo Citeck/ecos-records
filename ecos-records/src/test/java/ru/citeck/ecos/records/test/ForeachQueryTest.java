@@ -10,7 +10,6 @@ import ru.citeck.ecos.records2.QueryConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -97,7 +96,7 @@ public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQue
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField metaField) {
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
         RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
         result.setRecords(Collections.singletonList(resultRefs.get(queries.size())));
         queries.add(query);

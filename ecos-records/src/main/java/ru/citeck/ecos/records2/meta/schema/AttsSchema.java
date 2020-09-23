@@ -11,11 +11,11 @@ import java.util.Map;
 @AllArgsConstructor
 public class AttsSchema {
 
-    private final Map<String, String> attributes;
-    private final List<SchemaAtt> schema;
+    private final Map<String, String> sourceAtts;
+    private final List<SchemaRootAtt> attributes;
 
     public AttsSchema() {
-        attributes = Collections.emptyMap();
-        schema = Collections.emptyList();
+        sourceAtts = Collections.emptyMap();
+        attributes = Collections.emptyList();
     }
 }

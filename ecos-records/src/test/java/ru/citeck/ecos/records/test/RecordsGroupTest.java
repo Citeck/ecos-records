@@ -9,7 +9,6 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.*;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
@@ -168,7 +167,7 @@ class RecordsGroupTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         RecordsQueryResult<Object> result = new RecordsQueryResult<>();
 

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.source.dao.local.meta;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
@@ -28,7 +28,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
 
         return records.stream().map(r -> {
             if (r.getId().isEmpty()) {
@@ -48,7 +48,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             switch (name) {
                 case "rec":
                     return new Records();
@@ -65,7 +65,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     public static class Time implements MetaValue {
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
 
             switch (name) {
                 case "started":
@@ -122,7 +122,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     public static class Records implements MetaValue {
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             return RecordRef.valueOf(name);
         }
     }

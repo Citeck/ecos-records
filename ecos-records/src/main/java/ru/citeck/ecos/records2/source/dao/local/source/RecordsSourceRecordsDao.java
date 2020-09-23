@@ -3,7 +3,6 @@ package ru.citeck.ecos.records2.source.dao.local.source;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -25,7 +24,7 @@ public class RecordsSourceRecordsDao extends LocalRecordsDao
     }
 
     @Override
-    public List<?> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<?> getLocalRecordsMeta(List<RecordRef> records) {
 
         return records.stream().map(rec -> {
             RecordsSourceInfo info = recordsService.getSourceInfo(rec.getId());
@@ -37,7 +36,7 @@ public class RecordsSourceRecordsDao extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query) {
         return new RecordsQueryResult<>(recordsService.getSourcesInfo());
     }
 }

@@ -82,7 +82,7 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    public static String getMetaValueId(Object value) {
+    public static String getMetaValueId(Object value) throws Exception {
         if (value == null) {
             return null;
         }

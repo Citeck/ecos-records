@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.source.dao.local.meta;
 
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.util.Map;
@@ -23,12 +23,12 @@ public class MetaRecordsDaoAttsProviderImpl implements MetaRecordsDaoAttsProvide
     public class Attributes implements MetaValue {
 
         @Override
-        public Object getAttribute(String name, MetaField field) throws Exception {
+        public Object getAttribute(@NotNull String name) throws Exception {
             MetaAttributesSupplier supplier = suppliers.get(name);
             if (supplier == null) {
                 return null;
             }
-            return supplier.getAttribute(name, field);
+            return supplier.getAttribute(name);
         }
     }
 }

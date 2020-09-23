@@ -13,7 +13,6 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -37,7 +36,7 @@ public class MetaEdgeTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return Collections.singletonList(new MetaTestVal());
     }
 
@@ -123,7 +122,7 @@ public class MetaEdgeTest extends LocalRecordsDao
         }
 
         @Override
-        public MetaEdge getEdge(String name, MetaField field) {
+        public MetaEdge getEdge(String name) {
             return new MetaTestEdge(name);
         }
     }
@@ -166,7 +165,7 @@ public class MetaEdgeTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getValue(@NotNull MetaField field) {
+        public Object getValue() {
             return new MetaTestVal();
         }
 

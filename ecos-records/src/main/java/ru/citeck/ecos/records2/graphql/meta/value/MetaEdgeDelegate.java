@@ -1,8 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
+import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
 
 import java.util.List;
 
@@ -10,74 +9,86 @@ public class MetaEdgeDelegate implements MetaEdge {
 
     @Getter
     private final MetaEdge impl;
-    private final UncheckedFunction<MetaField, Object> getValue;
+    private final UncheckedSupplier<Object> getValue;
 
     public MetaEdgeDelegate(MetaEdge impl) {
         this.impl = impl;
         this.getValue = null;
     }
 
-    public MetaEdgeDelegate(MetaEdge impl, UncheckedFunction<MetaField, Object> getValue) {
+    public MetaEdgeDelegate(MetaEdge impl, UncheckedSupplier<Object> getValue) {
         this.impl = impl;
         this.getValue = getValue;
     }
 
-    public boolean isProtected() {
+    @Override
+    public boolean isProtected() throws Exception {
         return impl.isProtected();
     }
 
-    public boolean isMultiple() {
+    public boolean isMultiple() throws Exception {
         return impl.isMultiple();
     }
 
-    public boolean isAssociation() {
+    @Override
+    public boolean isAssociation() throws Exception {
         return impl.isAssociation();
     }
 
-    public boolean isSearchable() {
+    @Override
+    public boolean isSearchable() throws Exception {
         return impl.isSearchable();
     }
 
-    public List<?> getOptions() {
+    @Override
+    public List<?> getOptions() throws Exception {
         return impl.getOptions();
     }
 
-    public List<?> getDistinct() {
+    public List<?> getDistinct() throws Exception {
         return impl.getDistinct();
     }
 
-    public List<CreateVariant> getCreateVariants() {
+    @Override
+    public List<CreateVariant> getCreateVariants() throws Exception {
         return impl.getCreateVariants();
     }
 
-    public Class<?> getJavaClass() {
+    @Override
+    public Class<?> getJavaClass() throws Exception {
         return impl.getJavaClass();
     }
 
-    public String getEditorKey() {
+    @Override
+    public String getEditorKey() throws Exception {
         return impl.getEditorKey();
     }
 
-    public String getType() {
+    @Override
+    public String getType() throws Exception {
         return impl.getType();
     }
 
-    public String getTitle() {
+    @Override
+    public String getTitle() throws Exception {
         return impl.getTitle();
     }
 
-    public String getDescription() {
+    @Override
+    public String getDescription() throws Exception {
         return impl.getDescription();
     }
 
-    public String getName() {
+    @Override
+    public String getName() throws Exception {
         return impl.getName();
     }
 
-    public Object getValue(@NotNull MetaField field) throws Exception {
+    @Override
+    public Object getValue() throws Exception {
         if (getValue != null) {
-            return getValue.apply(field);
+            return getValue.get();
         }
-        return impl.getValue(field);
+        return impl.getValue();
     }
 }

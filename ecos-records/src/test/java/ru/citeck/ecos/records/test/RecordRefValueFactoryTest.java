@@ -11,7 +11,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -117,7 +116,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<MetaValue> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+    public RecordsQueryResult<MetaValue> queryLocalRecords(@NotNull RecordsQuery query) {
         RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();
         result.addRecord(Val.val0);
         return result;
@@ -125,7 +124,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return records.stream().map(r -> {
             if (r.equals(RecordRef.valueOf(Val.val0.getId()))) {
                 return Val.val0;
@@ -176,7 +175,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
         }
 
         @Override
-        public boolean has(String name) {
+        public boolean has(@NotNull String name) {
             if (name.equals("has_true")) {
                 return true;
             } else if (name.equals("has_false")) {
@@ -186,12 +185,12 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAs(String name) {
+        public Object getAs(@NotNull String name) {
             return this;
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             switch (name) {
                 case VAL0_FIELD:
                     return val0.ref;

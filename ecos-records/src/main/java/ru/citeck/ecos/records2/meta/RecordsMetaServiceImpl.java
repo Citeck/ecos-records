@@ -1,19 +1,9 @@
 package ru.citeck.ecos.records2.meta;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.*;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
-import ru.citeck.ecos.records2.meta.attproc.AttProcessor;
-import ru.citeck.ecos.records2.meta.attproc.AttFormatProcessor;
-import ru.citeck.ecos.records2.meta.attproc.AttPrefixSuffixProcessor;
 import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
@@ -25,19 +15,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsMetaServiceImpl implements RecordsMetaService {
 
-    private final RecordsMetaGql graphQLService;
     private final AttributesMetaResolver attributesMetaResolver;
     private final DtoMetaResolver dtoMetaResolver;
 
-    private final Map<String, AttProcessor> attProcessors = new ConcurrentHashMap<>();
-
     public RecordsMetaServiceImpl(RecordsServiceFactory serviceFactory) {
-        graphQLService = serviceFactory.getRecordsMetaGql();
         dtoMetaResolver = serviceFactory.getDtoMetaResolver();
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
-
-        register(new AttFormatProcessor());
-        register(new AttPrefixSuffixProcessor());
     }
 
     @Override
@@ -111,112 +94,15 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     }
 
     @Override
+    public RecordMeta convertMetaResult(RecordMeta meta, AttsSchema schema, boolean flat) {
+        return null;
+    }
+
+    @Override
     public List<RecordMeta> convertMetaResult(List<RecordMeta> meta, AttsSchema schema, boolean flat) {
         return meta.stream()
                    .map(m -> convertMetaResult(m, schema, flat))
                    .collect(Collectors.toList());
-    }
-
-    @Override
-    public RecordMeta convertMetaResult(RecordMeta meta, AttsSchema schema, boolean flat) {
-
-       /* ObjectData attributes = meta.getAttributes();
-        ObjectData resultAttributes = ObjectData.create();
-        Map<String, AttributesSchema> attsInfo = schema.getAttsInfo();
-
-        Map<String, MetaField> subFields = schema.getMetaField().getSubFields();
-
-        Iterator<String> fieldsIt = attributes.fieldNames();
-        while (fieldsIt.hasNext()) {
-            String nextFieldName = fieldsIt.next();
-            processAttribute(
-                nextFieldName,
-                attsInfo,
-                attributes,
-                resultAttributes,
-                flat,
-                subFields.getOrDefault(nextFieldName, EmptyMetaField.INSTANCE)
-            );
-        }
-
-        RecordMeta recordMeta = new RecordMeta(meta.getId());
-        recordMeta.setAttributes(resultAttributes);
-
-        return recordMeta;*/
-        return null;
-    }
-
-    private void processAttribute(String key,
-                                  Map<String, AttsSchema> attsInfo,
-                                  ObjectData attributes,
-                                  ObjectData resultAttributes,
-                                  boolean flat,
-                                  MetaField metaField) {
-
-        /*AttributesSchema attInfo = attsInfo.get(key);
-        if (attInfo == null) {
-            return;
-        }
-        String resultKey = attInfo.getOriginalKey();
-        if (StringUtils.isBlank(attInfo.getOriginalKey())) {
-            return;
-        }
-
-        DataValue value = attributes.get(key);
-
-        if (metaField.getName().equals("json") || !flat) {
-
-            resultAttributes.set(resultKey, value);
-
-        } else {
-
-            JsonNode flatValue = toFlatNode(value.getValue(), metaField);
-
-            if (flatValue.isNull()) {
-                List<String> orElseAtts = attInfo.getOrElseAtts();
-                for (String orElseAtt : orElseAtts) {
-                    char firstChar = orElseAtt.charAt(0);
-                    if (firstChar == '"' || firstChar == '\'') {
-                        orElseAtt = orElseAtt.substring(1, orElseAtt.length() - 1);
-                        if (attInfo.getType() != null && !String.class.equals(attInfo.getType())) {
-                            flatValue = Json.getMapper().toJson(
-                                DataValue.createStr(orElseAtt).getAs(attInfo.getType())
-                            );
-                        } else {
-                            flatValue = TextNode.valueOf(orElseAtt);
-                        }
-                        break;
-                    } else {
-                        MetaField orElseAttField = metaField.getParent().getSubFields().get(orElseAtt);
-                        JsonNode orElseValue = toFlatNode(attributes.get(orElseAtt).getValue(), orElseAttField);
-                        if (!orElseValue.isNull()) {
-                            flatValue = orElseValue;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!flatValue.isNull() && !attInfo.getProcessors().isEmpty()) {
-
-                DataValue processedValue = DataValue.create(flatValue);
-                for (AttProcessorDef procDef : attInfo.getProcessors()) {
-                    AttProcessor processor = attProcessors.get(procDef.getType());
-                    if (processor == null) {
-                        log.error("Attribute processor '"
-                            + procDef.getType()
-                            + "' is not found! Result will be null");
-                        processedValue = DataValue.NULL;
-                    } else {
-                        Object procResult = processor.process(processedValue, procDef.getArguments());
-                        processedValue = DataValue.create(procResult);
-                    }
-                }
-                flatValue = processedValue.getValue();
-            }
-            resultAttributes.set(resultKey, flatValue);
-        }*/
-        return;
     }
 
     @Override
@@ -233,63 +119,5 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     public AttsSchema createSchema(Map<String, String> attributes) {
         //return attributesMetaResolver.createAttsSchema(attributes);
         return null;
-    }
-
-    private JsonNode toFlatNode(JsonNode input, @Nullable MetaField metaField) {
-
-        if (input == null || input.isMissingNode() || input.isNull()) {
-            return NullNode.getInstance();
-        }
-
-        if (metaField == null || metaField == EmptyMetaField.INSTANCE) {
-            return input;
-        }
-
-        JsonNode node = input;
-
-        if (node.isObject()) {
-
-            Map<String, MetaField> subFields = metaField.getSubFields();
-
-            if (node.size() > 1) {
-
-                ObjectNode objNode = JsonNodeFactory.instance.objectNode();
-                final JsonNode finalNode = node;
-
-                node.fieldNames().forEachRemaining(name ->
-                    objNode.set(name, toFlatNode(finalNode.get(name), subFields.get(name)))
-                );
-
-                node = objNode;
-
-            } else if (node.size() == 1) {
-
-                String fieldName = node.fieldNames().next();
-                JsonNode value = node.get(fieldName);
-                MetaField subField = subFields.get(fieldName);
-
-                if (subField == null || "json".equals(subField.getName())) {
-                    node = value;
-                } else {
-                    node = toFlatNode(value, subField);
-                }
-            }
-
-        } else if (node.isArray()) {
-
-            ArrayNode newArr = JsonNodeFactory.instance.arrayNode();
-
-            for (JsonNode n : node) {
-                newArr.add(toFlatNode(n, metaField));
-            }
-
-            node = newArr;
-        }
-
-        return node;
-    }
-
-    private void register(AttProcessor processor) {
-        attProcessors.put(processor.getType(), processor);
     }
 }

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordConstants;
 
 public class EmptyValue implements MetaValue {
@@ -10,7 +11,7 @@ public class EmptyValue implements MetaValue {
     }
 
     @Override
-    public Object getAttribute(String name, MetaField field) {
+    public Object getAttribute(@NotNull String name) {
         if (RecordConstants.ATT_NOT_EXISTS.equals(name)) {
             return true;
         }

@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.meta.attproc;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.commons.data.ObjectData;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +14,7 @@ public class AttOrProcessor implements AttProcessor {
 
     @NotNull
     @Override
-    public Object process(@NotNull RecordMeta meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
+    public Object process(@NotNull ObjectData meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
 
         if (arguments.isEmpty() || value.isNotNull()) {
             return value;
@@ -33,11 +33,13 @@ public class AttOrProcessor implements AttProcessor {
         return value;
     }
 
+    @NotNull
     @Override
     public String getType() {
         return "or";
     }
 
+    @NotNull
     @Override
     public Map<String, String> getAttributesToLoad(@NotNull List<DataValue> arguments) {
 

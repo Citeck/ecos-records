@@ -15,7 +15,6 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
@@ -150,7 +149,7 @@ public class RemoteSyncRecordsDaoTest {
         }
 
         @Override
-        public RecordsQueryResult<ValueDto> queryLocalRecords(RecordsQuery query, @NotNull MetaField field) {
+        public RecordsQueryResult<ValueDto> queryLocalRecords(RecordsQuery query) {
 
             if (!query.getLanguage().equals(PredicateService.LANGUAGE_PREDICATE)) {
                 throw new IllegalArgumentException("Language is not supported! " + query.getLanguage());

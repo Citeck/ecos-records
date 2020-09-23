@@ -2,12 +2,12 @@ package ru.citeck.ecos.records2.meta.schema.resolver;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
@@ -16,8 +16,11 @@ import ru.citeck.ecos.records2.graphql.meta.value.AttFuncValue;
 import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
+import ru.citeck.ecos.records2.meta.attproc.AttProcService;
+import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records2.meta.schema.SchemaRootAtt;
+import ru.citeck.ecos.records2.meta.schema.read.AttSchemaReader;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -26,57 +29,101 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AttSchemaResolver {
 
-    private static final List<Class<?>> FORCE_CACHE_TYPES = Arrays.asList(
-        String.class,
-        RecordRef.class
+    private static final List<Class<?>> FORCE_CACHE_TYPES = Collections.singletonList(
+        String.class
     );
 
+    private final static String PROC_ATT_ALIAS_PREFIX = "__proc_att_";
+
     private final MetaValuesConverter metaValuesConverter;
+    private final AttProcService attProcService;
+
+    private final AttSchemaReader attSchemaReader = new AttSchemaReader();
+
+    // todo: move types logic to this resolver
+    // private final RecordTypeService recordTypeService;
 
     public AttSchemaResolver(RecordsServiceFactory factory) {
         metaValuesConverter = factory.getMetaValuesConverter();
+        attProcService = factory.getAttProcService();
     }
 
-    public DataValue resolve(Object value, SchemaAtt attribute) {
-        return resolve(value, attribute, true);
+    public DataValue resolve(Object value, SchemaRootAtt attribute) {
+        return resolve(value, attribute, false);
     }
 
-    public DataValue resolve(Object value, SchemaAtt attribute, boolean flat) {
-        ObjectData result = resolve(value, Collections.singletonList(attribute), flat);
-        return result.get(attribute.getAliasForValue());
+    public DataValue resolve(Object value, SchemaRootAtt attribute, boolean raw) {
+        ObjectData result = resolve(value, Collections.singletonList(attribute), raw);
+        return result.get(attribute.getAttribute().getAliasForValue());
     }
 
-    public ObjectData resolve(Object value, List<SchemaAtt> schema, boolean flat) {
-        return resolve(Collections.singletonList(value), schema, flat)
+    public ObjectData resolve(Object value, List<SchemaRootAtt> schema, boolean raw) {
+        return resolve(Collections.singletonList(value), schema, raw)
             .stream()
             .findFirst()
             .orElseThrow(() -> new ResolveException("Resolving error"));
     }
 
-    public List<ObjectData> resolve(List<Object> values, List<SchemaAtt> schema) {
-        return resolve(values, schema, true);
+    public List<ObjectData> resolve(List<Object> values, List<SchemaRootAtt> schema) {
+        return resolve(values, schema, false);
     }
 
-    public List<ObjectData> resolve(List<Object> values, List<SchemaAtt> schema, boolean flat) {
+    public List<ObjectData> resolve(List<Object> values, List<SchemaRootAtt> schema, boolean raw) {
 
-        ResolveContext context = new ResolveContext(metaValuesConverter);
+        List<Map<String, Object>> result = AttContext.doInContext(attContext -> {
 
-        List<ValueContext> metaValues = values.stream()
-            .map(context::toValueContext)
-            .collect(Collectors.toList());
+            ResolveContext context = new ResolveContext(metaValuesConverter, attContext);
 
-        List<Map<String, Object>> result = resolve(metaValues, schema, context);
+            List<SchemaAtt> innerAtts = schema.stream()
+                .map(SchemaRootAtt::getAttribute)
+                .collect(Collectors.toList());
+
+            attContext.setSchemaAtt(new SchemaAtt("ROOT", "ROOT", false, innerAtts));
+
+            List<ValueContext> metaValues = values.stream()
+                .map(context::toValueContext)
+                .collect(Collectors.toList());
+
+            return resolveRoot(metaValues, schema, context);
+        });
 
         return result.stream()
-            .map(v -> ObjectData.create(flat ? toFlatMap(v, schema) : v))
+            .map(v -> postProcess(v, schema, raw))
             .collect(Collectors.toList());
     }
 
-    private Map<String, Object> toFlatMap(Map<String, Object> data, List<SchemaAtt> schema) {
+    private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schema, boolean raw) {
+
+        if (raw) {
+            return ObjectData.create(data);
+        }
+
+        ObjectData flatData = ObjectData.create(toFlatMap(data, schema));
+
+        for (SchemaRootAtt rootAtt : schema) {
+
+            List<AttProcessorDef> processors = rootAtt.getProcessors();
+            if (processors.isEmpty()) {
+                continue;
+            }
+
+            String alias = rootAtt.getAttribute().getAliasForValue();
+
+            DataValue value = flatData.get(alias);
+            value = attProcService.process(flatData, value, processors, rootAtt.getType());
+
+            flatData.set(alias, value);
+        }
+
+        return flatData;
+    }
+
+    private Map<String, Object> toFlatMap(Map<String, Object> data, List<SchemaRootAtt> schema) {
 
         Map<String, Object> flatRes = new LinkedHashMap<>();
 
-        for (SchemaAtt att : schema) {
+        for (SchemaRootAtt rootAtt : schema) {
+            SchemaAtt att = rootAtt.getAttribute();
             String alias = att.getAliasForValue();
             flatRes.put(alias, toFlatObj(data.get(alias), att));
         }
@@ -118,6 +165,40 @@ public class AttSchemaResolver {
         return data;
     }
 
+    private List<Map<String, Object>> resolveRoot(List<ValueContext> values,
+                                                  List<SchemaRootAtt> attributes,
+                                                  ResolveContext context) {
+        return values.stream()
+            .map(v -> resolveRoot(v, attributes, context))
+            .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> resolveRoot(ValueContext value,
+                                            List<SchemaRootAtt> rootAttributes,
+                                            ResolveContext context) {
+
+        List<SchemaAtt> attributes = new ArrayList<>();
+        Set<String> attributesToLoad = new HashSet<>();
+
+        for (SchemaRootAtt rootAtt : rootAttributes) {
+            SchemaAtt attribute = rootAtt.getAttribute();
+            attributes.add(attribute);
+            attributesToLoad.addAll(attProcService.getAttributesToLoad(rootAtt.getProcessors()));
+        }
+
+        if (!attributesToLoad.isEmpty()) {
+            //todo
+            //attSchemaReader.read()
+        }
+
+        return resolve(
+            value,
+            rootAttributes.stream()
+                .map(SchemaRootAtt::getAttribute)
+                .collect(Collectors.toList()
+        ), context);
+    }
+
     private List<Map<String, Object>> resolve(List<ValueContext> values,
                                               List<SchemaAtt> attributes,
                                               ResolveContext context) {
@@ -131,10 +212,13 @@ public class AttSchemaResolver {
                                         ResolveContext context) {
 
         Map<String, Object> result = new LinkedHashMap<>();
+        AttContext attContext = context.getAttContext();
 
         for (SchemaAtt att : attributes) {
 
-            List<Object> attValue = toList(value.resolve(att.getName()));
+            attContext.setSchemaAtt(att);
+            List<Object> attValue = toList(value.resolve(attContext));
+
             String alias = att.getAliasForValue();
             boolean isScalar = att.getName().charAt(0) == '.';
 
@@ -242,13 +326,32 @@ public class AttSchemaResolver {
     private static class ValueContext {
 
         private final MetaValue value;
-        private final Map<String, Object> attributes = new HashMap<>();
+        private final Map<String, Object> attributesCache = new HashMap<>();
 
-        public Object resolve(String attribute) {
-            return attributes.computeIfAbsent(attribute, this::resolveImpl);
+        public Object resolve(AttContext attContext) {
+
+            String name = attContext.getSchemaAtt().getName();
+
+            Object res;
+            if (attributesCache.containsKey(name)) {
+                res = attributesCache.get(name);
+            } else {
+                attContext.setSchemaAttWasRequested(false);
+                try {
+                    res = resolveImpl(name);
+                } catch (Exception e) {
+                    log.error("Attribute resolving error. Attribute: " + name + " Value: " + value + " ");
+                    res = null;
+                }
+                if (!attContext.isSchemaAttWasRequested()) {
+                    attributesCache.put(name, res);
+                }
+            }
+
+            return res;
         }
 
-        private Object resolveImpl(String attribute) {
+        private Object resolveImpl(String attribute) throws Exception {
 
             if (attribute.charAt(0) == '.') {
                 return getScalar(attribute.substring(1));
@@ -261,30 +364,16 @@ public class AttSchemaResolver {
                 case RecordConstants.ATT_AS:
                     return new AttFuncValue(value::getAs);
                 case RecordConstants.ATT_HAS:
-                    return new AttFuncValue((attName, field) -> {
-                        try {
-                            return value.has(attName);
-                        } catch (Exception e) {
-                            ExceptionUtils.throwException(e);
-                            return false;
-                        }
-                    });
+                    return new AttFuncValue(value::has);
                 default:
                     if (attribute.startsWith("\\_")) {
                         attribute = attribute.substring(1);
                     }
-                    try {
-                        //todo: meta field
-                        return value.getAttribute(attribute, EmptyMetaField.INSTANCE);
-                    } catch (Exception e) {
-                        ExceptionUtils.throwException(e);
-                    }
+                    return value.getAttribute(attribute);
             }
-
-            return null;
         }
 
-        private Object getScalar(String scalar) {
+        private Object getScalar(String scalar) throws Exception {
 
             switch (scalar) {
                 case "str":
@@ -313,26 +402,44 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ResolveContext {
 
-        private final Map<Object, MetaValue> forceMetaValueCache = new HashMap<>();
-        private final Map<Object, MetaValue> metaValueCache = new IdentityHashMap<>();
-        private final Map<MetaValue, ValueContext> valueContextCache = new IdentityHashMap<>();
+        private final Map<Object, ValueContext> valueHashCtxCache = new HashMap<>();
+        private final Map<Object, ValueContext> valueIdentityCtxCache = new IdentityHashMap<>();
 
         private final MetaValuesConverter converter;
 
+        @Getter
+        private final AttContext attContext;
+
         @NotNull
-        MetaValue toMetaValue(@NotNull Object value) {
+        private MetaValue convertToMetaValue(@NotNull Object value) {
             if (value instanceof MetaValue) {
                 return (MetaValue) value;
             }
-            if (FORCE_CACHE_TYPES.contains(value.getClass())) {
-                return forceMetaValueCache.computeIfAbsent(value, converter::toMetaValue);
-            }
-            return metaValueCache.computeIfAbsent(value, converter::toMetaValue);
+            return converter.toMetaValue(value);
         }
 
         @NotNull
         ValueContext toValueContext(@NotNull Object value) {
-            return valueContextCache.computeIfAbsent(toMetaValue(value), ValueContext::new);
+
+            Map<Object, ValueContext> cache;
+            if (FORCE_CACHE_TYPES.contains(value.getClass())) {
+                cache = valueHashCtxCache;
+            } else {
+                cache = valueIdentityCtxCache;
+            }
+
+            if (cache.containsKey(value)) {
+                return cache.get(value);
+            }
+
+            attContext.setSchemaAttWasRequested(false);
+
+            ValueContext result = new ValueContext(convertToMetaValue(value));
+
+            if (!attContext.isSchemaAttWasRequested()) {
+                cache.put(value, result);
+            }
+            return result;
         }
     }
 }

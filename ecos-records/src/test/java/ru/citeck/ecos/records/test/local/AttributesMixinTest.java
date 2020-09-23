@@ -1,17 +1,18 @@
 package ru.citeck.ecos.records.test.local;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -137,12 +138,12 @@ public class AttributesMixinTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query) {
         return RecordsQueryResult.of(new Record(), new MetaValueRecord(REC_META_VALUE_ID));
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
         return records.stream().map(r -> {
             if (REC_ID.equals(r.getId())) {
                 return new Record();
@@ -182,7 +183,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) throws Exception {
+        public Object getAttribute(@NotNull String name) throws Exception {
 
             switch (name) {
                 case "strField": return strFieldValue;
@@ -203,12 +204,12 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String attribute, MetaValue meta, MetaField field) throws Exception {
-            return meta.getAttribute(attribute, field);
+        public Object getAttribute(String attribute, MetaValue meta) throws Exception {
+            return meta.getAttribute(attribute);
         }
 
         @Override
-        public MetaEdge getEdge(String attribute, MetaValue meta, Supplier<MetaEdge> base, MetaField field) {
+        public MetaEdge getEdge(String attribute, MetaValue meta, UncheckedSupplier<MetaEdge> base) {
             if (attribute.equals(intField0Name)) {
                 return new MetaEdge() {
                     @Override
@@ -217,8 +218,8 @@ public class AttributesMixinTest extends LocalRecordsDao
                     }
 
                     @Override
-                    public Object getValue(MetaField field) throws Exception {
-                        return getAttribute(attribute, meta, field);
+                    public Object getValue() throws Exception {
+                        return getAttribute(attribute, meta);
                     }
 
                     @Override
@@ -244,7 +245,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String attribute, RecordRef id, MetaField field) {
+        public Object getAttribute(String attribute, RecordRef id) {
             if (attribute.equals(recordRefAttName)) {
                 return id.toString();
             }
@@ -252,7 +253,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public MetaEdge getEdge(String attribute, RecordRef meta, Supplier<MetaEdge> base, MetaField field) {
+        public MetaEdge getEdge(String attribute, RecordRef meta, UncheckedSupplier<MetaEdge> base) {
             if (attribute.equals(recordRefAttName)) {
                 return new MetaEdge() {
                     @Override
@@ -261,8 +262,8 @@ public class AttributesMixinTest extends LocalRecordsDao
                     }
 
                     @Override
-                    public Object getValue(MetaField field) throws Exception {
-                        return getAttribute(attribute, meta, field);
+                    public Object getValue() throws Exception {
+                        return getAttribute(attribute, meta);
                     }
 
                     @Override
@@ -288,7 +289,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String attribute, RecordMeta meta, MetaField field) {
+        public Object getAttribute(String attribute, RecordMeta meta) {
             switch (attribute) {
                 case strFieldValueWithPrefixName:
                     return strFieldPrefixValue + meta.getStringOrNull("strField");
@@ -320,7 +321,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String attribute, MixinMeta meta, MetaField field) {
+        public Object getAttribute(String attribute, MixinMeta meta) {
             switch (attribute) {
                 case strFieldValueWithPrefixName:
                     return strFieldPrefixValue + meta.str;

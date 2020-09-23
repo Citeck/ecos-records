@@ -126,7 +126,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                     recordsResult.addError(new RecordsError(errorMsg));
                 } else {
                     recordsResult = doWithSchema(attributes, flatAttributes,
-                        schema -> groupsSource.queryRecords(convertedQuery, schema));
+                        schema -> groupsSource.queryRecords(convertedQuery));
                 }
             }
         }
@@ -313,7 +313,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
 
         long queryStart = System.currentTimeMillis();
-        RecordsQueryResult<RecordMeta> records = daoWithQuery.dao.queryRecords(daoWithQuery.query, schema);
+        RecordsQueryResult<?> records = daoWithQuery.dao.queryRecords(daoWithQuery.query);
         if (records == null) {
             records = new RecordsQueryResult<>();
         }
@@ -393,7 +393,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             if (recordsDao.isPresent()) {
 
                 meta = new RecordsResult<>(
-                    recordsDao.get().getMeta(new ArrayList<>(records), schema),
+                    recordsDao.get().getRecordsMeta(new ArrayList<>(records)),
                     m -> new RecordMetaWithDao(m, recordsDao.get())
                 );
 
@@ -442,7 +442,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         for (Object record : metaRes.getRecords()) {
 
             boolean flattingRequired;
-            RecordMeta meta;
+            Object meta;
 
             if (record instanceof RecordMetaWithDao) {
 
@@ -464,7 +464,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                 continue;
             }
 
-            metaList.add(recordsMetaService.convertMetaResult(meta, schema, flattingRequired));
+            // todo
+            //metaList.add(recordsMetaService.convertMetaResult(meta, schema, flattingRequired));
         }
 
         @SuppressWarnings("unchecked")
@@ -678,7 +679,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     @AllArgsConstructor
     private static class QueryResult {
         @NotNull
-        private RecordsQueryResult<RecordMeta> result;
+        private RecordsQueryResult<?> result;
         @Nullable
         private RecordsDao recordsDao;
     }
@@ -698,7 +699,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     @AllArgsConstructor
     private static class RecordMetaWithDao {
         @NotNull
-        private RecordMeta meta;
+        private Object meta;
         @Nullable
         private RecordsDao dao;
     }

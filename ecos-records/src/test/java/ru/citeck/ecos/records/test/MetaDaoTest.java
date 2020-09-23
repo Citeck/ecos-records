@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records.test;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -7,7 +8,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaAttributesSupplier;
@@ -39,7 +39,7 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao {
                 return new ArrayList<>(metaAtts.keySet());
             }
             @Override
-            public Object getAttribute(String attribute, MetaField field) throws Exception {
+            public Object getAttribute(String attribute) throws Exception {
                 return metaAtts.get(attribute);
             }
         });
@@ -67,7 +67,7 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao {
     }
 
     @Override
-    public List<MetaValue> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<MetaValue> getLocalRecordsMeta(List<RecordRef> records) {
         return records.stream().map(Value::new).collect(Collectors.toList());
     }
 
@@ -80,7 +80,7 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             if (name.equals("field")) {
                 return ref.getId();
             } else if (name.equals("enum")) {

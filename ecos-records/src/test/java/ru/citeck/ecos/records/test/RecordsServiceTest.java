@@ -12,7 +12,6 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -47,13 +46,13 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return records.stream().map(r -> new PojoMeta(r.toString())).collect(Collectors.toList());
     }
 
     @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
@@ -61,7 +60,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         result.setRecords(getLocalRecordsMeta(query.getIds()
                                              .stream()
                                              .map(RecordRef::valueOf)
-                                             .collect(Collectors.toList()), field));
+                                             .collect(Collectors.toList())));
 
         result.setHasMore(false);
         result.setTotalCount(query.getIds().size());

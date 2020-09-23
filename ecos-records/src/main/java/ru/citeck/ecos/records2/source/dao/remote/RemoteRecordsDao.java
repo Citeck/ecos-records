@@ -27,7 +27,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttsSchema schema) {
+    public RecordsQueryResult<Object> queryRecords(@NotNull RecordsQuery query) {
 
         /*QueryBody request = new QueryBody();
 
@@ -63,7 +63,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttsSchema schema) {
+    public List<Object> getRecordsMeta(@NotNull List<RecordRef> records) {
 
        /* List<RecordRef> recordsRefs = records.stream()
                                              .map(RecordRef::getId)

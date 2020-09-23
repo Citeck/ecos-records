@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test.local;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -8,7 +9,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
@@ -172,12 +172,12 @@ public class ComputedAttsTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query, MetaField field) {
+    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query) {
         return RecordsQueryResult.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
         return records.stream().map(r -> new MetaValueRecord(r.getId())).collect(Collectors.toList());
     }
 
@@ -195,7 +195,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) throws Exception {
+        public Object getAttribute(@NotNull String name) throws Exception {
 
             switch (name) {
                 case "strField": return strFieldValue;

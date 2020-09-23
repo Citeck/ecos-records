@@ -8,7 +8,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
@@ -84,7 +83,7 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public List<Meta> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+        public List<Meta> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
             return records.stream().map(r -> new Meta(r.toString(), r.getId())).collect(Collectors.toList());
         }
 
@@ -128,7 +127,7 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public RecordsQueryResult<Meta> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+        public RecordsQueryResult<Meta> queryLocalRecords(@NotNull RecordsQuery query) {
             RecordsQueryResult<Meta> result = new RecordsQueryResult<>();
             result.addRecord(new Meta());
             return result;

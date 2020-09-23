@@ -1,7 +1,9 @@
 package ru.citeck.ecos.records.test.schema;
 
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.records2.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records2.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records2.meta.schema.write.AttSchemaGqlWriter;
 import ru.citeck.ecos.records2.meta.schema.write.AttSchemaWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SchemaTest {
 
     private final AttSchemaReader reader = new AttSchemaReader();
-    private final AttSchemaWriter writer = new AttSchemaWriter();
+    private final AttSchemaWriter writer = new AttSchemaGqlWriter();
 
     @Test
     public void edgeGqlTest() {
@@ -32,42 +34,46 @@ public class SchemaTest {
         assertEdgeScalar("editorKey", "str");
         assertEdgeScalar("type", "str");
 
-        assertAtt(".att(n:\"_edge\"){att(n:\"cm:name\"){att(n:\"protected\"){bool}}}",
-            ".edge(n:\"cm:name\"){protected}");
+        assertAtt(".edge(n:\"cm:name\"){protected}", ".edge(n:\"cm:name\"){protected}");
     }
 
     private void assertEdgeMetaVal(String inner, boolean multiple) {
         String edgeName = "cm:name";
         String innerInner = "att(n:\"title\"){disp}";
-        assertAtt(".att(n:\"_edge\"){att(n:\"" + edgeName + "\"){att"
-                + (multiple ? "s" : "") + "(n:\"" + inner + "\"){" + innerInner + "}}}",
-            ".edge(n:\"" + edgeName + "\"){" + inner + "{" + innerInner + "}}");
+        String att = ".edge(n:\"" + edgeName + "\"){" + inner + "{" + innerInner + "}}";
+        assertAtt(att, att);
     }
 
     private void assertEdgeScalar(String inner, String innerInner) {
+
         String edgeName = "cm:name";
-        assertAtt(".att(n:\"_edge\"){att(n:\"" + edgeName + "\"){att(n:\"" + inner + "\"){" + innerInner + "}}}",
-            ".edge(n:\"" + edgeName + "\"){" + inner + "}");
+        String att = ".edge(n:\"" + edgeName + "\"){" + inner + "}";
+
+        SchemaRootAtt schemaAtt = reader.read(att);
+        assertEquals(1, schemaAtt.getAttribute().getInner().size());
+        assertEquals(1, schemaAtt.getAttribute().getInner().get(0).getInner().size());
+        assertEquals(inner, schemaAtt.getAttribute().getInner().get(0).getInner().get(0).getName());
+
+        assertAtt(att, att);
     }
 
     @Test
     public void edgeSimpleTest() {
-        assertAtt(".att(n:\"_edge\"){att(n:\"cm:name\"){att(n:\"protected\"){bool}}}",
-            "#cm:name?protected");
+        assertAtt(".edge(n:\"cm:name\"){protected}", "#cm:name?protected");
     }
 
     @Test
     public void hasAttTest() {
-        assertAtt(".att(n:\"permissions\"){att(n:\"_has\"){att(n:\"Write\"){bool}}}", "permissions?has('Write')");
+        assertAtt(".att(n:\"permissions\"){has(n:\"Write\")}", "permissions?has('Write')");
     }
 
     @Test
     public void asAttTest() {
         assertAtt(".att(n:\"permissions\"){" +
-            "att(n:\"_as\"){att(n:\"NodeRef\"){" +
+            "as(n:\"NodeRef\"){" +
                 "att(n:\"inner\"){" +
                     "att(n:\"att\"){str}" +
-        "}}}}", ".att(n:\"permissions\"){as('NodeRef'){att('inner'){att('att'){str}}}}");
+        "}}}", ".att(n:\"permissions\"){as('NodeRef'){att('inner'){att('att'){str}}}}");
     }
 
     @Test
@@ -130,8 +136,8 @@ public class SchemaTest {
     }
 
     private void assertAtt(String expected, String source) {
-        String gqlAtt = writer.writeToString(reader.readAttribute(source));
+        String gqlAtt = writer.write(reader.read(source));
         assertEquals(expected, gqlAtt);
-        assertEquals(gqlAtt, writer.writeToString(reader.readAttribute(gqlAtt)));
+        assertEquals(gqlAtt, writer.write(reader.read(gqlAtt)));
     }
 }

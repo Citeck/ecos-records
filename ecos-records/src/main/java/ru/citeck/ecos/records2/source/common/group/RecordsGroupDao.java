@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2.source.common.group;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
@@ -25,8 +24,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
     }
 
     @Override
-    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query,
-                                                   @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {

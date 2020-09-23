@@ -1,70 +1,68 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 
 public interface MetaEdge {
 
-    default boolean isProtected() {
+    default boolean isProtected() throws Exception {
         return false;
     }
 
-    default boolean isMultiple() {
+    default boolean isMultiple() throws Exception {
         return true;
     }
 
-    default boolean isAssociation() {
+    default boolean isAssociation() throws Exception {
         return false;
     }
 
-    default boolean isSearchable() {
+    default boolean isSearchable() throws Exception {
         return true;
     }
 
     /**
      * Can client read value of this attribute or not.
      */
-    default boolean canBeRead() {
+    default boolean canBeRead() throws Exception {
         return true;
     }
 
-    default List<?> getOptions() {
+    default List<?> getOptions() throws Exception {
         return null;
     }
 
-    default List<?> getDistinct() {
+    default List<?> getDistinct() throws Exception {
         return null;
     }
 
-    default List<CreateVariant> getCreateVariants() {
+    default List<CreateVariant> getCreateVariants() throws Exception {
         return null;
     }
 
-    default Class<?> getJavaClass() {
+    default Class<?> getJavaClass() throws Exception {
         return Object.class;
     }
 
-    default String getEditorKey() {
+    default String getEditorKey() throws Exception {
         return null;
     }
 
     /**
      * Type of attribute.
      */
-    default String getType() {
+    default String getType() throws Exception {
         return null;
     }
 
-    default String getTitle() {
+    default String getTitle() throws Exception {
         return getName();
     }
 
-    default String getDescription() {
+    default String getDescription() throws Exception {
         return "";
     }
 
-    String getName();
+    String getName() throws Exception ;
 
-    Object getValue(@NotNull MetaField field) throws Exception;
+    Object getValue() throws Exception;
 }

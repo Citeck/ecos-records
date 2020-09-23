@@ -3,13 +3,13 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records2.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records2.meta.schema.write.AttSchemaGqlWriter;
+import ru.citeck.ecos.records2.meta.schema.write.AttSchemaWriter;
 
 import java.util.*;
 
@@ -18,10 +18,11 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
     private static final String ATT_ID = ".id";
     private static final String ATT_STR = ".str";
 
-    private final RecordsServiceFactory serviceFactory;
+    private final RecordsService recordsService;
+    private final AttSchemaWriter schemaWriter = new AttSchemaGqlWriter();
 
     public RecordRefValueFactory(RecordsServiceFactory serviceFactory) {
-        this.serviceFactory = serviceFactory;
+        this.recordsService = serviceFactory.getRecordsService();
     }
 
     @Override
@@ -37,25 +38,28 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
     public class RecordRefValue implements MetaValue {
 
         private final RecordRef ref;
-        private RecordMeta meta;
+        private final RecordMeta meta;
 
         RecordRefValue(RecordRef recordRef) {
+
+            SchemaAtt schemaAtt = AttContext.getCurrentSchemaAtt();
+
             ref = recordRef;
-        }
 
-        @Override
-        public <T extends QueryContext> void init(@NotNull T context, MetaField field) {
+            Map<String, String> attsMap = new HashMap<>();
 
-            Map<String, String> attsMap = field.getInnerAttributesMap();
-            if (Objects.equals(attsMap.get(ATT_ID), ATT_ID)) {
-                attsMap.remove(ATT_ID);
-            }
-            if (Objects.equals(attsMap.get(ATT_STR), ATT_STR)) {
-                attsMap.remove(ATT_STR);
+            StringBuilder sb = new StringBuilder();
+            for (SchemaAtt inner : schemaAtt.getInner()) {
+                String innerName = inner.getName();
+                if (!innerName.equals(ATT_ID) && !innerName.equals(ATT_STR)) {
+                    schemaWriter.write(inner, sb);
+                    attsMap.put(inner.getAliasForValue(), sb.toString());
+                    sb.setLength(0);
+                }
             }
 
             if (attsMap.size() > 0) {
-                this.meta = serviceFactory.getRecordsService().getRawAttributes(ref, attsMap);
+                this.meta = recordsService.getAttributes(ref, attsMap);
             } else {
                 this.meta = new RecordMeta(ref);
             }
@@ -96,7 +100,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
-        public Object getAs(@NotNull String type, @NotNull MetaField field) {
+        public Object getAs(@NotNull String type) {
             return new InnerMetaValue(meta.getAttribute(".as"));
         }
 
@@ -111,7 +115,7 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name, @NotNull MetaField field) {
+        public Object getAttribute(@NotNull String name) {
             DataValue result = meta.get(name);
             if (result.isArray()) {
                 List<InnerMetaValue> resultList = new ArrayList<>();

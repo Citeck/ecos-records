@@ -7,8 +7,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records2.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -58,7 +59,7 @@ public class RecordsGroup implements MetaValue {
     }
 
     @Override
-    public Object getAttribute(String name, @NotNull MetaField field) {
+    public Object getAttribute(@NotNull String name) {
 
         switch (name) {
             case FIELD_PREDICATE:
@@ -73,7 +74,10 @@ public class RecordsGroup implements MetaValue {
 
             case FIELD_VALUES:
 
-                Map<String, String> innerAttributes = field.getInnerAttributesMap();
+                SchemaAtt field = AttContext.getCurrentSchemaAtt();
+
+                // todo
+                Map<String, String> innerAttributes = Collections.emptyMap();//field.getInnerAttributesMap();
                 RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, innerAttributes);
 
                 return records.getRecords().stream().map(r -> {

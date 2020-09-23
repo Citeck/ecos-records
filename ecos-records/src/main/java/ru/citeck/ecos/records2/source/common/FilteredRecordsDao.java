@@ -16,16 +16,15 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
 
     private RecordsQueryDao targetDao;
 
-
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                       @NotNull AttsSchema schema) {
+    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query) {
 
+        /* todo
         RecordsQuery localQuery = new RecordsQuery(query);
         int maxItems = localQuery.getMaxItems();
         localQuery.setMaxItems((int) (1.5f * maxItems));
 
-        RecordsQueryResult<RecordMeta> records = targetDao.queryRecords(localQuery, schema);
+        RecordsQueryResult<RecordMeta> records = targetDao.queryRecords(localQuery);
         Function<List<RecordMeta>, List<RecordMeta>> filter = getFilter(query);
 
         List<RecordMeta> filtered = filter.apply(records.getRecords());
@@ -40,7 +39,10 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
         records.setTotalCount(records.getTotalCount() - totalDiff);
         records.setRecords(resultRecords);
 
+
         return records;
+ */
+        return null;
     }
 
     protected abstract Function<List<RecordMeta>, List<RecordMeta>> getFilter(RecordsQuery query);

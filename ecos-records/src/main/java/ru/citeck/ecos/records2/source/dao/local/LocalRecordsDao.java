@@ -4,10 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
@@ -46,7 +44,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     protected RecordsService recordsService;
     protected PredicateService predicateService;
     protected RecordsMetaService recordsMetaService;
-    protected RecordsMetaGql recordsMetaGql;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
     protected RecordTypeService recordTypeService;
@@ -108,7 +105,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull AttsSchema schema) {
+    public RecordsQueryResult<Object> queryRecords(@NotNull RecordsQuery query) {
 
         /*RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
@@ -164,7 +161,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull AttsSchema schema) {
+    public List<Object> getRecordsMeta(@NotNull List<RecordRef> records) {
 
         /*RecordsResult<RecordMeta> result;
 
@@ -194,7 +191,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         return null;
     }
 
-    private RecordsResult<RecordMeta> getMetaImpl(List<?> records, AttsSchema schema) {
+    private RecordsResult<RecordMeta> getMetaImpl(List<?> records) {
 
         /*Map<Object, Object> metaCache = new ConcurrentHashMap<>();
 
@@ -225,7 +222,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         recordsService = serviceFactory.getRecordsService();
         predicateService = serviceFactory.getPredicateService();
         recordsMetaService = serviceFactory.getRecordsMetaService();
-        recordsMetaGql = serviceFactory.getRecordsMetaGql();
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
         recordTypeService = serviceFactory.getRecordTypeService();
     }

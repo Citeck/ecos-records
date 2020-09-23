@@ -12,7 +12,6 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
@@ -257,7 +256,7 @@ public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaD
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
         return records.stream()
             .map(r -> r.getId().equals("Meta0") ? new Meta0() : new Meta1())
             .collect(Collectors.toList());

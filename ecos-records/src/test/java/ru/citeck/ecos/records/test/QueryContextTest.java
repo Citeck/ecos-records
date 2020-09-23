@@ -9,7 +9,6 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
@@ -66,7 +65,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
 
         QueryContext.getCurrent().incrementCount("test");
         QueryContext.getCurrent().incrementCount("test");
@@ -98,11 +97,12 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
             return id.toString();
         }
 
-        @Override
-        public <T extends QueryContext> void init(T context, MetaField field) {
+        //todo
+       /* @Override
+        public <T extends QueryContext> void init(T context) {
             assertSame(QueryContext.getCurrent(), context);
             context.getList("testList").add(this);
-        }
+        }*/
 
         @Override
         public String getString() {

@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,7 @@ public class ByteArrayValueFactory implements MetaValueFactory<byte[]> {
             }
 
             @Override
-            public Object getAs(String type, MetaField field) {
+            public Object getAs(@NotNull String type) {
                 if ("string".equals(type)) {
                     return new String(value, StandardCharsets.UTF_8);
                 }

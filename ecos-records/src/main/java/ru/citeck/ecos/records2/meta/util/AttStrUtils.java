@@ -9,6 +9,19 @@ import java.util.List;
 
 public class AttStrUtils {
 
+    public static String removeQuotes(String str) {
+        if (str == null || str.length() < 2) {
+            return str;
+        }
+        char firstChar = str.charAt(0);
+        if (firstChar == str.charAt(str.length() - 1)) {
+            if (firstChar == '"' || firstChar == '\'') {
+                return str.substring(1, str.length() - 1);
+            }
+        }
+        return str;
+    }
+
     public static String removeEscaping(String str, char ofChar) {
         return str.replace("\\" + ofChar, String.valueOf(ofChar));
     }

@@ -7,15 +7,11 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records2.evaluator.evaluators.*;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.*;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.bean.BeanValueFactory;
-import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
-import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
-import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
-import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import ru.citeck.ecos.records2.meta.*;
+import ru.citeck.ecos.records2.meta.attproc.*;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords;
@@ -50,7 +46,6 @@ import java.util.function.Supplier;
 public class RecordsServiceFactory {
 
     private RestHandler restHandler;
-    private RecordsMetaGql recordsMetaGql;
     private RecordsService recordsService;
     private DtoMetaResolver dtoMetaResolver;
     private RecordsResolver recordsResolver;
@@ -69,12 +64,11 @@ public class RecordsServiceFactory {
     private List<RecordsDao> defaultRecordsDao;
     private RecordTypeService recordTypeService;
     private RecordsTemplateService recordsTemplateService;
+    private AttProcService attProcService;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
     private RecordsProperties properties;
-
-    private List<GqlTypeDefinition> gqlTypes;
 
     private RecordEvaluatorService tmpEvaluatorsService;
     private RecordsService tmpRecordsService;
@@ -265,37 +259,6 @@ public class RecordsServiceFactory {
         return new PredicateServiceImpl();
     }
 
-    public final synchronized RecordsMetaGql getRecordsMetaGql() {
-        if (recordsMetaGql == null) {
-            recordsMetaGql = createRecordsMetaGql();
-        }
-        return recordsMetaGql;
-    }
-
-    protected RecordsMetaGql createRecordsMetaGql() {
-        return new RecordsMetaGql(this);
-    }
-
-    public final synchronized List<GqlTypeDefinition> getGqlTypes() {
-        if (gqlTypes == null) {
-            gqlTypes = createGqlTypes();
-        }
-        return gqlTypes;
-    }
-
-    protected List<GqlTypeDefinition> createGqlTypes() {
-
-        List<GqlTypeDefinition> gqlTypes = new ArrayList<>();
-        MetaValueTypeDef metaValueTypeDef = new MetaValueTypeDef(this);
-
-        gqlTypes.add(metaValueTypeDef);
-
-        gqlTypes.add(new GqlMetaQueryDef(this));
-        gqlTypes.add(new MetaEdgeTypeDef(metaValueTypeDef));
-
-        return gqlTypes;
-    }
-
     public final synchronized MetaValuesConverter getMetaValuesConverter() {
         if (metaValuesConverter == null) {
             metaValuesConverter = createMetaValuesConverter();
@@ -432,5 +395,26 @@ public class RecordsServiceFactory {
             recordsTemplateService = createRecordsTemplateService();
         }
         return recordsTemplateService;
+    }
+
+    protected List<AttProcessor> getAttProcessors() {
+        return Arrays.asList(
+            new AttFormatProcessor(),
+            new AttPrefixSuffixProcessor(),
+            new AttOrProcessor()
+        );
+    }
+
+    protected AttProcService createAttProcService() {
+        AttProcService service = new AttProcService();
+        getAttProcessors().forEach(service::register);
+        return service;
+    }
+
+    public final synchronized AttProcService getAttProcService() {
+        if (attProcService == null) {
+            attProcService = createAttProcService();
+        }
+        return attProcService;
     }
 }

@@ -2,29 +2,38 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.graphql.meta.value.EmptyValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.source.dao.RecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class InMemRecordsDao<T> extends LocalRecordsDao
-                                implements LocalRecordsMetaDao,
-                                           LocalRecordsQueryDao {
+public class InMemRecordsDao<T> extends AbstractRecordsDao
+                                implements RecordsMetaDao,
+                                           RecordsQueryDao,
+                                           ServiceFactoryAware {
 
     private static final List<String> SUPPORTED_LANGUAGES = Collections.singletonList(
         PredicateService.LANGUAGE_PREDICATE
     );
 
     private final Map<RecordRef, T> records = new ConcurrentHashMap<>();
+    protected PredicateService predicateService;
+    protected RecordsService recordsService;
+    protected RecordsServiceFactory serviceFactory;
+    protected RecordsMetaService recordsMetaService;
 
     public InMemRecordsDao(String sourceId) {
         setId(sourceId);
@@ -48,7 +57,7 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryRecords(@NotNull RecordsQuery query) {
 
         Predicate predicate = query.getQuery(Predicate.class);
 
@@ -67,7 +76,7 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<?> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<?> getRecordsMeta(@NotNull List<RecordRef> records) {
         return records.stream()
             .map(this::toGlobalRef)
             .map(ref -> {
@@ -92,5 +101,13 @@ public class InMemRecordsDao<T> extends LocalRecordsDao
     @Override
     public List<String> getSupportedLanguages() {
         return SUPPORTED_LANGUAGES;
+    }
+
+    @Override
+    public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+        this.predicateService = serviceFactory.getPredicateService();
+        this.recordsService = serviceFactory.getRecordsService();
+        this.recordsMetaService = serviceFactory.getRecordsMetaService();
     }
 }

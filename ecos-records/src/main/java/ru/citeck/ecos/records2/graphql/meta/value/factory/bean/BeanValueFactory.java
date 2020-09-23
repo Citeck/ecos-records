@@ -8,11 +8,9 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -98,7 +96,7 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
+        public Object getAttribute(@NotNull String name) throws Exception {
             if (bean instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> beanAsMap = (Map<String, Object>) bean;
@@ -125,13 +123,13 @@ public class BeanValueFactory implements MetaValueFactory<Object> {
         }
 
         @Override
-        public MetaEdge getEdge(@NotNull String name, @NotNull MetaField field) {
+        public MetaEdge getEdge(@NotNull String name) {
             return new BeanEdge(name, this);
         }
 
         private <T> T getAttWithType(String name, Class<T> type) {
             try {
-                return Json.getMapper().convert(getAttribute(name, EmptyMetaField.INSTANCE), type);
+                return Json.getMapper().convert(getAttribute(name), type);
             } catch (Exception e) {
                 return null;
             }

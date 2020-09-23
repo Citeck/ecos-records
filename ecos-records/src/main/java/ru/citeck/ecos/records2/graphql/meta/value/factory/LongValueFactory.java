@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.meta.schema.SchemaAtt;
 
 import java.util.Collections;
 import java.util.List;

@@ -211,7 +211,7 @@ public class RecordsMutationTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsDelResult delete(RecordsDeletion deletion) {
+    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
         return null;
     }
 

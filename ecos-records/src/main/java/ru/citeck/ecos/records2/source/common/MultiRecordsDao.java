@@ -3,7 +3,6 @@ package ru.citeck.ecos.records2.source.common;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.meta.schema.AttsSchema;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
@@ -23,8 +22,7 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                       @NotNull AttsSchema schema) {
+    public RecordsQueryResult<?> queryRecords(@NotNull RecordsQuery query) {
 
         RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
 
@@ -43,8 +41,9 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
             localQuery.setMaxItems(query.getMaxItems() - result.getRecords().size());
             RecordsQueryDao recordsDao = this.recordsDao.get(sourceIdx);
-            RecordsQueryResult<RecordMeta> daoRecords = recordsDao.queryRecords(localQuery, schema);
+            RecordsQueryResult<?> daoRecords = recordsDao.queryRecords(localQuery);
 
+            //todo
             result.merge(daoRecords);
 
             if (++sourceIdx < this.recordsDao.size()) {

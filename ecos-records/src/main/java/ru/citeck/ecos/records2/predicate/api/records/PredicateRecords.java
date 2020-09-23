@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.meta.util.AttModelUtils;
 import ru.citeck.ecos.records2.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
@@ -33,7 +32,7 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
     }
 
     @Override
-    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field) {
+    public RecordsQueryResult<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         PredicateCheckQuery query = recordsQuery.getQuery(PredicateCheckQuery.class);
 

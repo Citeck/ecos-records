@@ -2,7 +2,6 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 
 public class MetaValueDelegate implements MetaValue {
@@ -15,72 +14,62 @@ public class MetaValueDelegate implements MetaValue {
     }
 
     @Override
-    public <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
-        impl.init(context, field);
-    }
-
-    @Override
-    public String getString() {
+    public String getString() throws Exception {
         return impl.getString();
     }
 
     @Override
-    public String getDisplayName() {
+    public String getDisplayName() throws Exception {
         return impl.getDisplayName();
     }
 
     @Override
-    public String getId() {
+    public String getId() throws Exception {
         return impl.getId();
     }
 
     @Override
-    public String getLocalId() {
+    public String getLocalId() throws Exception {
         return impl.getLocalId();
     }
 
     @Override
-    public Object getAttribute(String name, MetaField field) throws Exception {
-        return impl.getAttribute(name, field);
+    public Object getAttribute(@NotNull String name) throws Exception {
+        return impl.getAttribute(name);
     }
 
     @Override
-    public MetaEdge getEdge(String name, MetaField field) {
-        return impl.getEdge(name, field);
+    public MetaEdge getEdge(@NotNull String name) throws Exception {
+        return impl.getEdge(name);
     }
 
     @Override
-    public boolean has(String name) throws Exception {
+    public boolean has(@NotNull String name) throws Exception {
         return impl.has(name);
     }
 
     @Override
-    public Double getDouble() {
+    public Double getDouble() throws Exception {
         return impl.getDouble();
     }
 
     @Override
-    public Boolean getBool() {
+    public Boolean getBool() throws Exception {
         return impl.getBool();
     }
 
     @Override
-    public Object getJson() {
+    public Object getJson() throws Exception {
         return impl.getJson();
     }
 
     @Override
-    public Object getAs(String type) {
+    public Object getAs(@NotNull String type) throws Exception {
         return impl.getAs(type);
     }
 
     @Override
-    public Object getAs(String type, MetaField field) {
-        return impl.getAs(type, field);
-    }
-
-    @Override
-    public RecordRef getRecordType() {
+    public RecordRef getRecordType() throws Exception {
         return impl.getRecordType();
     }
 }

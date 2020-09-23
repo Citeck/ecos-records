@@ -20,6 +20,7 @@ public class ResolverTest {
 
     @Test
     void test() {
+
         testAtt(new TestClass(), "inner?json", "{\"key\":\"value\"}");
         testAtt(new TestClass(), "inner{.disp,innerField}", "{\".disp\":\"InnerDisp\", \"innerField\":\"inner\"}");
         testAtt(new TestClass(), "field0", "abc");
@@ -38,10 +39,11 @@ public class ResolverTest {
         assertEquals(1, test.getInner().getSomeValueCounter());
 
         testAtt(new TestClass(), "inner[]?json", "[ {\"key\":\"value\"} ]");
+
     }
 
     private void testAtt(Object value, String att, Object expected) {
-        assertEquals(DataValue.create(expected), resolver.resolve(value, reader.readAttribute(att)));
+        assertEquals(DataValue.create(expected), resolver.resolve(value, reader.read(att)));
     }
 
     @Data

@@ -11,9 +11,9 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.query.request.query.QueryConsistency;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.SortBy;
+import ru.citeck.ecos.records3.record.operation.query.QueryConsistency;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.SortBy;
 
 import java.io.IOException;
 import java.util.Arrays;

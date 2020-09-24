@@ -7,8 +7,8 @@ import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.op.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 
 import java.util.ArrayList;
 import java.util.Collection;

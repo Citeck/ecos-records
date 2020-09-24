@@ -6,10 +6,10 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.op.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.op.meta.schema.write.AttSchemaGqlWriter;
-import ru.citeck.ecos.records3.record.op.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaGqlWriter;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 
 import java.util.*;
 

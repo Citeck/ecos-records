@@ -2,8 +2,8 @@ package ru.citeck.ecos.records3.source.dao;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 
 import java.util.Collections;
 import java.util.List;

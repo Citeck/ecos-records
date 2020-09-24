@@ -10,13 +10,13 @@ import ru.citeck.ecos.commons.utils.ScriptUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
-import ru.citeck.ecos.records3.record.op.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.graphql.meta.value.*;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.type.ComputedAttribute;
 import ru.citeck.ecos.records3.type.RecordTypeService;
 

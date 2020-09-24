@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
 
 import java.util.Iterator;
 import java.util.List;

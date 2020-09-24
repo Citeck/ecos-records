@@ -6,9 +6,9 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetailsImpl;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.meta.util.AttModelUtils;
-import ru.citeck.ecos.records3.record.op.meta.util.RecordModelAtts;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
+import ru.citeck.ecos.records3.record.operation.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.*;

@@ -6,12 +6,12 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.op.delete.RecDelStatus;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.delete.RecDelStatus;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +36,12 @@ import java.util.Optional;
  *
  * <p>A result of each method to request attributes converts data to a flat view.
  * It means that {"a":{"b":{"c":"value"}}} will be replaced with {"a": "value"}
+ *
+ * Res == Result
+ * Att == Attribute
+ * Atts == Attributes
+ * Rec == Record
+ * Recs == Recordsxfc
  *
  * @see MetaValue
  * @see RecordRef
@@ -145,19 +151,13 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecsQueryRes<RecordMeta> query(RecordsQuery query,
-                                       Collection<String> attributes,
-                                       boolean rawAtts);
+    RecsQueryRes<RecordMeta> query(RecordsQuery query, Collection<String> attributes, boolean rawAtts);
 
     @NotNull
-    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach,
-                                             RecordsQuery query,
-                                             Collection<String> attributes);
+    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach, RecordsQuery query, Collection<String> attributes);
     @NotNull
-    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach,
-                                             RecordsQuery query,
-                                             Collection<String> attributes,
-                                             boolean rawAtts);
+    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach, RecordsQuery query, Collection<String> attributes,
+                                         boolean rawAtts);
 
     /**
      * Query records and its attributes.
@@ -179,19 +179,14 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecsQueryRes<RecordMeta> query(RecordsQuery query,
-                                       Map<String, String> attributes,
-                                       boolean rawAtts);
+    RecsQueryRes<RecordMeta> query(RecordsQuery query,  Map<String, String> attributes, boolean rawAtts);
 
     @NotNull
-    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach,
-                                             RecordsQuery query,
-                                             Map<String, String> attributes);
+    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach, RecordsQuery query, Map<String, String> attributes);
+
     @NotNull
-    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach,
-                                             RecordsQuery query,
-                                             Map<String, String> attributes,
-                                             boolean rawAtts);
+    RecsQueryRes<List<RecordMeta>> query(List<DataValue> foreach, RecordsQuery query, Map<String, String> attributes,
+                                         boolean rawAtts);
 
     /* ATTRIBUTES */
 
@@ -296,12 +291,12 @@ public interface RecordsService {
      * attribute for the request.
      * You can use MetaAtt annotation to change the requested attribute.
      *
-     * @param metaClass DTO to generate metadata schema and retrieve data
+     * @param attsClass DTO to generate metadata schema and retrieve data
      *
      * @see MetaAtt
      */
     @NotNull
-    <T> T getAtts(@NotNull RecordRef record, @NotNull Class<T> metaClass);
+    <T> T getAtts(@NotNull RecordRef record, @NotNull Class<T> attsClass);
 
     /**
      * Get records metadata. Specified class will be used to determine
@@ -310,14 +305,14 @@ public interface RecordsService {
      * attribute for the request.
      * You can use MetaAtt annotation to change the requested attribute.
      *
-     * @param metaClass DTO to generate metadata schema and retrieve data
+     * @param attsClass DTO to generate metadata schema and retrieve data
      *
      * @see MetaAtt
      */
     @NotNull
-    <T> List<T> getAtts(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass);
+    <T> List<T> getAtts(@NotNull Collection<RecordRef> records, @NotNull Class<T> attsClass);
 
-    /* MODIFICATION */
+    /* MUTATION */
 
     /**
      * Create or change records.
@@ -349,6 +344,8 @@ public interface RecordsService {
     @NotNull
     List<RecordMeta> mutateAndGet(List<RecordMeta> records, Map<String, String> attsToGet);
 
+    /* DELETION */
+
     /**
      * Delete records.
      */
@@ -374,11 +371,11 @@ public interface RecordsService {
      * Add info about RecordsDao with specified Id.
      */
     @Nullable
-    RecordsSourceInfo getSourceInfo(String sourceId);
+    RecsSourceInfo getSourceInfo(String sourceId);
 
     /**
      * Get info about all registered RecordsDao.
      */
     @NotNull
-    List<RecordsSourceInfo> getSourcesInfo();
+    List<RecsSourceInfo> getSourcesInfo();
 }

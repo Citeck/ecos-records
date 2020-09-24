@@ -4,13 +4,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -34,8 +34,8 @@ public interface RecordsResolver {
     RecordsDelResult delete(@NotNull RecordsDeletion deletion);
 
     @Nullable
-    RecordsSourceInfo getSourceInfo(@NotNull String sourceId);
+    RecsSourceInfo getSourceInfo(@NotNull String sourceId);
 
     @NotNull
-    List<RecordsSourceInfo> getSourceInfo();
+    List<RecsSourceInfo> getSourceInfo();
 }

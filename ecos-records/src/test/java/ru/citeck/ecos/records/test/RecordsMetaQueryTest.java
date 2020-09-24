@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
 
 import java.util.Comparator;
 import java.util.List;

@@ -5,9 +5,9 @@ import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.request.query.lang.DistinctQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 

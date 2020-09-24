@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test.schema;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.record.op.meta.schema.GqlKeyUtils;
+import ru.citeck.ecos.records3.record.operation.meta.schema.GqlKeyUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -7,8 +7,8 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

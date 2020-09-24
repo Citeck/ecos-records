@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.record.op.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;

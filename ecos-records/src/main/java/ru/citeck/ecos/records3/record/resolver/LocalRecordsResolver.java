@@ -11,32 +11,32 @@ import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.ServiceFactoryAware;
-import ru.citeck.ecos.records3.record.op.mutate.RecordsMutateDao;
-import ru.citeck.ecos.records3.record.op.query.exception.LanguageNotSupportedException;
+import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
+import ru.citeck.ecos.records3.record.operation.query.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records3.record.exception.RecordsException;
 import ru.citeck.ecos.records3.record.exception.RecsSourceNotFoundException;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
 import ru.citeck.ecos.records3.predicate.model.OrPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryWithLang;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryWithLang;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
 import ru.citeck.ecos.records3.record.error.RecordsError;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.request.query.lang.DistinctQuery;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.source.dao.*;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.source.dao.local.job.Job;
 import ru.citeck.ecos.records3.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records3.source.dao.local.job.JobsProvider;
@@ -611,14 +611,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
     @Nullable
     @Override
-    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
 
         RecordsDao recordsDao = allDao.get(sourceId);
         if (recordsDao == null) {
             return null;
         }
 
-        RecordsSourceInfo recordsSourceInfo = new RecordsSourceInfo();
+        RecsSourceInfo recordsSourceInfo = new RecsSourceInfo();
         recordsSourceInfo.setId(sourceId);
 
         if (recordsDao instanceof RecordsQueryDao) {
@@ -645,7 +645,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
     @NotNull
     @Override
-    public List<RecordsSourceInfo> getSourceInfo() {
+    public List<RecsSourceInfo> getSourceInfo() {
         return allDao.keySet()
             .stream()
             .map(this::getSourceInfo)

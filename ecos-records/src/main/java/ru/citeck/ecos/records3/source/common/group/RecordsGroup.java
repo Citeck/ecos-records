@@ -8,12 +8,12 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.op.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 
 import java.util.*;
 import java.util.stream.Collectors;

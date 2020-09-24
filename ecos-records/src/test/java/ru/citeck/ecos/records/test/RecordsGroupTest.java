@@ -10,10 +10,10 @@ import ru.citeck.ecos.records3.RecordsServiceImpl;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.*;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.request.query.lang.DistinctQuery;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 

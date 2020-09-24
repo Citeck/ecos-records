@@ -3,7 +3,7 @@ package ru.citeck.ecos.records.test.attributes;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.meta.schema.read.DtoSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 
 import java.util.HashMap;
 import java.util.Map;

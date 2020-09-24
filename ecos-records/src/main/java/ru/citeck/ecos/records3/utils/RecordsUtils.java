@@ -7,7 +7,7 @@ import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.lang.reflect.InvocationTargetException;

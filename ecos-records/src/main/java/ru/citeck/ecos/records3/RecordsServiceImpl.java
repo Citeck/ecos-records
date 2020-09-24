@@ -6,21 +6,21 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.op.meta.schema.read.DtoSchemaResolver;
-import ru.citeck.ecos.records3.record.op.query.QueryContext;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
 import ru.citeck.ecos.records3.record.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.record.resolver.RecordsDaoRegistry;
 import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -295,13 +295,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Nullable
     @Override
-    public RecordsSourceInfo getSourceInfo(String sourceId) {
+    public RecsSourceInfo getSourceInfo(String sourceId) {
         return recordsResolver.getSourceInfo(sourceId);
     }
 
     @NotNull
     @Override
-    public List<RecordsSourceInfo> getSourcesInfo() {
+    public List<RecsSourceInfo> getSourcesInfo() {
         return recordsResolver.getSourceInfo();
     }
 

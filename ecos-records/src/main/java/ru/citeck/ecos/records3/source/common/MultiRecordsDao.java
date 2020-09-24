@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.source.common;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
 

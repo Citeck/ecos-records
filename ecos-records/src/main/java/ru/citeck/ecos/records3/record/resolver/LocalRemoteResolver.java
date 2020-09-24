@@ -5,15 +5,15 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 
 import java.util.ArrayList;
@@ -104,7 +104,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
 
     @Nullable
     @Override
-    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
         if (isRemoteSourceId(sourceId)) {
             return remote.getSourceInfo(sourceId);
         }
@@ -113,8 +113,8 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
 
     @NotNull
     @Override
-    public List<RecordsSourceInfo> getSourceInfo() {
-        List<RecordsSourceInfo> result = new ArrayList<>(local.getSourceInfo());
+    public List<RecsSourceInfo> getSourceInfo() {
+        List<RecsSourceInfo> result = new ArrayList<>(local.getSourceInfo());
         result.addAll(remote.getSourceInfo());
         return result;
     }

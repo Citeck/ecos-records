@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.graphql.meta.value.factory;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.records3.record.op.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
 
 import java.util.Collections;

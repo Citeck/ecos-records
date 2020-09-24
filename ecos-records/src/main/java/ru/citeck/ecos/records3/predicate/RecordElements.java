@@ -5,7 +5,7 @@ import ru.citeck.ecos.records3.IterableRecords;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.*;

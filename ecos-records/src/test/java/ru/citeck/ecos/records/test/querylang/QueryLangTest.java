@@ -7,9 +7,9 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryLangConverter;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryWithLang;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangConverter;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
+import ru.citeck.ecos.records3.record.operation.query.lang.QueryWithLang;
 
 import java.util.Collections;
 import java.util.Optional;

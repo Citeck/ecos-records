@@ -8,10 +8,10 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 

@@ -7,10 +7,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.MutableRecordsLocalDao;
 

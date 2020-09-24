@@ -6,19 +6,19 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.op.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.request.query.typed.RecsMetaQueryRes;
-import ru.citeck.ecos.records3.record.op.delete.request.DeletionBody;
-import ru.citeck.ecos.records3.record.op.mutate.MutateBody;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.typed.RecsMetaQueryRes;
+import ru.citeck.ecos.records3.record.operation.delete.request.DeletionBody;
+import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records3.source.info.RecordsSourceInfo;
+import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 
 import java.util.*;
@@ -125,14 +125,14 @@ public class RemoteRecordsResolver implements RecordsResolver {
 
     @Nullable
     @Override
-    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
         //todo
         return null;
     }
 
     @NotNull
     @Override
-    public List<RecordsSourceInfo> getSourceInfo() {
+    public List<RecsSourceInfo> getSourceInfo() {
         //todo
         return Collections.emptyList();
     }

@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.source.dao.remote;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.source.dao.*;
 

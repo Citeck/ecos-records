@@ -6,9 +6,9 @@ import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.op.delete.request.DeletionBody;
-import ru.citeck.ecos.records3.record.op.mutate.MutateBody;
-import ru.citeck.ecos.records3.record.op.mutate.request.RecordsMutResult;
+import ru.citeck.ecos.records3.record.operation.delete.request.DeletionBody;
+import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
+import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.List;

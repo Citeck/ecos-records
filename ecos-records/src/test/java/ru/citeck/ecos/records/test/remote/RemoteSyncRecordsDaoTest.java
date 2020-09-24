@@ -10,24 +10,24 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
-import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.rest.QueryBody;
-import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.RecordConstants;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.predicate.PredicateService;
+import ru.citeck.ecos.records3.predicate.model.Predicate;
+import ru.citeck.ecos.records3.predicate.model.Predicates;
+import ru.citeck.ecos.records3.predicate.model.ValuePredicate;
+import ru.citeck.ecos.records3.predicate.model.VoidPredicate;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
+import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.RemoteSyncRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -84,7 +84,7 @@ public class RemoteSyncRecordsDaoTest {
         query.setQuery(VoidPredicate.INSTANCE);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
+        RecsQueryRes<RecordRef> result = recordsService.queryRecords(query);
         assertEquals(TOTAL_RECS, result.getTotalCount());
 
         assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDao.getRecords().values()));
@@ -100,12 +100,12 @@ public class RemoteSyncRecordsDaoTest {
         query1.setSourceId(REMOTE_SOURCE_ID);
         query1.setQuery(predicate);
 
-        RecordsQueryResult<RecordRef> recs = recordsService.queryRecords(query1);
+        RecsQueryRes<RecordRef> recs = recordsService.queryRecords(query1);
         assertEquals(0, recs.getErrors().size());
         assertEquals(1, recs.getRecords().size());
         assertEquals(RecordRef.valueOf(REMOTE_SOURCE_ID + "@id-100"), recs.getRecords().get(0));
 
-        RecordsQueryResult<ValueDto> resultWithMeta = recordsService.queryRecords(query1, ValueDto.class);
+        RecsQueryRes<ValueDto> resultWithMeta = recordsService.queryRecords(query1, ValueDto.class);
         assertEquals(0, resultWithMeta.getErrors().size());
         assertEquals(1, resultWithMeta.getRecords().size());
         assertEquals(origDto, resultWithMeta.getRecords().get(0));
@@ -149,7 +149,7 @@ public class RemoteSyncRecordsDaoTest {
         }
 
         @Override
-        public RecordsQueryResult<ValueDto> queryLocalRecords(RecordsQuery query) {
+        public RecsQueryRes<ValueDto> queryLocalRecords(RecordsQuery query) {
 
             if (!query.getLanguage().equals(PredicateService.LANGUAGE_PREDICATE)) {
                 throw new IllegalArgumentException("Language is not supported! " + query.getLanguage());
@@ -187,7 +187,7 @@ public class RemoteSyncRecordsDaoTest {
                 idx++;
             }
 
-            RecordsQueryResult<ValueDto> queryResult = new RecordsQueryResult<>(result);
+            RecsQueryRes<ValueDto> queryResult = new RecsQueryRes<>(result);
             queryResult.setTotalCount(result.size() + sortedValues.size() - idx);
             return queryResult;
         }

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records.test.utils;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.meta.util.AttStrUtils;
+import ru.citeck.ecos.records3.record.op.meta.util.AttStrUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,5 +48,13 @@ public class AttStrUtilsTest {
         assertEquals(new AttStrUtils.SplitPair("a{b|}cde", "fg)"), AttStrUtils.splitByFirst("a{b|}cde|fg)", "|"));
 
         assertEquals(new AttStrUtils.SplitPair("abc", "'def'"), AttStrUtils.splitByFirst("abc|'def'", "|"));
+    }
+
+    @Test
+    void testEscape() {
+        List<String> split = AttStrUtils.split("abc\\.cde.efg", ".");
+        assertEquals(2, split.size());
+        assertEquals("abc\\.cde", split.get(0));
+        assertEquals("efg", split.get(1));
     }
 }

@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records.test;
 
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.resolver.RecordsResolver;
-import ru.citeck.ecos.records2.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
+import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
+import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
+import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 
 import java.util.ArrayList;
 import java.util.HashMap;

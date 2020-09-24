@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.request.error.RecordsError;
+import ru.citeck.ecos.records3.record.error.RecordsError;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

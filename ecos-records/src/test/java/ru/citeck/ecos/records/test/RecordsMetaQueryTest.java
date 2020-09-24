@@ -8,10 +8,10 @@ import lombok.Setter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
-import ru.citeck.ecos.records2.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.record.op.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.op.meta.schema.AttsSchema;
 
 import java.util.Comparator;
 import java.util.List;

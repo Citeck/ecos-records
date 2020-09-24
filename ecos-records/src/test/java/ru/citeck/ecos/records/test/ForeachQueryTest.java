@@ -6,15 +6,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.QueryConstants;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.QueryConstants;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +69,7 @@ public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQue
         RecordsQuery query = new RecordsQuery();
         query.setQuery(getQuery(QueryConstants.IT_VAR));
 
-        RecordsQueryResult<List<RecordRef>> result = recordsService.queryRecords(eachNode, query);
+        RecsQueryRes<List<RecordRef>> result = recordsService.queryRecords(eachNode, query);
         List<List<RecordRef>> records = result.getRecords();
 
         assertTrue(result.getErrors().isEmpty());
@@ -96,8 +96,8 @@ public class ForeachQueryTest extends LocalRecordsDao implements LocalRecordsQue
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
+    public RecsQueryRes<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+        RecsQueryRes<RecordRef> result = new RecsQueryRes<>();
         result.setRecords(Collections.singletonList(resultRefs.get(queries.size())));
         queries.add(query);
         return result;

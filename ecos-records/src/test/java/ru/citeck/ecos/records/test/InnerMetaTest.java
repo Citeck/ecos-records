@@ -5,15 +5,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.*;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.value.InnerMetaValue;
+import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;

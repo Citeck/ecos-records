@@ -7,16 +7,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
         attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
+        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
 
         assertEquals(1, result.getRecords().size());
         RecordMeta meta = result.getRecords().get(0);
@@ -106,7 +106,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("null_0", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + ".unknown?str");
 
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
+        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
 
         assertEquals(1, result.getRecords().size());
         RecordMeta meta = result.getRecords().get(0);
@@ -116,8 +116,8 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<MetaValue> queryLocalRecords(@NotNull RecordsQuery query) {
-        RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();
+    public RecsQueryRes<MetaValue> queryLocalRecords(@NotNull RecordsQuery query) {
+        RecsQueryRes<MetaValue> result = new RecsQueryRes<>();
         result.addRecord(Val.val0);
         return result;
     }

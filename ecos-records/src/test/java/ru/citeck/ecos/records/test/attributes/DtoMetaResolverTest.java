@@ -2,8 +2,8 @@ package ru.citeck.ecos.records.test.attributes;
 
 import lombok.Data;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.meta.DtoMetaResolver;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.meta.schema.read.DtoSchemaResolver;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +16,7 @@ public class DtoMetaResolverTest {
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        DtoMetaResolver dtoMetaResolver = factory.getDtoMetaResolver();
+        DtoSchemaResolver dtoMetaResolver = factory.getDtoMetaResolver();
 
         Map<String, String> attributes = new HashMap<>(dtoMetaResolver.getAttributes(TestDto.class));
 

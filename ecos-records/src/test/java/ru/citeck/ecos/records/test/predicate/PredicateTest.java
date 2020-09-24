@@ -4,12 +4,12 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.predicate.PredicateUtils;
-import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
-import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.predicate.PredicateUtils;
+import ru.citeck.ecos.records3.predicate.model.Predicate;
+import ru.citeck.ecos.records3.predicate.model.Predicates;
+import ru.citeck.ecos.records3.predicate.model.ValuePredicate;
+import ru.citeck.ecos.records3.predicate.model.VoidPredicate;
 
 import java.util.ArrayList;
 import java.util.List;

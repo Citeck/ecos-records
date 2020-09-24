@@ -5,10 +5,10 @@ import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records2.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.record.op.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.meta.schema.resolver.AttSchemaResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

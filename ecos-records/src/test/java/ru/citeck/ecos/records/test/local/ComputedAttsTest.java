@@ -8,15 +8,15 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records2.type.ComputedAttribute;
-import ru.citeck.ecos.records2.type.RecordTypeService;
+import ru.citeck.ecos.records3.*;
+import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.type.ComputedAttribute;
+import ru.citeck.ecos.records3.type.RecordTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -89,7 +89,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         String strAtt = strFieldValueWithPrefixName;
 
         List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
+        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
         RecordMeta meta = result.getRecords().get(0);
 
         assertTrue(meta.get(strAtt).isNull());
@@ -172,8 +172,8 @@ public class ComputedAttsTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query) {
-        return RecordsQueryResult.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
+    public RecsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+        return RecsQueryRes.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
     }
 
     @Override

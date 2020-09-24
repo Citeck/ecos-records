@@ -7,22 +7,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.common.AttributesMixin;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.common.AttributesMixin;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,7 +76,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         String strAtt = strFieldValueWithPrefixName;
 
         List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
+        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
         RecordMeta meta = result.getRecords().get(0);
 
         assertTrue(meta.get(strAtt).isNull());
@@ -121,7 +120,7 @@ public class AttributesMixinTest extends LocalRecordsDao
 
         List<String> mixinAtts = Arrays.asList(strAtt, intAtt, finalFieldName);
 
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
+        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
 
         result.getRecords().forEach(meta -> {
 
@@ -138,8 +137,8 @@ public class AttributesMixinTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(RecordsQuery query) {
-        return RecordsQueryResult.of(new Record(), new MetaValueRecord(REC_META_VALUE_ID));
+    public RecsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+        return RecsQueryRes.of(new Record(), new MetaValueRecord(REC_META_VALUE_ID));
     }
 
     @Override

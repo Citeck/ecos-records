@@ -8,16 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,11 +51,11 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
-        RecordsQueryResult<Object> result = new RecordsQueryResult<>();
+        RecsQueryRes<Object> result = new RecsQueryRes<>();
         result.setRecords(getLocalRecordsMeta(query.getIds()
                                              .stream()
                                              .map(RecordRef::valueOf)
@@ -74,7 +73,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         RecordsQuery query = new RecordsQuery();
         query.setSourceId("unknown-id");
 
-        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
+        RecsQueryRes<RecordRef> records = recordsService.queryRecords(query);
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
@@ -93,7 +92,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         query.setQuery(daoQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<RecordRef> records = recordsService.queryRecords(query);
+        RecsQueryRes<RecordRef> records = recordsService.queryRecords(query);
         List<RecordRef> recordsRefs = records.getRecords();
 
         assertEquals(ids.size(), recordsRefs.size());
@@ -181,7 +180,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         query.setQuery(exactIdsQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecordsQueryResult<JournalListInfo> records = recordsService.queryRecords(query, JournalListInfo.class);
+        RecsQueryRes<JournalListInfo> records = recordsService.queryRecords(query, JournalListInfo.class);
         assertEquals(1, records.getTotalCount());
 
         List<JournalInfo> journals = records.getRecords().get(0).getJournals();

@@ -5,18 +5,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.RecordsServiceImpl;
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.querylang.QueryLangService;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceImpl;
+import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.predicate.PredicateService;
+import ru.citeck.ecos.records3.predicate.model.*;
+import ru.citeck.ecos.records3.record.op.query.lang.QueryLangService;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.request.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.request.query.lang.DistinctQuery;
+import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.io.IOException;
 import java.util.*;
@@ -167,9 +166,9 @@ class RecordsGroupTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
-        RecordsQueryResult<Object> result = new RecordsQueryResult<>();
+        RecsQueryRes<Object> result = new RecsQueryRes<>();
 
         Predicate predicate = recordsQuery.getQuery(Predicate.class);
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
@@ -213,7 +212,7 @@ class RecordsGroupTest extends LocalRecordsDao
         assertResults(recordsService.queryRecords(recordsQuery, Result.class), predicate);
     }
 
-    private void assertResults(RecordsQueryResult<Result> records, Predicate predicate) {
+    private void assertResults(RecsQueryRes<Result> records, Predicate predicate) {
 
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
         List<PojoMeta> filteredValues = VALUES.stream()
@@ -283,7 +282,7 @@ class RecordsGroupTest extends LocalRecordsDao
         distinctQuery.setQuery(predicate);
         recordsQuery.setQuery(distinctQuery);
 
-        RecordsQueryResult<DistinctValue> result = recordsService.queryRecords(recordsQuery, DistinctValue.class);
+        RecsQueryRes<DistinctValue> result = recordsService.queryRecords(recordsQuery, DistinctValue.class);
 
         Set<String> manualCalculatedDistinct = new HashSet<>();
         VALUES.forEach(v -> {

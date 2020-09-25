@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
 import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
@@ -43,7 +43,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
     protected RecordsService recordsService;
     protected PredicateService predicateService;
-    protected RecordsMetaService recordsMetaService;
+    protected RecordAttsService recordsMetaService;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
     protected RecordTypeService recordTypeService;

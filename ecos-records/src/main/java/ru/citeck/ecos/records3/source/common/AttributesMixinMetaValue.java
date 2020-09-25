@@ -15,7 +15,7 @@ import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.graphql.meta.value.*;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.type.ComputedAttribute;
 import ru.citeck.ecos.records3.type.RecordTypeService;
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressFBWarnings({"NP_BOOLEAN_RETURN_NULL"})
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
-    private final RecordsMetaService recordsMetaService;
+    private final RecordAttsService recordsMetaService;
     private final RecordTypeService recordTypeService;
 
     private final Map<String, ParameterizedAttsMixin> mixins;
@@ -42,7 +42,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     private boolean initialized = false;
 
     public AttributesMixinMetaValue(MetaValue impl,
-                                    RecordsMetaService recordsMetaService,
+                                    RecordAttsService recordsMetaService,
                                     RecordTypeService recordTypeService,
                                     MetaValuesConverter metaValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,

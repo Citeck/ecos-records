@@ -10,8 +10,11 @@ import ru.citeck.ecos.records3.evaluator.evaluators.*;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValuesConverter;
 import ru.citeck.ecos.records3.graphql.meta.value.factory.*;
 import ru.citeck.ecos.records3.graphql.meta.value.factory.bean.BeanValueFactory;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaServiceImpl;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsServiceImpl;
+import ru.citeck.ecos.records3.record.operation.meta.attproc.*;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.template.RecordsTemplateService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.predicate.PredicateService;
@@ -54,11 +57,10 @@ public class RecordsServiceFactory {
     private RecordsResolver recordsResolver;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
-    private RecordsMetaService recordsMetaService;
+    private RecordAttsService recordsMetaService;
     private List<MetaValueFactory<?>> metaValueFactories;
     private LocalRecordsResolver localRecordsResolver;
     private RemoteRecordsResolver remoteRecordsResolver;
-    private AttributesMetaResolver attributesMetaResolver;
     private Supplier<? extends QueryContext> queryContextSupplier;
     private MetaValuesConverter metaValuesConverter;
     private RecordEvaluatorService recordEvaluatorService;
@@ -68,6 +70,8 @@ public class RecordsServiceFactory {
     private RecordTypeService recordTypeService;
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
+    private AttSchemaReader attSchemaReader;
+    private AttSchemaResolver attSchemaResolver;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
@@ -240,15 +244,15 @@ public class RecordsServiceFactory {
         return new QueryLangServiceImpl();
     }
 
-    public final synchronized RecordsMetaService getRecordsMetaService() {
+    public final synchronized RecordAttsService getRecordsMetaService() {
         if (recordsMetaService == null) {
             recordsMetaService = createRecordsMetaService();
         }
         return recordsMetaService;
     }
 
-    protected RecordsMetaService createRecordsMetaService() {
-        return new RecordsMetaServiceImpl(this);
+    protected RecordAttsService createRecordsMetaService() {
+        return new RecordAttsServiceImpl(this);
     }
 
     public final synchronized PredicateService getPredicateService() {
@@ -304,17 +308,6 @@ public class RecordsServiceFactory {
         }
 
         return metaValueFactories;
-    }
-
-    public final synchronized AttributesMetaResolver getAttributesMetaResolver() {
-        if (attributesMetaResolver == null) {
-            attributesMetaResolver = createAttributesMetaResolver();
-        }
-        return attributesMetaResolver;
-    }
-
-    protected AttributesMetaResolver createAttributesMetaResolver() {
-        return new AttributesMetaResolver();
     }
 
     public final synchronized DtoSchemaResolver getDtoMetaResolver() {
@@ -398,6 +391,28 @@ public class RecordsServiceFactory {
             recordsTemplateService = createRecordsTemplateService();
         }
         return recordsTemplateService;
+    }
+
+    protected AttSchemaReader createAttSchemaReader() {
+        return new AttSchemaReader();
+    }
+
+    public final synchronized AttSchemaReader getAttSchemaReader() {
+        if (attSchemaReader == null) {
+            attSchemaReader = createAttSchemaReader();
+        }
+        return attSchemaReader;
+    }
+
+    protected AttSchemaResolver createAttSchemaResolver() {
+        return new AttSchemaResolver(this);
+    }
+
+    public final synchronized AttSchemaResolver getAttSchemaResolver() {
+        if (attSchemaResolver == null) {
+            attSchemaResolver = createAttSchemaResolver();
+        }
+        return attSchemaResolver;
     }
 
     protected List<AttProcessor> getAttProcessors() {

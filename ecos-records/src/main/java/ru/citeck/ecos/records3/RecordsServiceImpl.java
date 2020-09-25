@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
@@ -34,7 +34,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\((n:)?[\"']([^\"']+)[\"']\\).+");
 
     private final RecordsResolver recordsResolver;
-    private final RecordsMetaService recordsMetaService;
+    private final RecordAttsService recordsMetaService;
 
     private final DtoSchemaResolver dtoAttributesResolver;
 
@@ -49,7 +49,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecsQueryRes<RecordRef> queryRecords(RecordsQuery query) {
+    public RecsQueryRes<RecordRef> query(RecordsQuery query) {
         return handleRecordsQuery(() -> {
             RecsQueryRes<RecordMeta> metaResult = recordsResolver.queryRecords(query,
                 Collections.emptyMap(), true);
@@ -59,7 +59,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public <T> RecsQueryRes<T> queryRecords(RecordsQuery query, Class<T> metaClass) {
+    public <T> RecsQueryRes<T> query(RecordsQuery query, Class<T> metaClass) {
 
         Map<String, String> attributes = dtoAttributesResolver.getAttributes(metaClass);
         if (attributes.isEmpty()) {
@@ -73,7 +73,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecsQueryRes<RecordMeta> queryRecords(RecordsQuery query,
+    public RecsQueryRes<RecordMeta> query(RecordsQuery query,
                                                  Map<String, String> attributes,
                                                  boolean rawAtts) {
 
@@ -117,7 +117,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public <T> T getMeta(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
+    public <T> T getAtts(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
 
         List<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
         if (meta.size() == 0) {
@@ -128,7 +128,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public <T> List<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
+    public <T> List<T> getAtts(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
 
         Map<String, String> attributes = dtoAttributesResolver.getAttributes(metaClass);
         if (attributes.isEmpty()) {

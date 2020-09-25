@@ -11,11 +11,12 @@ import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.ServiceFactoryAware;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsMetaDao;
 import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
 import ru.citeck.ecos.records3.record.operation.query.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records3.record.exception.RecordsException;
 import ru.citeck.ecos.records3.record.exception.RecsSourceNotFoundException;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
@@ -63,7 +64,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
-    private final RecordsMetaService recordsMetaService;
+    private final RecordAttsService recordsMetaService;
 
     private final String currentApp;
 

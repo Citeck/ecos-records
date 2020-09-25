@@ -38,7 +38,7 @@ public class AttSchemaResolver {
     private final MetaValuesConverter metaValuesConverter;
     private final AttProcService attProcService;
 
-    private final AttSchemaReader attSchemaReader = new AttSchemaReader();
+    private final AttSchemaReader attSchemaReader;
 
     // todo: move types logic to this resolver
     // private final RecordTypeService recordTypeService;
@@ -46,19 +46,20 @@ public class AttSchemaResolver {
     public AttSchemaResolver(RecordsServiceFactory factory) {
         metaValuesConverter = factory.getMetaValuesConverter();
         attProcService = factory.getAttProcService();
+        attSchemaReader = factory.getAttSchemaReader();
     }
 
     public DataValue resolve(Object value, SchemaRootAtt attribute) {
         return resolve(value, attribute, false);
     }
 
-    public DataValue resolve(Object value, SchemaRootAtt attribute, boolean raw) {
-        ObjectData result = resolve(value, Collections.singletonList(attribute), raw);
+    public DataValue resolve(Object value, SchemaRootAtt attribute, boolean rawAtts) {
+        ObjectData result = resolve(value, Collections.singletonList(attribute), rawAtts);
         return result.get(attribute.getAttribute().getAliasForValue());
     }
 
-    public ObjectData resolve(Object value, List<SchemaRootAtt> schema, boolean raw) {
-        return resolve(Collections.singletonList(value), schema, raw)
+    public ObjectData resolve(Object value, List<SchemaRootAtt> schema, boolean rawAtts) {
+        return resolve(Collections.singletonList(value), schema, rawAtts)
             .stream()
             .findFirst()
             .orElseThrow(() -> new ResolveException("Resolving error"));
@@ -68,7 +69,7 @@ public class AttSchemaResolver {
         return resolve(values, schema, false);
     }
 
-    public List<ObjectData> resolve(List<Object> values, List<SchemaRootAtt> schema, boolean raw) {
+    public List<ObjectData> resolve(List<Object> values, List<SchemaRootAtt> schema, boolean rawAtts) {
 
         List<Map<String, Object>> result = AttContext.doInContext(attContext -> {
 
@@ -88,13 +89,13 @@ public class AttSchemaResolver {
         });
 
         return result.stream()
-            .map(v -> postProcess(v, schema, raw))
+            .map(v -> postProcess(v, schema, rawAtts))
             .collect(Collectors.toList());
     }
 
-    private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schema, boolean raw) {
+    private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schema, boolean rawAtts) {
 
-        if (raw) {
+        if (rawAtts) {
             return ObjectData.create(data);
         }
 

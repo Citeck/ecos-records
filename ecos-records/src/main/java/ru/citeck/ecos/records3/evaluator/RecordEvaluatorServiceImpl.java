@@ -6,7 +6,7 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetailsImpl;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
 import ru.citeck.ecos.records3.record.operation.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records3.request.result.RecordsResult;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     private final RecordsService recordsService;
-    private final RecordsMetaService recordsMetaService;
+    private final RecordAttsService recordsMetaService;
 
     private final Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 

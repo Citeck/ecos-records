@@ -6,8 +6,9 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.delete.RecDelStatus;
-import ru.citeck.ecos.records3.record.operation.meta.RecordsMetaService;
+import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
@@ -46,7 +47,7 @@ import java.util.Optional;
  * @see MetaValue
  * @see RecordRef
  * @see RecordMeta
- * @see RecordsMetaService
+ * @see RecordAttsService
  *
  * @author Pavel Simonov
  */
@@ -350,10 +351,10 @@ public interface RecordsService {
      * Delete records.
      */
     @NotNull
-    List<RecDelStatus> delete(List<RecordRef> records);
+    List<DelStatus> delete(List<RecordRef> records);
 
     @NotNull
-    RecDelStatus delete(RecordRef recordRef);
+    DelStatus delete(RecordRef recordRef);
 
     /* OTHER */
 

@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.source.common;
 
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaEdgeDelegate;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.MetaEdgeDelegate;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public interface AttributesMixin<ReqMetaT, ResMetaT> {
 
     Object getAttribute(String attribute, ResMetaT meta) throws Exception;
 
-    default MetaEdge getEdge(String attribute, ResMetaT meta, UncheckedSupplier<MetaEdge> base) throws Exception {
+    default AttEdge getEdge(String attribute, ResMetaT meta, UncheckedSupplier<AttEdge> base) throws Exception {
         return new MetaEdgeDelegate(base.get(), () -> getAttribute(attribute, meta));
     }
 

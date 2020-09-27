@@ -7,14 +7,14 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records3.evaluator.evaluators.*;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records3.graphql.meta.value.factory.*;
-import ru.citeck.ecos.records3.graphql.meta.value.factory.bean.BeanValueFactory;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
+import ru.citeck.ecos.records3.record.operation.meta.value.factory.*;
+import ru.citeck.ecos.records3.record.operation.meta.value.factory.bean.BeanValueFactory;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsServiceImpl;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.*;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
 import ru.citeck.ecos.records3.template.RecordsTemplateService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.predicate.PredicateService;
@@ -58,11 +58,11 @@ public class RecordsServiceFactory {
     private PredicateService predicateService;
     private QueryLangService queryLangService;
     private RecordAttsService recordsMetaService;
-    private List<MetaValueFactory<?>> metaValueFactories;
+    private List<AttValueFactory<?>> metaValueFactories;
     private LocalRecordsResolver localRecordsResolver;
     private RemoteRecordsResolver remoteRecordsResolver;
     private Supplier<? extends QueryContext> queryContextSupplier;
-    private MetaValuesConverter metaValuesConverter;
+    private AttValuesConverter attValuesConverter;
     private RecordEvaluatorService recordEvaluatorService;
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
@@ -71,7 +71,7 @@ public class RecordsServiceFactory {
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
     private AttSchemaReader attSchemaReader;
-    private AttSchemaResolver attSchemaResolver;
+    private AttResolver attSchemaResolver;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
@@ -266,33 +266,33 @@ public class RecordsServiceFactory {
         return new PredicateServiceImpl();
     }
 
-    public final synchronized MetaValuesConverter getMetaValuesConverter() {
-        if (metaValuesConverter == null) {
-            metaValuesConverter = createMetaValuesConverter();
+    public final synchronized AttValuesConverter getAttValuesConverter() {
+        if (attValuesConverter == null) {
+            attValuesConverter = createMetaValuesConverter();
         }
-        return metaValuesConverter;
+        return attValuesConverter;
     }
 
-    protected MetaValuesConverter createMetaValuesConverter() {
-        return new MetaValuesConverter(this);
+    protected AttValuesConverter createMetaValuesConverter() {
+        return new AttValuesConverter(this);
     }
 
-    public final synchronized List<MetaValueFactory<?>> getMetaValueFactories() {
+    public final synchronized List<AttValueFactory<?>> getMetaValueFactories() {
         if (metaValueFactories == null) {
             metaValueFactories = createMetaValueFactories();
         }
         return metaValueFactories;
     }
 
-    protected List<MetaValueFactory<?>> createMetaValueFactories() {
+    protected List<AttValueFactory<?>> createMetaValueFactories() {
 
-        List<MetaValueFactory<?>> metaValueFactories = new ArrayList<>();
+        List<AttValueFactory<?>> metaValueFactories = new ArrayList<>();
 
         metaValueFactories.add(new ObjectDataValueFactory());
         metaValueFactories.add(new ByteArrayValueFactory());
-        metaValueFactories.add(new DataValueMetaFactory());
+        metaValueFactories.add(new DataValueAttFactory());
         metaValueFactories.add(new MLTextValueFactory());
-        metaValueFactories.add(new RecordMetaValueFactory());
+        metaValueFactories.add(new RecordAttValueFactory());
         metaValueFactories.add(new BeanValueFactory());
         metaValueFactories.add(new BooleanValueFactory());
         metaValueFactories.add(new DateValueFactory());
@@ -404,11 +404,11 @@ public class RecordsServiceFactory {
         return attSchemaReader;
     }
 
-    protected AttSchemaResolver createAttSchemaResolver() {
-        return new AttSchemaResolver(this);
+    protected AttResolver createAttSchemaResolver() {
+        return new AttResolver(this);
     }
 
-    public final synchronized AttSchemaResolver getAttSchemaResolver() {
+    public final synchronized AttResolver getAttSchemaResolver() {
         if (attSchemaResolver == null) {
             attSchemaResolver = createAttSchemaResolver();
         }

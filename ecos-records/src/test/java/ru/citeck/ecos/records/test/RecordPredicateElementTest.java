@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.predicate.Element;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.RecordElement;
@@ -152,7 +152,7 @@ public class RecordPredicateElementTest extends LocalRecordsDao implements Local
                       .collect(Collectors.toList());
     }
 
-    class TestValue implements MetaValue {
+    class TestValue implements AttValue {
 
         RecordRef ref;
 
@@ -170,7 +170,7 @@ public class RecordPredicateElementTest extends LocalRecordsDao implements Local
             return new AttValue(attributes.get(ref.getId()).get(name));
         }
 
-        class AttValue implements MetaValue {
+        class AttValue implements ru.citeck.ecos.records3.record.operation.meta.value.AttValue {
 
             private String str;
 

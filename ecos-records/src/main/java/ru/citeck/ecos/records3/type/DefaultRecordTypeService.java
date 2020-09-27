@@ -20,7 +20,7 @@ public class DefaultRecordTypeService implements RecordTypeService {
     @NotNull
     public List<ComputedAttribute> getComputedAttributes(RecordRef type) {
 
-        ComputedAttsMeta meta = recordsService.getMeta(type, ComputedAttsMeta.class);
+        ComputedAttsMeta meta = recordsService.getAtts(type, ComputedAttsMeta.class);
         if (meta == null || meta.computedAttributes == null) {
             return Collections.emptyList();
         }

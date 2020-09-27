@@ -35,31 +35,31 @@ class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMet
 
         RecordRef ref = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAttribute(ref, "doubleNum|fmt('000000.00')");
+        DataValue attribute = recordsService.getAtt(ref, "doubleNum|fmt('000000.00')");
         assertEquals("000123.32", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "doubleNum?num|fmt('000000.00000')");
+        attribute = recordsService.getAtt(ref, "doubleNum?num|fmt('000000.00000')");
         assertEquals("000123.32000", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "doubleNum?num|fmt('0.0')");
+        attribute = recordsService.getAtt(ref, "doubleNum?num|fmt('0.0')");
         assertEquals("123.3", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY')");
         assertEquals("2020", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD')");
         assertEquals("2020.01.01", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD___HH')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH')");
         assertEquals("2020.01.01___01", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
         assertEquals("2020.01.01___08", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY,MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY,MM.DD___HH','','GMT+7:00')");
         assertEquals("2020,01.01___08", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "datee!'_____'|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "datee!'_____'|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
         assertEquals("_____", attribute.asText());
     }
 
@@ -68,10 +68,10 @@ class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMet
 
         RecordRef ref = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ')");
+        DataValue attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ')");
         assertEquals("№ 2020.01.01___08", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ', '-ohoh')");
+        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ', '-ohoh')");
         assertEquals("№ 2020.01.01___08-ohoh", attribute.asText());
     }
 

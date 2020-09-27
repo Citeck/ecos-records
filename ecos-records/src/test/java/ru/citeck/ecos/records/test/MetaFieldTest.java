@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaFieldTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao, MetaValue {
+                           implements LocalRecordsMetaDao, AttValue {
 
     private static final String SOURCE_ID = "test-source";
     private static final RecordRef RECORD_REF = RecordRef.create(SOURCE_ID, "test");
@@ -60,7 +60,7 @@ public class MetaFieldTest extends LocalRecordsDao
         attributes.put("field1", "att(n:\"two\"){num}");
 
         assertsPassed = false;
-        recordsService.getAttributes(Collections.singletonList(RECORD_REF), attributes);
+        recordsService.getAtts(Collections.singletonList(RECORD_REF), attributes);
         assertTrue(assertsPassed);
     }
 

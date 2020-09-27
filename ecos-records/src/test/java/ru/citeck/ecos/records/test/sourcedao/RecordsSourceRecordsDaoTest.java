@@ -7,8 +7,8 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
@@ -36,8 +36,8 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
     }
 
     @Override
-    public RecsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
-        return new RecsQueryRes<>();
+    public RecordsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+        return new RecordsQueryRes<>();
     }
 
     @Override
@@ -47,10 +47,10 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
 
     @Test
     public void test() {
-        SourceLangMetaInfo meta = recordsService.getMeta(RecordRef.create("source", "test"), SourceLangMetaInfo.class);
+        SourceLangMetaInfo meta = recordsService.getAtts(RecordRef.create("source", "test"), SourceLangMetaInfo.class);
         assertEquals(SUPPORTED_LANGUAGES, meta.getSupportedLanguages());
 
-        SourceFlagsMetaInfo meta2 = recordsService.getMeta(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
+        SourceFlagsMetaInfo meta2 = recordsService.getAtts(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
         assertEquals("meta", meta2.id);
         assertTrue(meta2.metaSupported);
         assertFalse(meta2.mutationSupported);

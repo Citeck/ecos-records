@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.error;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,7 @@ public class ErrorUtils {
         return error;
     }
 
-    public static boolean logErrors(RecordsResult<?> result) {
+    /*public static boolean logErrors(RecordsResult<?> result) {
 
         StringBuilder sb = new StringBuilder();
         if (logErrors(result, sb)) {
@@ -77,5 +76,5 @@ public class ErrorUtils {
             return true;
         }
         return false;
-    }
+    }*/
 }

@@ -2,10 +2,11 @@ package ru.citeck.ecos.records3.record.resolver;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
 import java.util.List;
@@ -14,20 +15,20 @@ import java.util.Map;
 public interface RecordsResolver {
 
     @Nullable
-    RecsQueryRes<RecordMeta> query(@NotNull RecordsQuery query,
-                                   @NotNull Map<String, String> attributes,
-                                   boolean rawAtts);
+    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                      @NotNull Map<String, String> attributes,
+                                      boolean rawAtts);
 
     @Nullable
-    List<RecordMeta> getAtts(@NotNull List<RecordRef> records,
+    List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
                              @NotNull Map<String, String> attributes,
                              boolean rawAtts);
 
     @Nullable
-    RecordsMutResult mutate(@NotNull RecordsMutation mutation);
+    List<RecordRef> mutate(@NotNull List<RecordAtts> records);
 
     @Nullable
-    RecordsDelResult delete(@NotNull RecordsDeletion deletion);
+    List<DelStatus> delete(@NotNull List<RecordRef> records);
 
     @Nullable
     RecsSourceInfo getSourceInfo(@NotNull String sourceId);

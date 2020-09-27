@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.source.common;
 import lombok.Data;
 import ru.citeck.ecos.commons.utils.ReflectUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaEdge;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
 
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class ParameterizedAttsMixin implements AttributesMixin<Object, Object> {
     }
 
     @Override
-    public MetaEdge getEdge(String attribute, Object meta, UncheckedSupplier<MetaEdge> base) throws Exception {
+    public AttEdge getEdge(String attribute, Object meta, UncheckedSupplier<AttEdge> base) throws Exception {
         return impl.getEdge(attribute, meta, base);
     }
 

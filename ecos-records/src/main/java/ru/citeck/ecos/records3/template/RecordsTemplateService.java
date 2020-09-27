@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.template;
 
 import ru.citeck.ecos.commons.utils.TmplUtils;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -27,7 +27,7 @@ public class RecordsTemplateService {
             return template;
         }
 
-        RecordMeta meta = recordsService.getAtts(recordRef, atts);
+        RecordAtts meta = recordsService.getAtts(recordRef, atts);
 
         return TmplUtils.applyAtts(template, meta.getAttributes());
     }

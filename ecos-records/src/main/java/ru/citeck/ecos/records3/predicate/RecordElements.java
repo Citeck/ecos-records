@@ -2,11 +2,10 @@ package ru.citeck.ecos.records3.predicate;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records3.IterableRecords;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 
 import java.util.*;
 import java.util.function.Function;
@@ -58,10 +57,9 @@ public class RecordElements implements Elements<RecordElement> {
 
     private List<RecordElement> getElements(List<RecordRef> refs, Map<String, String> attributes) {
 
-        RecordsResult<RecordMeta> recordsMeta = recordsService.getAttributes(refs, attributes);
+        List<RecordAtts> recordsMeta = recordsService.getAtts(refs, attributes);
 
-        return recordsMeta.getRecords()
-                          .stream()
+        return recordsMeta.stream()
                           .map(RecordElement::new)
                           .collect(Collectors.toList());
     }

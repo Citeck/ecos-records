@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
@@ -39,14 +39,14 @@ public class RecordsConvertionTest extends LocalRecordsDao implements LocalRecor
         query.setLanguage(SOURCE_LANG);
         query.setSourceId(ID);
 
-        recordsService.queryRecords(query);
+        recordsService.query(query);
     }
 
     @NotNull
     @Override
-    public RecsQueryRes<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
         assertEquals(CONVERTED_LANG, query.getLanguage());
-        return new RecsQueryRes<>();
+        return new RecordsQueryRes<>();
     }
 
     @Override

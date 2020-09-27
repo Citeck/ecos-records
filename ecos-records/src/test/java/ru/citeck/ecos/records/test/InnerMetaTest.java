@@ -7,8 +7,8 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.InnerMetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -36,40 +36,40 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         RecordRef ref = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAttribute(ref, "field0");
+        DataValue attribute = recordsService.getAtt(ref, "field0");
         assertEquals("field0", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "inner.field1");
+        attribute = recordsService.getAtt(ref, "inner.field1");
         assertEquals("FIELD1", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "display");
+        attribute = recordsService.getAtt(ref, "display");
         assertEquals("DISPLAY", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerDisp");
+        attribute = recordsService.getAtt(ref, "innerDisp");
         assertEquals("INNER_DISP", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerDisp");
+        attribute = recordsService.getAtt(ref, "innerDisp");
         assertEquals("INNER_DISP", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerStr");
+        attribute = recordsService.getAtt(ref, "innerStr");
         assertEquals("INNER_STR", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerField1");
+        attribute = recordsService.getAtt(ref, "innerField1");
         assertEquals("FIELD1", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerField1Disp");
+        attribute = recordsService.getAtt(ref, "innerField1Disp");
         assertEquals("FIELD1", attribute.asText());
 
-        attribute = recordsService.getAttribute(ref, "innerHasTrue?bool");
+        attribute = recordsService.getAtt(ref, "innerHasTrue?bool");
         assertTrue(attribute.isBoolean() && attribute.asBoolean());
 
-        attribute = recordsService.getAttribute(ref, "innerHasFalse?bool");
+        attribute = recordsService.getAtt(ref, "innerHasFalse?bool");
         assertTrue(attribute.isBoolean() && !attribute.asBoolean());
     }
 
     @NotNull
     @Override
-    public List<MetaValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<AttValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
         return records.stream().map(r -> {
             if (r.getId().contains("inner")) {
                 return new InnerMeta();
@@ -78,9 +78,9 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }).collect(Collectors.toList());
     }
 
-    class Meta implements MetaValue {
+    class Meta implements AttValue {
 
-        private RecordMeta attributes;
+        private RecordAtts attributes;
 
         //todo
         /*@Override
@@ -102,7 +102,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
     }
 
-    class InnerMeta implements MetaValue {
+    class InnerMeta implements AttValue {
 
         InnerInnerMeta inner = new InnerInnerMeta();
         InnerInnerMeta2 inner2 = new InnerInnerMeta2();
@@ -136,7 +136,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
     }
 
-    public class InnerInnerMeta2 implements MetaValue {
+    public class InnerInnerMeta2 implements AttValue {
 
         @Override
         public boolean has(@NotNull String name) {

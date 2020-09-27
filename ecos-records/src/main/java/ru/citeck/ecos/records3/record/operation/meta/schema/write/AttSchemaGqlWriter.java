@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.write;
 
+import ru.citeck.ecos.commons.utils.NameUtils;
 import ru.citeck.ecos.records3.RecordConstants;
-import ru.citeck.ecos.records3.record.operation.meta.schema.GqlKeyUtils;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         List<SchemaAtt> inner = attribute.getInner();
 
         if (sb.length() > 0 && !alias.isEmpty()) {
-            sb.append(GqlKeyUtils.escape(alias)).append(":");
+            sb.append(NameUtils.escape(alias)).append(":");
         }
 
         char firstCharInName = name.charAt(0);
@@ -84,7 +84,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
 
         String alias = attribute.getAlias();
         if (!alias.isEmpty()) {
-            sb.append(GqlKeyUtils.escape(alias)).append(":");
+            sb.append(NameUtils.unescape(alias)).append(":");
         }
         sb.append(attribute.getName());
 

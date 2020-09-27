@@ -2,9 +2,9 @@ package ru.citeck.ecos.records3.source.dao.local.source;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.graphql.meta.value.EmptyValue;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
@@ -36,7 +36,7 @@ public class RecordsSourceRecordsDao extends LocalRecordsDao
     }
 
     @Override
-    public RecsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery query) {
-        return new RecsQueryRes<>(recordsService.getSourcesInfo());
+    public RecordsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery query) {
+        return new RecordsQueryRes<>(recordsService.getSourcesInfo());
     }
 }

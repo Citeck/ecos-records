@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.evaluator;
 
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetails;
 
@@ -54,9 +54,9 @@ public interface RecordEvaluatorService {
 
     Map<String, String> getRequiredMetaAttributes(RecordEvaluatorDto evalDto);
 
-    boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta);
+    boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordAtts fullRecordAtts);
 
-    EvalDetails evalDetailsWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta);
+    EvalDetails evalDetailsWithMeta(RecordEvaluatorDto evalDto, RecordAtts fullRecordAtts);
 
     void register(RecordEvaluator<?, ?, ?> evaluator);
 }

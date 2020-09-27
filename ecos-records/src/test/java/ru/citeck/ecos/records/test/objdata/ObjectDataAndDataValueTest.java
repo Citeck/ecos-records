@@ -37,32 +37,32 @@ public class ObjectDataAndDataValueTest extends LocalRecordsDao implements Local
     @Test
     void test() {
 
-        DataValue value = recordsService.getAttribute(RecordRef.valueOf("test"), "data?json");
+        DataValue value = recordsService.getAtt(RecordRef.valueOf("test"), "data?json");
         assertEquals("b", value.get("a").asText());
 
-        DataValue value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "data.a?str");
+        DataValue value2 = recordsService.getAtt(RecordRef.valueOf("test"), "data.a?str");
         assertEquals("b", value2.asText());
 
-        value = recordsService.getAttribute(RecordRef.valueOf("test"), "dataValue?json");
+        value = recordsService.getAtt(RecordRef.valueOf("test"), "dataValue?json");
         assertEquals("b", value.get("a").asText());
 
-        value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "dataValue.a?str");
+        value2 = recordsService.getAtt(RecordRef.valueOf("test"), "dataValue.a?str");
         assertEquals("b", value2.asText());
 
-        value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "data.unknown?str");
+        value2 = recordsService.getAtt(RecordRef.valueOf("test"), "data.unknown?str");
         assertEquals(DataValue.NULL, value2);
 
-        value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "dataValue.unknown?str");
+        value2 = recordsService.getAtt(RecordRef.valueOf("test"), "dataValue.unknown?str");
         assertEquals(DataValue.NULL, value2);
 
-        value2 = recordsService.getAttribute(RecordRef.valueOf("test"), "unknown?str");
+        value2 = recordsService.getAtt(RecordRef.valueOf("test"), "unknown?str");
         assertEquals(DataValue.NULL, value2);
     }
 
     @Test
     void dtoTest() {
 
-        TestDataMeta dtoValue = recordsService.getMeta(RecordRef.valueOf("test"), TestDataMeta.class);
+        TestDataMeta dtoValue = recordsService.getAtts(RecordRef.valueOf("test"), TestDataMeta.class);
         TestDataMeta expected = new TestDataMeta(new TestData(RecordRef.valueOf("test")));
         assertEquals(expected, dtoValue);
     }

@@ -1,19 +1,14 @@
 package ru.citeck.ecos.records3.utils;
 
-import ru.citeck.ecos.records3.record.error.RecordsError;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
-
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class SecurityUtils {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile("([a-z0-9]+\\.)+[A-Z][a-zA-Z0-9]*");
     private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("\\([a-zA-Z0-9]+\\.java:(\\d+)\\)");
 
-    public static <T> RecordsResult<T> encodeResult(RecordsResult<T> result) {
+    /*public static <T> RecordsResult<T> encodeResult(RecordsResult<T> result) {
 
         for (RecordsError error : result.getErrors()) {
             error.setMsg(encodeClasses(error.getMsg()));
@@ -28,7 +23,7 @@ public class SecurityUtils {
         }
 
         return result;
-    }
+    }*/
 
     private static String encodeClasses(String str) {
 

@@ -3,12 +3,11 @@ package ru.citeck.ecos.records3.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsUtils {
 
-    public static RecordsResult<RecordMeta> metaWithDefaultApp(RecordsResult<RecordMeta> metaResult,
+    /*public static RecordsResult<RecordAtts> metaWithDefaultApp(RecordsResult<RecordAtts> metaResult,
                                                                String appName) {
         if (StringUtils.isBlank(appName)) {
             return metaResult;
@@ -30,10 +29,10 @@ public class RecordsUtils {
             .collect(Collectors.toList())
         );
         return metaResult;
-    }
+    }*/
 
-    public static RecsQueryRes<RecordMeta> metaWithDefaultApp(RecsQueryRes<RecordMeta> queryResult,
-                                                              String appName) {
+    public static RecordsQueryRes<RecordAtts> metaWithDefaultApp(RecordsQueryRes<RecordAtts> queryResult,
+                                                                 String appName) {
         if (StringUtils.isBlank(appName)) {
             return queryResult;
         }
@@ -50,12 +49,12 @@ public class RecordsUtils {
                                                              Class<?> defaultClass,
                                                              RecordsService recordsService) {
 
-        Map<String, String> attJavaClasses = new HashMap<>();
+        /*Map<String, String> attJavaClasses = new HashMap<>();
         for (String attribute : attributes) {
             attJavaClasses.put(attribute, "#" + attribute + "?javaClass");
         }
         RecordRef recordRef = RecordRef.create(sourceId, "");
-        RecordMeta javaClasses = recordsService.getAttributes(recordRef, attJavaClasses);
+        RecordAtts javaClasses = recordsService.getAtts(recordRef, attJavaClasses);
 
         Map<String, Class<?>> result = new HashMap<>();
 
@@ -73,7 +72,8 @@ public class RecordsUtils {
             }
         }
 
-        return result;
+        return result;*/
+        return null;
     }
 
     public static List<RecordRef> toLocalRecords(Collection<RecordRef> records) {
@@ -83,11 +83,12 @@ public class RecordsUtils {
     }
 
     public static String getMetaValueId(Object value) throws Exception {
-        if (value == null) {
+        return null;
+        /*if (value == null) {
             return null;
         }
-        if (value instanceof MetaValue) {
-            return ((MetaValue) value).getId();
+        if (value instanceof AttValue) {
+            return ((AttValue) value).getId();
         }
         try {
             Object propValue = PropertyUtils.getProperty(value, "id");
@@ -95,24 +96,24 @@ public class RecordsUtils {
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             log.debug("Error", e);
         }
-        return null;
+        return null;*/
     }
 
-    public static List<RecordMeta> toScopedRecordsMeta(String sourceId, List<RecordMeta> records) {
+    public static List<RecordAtts> toScopedRecordsMeta(String sourceId, List<RecordAtts> records) {
         if (StringUtils.isBlank(sourceId)) {
             return records;
         }
         return records.stream()
-                      .map(n -> new RecordMeta(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAttributes()))
+                      .map(n -> new RecordAtts(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAttributes()))
                       .collect(Collectors.toList());
     }
 
-    public static RecordsResult<RecordRef> toScoped(String sourceId, RecordsResult<RecordRef> result) {
+    /*public static RecordsResult<RecordRef> toScoped(String sourceId, RecordsResult<RecordRef> result) {
         return new RecordsResult<>(result, r -> RecordRef.create(sourceId, r));
-    }
+    }*/
 
-    public static RecsQueryRes<RecordRef> toScoped(String sourceId, RecsQueryRes<RecordRef> result) {
-        return new RecsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
+    public static RecordsQueryRes<RecordRef> toScoped(String sourceId, RecordsQueryRes<RecordRef> result) {
+        return new RecordsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
     }
 
     public static List<RecordRef> toScopedRecords(String sourceId, List<RecordRef> records) {
@@ -131,8 +132,8 @@ public class RecordsUtils {
         return groupBySource(records, r -> r, (r, d) -> r);
     }
 
-    public static Map<String, List<RecordMeta>> groupMetaBySource(Collection<RecordMeta> records) {
-        return groupBySource(records, RecordMeta::getId, (r, d) -> d);
+    public static Map<String, List<RecordAtts>> groupMetaBySource(Collection<RecordAtts> records) {
+        return groupBySource(records, RecordAtts::getId, (r, d) -> d);
     }
 
     public static <V> Map<RecordRef, V> convertToRefs(Map<String, V> data) {
@@ -147,7 +148,7 @@ public class RecordsUtils {
         return result;
     }
 
-    public static  List<RecordMeta> convertToRefs(String sourceId, List<RecordMeta> data) {
+    public static  List<RecordAtts> convertToRefs(String sourceId, List<RecordAtts> data) {
         return toScopedRecordsMeta(sourceId, data);
     }
 

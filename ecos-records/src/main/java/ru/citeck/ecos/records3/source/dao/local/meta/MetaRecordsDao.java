@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.source.dao.local.meta;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.EmptyValue;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -39,7 +39,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
         }).collect(Collectors.toList());
     }
 
-    public static class MetaRoot implements MetaValue {
+    public static class MetaRoot implements AttValue {
 
         MetaRecordsDaoAttsProvider attsProvider;
 
@@ -62,7 +62,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
         }
     }
 
-    public static class Time implements MetaValue {
+    public static class Time implements AttValue {
 
         @Override
         public Object getAttribute(@NotNull String name) {
@@ -119,7 +119,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
         }
     }
 
-    public static class Records implements MetaValue {
+    public static class Records implements AttValue {
 
         @Override
         public Object getAttribute(@NotNull String name) {

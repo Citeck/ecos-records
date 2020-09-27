@@ -11,7 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 
 import java.util.Comparator;
 import java.util.List;
@@ -34,7 +34,7 @@ public class RecordsMetaQueryTest {
     @Test
     void testQueryBuild() {
 
-        Map<String, String> attributes = recordsMetaService.getAttributes(SimplePojo.class);
+        /*Map<String, String> attributes = recordsMetaService.getAtts(SimplePojo.class);
 
         assertEquals(12, attributes.size());
 
@@ -67,9 +67,9 @@ public class RecordsMetaQueryTest {
         attributesMap.put("12", "name.title{ key:inner?str  ,   key2:inner2?bool }");
         attributesMap.put("13", "name.title.other.deep{aa:inner?json}");
         attributesMap.put("15", "name{aa:inner.and.more?bool,bb:inner2}");
-        attributesMap.put("16", "name{aa:inner[]{array}}");
+        attributesMap.put("16", "name{aa:inner[]{array}}");*/
 
-        AttsSchema schema = recordsMetaService.createSchema(attributesMap);
+        //AttSchema schema = recordsMetaService.createSchema(attributesMap);
         /*assertEquals(""
             + "a:att(n:\"name\"){att(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){disp}}}},"
             + "b:att(n:\"name\"){atts(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){disp}}}},"

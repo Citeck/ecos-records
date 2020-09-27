@@ -9,7 +9,7 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -41,7 +41,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
         assertNull(QueryContext.getCurrent());
 
-        recordsService.getMeta(Arrays.asList(
+        recordsService.getAtts(Arrays.asList(
             RecordRef.create(SOURCE_ID, "1"),
             RecordRef.create(SOURCE_ID, "2"),
             RecordRef.create(SOURCE_ID, "3")
@@ -84,7 +84,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
         return records.stream().map(Record::new).collect(Collectors.toList());
     }
 
-    public class Record implements MetaValue {
+    public class Record implements AttValue {
 
         private RecordRef id;
 

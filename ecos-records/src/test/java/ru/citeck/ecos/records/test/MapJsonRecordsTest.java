@@ -54,12 +54,12 @@ public class MapJsonRecordsTest extends LocalRecordsDao
     @Test
     void testSingleStrAttribute() {
 
-        DataValue value = recordsService.getAttribute(TEST_REF,
+        DataValue value = recordsService.getAtt(TEST_REF,
             ".att(n:\"key0\"){att(n:\"key1\"){att(n:\"key2\"){att(n:\"field\"){str}}}}");
 
         assertEquals(DataValue.create("Value0"), value);
 
-        value = recordsService.getAttribute(TEST_REF,
+        value = recordsService.getAtt(TEST_REF,
             ".att(n:\"key1\"){att(n:\"key1\"){att(n:\"key2\"){att(n:\"field\"){str}}}}");
 
         assertEquals(DataValue.NULL, value);

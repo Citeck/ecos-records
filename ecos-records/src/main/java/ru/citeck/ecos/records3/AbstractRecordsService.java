@@ -8,15 +8,15 @@ import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.query.QueryConstants;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
-import ru.citeck.ecos.records3.record.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -37,123 +37,123 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public Optional<RecordRef> queryRecord(RecordsQuery query) {
-        return queryRecords(query).getRecords().stream().findFirst();
+    public Optional<RecordRef> queryOne(RecordsQuery query) {
+        return query(query).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public <T> Optional<T> queryRecord(RecordsQuery query, Class<T> metaClass) {
-        return queryRecords(query, metaClass).getRecords().stream().findFirst();
+    public <T> Optional<T> queryOne(RecordsQuery query, Class<T> metaClass) {
+        return query(query, metaClass).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes) {
-        return queryRecords(query, attributes).getRecords().stream().findFirst();
-    }
-
-
-    @NotNull
-    @Override
-    public Optional<RecordMeta> queryRecord(RecordsQuery query, Map<String, String> attributes, boolean rawAtts) {
-        return queryRecords(query, attributes, rawAtts).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes) {
-        return queryRecords(query, attributes).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public Optional<RecordMeta> queryRecord(RecordsQuery query, Collection<String> attributes, boolean rawAtts) {
-        return queryRecords(query, attributes, rawAtts).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public RecsQueryRes<RecordMeta> queryRecords(RecordsQuery query, Collection<String> attributes) {
-        return queryRecords(query, toAttributesMap(attributes));
-    }
-
-    @NotNull
-    @Override
-    public RecsQueryRes<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
-        return queryRecords(query, attributes, false);
-    }
-
-    @NotNull
-    @Override
-    public RecsQueryRes<RecordMeta> queryRecords(RecordsQuery query,
-                                                 Collection<String> attributes,
-                                                 boolean rawAtts) {
-
-        return queryRecords(query, toAttributesMap(attributes), rawAtts);
-    }
-
-    @NotNull
-    @Override
-    public RecsQueryRes<List<RecordRef>> queryRecords(List<DataValue> foreach, RecordsQuery query) {
-        return queryForEach(foreach, query, this::queryRecords);
-    }
-
-    @NotNull
-    @Override
-    public <T> RecsQueryRes<List<T>> queryRecords(List<DataValue> foreach,
-                                                  RecordsQuery query,
-                                                  Class<T> metaClass) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, metaClass));
-    }
-
-    @NotNull
-    @Override
-    public RecsQueryRes<List<RecordMeta>> queryRecords(List<DataValue> foreach,
-                                                       RecordsQuery query,
-                                                       Collection<String> attributes) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, attributes));
+    public Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes) {
+        return query(query, attributes).getRecords().stream().findFirst();
     }
 
 
     @NotNull
     @Override
-    public RecsQueryRes<List<RecordMeta>> queryRecords(List<DataValue> foreach,
-                                                       RecordsQuery query,
-                                                       Collection<String> attributes,
-                                                       boolean rawAtts) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, attributes, rawAtts));
+    public Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes, boolean rawAtts) {
+        return query(query, attributes, rawAtts).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public RecsQueryRes<List<RecordMeta>> queryRecords(List<DataValue> foreach,
-                                                       RecordsQuery query,
-                                                       Map<String, String> attributes) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, attributes));
+    public Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes) {
+        return query(query, attributes).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public RecsQueryRes<List<RecordMeta>> queryRecords(List<DataValue> foreach,
-                                                       RecordsQuery query,
-                                                       Map<String, String> attributes,
-                                                       boolean rawAtts) {
-
-        return queryForEach(foreach, query, q -> queryRecords(q, attributes, rawAtts));
+    public Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes, boolean rawAtts) {
+        return query(query, attributes, rawAtts).getRecords().stream().findFirst();
     }
 
-    private <T> RecsQueryRes<List<T>> queryForEach(List<DataValue> foreach,
+    @NotNull
+    @Override
+    public RecordsQueryRes<RecordAtts> query(RecordsQuery query, Collection<String> attributes) {
+        return query(query, AttUtils.toMap(attributes));
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<RecordAtts> query(RecordsQuery query, Map<String, String> attributes) {
+        return query(query, attributes, false);
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<RecordAtts> query(RecordsQuery query,
+                                             Collection<String> attributes,
+                                             boolean rawAtts) {
+
+        return query(query, AttUtils.toMap(attributes), rawAtts);
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<List<RecordRef>> query(List<DataValue> foreach, RecordsQuery query) {
+        return queryForEach(foreach, query, this::query);
+    }
+
+    @NotNull
+    @Override
+    public <T> RecordsQueryRes<List<T>> query(List<DataValue> foreach,
+                                              RecordsQuery query,
+                                              Class<T> metaClass) {
+
+        return queryForEach(foreach, query, q -> query(q, metaClass));
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
                                                    RecordsQuery query,
-                                                   Function<RecordsQuery, RecsQueryRes<T>> queryImpl) {
+                                                   Collection<String> attributes) {
+
+        return queryForEach(foreach, query, q -> query(q, attributes));
+    }
+
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
+                                                   RecordsQuery query,
+                                                   Collection<String> attributes,
+                                                   boolean rawAtts) {
+
+        return queryForEach(foreach, query, q -> query(q, attributes, rawAtts));
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
+                                                   RecordsQuery query,
+                                                   Map<String, String> attributes) {
+
+        return queryForEach(foreach, query, q -> query(q, attributes));
+    }
+
+    @NotNull
+    @Override
+    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
+                                                   RecordsQuery query,
+                                                   Map<String, String> attributes,
+                                                   boolean rawAtts) {
+
+        return queryForEach(foreach, query, q -> query(q, attributes, rawAtts));
+    }
+
+    private <T> RecordsQueryRes<List<T>> queryForEach(List<DataValue> foreach,
+                                                      RecordsQuery query,
+                                                      Function<RecordsQuery, RecordsQueryRes<T>> queryImpl) {
 
         return QueryContext.withContext(serviceFactory, () -> {
 
-            RecsQueryRes<List<T>> result = new RecsQueryRes<>();
+            RecordsQueryRes<List<T>> result = new RecordsQueryRes<>();
 
             int idx = 0;
 
@@ -161,15 +161,15 @@ public abstract class AbstractRecordsService implements RecordsService {
 
                 RecordsQuery eachRecordsQuery = new RecordsQuery(query);
                 eachRecordsQuery.setQuery(replaceIt(mapper.toJson(query.getQuery()), mapper.toJson(eachIt)));
-                RecsQueryRes<T> eachRes = queryImpl.apply(eachRecordsQuery);
+                RecordsQueryRes<T> eachRes = queryImpl.apply(eachRecordsQuery);
 
                 result.setTotalCount(result.getTotalCount() + eachRes.getTotalCount());
                 result.addRecord(eachRes.getRecords());
-                result.addErrors(eachRes.getErrors());
-
-                if (eachRes.getDebug() != null) {
+                //todo
+                //result.addErrors(eachRes.getErrors());
+                /*if (eachRes.getDebug() != null) {
                     result.setDebugInfo(AbstractRecordsService.class, "each_" + idx, eachRes.getDebug());
-                }
+                }*/
 
                 idx++;
             }
@@ -227,7 +227,7 @@ public abstract class AbstractRecordsService implements RecordsService {
             return DataValue.NULL;
         }
 
-        List<RecordMeta> meta = getAtts(Collections.singletonList(record),
+        List<RecordAtts> meta = getAtts(Collections.singletonList(record),
             Collections.singletonList(attribute));
         if (!meta.isEmpty()) {
             return meta.get(0).getAttribute(attribute);
@@ -237,43 +237,43 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public List<RecordMeta> getAtts(Collection<RecordRef> records, Collection<String> attributes) {
-        return getAtts(records, toAttributesMap(attributes), false);
+    public List<RecordAtts> getAtts(Collection<RecordRef> records, Collection<String> attributes) {
+        return getAtts(records, AttUtils.toMap(attributes), false);
     }
 
     @NotNull
     @Override
-    public List<RecordMeta> getAtts(Collection<RecordRef> records, Collection<String> attributes, boolean rawAtts) {
-        return getAtts(records, toAttributesMap(attributes), rawAtts);
+    public List<RecordAtts> getAtts(Collection<RecordRef> records, Collection<String> attributes, boolean rawAtts) {
+        return getAtts(records, AttUtils.toMap(attributes), rawAtts);
     }
 
     @NotNull
     @Override
-    public RecordMeta getAtts(RecordRef record, Collection<String> attributes) {
+    public RecordAtts getAtts(RecordRef record, Collection<String> attributes) {
         return extractOne(getAtts(Collections.singletonList(record), attributes, false), record);
     }
 
     @NotNull
     @Override
-    public RecordMeta getAtts(RecordRef record, Collection<String> attributes, boolean rawAtts) {
+    public RecordAtts getAtts(RecordRef record, Collection<String> attributes, boolean rawAtts) {
         return extractOne(getAtts(Collections.singletonList(record), attributes, rawAtts), record);
     }
 
     @NotNull
     @Override
-    public RecordMeta getAtts(RecordRef record, Map<String, String> attributes) {
+    public RecordAtts getAtts(RecordRef record, Map<String, String> attributes) {
         return extractOne(getAtts(Collections.singletonList(record), attributes, false), record);
     }
 
     @NotNull
     @Override
-    public RecordMeta getAtts(RecordRef record, Map<String, String> attributes, boolean rawAtts) {
+    public RecordAtts getAtts(RecordRef record, Map<String, String> attributes, boolean rawAtts) {
         return extractOne(getAtts(Collections.singletonList(record), attributes, rawAtts), record);
     }
 
     @NotNull
     @Override
-    public List<RecordMeta> getAtts(Collection<RecordRef> records, Map<String, String> attributes) {
+    public List<RecordAtts> getAtts(Collection<RecordRef> records, Map<String, String> attributes) {
         return getAtts(records, attributes, false);
     }
 
@@ -281,32 +281,63 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public RecordMeta mutate(RecordMeta meta) {
+    public RecordRef mutate(RecordRef record, String attribute, Object value) {
+        return mutate(record, Collections.singletonMap(attribute, value));
+    }
 
-        RecordsMutation mutation = new RecordsMutation();
-        mutation.addRecord(meta);
-        RecordsMutResult result = this.mutate(mutation);
+    @NotNull
+    @Override
+    public RecordRef mutate(RecordRef record, Map<String, Object> attributes) {
+        return mutate(record, ObjectData.create(attributes));
+    }
 
-        ErrorUtils.logErrors(result);
+    @NotNull
+    @Override
+    public RecordRef mutate(RecordRef record, ObjectData attributes) {
+        return mutate(new RecordAtts(record, attributes));
+    }
 
-        return result.getRecords()
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Record mutation failed. Meta: " + meta));
+    @NotNull
+    @Override
+    public RecordRef mutate(RecordAtts meta) {
+
+        List<RecordAtts> records = Collections.singletonList(meta);
+        List<RecordRef> recordRefs = this.mutate(records);
+
+        if (recordRefs.size() != 1) {
+            log.warn("Strange behaviour. Expected 1 record, but found " + recordRefs.size());
+        }
+
+        return recordRefs.get(0);
+    }
+
+    /* DELETE */
+
+    @NotNull
+    @Override
+    public DelStatus delete(RecordRef record) {
+
+        List<DelStatus> result = delete(Collections.singletonList(record));
+
+        if (result.size() != 1) {
+            log.warn("Strange behaviour. Expected 1 record, but found " + result.size());
+        }
+
+        return result.get(0);
     }
 
     /* UTILS */
 
-    private RecordMeta extractOne(List<RecordMeta> values, RecordRef record) {
+    private RecordAtts extractOne(List<RecordAtts> values, RecordRef record) {
 
         if (values.isEmpty()) {
-            return new RecordMeta(record);
+            return new RecordAtts(record);
         }
-        RecordMeta meta;
+        RecordAtts meta;
         if (values.size() == 1) {
             meta = values.get(0);
             if (!record.equals(meta.getId())) {
-                meta = new RecordMeta(meta, record);
+                meta = new RecordAtts(meta, record);
             }
             return meta;
         }
@@ -323,16 +354,8 @@ public abstract class AbstractRecordsService implements RecordsService {
                         .collect(Collectors.joining(", ")));
         }
         if (meta == null) {
-            meta = new RecordMeta(record);
+            meta = new RecordAtts(record);
         }
         return meta;
-    }
-
-    private Map<String, String> toAttributesMap(Collection<String> attributes) {
-        Map<String, String> attributesMap = new HashMap<>();
-        for (String attribute : attributes) {
-            attributesMap.put(attribute, attribute);
-        }
-        return attributesMap;
     }
 }

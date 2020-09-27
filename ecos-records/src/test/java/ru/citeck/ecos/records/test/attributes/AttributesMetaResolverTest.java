@@ -2,7 +2,6 @@ package ru.citeck.ecos.records.test.attributes;
 
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.meta.AttributesMetaResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -11,8 +10,8 @@ public class AttributesMetaResolverTest {
     @Test
     void test() {
 
-        RecordsServiceFactory factory = new RecordsServiceFactory();
-        AttributesMetaResolver attsMetaResolver = factory.getAttributesMetaResolver();
+        //RecordsServiceFactory factory = new RecordsServiceFactory();
+        //AttributesMetaResolver attsMetaResolver = factory.getAttributesMetaResolver();
 
         /*tring res = attsMetaResolver.convertAttToGqlFormat("field{id,str,config?json}", "str", false);
         assertEquals(".att(n:\"field\"){id:att(n:\"id\"){str},str:att(n:\"str\"){str},config:att(n:\"config\"){json}}", res);
@@ -39,7 +38,7 @@ public class AttributesMetaResolverTest {
     @Test
     void testInner() {
 
-        AttributesMetaResolver attsMetaResolver = new RecordsServiceFactory().getAttributesMetaResolver();
+        //AttributesMetaResolver attsMetaResolver = new RecordsServiceFactory().getAttributesMetaResolver();
 
         /*String res = attsMetaResolver.convertAttToGqlFormat("field?as('abc').field0", "str", false);
         assertEquals(".att(n:\"field\"){as('abc'){att(n:\"field0\"){str}}}", res);

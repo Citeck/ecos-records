@@ -2,16 +2,12 @@ package ru.citeck.ecos.records3.source.dao.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValuesConverter;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.common.AttributesMixin;
 import ru.citeck.ecos.records3.source.common.ParameterizedAttsMixin;
 import ru.citeck.ecos.records3.source.dao.*;
@@ -20,7 +16,6 @@ import ru.citeck.ecos.records3.type.RecordTypeService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Local records DAO.
@@ -44,7 +39,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     protected RecordsService recordsService;
     protected PredicateService predicateService;
     protected RecordAttsService recordsMetaService;
-    protected MetaValuesConverter metaValuesConverter;
+    protected AttValuesConverter attValuesConverter;
     protected RecordsServiceFactory serviceFactory;
     protected RecordTypeService recordTypeService;
 
@@ -59,14 +54,14 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public final RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
-        return mutateImpl(mutation);
+    public final List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
+        return mutateImpl(records);
     }
 
     @NotNull
-    protected RecordsMutResult mutateImpl(@NotNull RecordsMutation mutation) {
+    protected List<RecordRef> mutateImpl(@NotNull List<RecordAtts> records) {
 
-        if (this instanceof MutableRecordsLocalDao) {
+        /*if (this instanceof MutableRecordsLocalDao) {
 
             MutableRecordsLocalDao mutableDao = (MutableRecordsLocalDao) this;
 
@@ -84,7 +79,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             }
 
             for (int i = 0; i < recordRefs.size(); i++) {
-                RecordMeta meta = mutation.getRecords().get(i);
+                RecordAtts meta = mutation.getRecords().get(i);
                 Json.getMapper().applyData(values.get(i), meta.getAttributes());
             }
 
@@ -92,20 +87,20 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             if (addSourceId) {
                 result.setRecords(result.getRecords()
                         .stream()
-                        .map(meta -> new RecordMeta(meta, r -> RecordRef.valueOf(getId() + "@" + r)))
+                        .map(meta -> new RecordAtts(meta, r -> RecordRef.valueOf(getId() + "@" + r)))
                         .collect(Collectors.toList()));
-            }
+            }*/
 
-            return result;
+            return null;
         }
 
-        writeWarn("RecordsDao doesn't implement MutableRecordsLocalDAO");
+        //writeWarn("RecordsDao doesn't implement MutableRecordsLocalDAO");
 
-        return new RecordsMutResult();
-    }
+        //return null; //new RecordsMutResult();
+    //}
 
     @NotNull
-    public RecsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
 
         /*RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
 
@@ -161,7 +156,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public List<Object> getRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<Object> getRecordsMeta(@NotNull List<String> records) {
 
         /*RecordsResult<RecordMeta> result;
 
@@ -191,7 +186,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         return null;
     }
 
-    private RecordsResult<RecordMeta> getMetaImpl(List<?> records) {
+    private List<RecordAtts> getMetaImpl(List<?> records) {
 
         /*Map<Object, Object> metaCache = new ConcurrentHashMap<>();
 
@@ -222,7 +217,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         recordsService = serviceFactory.getRecordsService();
         predicateService = serviceFactory.getPredicateService();
         recordsMetaService = serviceFactory.getRecordsMetaService();
-        metaValuesConverter = serviceFactory.getMetaValuesConverter();
+        attValuesConverter = serviceFactory.getAttValuesConverter();
         recordTypeService = serviceFactory.getRecordTypeService();
     }
 

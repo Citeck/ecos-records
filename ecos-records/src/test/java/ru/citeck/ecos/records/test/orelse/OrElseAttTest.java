@@ -9,7 +9,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.RecordsDaoBuilder;
 
@@ -94,7 +94,7 @@ public class OrElseAttTest  extends LocalRecordsDao {
         private MetaData meta = new MetaData();
     }
 
-    public static class MetaData implements MetaValue {
+    public static class MetaData implements AttValue {
 
         @Override
         public Object getAs(@NotNull String type) {

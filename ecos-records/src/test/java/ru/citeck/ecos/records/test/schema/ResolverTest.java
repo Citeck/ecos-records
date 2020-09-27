@@ -8,14 +8,14 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ResolverTest {
 
     private final RecordsServiceFactory factory = new RecordsServiceFactory();
-    private final AttSchemaResolver resolver = new AttSchemaResolver(factory);
+    private final AttResolver resolver = new AttResolver(factory);
     private final AttSchemaReader reader = new AttSchemaReader();
 
     @Test

@@ -12,8 +12,8 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
@@ -51,11 +51,11 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecordsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
-        RecsQueryRes<Object> result = new RecsQueryRes<>();
+        RecordsQueryRes<Object> result = new RecordsQueryRes<>();
         result.setRecords(getLocalRecordsMeta(query.getIds()
                                              .stream()
                                              .map(RecordRef::valueOf)
@@ -73,7 +73,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         RecordsQuery query = new RecordsQuery();
         query.setSourceId("unknown-id");
 
-        RecsQueryRes<RecordRef> records = recordsService.queryRecords(query);
+        RecordsQueryRes<RecordRef> records = recordsService.query(query);
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
@@ -92,7 +92,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         query.setQuery(daoQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecsQueryRes<RecordRef> records = recordsService.queryRecords(query);
+        RecordsQueryRes<RecordRef> records = recordsService.query(query);
         List<RecordRef> recordsRefs = records.getRecords();
 
         assertEquals(ids.size(), recordsRefs.size());
@@ -110,7 +110,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testSingleStrAttribute() {
 
-        DataValue value = recordsService.getAttribute(TEST_REF, "fieldStr0");
+        DataValue value = recordsService.getAtt(TEST_REF, "fieldStr0");
 
         DataValue expected = DataValue.create(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
 
@@ -123,7 +123,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testSingleDateAttribute() {
 
-        DataValue value = recordsService.getAttribute(TEST_REF, "fieldDate");
+        DataValue value = recordsService.getAtt(TEST_REF, "fieldDate");
 
         DataValue expected = DataValue.create(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
 
@@ -136,7 +136,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testRecordsPojoMetaWithoutAnnotations() {
 
-        PojoMetaModelWithoutAnnotations result = recordsService.getMeta(TEST_REF, PojoMetaModelWithoutAnnotations.class);
+        PojoMetaModelWithoutAnnotations result = recordsService.getAtts(TEST_REF, PojoMetaModelWithoutAnnotations.class);
         PojoMeta pojoMeta = new PojoMeta(TEST_REF.getId());
 
         assertEquals(pojoMeta.getFieldDate(), result.getFieldDate());
@@ -147,7 +147,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testRecordsPojoMetaWithAnnotations() {
 
-        PojoMetaWithAnnotations result = recordsService.getMeta(TEST_REF, PojoMetaWithAnnotations.class);
+        PojoMetaWithAnnotations result = recordsService.getAtts(TEST_REF, PojoMetaWithAnnotations.class);
         PojoMeta pojoMeta = new PojoMeta(TEST_REF.getId());
 
         assertEquals(pojoMeta.getFieldDate(), result.getDate());
@@ -158,7 +158,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testRecordsPojoInnerFields() {
 
-        PojoMetaInnerTest result = recordsService.getMeta(TEST_REF, PojoMetaInnerTest.class);
+        PojoMetaInnerTest result = recordsService.getAtts(TEST_REF, PojoMetaInnerTest.class);
         PojoMeta pojoMeta = new PojoMeta(TEST_REF.getId());
 
         assertEquals(pojoMeta.getFieldStr0(), result.getStr0());
@@ -180,7 +180,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         query.setQuery(exactIdsQuery);
         query.setSourceId(SOURCE_ID);
 
-        RecsQueryRes<JournalListInfo> records = recordsService.queryRecords(query, JournalListInfo.class);
+        RecordsQueryRes<JournalListInfo> records = recordsService.query(query, JournalListInfo.class);
         assertEquals(1, records.getTotalCount());
 
         List<JournalInfo> journals = records.getRecords().get(0).getJournals();
@@ -196,7 +196,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testDisplayName() {
 
-        DataValue dispValue = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".disp");
+        DataValue dispValue = recordsService.getAtt(RecordRef.create(SOURCE_ID, "test"), ".disp");
 
         assertEquals(DataValue.create(PojoMeta.DISPLAY_NAME), dispValue);
     }
@@ -204,7 +204,7 @@ public class RecordsServiceTest extends LocalRecordsDao
     @Test
     void testRootJsonAttribute() {
 
-        DataValue value = recordsService.getAttribute(RecordRef.create(SOURCE_ID, "test"), ".json");
+        DataValue value = recordsService.getAtt(RecordRef.create(SOURCE_ID, "test"), ".json");
         DataValue test = Json.getMapper().convert(new PojoMeta("test"), DataValue.class);
 
         assertEquals(test, value);

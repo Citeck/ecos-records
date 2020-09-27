@@ -7,12 +7,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -67,9 +66,9 @@ public class MetaValueTest extends LocalRecordsDao
         attributes.put("date", ".att(n:\"date\"){str}");
 
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
-        RecordsResult<RecordMeta> result = recordsService.getAttributes(records, attributes);
+        List<RecordAtts> result = recordsService.getAtts(records, attributes);
 
-        RecordMeta meta = result.getRecords().get(0);
+        RecordAtts meta = result.get(0);
 
         assertEquals(MetaVal.DISP_VALUE, meta.getAttribute("disp", ""));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("str", ""));
@@ -90,7 +89,7 @@ public class MetaValueTest extends LocalRecordsDao
         assertEquals(testInnerSchema, innerSchema);
     }
 
-    public static class MetaVal implements MetaValue {
+    public static class MetaVal implements AttValue {
 
         static String STRING_VALUE = "STR_VALUE";
         static String DISP_VALUE = "DISP_VALUE";
@@ -119,7 +118,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public String getId() {
+        public String getLocalId() {
             return ID_VALUE;
         }
 
@@ -155,7 +154,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String name) {
+        public Object getAttribute(@NotNull String name) {
             if (name.equals("schema")) {
                 //todo
                 //schemaConsumer.accept(field.getInnerSchema());

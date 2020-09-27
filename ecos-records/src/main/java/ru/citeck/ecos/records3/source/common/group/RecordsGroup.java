@@ -3,22 +3,22 @@ package ru.citeck.ecos.records3.source.common.group;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.graphql.meta.value.InnerMetaValue;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.InnerMetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RecordsGroup implements MetaValue {
+public class RecordsGroup implements AttValue {
 
     public static final String FIELD_PREDICATE = "predicate";
     public static final String FIELD_PREDICATES = "predicates";
@@ -78,7 +78,7 @@ public class RecordsGroup implements MetaValue {
 
                 // todo
                 Map<String, String> innerAttributes = Collections.emptyMap();//field.getInnerAttributesMap();
-                RecsQueryRes<RecordMeta> records = recordsService.queryRecords(query, innerAttributes);
+                RecordsQueryRes<RecordAtts> records = recordsService.query(query, innerAttributes);
 
                 return records.getRecords().stream().map(r -> {
                     ObjectData atts = r.getAttributes();
@@ -95,7 +95,7 @@ public class RecordsGroup implements MetaValue {
             countQuery.setGroupBy(null);
             countQuery.setMaxItems(1);
             countQuery.setSkipCount(0);
-            RecsQueryRes<RecordRef> records = recordsService.queryRecords(countQuery);
+            RecordsQueryRes<RecordRef> records = recordsService.query(countQuery);
 
             return records.getTotalCount();
         }
@@ -107,10 +107,10 @@ public class RecordsGroup implements MetaValue {
 
             RecordsQuery sumQuery = new RecordsQuery(query);
             sumQuery.setGroupBy(null);
-            RecsQueryRes<RecordMeta> result = recordsService.queryRecords(sumQuery, attributes);
+            RecordsQueryRes<RecordAtts> result = recordsService.query(sumQuery, attributes);
 
             double sum = 0.0;
-            for (RecordMeta record : result.getRecords()) {
+            for (RecordAtts record : result.getRecords()) {
                 sum += record.get(attribute, 0.0);
             }
 
@@ -120,7 +120,7 @@ public class RecordsGroup implements MetaValue {
         return attributes.get(name);
     }
 
-    private static class ValueWrapper implements MetaValue {
+    private static class ValueWrapper implements AttValue {
 
         private DistinctValue value;
 

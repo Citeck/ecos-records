@@ -87,8 +87,6 @@ public class QueryContext {
         }
     }
 
-
-
     public static <T> T withContext(RecordsServiceFactory serviceFactory,
                                     Supplier<T> callable,
                                     Map<String, Object> contextAttributes) {
@@ -124,19 +122,20 @@ public class QueryContext {
         return withContext(serviceFactory, ctx -> callable.get());
     }
 
-    public static <T> T withContext(String queryId,
-                                    List<String> trace,
+    public static <T> T withContext(/*String queryId,
+                                    List<String> trace,*/
                                     RecordsServiceFactory serviceFactory,
                                     Function<QueryContext, T> callable) {
 
         QueryContext context = QueryContext.getCurrent();
         boolean isContextOwner = false;
         if (context == null) {
-            if (queryId == null) {
-                queryId = UUID.randomUUID().toString();
-            }
-            context.set
+
             context = serviceFactory.createQueryContext();
+
+            //context.queryId = queryId == null ? UUID.randomUUID().toString() : queryId;
+            //context.queryTrace = new ArrayList<>(trace != null ? trace : Collections.emptyList());
+
             QueryContext.setCurrent(context);
             isContextOwner = true;
         }

@@ -10,8 +10,8 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
@@ -36,7 +36,7 @@ public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalReco
     }
 
     @Override
-    public RecsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery query) {
 
         SchemaAtt field = AttContext.getCurrentSchemaAtt();
         //todo
@@ -79,7 +79,7 @@ public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalReco
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(ID);
 
-        RecsQueryRes<TestDto> result = recordsService.queryRecords(query, TestDto.class);
+        RecordsQueryRes<TestDto> result = recordsService.query(query, TestDto.class);
 
         assertEquals(1, result.getRecords().size());
         assertEquals("value0", result.getRecords().get(0).field0);

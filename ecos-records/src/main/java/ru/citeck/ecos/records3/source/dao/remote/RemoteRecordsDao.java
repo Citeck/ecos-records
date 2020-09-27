@@ -4,17 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsMetaDao;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.source.dao.*;
 
 import java.util.List;
 
 @Slf4j
-public class RemoteRecordsDao extends AbstractRecordsDao
+public class RemoteRecordsDao /*extends AbstractRecordsDao
                               implements RecordsMetaDao,
-                                         RecordsQueryDao {
+                                         RecordsQueryDao */{
 
     private boolean enabled = true;
 
@@ -24,8 +24,8 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     private String remoteSourceId = null;
 
     @NotNull
-    @Override
-    public RecsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
+   // @Override
+    public RecordsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
 
         /*QueryBody request = new QueryBody();
 
@@ -60,7 +60,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     }
 
     @NotNull
-    @Override
+    //@Override
     public List<Object> getRecordsMeta(@NotNull List<RecordRef> records) {
 
        /* List<RecordRef> recordsRefs = records.stream()
@@ -106,7 +106,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
         return restConnection;
     }
 
-    @Override
+   // @Override
     public boolean isRawAttributesProvided() {
         return false;
     }

@@ -4,12 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
@@ -41,14 +41,14 @@ class LocalRecordsTest {
 
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(RecordsQueryDaoImpl.ID);
-        recordsService.queryRecords(query);
+        recordsService.query(query);
     }
 
     @Test
     void testRecordWithComplexSourceId() {
 
         RecordRef ref = RecordRef.valueOf(RecordsSource.ID + "@first@second");
-        RecordMeta meta = recordsService.getAttributes(ref, Collections.singleton("localId"));
+        RecordAtts meta = recordsService.getAtts(ref, Collections.singleton("localId"));
 
         assertEquals(ref, meta.getId());
     }
@@ -59,7 +59,7 @@ class LocalRecordsTest {
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(RecordsWithMetaSource.ID);
 
-        RecsQueryRes<RecordRef> result = recordsService.queryRecords(query);
+        RecordsQueryRes<RecordRef> result = recordsService.query(query);
 
         assertEquals(1, result.getRecords().size());
     }
@@ -127,8 +127,8 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public RecsQueryRes<Meta> queryLocalRecords(@NotNull RecordsQuery query) {
-            RecsQueryRes<Meta> result = new RecsQueryRes<>();
+        public RecordsQueryRes<Meta> queryLocalRecords(@NotNull RecordsQuery query) {
+            RecordsQueryRes<Meta> result = new RecordsQueryRes<>();
             result.addRecord(new Meta());
             return result;
         }

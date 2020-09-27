@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.evaluator.evaluators;
 
 import lombok.Data;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.ServiceFactoryAware;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluator;
@@ -13,7 +13,7 @@ import ru.citeck.ecos.records3.predicate.model.Predicate;
 
 import java.util.List;
 
-public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordMeta, PredicateEvaluator.Config>,
+public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordAtts, PredicateEvaluator.Config>,
                                            ServiceFactoryAware {
 
     public static final String TYPE = "predicate";
@@ -27,7 +27,7 @@ public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordM
     }
 
     @Override
-    public boolean evaluate(RecordMeta meta, Config config) {
+    public boolean evaluate(RecordAtts meta, Config config) {
         Predicate predicate = Json.getMapper().convert(config.predicate, Predicate.class);
         return predicateService.isMatch(new RecordElement(meta), predicate);
     }

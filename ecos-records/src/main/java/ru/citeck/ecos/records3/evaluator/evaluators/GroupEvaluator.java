@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.evaluator.evaluators;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.ServiceFactoryAware;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorDto;
@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class GroupEvaluator
-    implements RecordEvaluatorWithDetails<Map<String, String>, RecordMeta, GroupEvaluator.Config>,
+    implements RecordEvaluatorWithDetails<Map<String, String>, RecordAtts, GroupEvaluator.Config>,
               ServiceFactoryAware {
 
     public static final String TYPE = "group";
@@ -26,7 +26,7 @@ public class GroupEvaluator
     private RecordEvaluatorService recordEvaluatorService;
 
     @Override
-    public EvalDetails evalWithDetails(RecordMeta meta, Config config) {
+    public EvalDetails evalWithDetails(RecordAtts meta, Config config) {
 
         Stream<RecordEvaluatorDto> evaluators = config.getEvaluators().stream();
 

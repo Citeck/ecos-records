@@ -13,5 +13,4 @@ public class SchemaRootAtt {
 
     private final SchemaAtt attribute;
     private final List<AttProcessorDef> processors;
-    private final JavaType type;
 }

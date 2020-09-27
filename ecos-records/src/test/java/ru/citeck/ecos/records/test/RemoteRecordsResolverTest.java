@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records.test;
 
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -39,7 +39,7 @@ class RemoteRecordsResolverTest {
     private RecordsService recordsService;
 
     private List<RecordRef> refs = new ArrayList<>();
-    private Map<RecordRef, RecordMeta> metaByRef = new HashMap<>();
+    private Map<RecordRef, RecordAtts> metaByRef = new HashMap<>();
 
     private List<String> urls = new ArrayList<>();
 
@@ -125,7 +125,7 @@ class RemoteRecordsResolverTest {
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(appId + "/localSource");
 
-        RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
+        RecordsQueryResult<RecordRef> result = recordsService.query(query);
         assertEquals(refs.stream()
                         .map(r -> RecordRef.valueOf(appId + "/" + r.removeAppName().toString()))
                         .collect(Collectors.toList()),
@@ -137,7 +137,7 @@ class RemoteRecordsResolverTest {
         urls.clear();
 
         List<RecordRef> qrefs = new ArrayList<>(refs);
-        RecordsResult<RecordMeta> metaResult = recordsService.getMeta(qrefs, TEST_SCHEMA);
+        RecordsResult<RecordMeta> metaResult = recordsService.getAtts(qrefs, TEST_SCHEMA);
 
         assertEquals(3, urls.size());
         checkRecordsMeta(refs, metaResult.getRecords());

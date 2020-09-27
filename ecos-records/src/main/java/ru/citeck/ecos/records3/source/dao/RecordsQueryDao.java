@@ -2,8 +2,8 @@ package ru.citeck.ecos.records3.source.dao;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 public interface RecordsQueryDao extends RecordsDao {
 
     @Nullable
-    RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query);
+    RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query);
 
     /**
      * Get query languages which can be used to query records in this DAO.

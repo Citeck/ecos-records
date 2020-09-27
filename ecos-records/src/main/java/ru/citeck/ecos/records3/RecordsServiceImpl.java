@@ -6,17 +6,14 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttReadException;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.resolver.RecordsDaoRegistry;
 import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
@@ -24,102 +21,88 @@ import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
-    private static final Pattern ATT_PATTERN = Pattern.compile("^\\.atts?\\((n:)?[\"']([^\"']+)[\"']\\).+");
-
     private final RecordsResolver recordsResolver;
-    private final RecordAttsService recordsMetaService;
-
+    private final AttSchemaReader attSchemaReader;
     private final DtoSchemaResolver dtoAttributesResolver;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
         dtoAttributesResolver = serviceFactory.getDtoMetaResolver();
         recordsResolver = serviceFactory.getRecordsResolver();
-        recordsMetaService = serviceFactory.getRecordsMetaService();
+        attSchemaReader = serviceFactory.getAttSchemaReader();
     }
 
     /* QUERY */
 
     @NotNull
     @Override
-    public RecsQueryRes<RecordRef> query(RecordsQuery query) {
+    public RecordsQueryRes<RecordRef> query(RecordsQuery query) {
         return handleRecordsQuery(() -> {
-            RecsQueryRes<RecordMeta> metaResult = recordsResolver.queryRecords(query,
+            RecordsQueryRes<RecordAtts> metaResult = recordsResolver.query(query,
                 Collections.emptyMap(), true);
-            return new RecsQueryRes<>(metaResult, RecordMeta::getId);
+            if (metaResult == null) {
+                metaResult = new RecordsQueryRes<>();
+            }
+            return new RecordsQueryRes<>(metaResult, RecordAtts::getId);
         });
     }
 
     @NotNull
     @Override
-    public <T> RecsQueryRes<T> query(RecordsQuery query, Class<T> metaClass) {
+    public <T> RecordsQueryRes<T> query(RecordsQuery query, Class<T> metaClass) {
 
         Map<String, String> attributes = dtoAttributesResolver.getAttributes(metaClass);
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
+        RecordsQueryRes<RecordAtts> meta = query(query, attributes);
 
-        RecsQueryRes<RecordMeta> meta = queryRecords(query, attributes);
-
-        return new RecsQueryRes<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
+        return new RecordsQueryRes<>(meta, m -> dtoAttributesResolver.instantiateMeta(metaClass, m.getAttributes()));
     }
 
     @NotNull
     @Override
-    public RecsQueryRes<RecordMeta> query(RecordsQuery query,
-                                                 Map<String, String> attributes,
-                                                 boolean rawAtts) {
+    public RecordsQueryRes<RecordAtts> query(RecordsQuery query,
+                                             Map<String, String> attributes,
+                                             boolean rawAtts) {
 
-        RecsQueryRes<RecordMeta> result = handleRecordsQuery(() ->
-            recordsResolver.queryRecords(query, attributes, true));
+        RecordsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
+            recordsResolver.query(query, attributes, true));
 
         if (result == null) {
-            result = new RecsQueryRes<>();
+            result = new RecordsQueryRes<>();
         }
         return result;
     }
 
     /* ATTRIBUTES */
 
-
     @NotNull
     @Override
-    public List<RecordMeta> getAtts(Collection<RecordRef> records,
+    public List<RecordAtts> getAtts(Collection<RecordRef> records,
                                     Map<String, String> attributes,
                                     boolean rawAtts) {
 
-        return getAttsImpl(records, attributes, rawAtts);
-    }
-
-    @NotNull
-    private List<RecordMeta> getAttsImpl(Collection<RecordRef> records,
-                                         Map<String, String> attributes,
-                                         boolean rawAtts) {
-
         if (attributes.isEmpty()) {
-            return records.stream().map(RecordMeta::new).collect(Collectors.toList());
+            return records.stream().map(RecordAtts::new).collect(Collectors.toList());
         }
 
-        List<RecordMeta> meta = handleRecordsListRead(() ->
-            recordsResolver.getMeta(new ArrayList<>(records), attributes, rawAtts));
+        List<RecordAtts> meta = handleRecordsListRead(() ->
+            recordsResolver.getAtts(new ArrayList<>(records), attributes, rawAtts));
 
         return meta != null ? meta : Collections.emptyList();
     }
-
-    /* META */
 
     @NotNull
     @Override
     public <T> T getAtts(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
 
-        List<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
+        List<T> meta = getAtts(Collections.singletonList(recordRef), metaClass);
         if (meta.size() == 0) {
             throw new IllegalStateException("Can't get record metadata. Ref: " + recordRef + " Result: " + meta);
         }
@@ -135,95 +118,63 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
 
-        List<RecordMeta> meta = getAtts(records, attributes);
+        List<RecordAtts> meta = getAtts(records, attributes);
 
         return meta.stream()
-            .map(m -> recordsMetaService.instantiateMeta(metaClass, m))
+            .map(m -> dtoAttributesResolver.instantiateMeta(metaClass, m.getAttributes()))
             .collect(Collectors.toList());
     }
 
-    /* MODIFICATION */
+    /* MUTATE */
 
     @NotNull
     @Override
-    public RecordsMutResult mutate(RecordsMutation mutation) {
+    public List<RecordRef> mutate(List<RecordAtts> records) {
 
         Map<String, RecordRef> aliasToRecordRef = new HashMap<>();
-        RecordsMutResult result = new RecordsMutResult();
-
-        List<RecordMeta> records = mutation.getRecords();
+        List<RecordRef> result = new ArrayList<>();
 
         for (int i = records.size() - 1; i >= 0; i--) {
 
-            RecordMeta record = records.get(i);
+            RecordAtts record = records.get(i);
 
             ObjectData attributes = ObjectData.create();
 
             record.forEach((name, value) -> {
 
-                String simpleName = name;
+                try {
 
-                if (name.charAt(0) != '.') {
+                    SchemaAtt parsedAtt = attSchemaReader.read(name).getAttribute();
+                    String scalarName = parsedAtt.getScalarName();
 
-                    int dotIdx = name.indexOf('.', 1);
-                    int bracketIdx = name.indexOf('{');
-
-                    int nameEndIdx = dotIdx;
-                    if (dotIdx == -1 || bracketIdx != -1 && bracketIdx < dotIdx) {
-                        nameEndIdx = bracketIdx;
-                    }
-
-                    if (nameEndIdx > 0) {
-                        simpleName = name.substring(0, nameEndIdx);
-                    } else {
-                        int questionIdx = name.indexOf('?');
-                        if (questionIdx > 0) {
-                            simpleName = name.substring(0, questionIdx);
-                        }
-                    }
-
-                } else {
-
-                    Matcher matcher = ATT_PATTERN.matcher(name);
-                    if (matcher.matches()) {
-                        simpleName = matcher.group(2);
-                    } else {
-                        simpleName = null;
-                    }
-                }
-
-                if (StringUtils.isNotBlank(simpleName)) {
-
-                    if (name.endsWith("?assoc") || name.endsWith("{assoc}") || name.endsWith("{.assoc}")) {
+                    if (".assoc".equals(scalarName)) {
                         value = convertAssocValue(value, aliasToRecordRef);
                     }
+                    attributes.set(parsedAtt.getName(), value);
 
-                    attributes.set(simpleName, value);
+                } catch (AttReadException e) {
+                    log.error("Attribute read failed", e);
                 }
             });
 
             record.setAttributes(attributes);
 
-            RecordsMutation sourceMut = new RecordsMutation();
-            sourceMut.setRecords(Collections.singletonList(record));
-            RecordsMutResult recordMutResult = recordsResolver.mutate(sourceMut);
+            List<RecordAtts> sourceMut = Collections.singletonList(record);
+            List<RecordRef> recordMutResult = recordsResolver.mutate(sourceMut);
             if (recordMutResult == null) {
-                recordMutResult = new RecordsMutResult();
-                recordMutResult.setRecords(sourceMut.getRecords()
-                    .stream()
-                    .map(r -> new RecordMeta(r.getId()))
-                    .collect(Collectors.toList()));
+                recordMutResult = sourceMut.stream()
+                    .map(RecordAtts::getId)
+                    .collect(Collectors.toList());
             }
 
-            if (i == 0) {
-                result.merge(recordMutResult);
+            for (int resIdx = recordMutResult.size() - 1; resIdx >= 0; resIdx--) {
+                result.add(0, recordMutResult.get(resIdx));
             }
 
-            List<RecordMeta> resultRecords = recordMutResult.getRecords();
-            for (RecordMeta resultMeta : resultRecords) {
+            for (RecordRef resultMeta : recordMutResult) {
                 String alias = record.get(RecordConstants.ATT_ALIAS, "");
                 if (StringUtils.isNotBlank(alias)) {
-                    aliasToRecordRef.put(alias, resultMeta.getId());
+                    aliasToRecordRef.put(alias, resultMeta);
                 }
             }
         }
@@ -249,31 +200,28 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecordsDelResult delete(RecordsDeletion deletion) {
-        RecordsDelResult result = recordsResolver.delete(deletion);
+    public List<DelStatus> delete(List<RecordRef> records) {
+        List<DelStatus> result = recordsResolver.delete(records);
         if (result == null) {
-            result = new RecordsDelResult();
-            result.setRecords(deletion.getRecords().stream().map(RecordMeta::new).collect(Collectors.toList()));
+            result = new ArrayList<>(records.size());
+            for (int i = 0; i < records.size(); i++) {
+                result.add(DelStatus.OK);
+            }
         }
         return result;
     }
 
     /* OTHER */
 
-    private <T> RecsQueryRes<T> handleRecordsQuery(Supplier<RecsQueryRes<T>> supplier) {
-        return handleRecordsRead(supplier, RecsQueryRes::new);
-    }
+    private <T> RecordsQueryRes<T> handleRecordsQuery(Supplier<RecordsQueryRes<T>> supplier) {
 
-    private <T extends RecordsResult<?>> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
-
-        T result;
+        RecordsQueryRes<T> result;
 
         try {
-            result = QueryContext.withContext(serviceFactory, impl);
+            result = QueryContext.withContext(serviceFactory, supplier);
         } catch (Throwable e) {
             log.error("Records resolving error", e);
-            result = orElse.get();
-            result.addError(ErrorUtils.convertException(e));
+            result = new RecordsQueryRes<>();
         }
 
         return result;

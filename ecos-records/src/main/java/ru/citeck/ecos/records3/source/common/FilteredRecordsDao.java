@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.source.common;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records3.RecordMeta;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
 
@@ -15,7 +15,7 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
     private RecordsQueryDao targetDao;
 
     @Override
-    public RecsQueryRes<RecordMeta> queryRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<RecordAtts> queryRecords(@NotNull RecordsQuery query) {
 
         /* todo
         RecordsQuery localQuery = new RecordsQuery(query);
@@ -43,7 +43,7 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
         return null;
     }
 
-    protected abstract Function<List<RecordMeta>, List<RecordMeta>> getFilter(RecordsQuery query);
+    protected abstract Function<List<RecordAtts>, List<RecordAtts>> getFilter(RecordsQuery query);
 
     public void setTargetDao(RecordsQueryDao targetDao) {
         this.targetDao = targetDao;

@@ -12,7 +12,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.predicate.api.records.PredicateRecords;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.source.dao.local.RecordsDaoBuilder;
 
 import java.util.*;
@@ -118,7 +118,7 @@ public class PredicateRecordsTest {
         query.setQuery(checkQuery);
         query.setSourceId("predicate");
 
-        return recordsService.queryRecords(query, ResultDto.class).getRecords();
+        return recordsService.query(query, ResultDto.class).getRecords();
     }
 
     @Data

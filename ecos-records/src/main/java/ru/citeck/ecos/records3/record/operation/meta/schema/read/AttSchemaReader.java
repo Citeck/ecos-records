@@ -1,21 +1,17 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.read;
 
-import ecos.com.fasterxml.jackson210.databind.JavaType;
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
-import ecos.com.fasterxml.jackson210.databind.type.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.utils.NameUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
-import ru.citeck.ecos.records3.record.operation.meta.schema.GqlKeyUtils;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.exception.AttSchemaException;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttStrUtils;
 
 import java.util.*;
@@ -40,19 +36,17 @@ public class AttSchemaReader {
 
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
-    private static final TypeFactory typeFactory = new ObjectMapper().getTypeFactory();
-
     @NotNull
-    public AttsSchema read(@Nullable Map<String, String> attributes) {
+    public AttSchema read(@Nullable Map<String, String> attributes) {
 
         if (attributes == null || attributes.isEmpty()) {
-            return new AttsSchema();
+            return new AttSchema();
         }
 
         List<SchemaRootAtt> schemaAtts = new ArrayList<>();
         attributes.forEach((k, v) -> schemaAtts.add(readRoot(k, v)));
 
-        return new AttsSchema(attributes, schemaAtts);
+        return new AttSchema(schemaAtts);
     }
 
     /**
@@ -61,6 +55,8 @@ public class AttSchemaReader {
     public SchemaRootAtt read(String attribute) {
         return readRoot("", attribute);
     }
+
+    /* === PRIVATE === */
 
     private SchemaRootAtt readRoot(String alias, String attribute) {
 
@@ -114,44 +110,7 @@ public class AttSchemaReader {
         }
 
         SchemaAtt schemaAtt = readInner(alias, att);
-        return new SchemaRootAtt(schemaAtt, processors, getFlatAttributeType(schemaAtt));
-    }
-
-    private JavaType getFlatAttributeType(SchemaAtt att) {
-        return getFlatAttributeType(att, att.isMultiple());
-    }
-
-    private JavaType getFlatAttributeType(SchemaAtt att, boolean multiple) {
-
-        if (multiple) {
-            return typeFactory.constructCollectionType(ArrayList.class, getFlatAttributeType(att, false));
-        }
-
-        String name = att.getName();
-
-        if (name.charAt(0) == '.') {
-            switch (name) {
-                case ".json":
-                    return typeFactory.constructType(JsonNode.class);
-                case ".bool":
-                    return typeFactory.constructType(Boolean.class);
-                case ".num":
-                    return typeFactory.constructType(Double.class);
-                default:
-                    return typeFactory.constructType(String.class);
-            }
-        }
-
-        List<SchemaAtt> inner = att.getInner();
-
-        if (inner.size() == 0) {
-            throw new AttReadException(att.getAlias(), att.getName(),
-                "Attribute is not a scalar and doesn't have inner attributes");
-        } else if (inner.size() == 1) {
-            return getFlatAttributeType(inner.get(0));
-        } else {
-            return typeFactory.constructType(ObjectData.class);
-        }
+        return new SchemaRootAtt(schemaAtt, processors);
     }
 
     private SchemaAtt readInner(String alias, String attribute) {
@@ -186,7 +145,7 @@ public class AttSchemaReader {
 
         String alias = "";
         if (aliasDelimIdx > 0) {
-            alias = GqlKeyUtils.unescape(att.substring(0, aliasDelimIdx));
+            alias = NameUtils.unescape(att.substring(0, aliasDelimIdx));
             att = att.substring(aliasDelimIdx + 1);
         }
 
@@ -231,12 +190,12 @@ public class AttSchemaReader {
             att += "}";
         }
 
-        return new SchemaAtt(
-            alias,
-            attribute.substring(0, openBraceIdx),
-            isMultiple,
-            readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readInner)
-        );
+        return SchemaAtt.create()
+            .setAlias(alias)
+            .setName(attribute.substring(0, openBraceIdx))
+            .setMultiple(isMultiple)
+            .setInner(readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readInner))
+            .build();
     }
 
     private SchemaAtt readSimpleAtt(String alias, String attribute) {
@@ -258,12 +217,12 @@ public class AttSchemaReader {
                 pathElem = pathElem.substring(0, arrIdx) + pathElem.substring(arrIdx + 2);
             }
 
-            schemaAtt = new SchemaAtt(
-                i == 0 ? alias : "",
-                pathElem,
-                isMultiple,
-                Collections.singletonList(schemaAtt)
-            );
+            schemaAtt = SchemaAtt.create()
+                .setAlias(i == 0 ? alias : "")
+                .setName(pathElem)
+                .setMultiple(isMultiple)
+                .setInner(schemaAtt)
+                .build();
         }
 
         return schemaAtt;
@@ -283,7 +242,11 @@ public class AttSchemaReader {
 
         int braceIdx = AttStrUtils.indexOf(attribute, '(');
         if (braceIdx == -1) {
-            return new SchemaAtt(alias, "." + attribute);
+            return SchemaAtt.create()
+                .setAlias(alias)
+                .setName(attribute)
+                .setScalar(true)
+                .build();
         }
 
         if (attribute.startsWith("as")) {
@@ -307,17 +270,13 @@ public class AttSchemaReader {
         String attName  = matcher.group(2);
         String attInner = matcher.group(3);
 
-        return new SchemaAtt(
-            alias,
-            RecordConstants.ATT_AS,
-            false,
-            Collections.singletonList(new SchemaAtt(
-                "",
-                attName,
-                false,
-                readInnerAtts(attInner, true, this::readInner)
-            ))
-        );
+        return SchemaAtt.create()
+            .setAlias(alias)
+            .setName(RecordConstants.ATT_AS)
+            .setInner(SchemaAtt.create()
+                .setName(attName)
+                .setInner(readInnerAtts(attInner, true, this::readInner)))
+            .build();
     }
 
     private SchemaAtt parseHasAtt(String alias, String attribute) {
@@ -329,17 +288,15 @@ public class AttSchemaReader {
 
         String attName = matcher.group(2);
 
-        return new SchemaAtt(
-            alias,
-            RecordConstants.ATT_HAS,
-            false,
-            Collections.singletonList(new SchemaAtt(
-                "",
-                attName,
-                false,
-                Collections.singletonList(new SchemaAtt(".bool"))
-            ))
-        );
+        return SchemaAtt.create()
+            .setAlias(alias)
+            .setName(RecordConstants.ATT_HAS)
+            .setInner(SchemaAtt.create()
+                .setName(attName)
+                .setInner(SchemaAtt.create()
+                    .setName("bool")
+                    .setScalar(true))
+            ).build();
     }
 
     private SchemaAtt readEdgeAtt(String alias, String attribute) {
@@ -366,15 +323,18 @@ public class AttSchemaReader {
             ));
         }
 
-        return new SchemaAtt(
-            alias,
-            RecordConstants.ATT_EDGE,
-            false,
-            Collections.singletonList(new SchemaAtt("", attName, false, schemaInnerAtts))
-        );
+        return SchemaAtt.create()
+            .setAlias(alias)
+            .setName(RecordConstants.ATT_EDGE)
+            .setInner(SchemaAtt.create().setName(attName).setInner(schemaInnerAtts))
+            .build();
     }
 
     private SchemaAtt parseEdgeInnerAtt(String alias, String attribute) {
+
+        SchemaAtt.Builder attBuilder = SchemaAtt.create()
+            .setAlias(alias)
+            .setName(attribute);
 
         switch (attribute) {
             case "name":
@@ -383,29 +343,24 @@ public class AttSchemaReader {
             case "javaClass":
             case "editorKey":
             case "type":
-                return new SchemaAtt(
-                    alias,
-                    attribute,
-                    false,
-                    Collections.singletonList(new SchemaAtt(".str"))
-                );
+                return attBuilder.setInner(SchemaAtt.create()
+                        .setName("str")
+                        .setScalar(true)
+                ).build();
             case "protected":
             case "canBeRead":
             case "multiple":
             case "isAssoc":
-                return new SchemaAtt(
-                    alias,
-                    attribute,
-                    false,
-                    Collections.singletonList(new SchemaAtt(".bool"))
-                );
+                return attBuilder.setInner(SchemaAtt.create()
+                    .setName("bool")
+                    .setScalar(true)
+                ).build();
         }
 
         int openBraceIdx = attribute.indexOf('{');
         int closeBraceIdx = attribute.lastIndexOf('}');
         if (openBraceIdx == -1 || closeBraceIdx == -1 || openBraceIdx > closeBraceIdx) {
-            log.error("Incorrect edge inner attribute: '" + attribute + "'");
-            return new SchemaAtt("");
+            throw new AttSchemaException("Incorrect edge inner attribute: '" + attribute + "'");
         }
 
         String attWithoutInner = attribute.substring(0, openBraceIdx);
@@ -418,12 +373,10 @@ public class AttSchemaReader {
             case "options":
             case "distinct":
             case "createVariants":
-                return new SchemaAtt(
-                    alias,
-                    attWithoutInner,
-                    multiple,
-                    readInnerAtts(innerAtts, true, this::readInner)
-                );
+                return attBuilder.setName(attWithoutInner)
+                    .setMultiple(multiple)
+                    .setInner(readInnerAtts(innerAtts, true, this::readInner))
+                    .build();
         }
 
         throw new AttReadException(alias, attribute, "Unknown 'edge inner' attribute");
@@ -441,7 +394,12 @@ public class AttSchemaReader {
         boolean multiple = attribute.startsWith("atts");
         List<SchemaAtt> innerAtts = readInnerAtts(matcher.group(3), true, this::readInner);
 
-        return new SchemaAtt(alias, attName, multiple, innerAtts);
+        return SchemaAtt.create()
+            .setAlias(alias)
+            .setName(attName)
+            .setMultiple(multiple)
+            .setInner(innerAtts)
+            .build();
     }
 
     private List<AttProcessorDef> parseProcessors(String processorStr) {

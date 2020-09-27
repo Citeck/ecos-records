@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.operation.mutate;
 
 import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
 import lombok.Data;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,18 +11,18 @@ import java.util.List;
 public class MutateBody {
 
     private boolean isSingleRecord = false;
-    private List<RecordMeta> records = new ArrayList<>();
+    private List<RecordAtts> records = new ArrayList<>();
 
-    void setRecord(RecordMeta record) {
+    void setRecord(RecordAtts record) {
         isSingleRecord = true;
         getRecords().add(record);
     }
 
-    public List<RecordMeta> getRecords() {
+    public List<RecordAtts> getRecords() {
         return records;
     }
 
-    public void setRecords(List<RecordMeta> records) {
+    public void setRecords(List<RecordAtts> records) {
         isSingleRecord = true;
         if (records != null) {
             this.records = new ArrayList<>(records);
@@ -31,7 +31,7 @@ public class MutateBody {
         }
     }
 
-    public void addRecord(RecordMeta meta) {
+    public void addRecord(RecordAtts meta) {
         this.records.add(meta);
     }
 

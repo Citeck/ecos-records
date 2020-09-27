@@ -2,14 +2,12 @@ package ru.citeck.ecos.records3.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.operation.delete.request.DeletionBody;
+import ru.citeck.ecos.records3.record.operation.delete.DeletionBody;
 import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.List;
 
@@ -31,22 +29,22 @@ public class RestHandler {
                    + "but found both. 'records' field will be ignored");
         }
 
-        RecordsResult<?> recordsResult;
-        List<DataValue> foreach = body.getForeach();
+        //RecordsResult<?> recordsResult;
+        /*List<DataValue> foreach = body.getForeach();
 
         if (body.getQuery() != null) {
 
             if (body.getAttributes() != null) {
 
                 if (foreach != null) {
-                    recordsResult = recordsService.queryRecords(
+                    recordsResult = recordsService.query(
                         foreach,
                         body.getQuery(),
                         body.getAttributes(),
                         body.isFlatAttributes()
                     );
                 } else {
-                    recordsResult = recordsService.queryRecords(
+                    recordsResult = recordsService.query(
                         body.getQuery(),
                         body.getAttributes(),
                         body.isFlatAttributes()
@@ -56,9 +54,9 @@ public class RestHandler {
             } else {
 
                 if (foreach != null) {
-                    recordsResult = recordsService.queryRecords(foreach, body.getQuery());
+                    recordsResult = recordsService.query(foreach, body.getQuery());
                 } else {
-                    recordsResult = recordsService.queryRecords(body.getQuery());
+                    recordsResult = recordsService.query(body.getQuery());
                 }
             }
         } else {
@@ -69,7 +67,7 @@ public class RestHandler {
             if (body.getAttributes() == null) {
                 throw new IllegalArgumentException("You must specify 'attributes' for records");
             }
-            recordsResult = recordsService.getAttributes(
+            recordsResult = recordsService.getAtts(
                 body.getRecords(),
                 body.getAttributes(),
                 body.isFlatAttributes()
@@ -85,9 +83,9 @@ public class RestHandler {
                                          .findFirst()
                                          .orElseThrow(() -> new IllegalStateException("Records is empty"));
 
-            if (body.isSingleAttribute() && record instanceof RecordMeta) {
+            if (body.isSingleAttribute() && record instanceof RecordAtts) {
 
-                RecordMeta meta = (RecordMeta) record;
+                RecordAtts meta = (RecordAtts) record;
                 return meta.get(QueryBody.SINGLE_ATT_KEY);
 
             } else {
@@ -96,12 +94,13 @@ public class RestHandler {
             }
         }
 
-        return recordsResult;
+        return recordsResult;*/
+        return null;
     }
 
     public Object mutateRecords(MutateBody body) {
 
-        RecordsMutResult result = recordsService.mutate(body);
+        /*RecordsMutResult result = recordsService.mutate(body);
 
         ErrorUtils.logErrorsWithBody(result, body);
 
@@ -113,11 +112,14 @@ public class RestHandler {
             return records.get(0);
         }
 
-        return result;
+        return result;*/
+        return null;
     }
 
+
     public Object deleteRecords(DeletionBody body) {
-        return recordsService.delete(body);
+        //return recordsService.delete(body);
+        return null;
     }
 
     public RecordsServiceFactory getFactory() {

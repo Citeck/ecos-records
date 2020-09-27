@@ -8,7 +8,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.meta.MetaAttributesSupplier;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
@@ -53,25 +53,25 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         RecordRef ref = RecordRef.valueOf("meta@");
 
-        DataValue value = recordsService.getAttribute(ref, "rec.123@VALUE.field");
+        DataValue value = recordsService.getAtt(ref, "rec.123@VALUE.field");
         assertEquals("VALUE", value.asText());
 
-        String attValue = recordsService.getAttribute(ref, "attributes.key?str").asText();
+        String attValue = recordsService.getAtt(ref, "attributes.key?str").asText();
         assertEquals(metaAtts.get("key"), attValue);
 
-        String enumAttValue = recordsService.getAttribute(ref, "rec.123@VALUE.enum").asText();
+        String enumAttValue = recordsService.getAtt(ref, "rec.123@VALUE.enum").asText();
         assertEquals("FIRST", enumAttValue);
 
-        String bytesValue = recordsService.getAttribute(ref, "rec.123@VALUE.bytes").asText();
+        String bytesValue = recordsService.getAtt(ref, "rec.123@VALUE.bytes").asText();
         assertEquals(Base64.getEncoder().encodeToString(BYTES_STR), bytesValue);
     }
 
     @Override
-    public List<MetaValue> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<AttValue> getLocalRecordsMeta(List<RecordRef> records) {
         return records.stream().map(Value::new).collect(Collectors.toList());
     }
 
-    public static class Value implements MetaValue {
+    public static class Value implements AttValue {
 
         private RecordRef ref;
 

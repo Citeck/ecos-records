@@ -9,9 +9,9 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
@@ -89,8 +89,8 @@ public class ComputedAttsTest extends LocalRecordsDao
         String strAtt = strFieldValueWithPrefixName;
 
         List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
-        RecsQueryRes<RecordMeta> result = recordsService.queryRecords(query, mixinAtts);
-        RecordMeta meta = result.getRecords().get(0);
+        RecordsQueryRes<RecordAtts> result = recordsService.query(query, mixinAtts);
+        RecordAtts meta = result.getRecords().get(0);
 
         assertTrue(meta.get(strAtt).isNull());
         assertTrue(meta.get(intAtt).isNull());
@@ -113,12 +113,12 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         computedAttributesType0.add(intCcmputedAtt);
 
-        RecordMeta recMeta0 = recordsService.getAttributes(RecordRef.create(getId(), "type0"), mixinAtts);
+        RecordAtts recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
 
         assertTrue(recMeta0.get(strAtt).isNull());
         assertEquals(30, recMeta0.get(intAtt).asInt());
 
-        RecordMeta recMeta1 = recordsService.getAttributes(RecordRef.create(getId(), "type1"), mixinAtts);
+        RecordAtts recMeta1 = recordsService.getAtts(RecordRef.create(getId(), "type1"), mixinAtts);
 
         assertTrue(recMeta1.get(strAtt).isNull());
         assertTrue(recMeta1.get(intAtt).isNull());
@@ -141,18 +141,18 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         computedAttributesType1.add(strPrefixAtt);
 
-        recMeta1 = recordsService.getAttributes(RecordRef.create(getId(), "type1"), mixinAtts);
+        recMeta1 = recordsService.getAtts(RecordRef.create(getId(), "type1"), mixinAtts);
         assertEquals(expectedStrPrefixResult, recMeta1.get(strAtt, ""));
         assertTrue(recMeta1.get(intAtt).isNull());
 
-        recMeta0 = recordsService.getAttributes(RecordRef.create(getId(), "type0"), mixinAtts);
+        recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
 
         assertTrue(recMeta0.get(strAtt).isNull());
         assertEquals(30, recMeta0.get(intAtt).asInt());
 
         computedAttributesType0.add(strPrefixAtt);
 
-        recMeta0 = recordsService.getAttributes(RecordRef.create(getId(), "type0"), mixinAtts);
+        recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
 
         assertEquals(expectedStrPrefixResult, recMeta0.get(strAtt, ""));
         assertEquals(30, recMeta0.get(intAtt).asInt());
@@ -167,13 +167,13 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         computedAttributesType0.add(innerComputedAtt);
 
-        DataValue res = recordsService.getAttribute(RecordRef.create(getId(), "type0"), innerFieldName);
+        DataValue res = recordsService.getAtt(RecordRef.create(getId(), "type0"), innerFieldName);
         assertEquals("some-inner-value", res.asText());
     }
 
     @Override
-    public RecsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
-        return RecsQueryRes.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
+    public RecordsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+        return RecordsQueryRes.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
     }
 
     @Override
@@ -181,7 +181,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         return records.stream().map(r -> new MetaValueRecord(r.getId())).collect(Collectors.toList());
     }
 
-    public static class MetaValueRecord implements MetaValue {
+    public static class MetaValueRecord implements AttValue {
 
         private final String id;
 
@@ -210,7 +210,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         }
 
         @Override
-        public RecordRef getRecordType() {
+        public RecordRef getTypeRef() {
             return RecordRef.create("emodel", "type", id);
         }
     }

@@ -5,13 +5,13 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.operation.query.SortBy;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.SortBy;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.source.dao.local.job.Job;
@@ -29,7 +29,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
 
     private final Class<T> model;
-    private AttsSchema schema;
+    private AttSchema schema;
 
     private final CompletableFuture<Boolean> firstSyncFuture = new CompletableFuture<>();
     private RemoteRecordsResolver remoteRecordsResolver;
@@ -44,16 +44,17 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
 
     @NotNull
     @Override
-    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
         waitUntilSyncCompleted();
         return super.queryRecords(query);
     }
 
     @NotNull
-    @Override
+    //@Override
     public List<?> getRecordsMeta(@NotNull List<RecordRef> records) {
         waitUntilSyncCompleted();
-        return super.getRecordsMeta(records);
+        //return super.getRecordsMeta(records);
+        return null;
     }
 
     @Override
@@ -66,8 +67,8 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
         try {
             if (!firstSyncFuture.isDone()) {
                 serviceFactory.initJobs(null);
-                log.warn("!!! Current thread will be blocked until data will be synchronized. "
-                       + "SourceId: " + getId() + ". Timeout: 5min !!!");
+                /*log.warn("!!! Current thread will be blocked until data will be synchronized. "
+                       + "SourceId: " + getId() + ". Timeout: 5min !!!");*/
             }
             firstSyncFuture.get(5, TimeUnit.MINUTES);
         } catch (Exception e) {
@@ -81,7 +82,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
      */
     private boolean update() {
 
-        if (this.remoteRecordsResolver == null) {
+        /*if (this.remoteRecordsResolver == null) {
             log.debug("Remote records resolver is not ready yet");
             return false;
         }
@@ -95,7 +96,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
         query.setMaxItems(50);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        RecsQueryRes<RecordMeta> result;
+        RecordsQueryRes<RecordAtts> result;
         try {
             if (getId().contains("/")) {
                 result = remoteRecordsResolver.queryRecords(query, schema.getSourceAtts(), true);
@@ -113,9 +114,9 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
         }
 
         Instant lastModified = currentSyncDate;
-        List<RecordMeta> flatMeta = recordsMetaService.convertMetaResult(result.getRecords(), schema, true);
+        List<RecordAtts> flatMeta = recordsMetaService.convertMetaResult(result.getRecords(), schema, true);
 
-        for (RecordMeta meta : flatMeta) {
+        for (RecordAtts meta : flatMeta) {
 
             String modifiedStr = meta.get(MODIFIED_ATT_KEY).asText();
             if (StringUtils.isBlank(modifiedStr)) {
@@ -138,7 +139,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
                 firstSyncFuture.complete(true);
             }
             return false;
-        }
+        }*/
         return true;
     }
 
@@ -172,12 +173,12 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
         this.remoteRecordsResolver = serviceFactory.getRemoteRecordsResolver();
         this.localRecordsResolver = serviceFactory.getLocalRecordsResolver();
 
-        if (this.getId().contains("/") && this.remoteRecordsResolver == null) {
+        /*if (this.getId().contains("/") && this.remoteRecordsResolver == null) {
             throw new IllegalStateException("Sync records DAO can't work "
                 + "without RemoteRecordsResolver. SourceId: " + getId());
         }
         Map<String, String> attributes = new HashMap<>(recordsMetaService.getAttributes(model));
         attributes.put(MODIFIED_ATT_KEY, RecordConstants.ATT_MODIFIED);
-        schema = recordsMetaService.createSchema(attributes);
+        schema = recordsMetaService.createSchema(attributes);*/
     }
 }

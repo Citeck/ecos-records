@@ -9,7 +9,6 @@ import ru.citeck.ecos.records3.evaluator.details.EvalDetailsImpl;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
 import ru.citeck.ecos.records3.record.operation.meta.util.RecordModelAtts;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -155,24 +154,22 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
         RecordModelAtts recordModelAtts = AttModelUtils.splitModelAttributes(attsToRequest);
 
-        RecordMeta modelMeta = null;
+        RecordAtts modelMeta = null;
         if (!recordModelAtts.getModelAtts().isEmpty()) {
-            modelMeta = recordsMetaService.getMeta(model, recordModelAtts.getModelAtts());
+            modelMeta = recordsMetaService.getAtts(model, recordModelAtts.getModelAtts());
         }
 
-        List<RecordMeta> recordsMeta;
+        List<RecordAtts> recordsMeta;
         if (!attsToRequest.isEmpty()) {
-            RecordsResult<RecordMeta> recordsRes = recordsService.getAttributes(recordRefs,
-                                                                                recordModelAtts.getRecordAtts());
-            recordsMeta = recordsRes.getRecords();
+            recordsMeta = recordsService.getAtts(recordRefs, recordModelAtts.getRecordAtts());
         } else {
-            recordsMeta = recordRefs.stream().map(RecordMeta::new).collect(Collectors.toList());
+            recordsMeta = recordRefs.stream().map(RecordAtts::new).collect(Collectors.toList());
         }
 
         Map<RecordRef, List<EvalDetails>> evalResultsByRecord = new HashMap<>();
 
         for (int i = 0; i < recordRefs.size(); i++) {
-            RecordMeta meta = recordsMeta.get(i);
+            RecordAtts meta = recordsMeta.get(i);
             List<EvalDetails> evalResult = evaluateWithMeta(evaluators, meta, modelMeta);
             evalResultsByRecord.put(recordRefs.get(i), evalResult);
         }
@@ -181,13 +178,13 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     }
 
     private List<EvalDetails> evaluateWithMeta(List<RecordEvaluatorDto> evaluators,
-                                               RecordMeta record,
-                                               RecordMeta model) {
+                                               RecordAtts record,
+                                               RecordAtts model) {
 
         List<EvalDetails> result = new ArrayList<>();
         for (RecordEvaluatorDto evaluator : evaluators) {
             if (model != null && model.getAttributes().size() != 0) {
-                RecordMeta recordWithModel = new RecordMeta(record);
+                RecordAtts recordWithModel = new RecordAtts(record);
                 model.forEach(recordWithModel::set);
                 record = recordWithModel;
             }
@@ -197,13 +194,13 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
     }
 
     @Override
-    public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta) {
-        EvalDetails details = evalDetailsWithMeta(evalDto, fullRecordMeta);
+    public boolean evaluateWithMeta(RecordEvaluatorDto evalDto, RecordAtts fullRecordAtts) {
+        EvalDetails details = evalDetailsWithMeta(evalDto, fullRecordAtts);
         return details != null && details.getResult();
     }
 
     @Override
-    public EvalDetails evalDetailsWithMeta(RecordEvaluatorDto evalDto, RecordMeta fullRecordMeta) {
+    public EvalDetails evalDetailsWithMeta(RecordEvaluatorDto evalDto, RecordAtts fullRecordAtts) {
 
         ParameterizedRecordEvaluator evaluator = this.evaluators.get(evalDto.getType());
 
@@ -217,14 +214,14 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         Map<String, String> metaAtts = getRequiredMetaAttributes(evalDto);
 
         ObjectData evaluatorMeta = ObjectData.create();
-        metaAtts.forEach((k, v) -> evaluatorMeta.set(k, fullRecordMeta.get(v)));
+        metaAtts.forEach((k, v) -> evaluatorMeta.set(k, fullRecordAtts.get(v)));
 
         Class<?> resMetaType = evaluator.getResMetaType();
         Object requiredMeta;
         if (resMetaType == null) {
             requiredMeta = null;
-        } else if (resMetaType.isAssignableFrom(RecordMeta.class)) {
-            RecordMeta meta = new RecordMeta(fullRecordMeta.getId());
+        } else if (resMetaType.isAssignableFrom(RecordAtts.class)) {
+            RecordAtts meta = new RecordAtts(fullRecordAtts.getId());
             meta.setAttributes(evaluatorMeta);
             requiredMeta = meta;
         } else {
@@ -279,9 +276,10 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
                     Map<String, String> typedAttributes = (Map<String, String>) requiredMeta;
                     attributes = typedAttributes;
                 } else if (requiredMeta instanceof Class) {
-                    attributes = recordsMetaService.getAttributes((Class<?>) requiredMeta);
+                    //todo
+                    //attributes = recordsMetaService.getAttributes((Class<?>) requiredMeta);
                 } else {
-                    attributes = recordsMetaService.getAttributes(requiredMeta.getClass());
+                    //attributes = recordsMetaService.getAttributes(requiredMeta.getClass());
                 }
             }
         } catch (Exception e) {

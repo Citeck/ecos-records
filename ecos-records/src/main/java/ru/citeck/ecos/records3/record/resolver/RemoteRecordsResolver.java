@@ -3,20 +3,16 @@ package ru.citeck.ecos.records3.record.resolver;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.record.operation.query.typed.RecsMetaQueryRes;
-import ru.citeck.ecos.records3.record.operation.delete.request.DeletionBody;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.typed.RecordsMetaQueryRes;
+import ru.citeck.ecos.records3.record.operation.delete.DeletionBody;
 import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.QueryBody;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
@@ -49,9 +45,9 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @Override
-    public RecsQueryRes<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                 @NotNull Map<String, String> attributes,
-                                                 boolean rawAtts) {
+    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                             @NotNull Map<String, String> attributes,
+                                             boolean rawAtts) {
 
         String sourceId = query.getSourceId();
         if (sourceId.indexOf('/') == -1) {
@@ -76,17 +72,17 @@ public class RemoteRecordsResolver implements RecordsResolver {
         queryBody.setAttributes(attributes);
         queryBody.setRawAtts(rawAtts);
 
-        RecsMetaQueryRes appResult = restApi.jsonPost(url, queryBody, RecsMetaQueryRes.class);
+        RecordsMetaQueryRes appResult = restApi.jsonPost(url, queryBody, RecordsMetaQueryRes.class);
 
         return RecordsUtils.metaWithDefaultApp(appResult, appName);
     }
 
     @Override
-    public List<RecordMeta> getMeta(@NotNull List<RecordRef> records,
+    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
 
-        return execRecordsAppRequest(
+        /*return execRecordsAppRequest(
             records,
             QUERY_URL,
             RecordRef::getAppName,
@@ -99,13 +95,14 @@ public class RemoteRecordsResolver implements RecordsResolver {
                 queryBody.setRawAtts(rawAtts);
                 return queryBody;
             },
-            RecsMetaQueryRes.class
-        ).getRecords();
+            RecordsMetaQueryRes.class
+        ).getRecords();*/
+        return null;
     }
 
     @Override
-    public RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
-        return this.execRecordsAppRequest(
+    public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
+        /*return this.execRecordsAppRequest(
             mutation.getRecords(),
             MUTATE_URL,
             m -> m.getId().getAppName(),
@@ -120,7 +117,8 @@ public class RemoteRecordsResolver implements RecordsResolver {
                 return body;
             },
             RecordsMutResult.class
-        );
+        );*/
+        return null;
     }
 
     @Nullable
@@ -137,18 +135,18 @@ public class RemoteRecordsResolver implements RecordsResolver {
         return Collections.emptyList();
     }
 
-    private RecordMeta addAppName(RecordMeta meta, String app) {
-        return new RecordMeta(meta, r -> r.addAppName(app));
+    private RecordAtts addAppName(RecordAtts meta, String app) {
+        return new RecordAtts(meta, r -> r.addAppName(app));
     }
 
-    private RecordMeta removeAppName(RecordMeta meta) {
-        return new RecordMeta(meta, RecordRef::removeAppName);
+    private RecordAtts removeAppName(RecordAtts meta) {
+        return new RecordAtts(meta, RecordRef::removeAppName);
     }
 
     @NotNull
     @Override
-    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
-        return execRecordsAppRequest(
+    public List<DelStatus> delete(@NotNull List<RecordRef> records) {
+        /*return execRecordsAppRequest(
             deletion.getRecords(),
             DELETE_URL,
             RecordRef::getAppName,
@@ -160,10 +158,11 @@ public class RemoteRecordsResolver implements RecordsResolver {
                 return body;
             },
             RecordsDelResult.class
-        );
+        );*/
+        return null;
     }
 
-    private <I, O, R extends RecordsResult<I>> R execRecordsAppRequest(
+    /*private <I, O, R extends RecordsResult<I>> R execRecordsAppRequest(
                                                               List<O> records,
                                                               String url,
                                                               Function<O, String> getApp,
@@ -229,7 +228,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
                                       .collect(Collectors.toList()));
 
         return appResult;
-    }
+    }*/
 
     public void setDefaultAppName(String defaultAppName) {
         this.defaultAppName = defaultAppName;

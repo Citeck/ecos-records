@@ -5,16 +5,15 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
 import ru.citeck.ecos.records3.record.operation.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records3.predicate.PredicateUtils;
 import ru.citeck.ecos.records3.predicate.RecordElement;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
@@ -32,15 +31,15 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
     }
 
     @Override
-    public RecsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecordsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
 
         PredicateCheckQuery query = recordsQuery.getQuery(PredicateCheckQuery.class);
 
         if (query.getPredicates().isEmpty() || query.getRecords().isEmpty()) {
-            return new RecsQueryRes<>();
+            return new RecordsQueryRes<>();
         }
 
-        RecsQueryRes<Object> queryResult = new RecsQueryRes<>();
+        RecordsQueryRes<Object> queryResult = new RecordsQueryRes<>();
 
         Set<String> attributes = new HashSet<>();
         for (Predicate predicate : query.getPredicates()) {
@@ -49,20 +48,20 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
 
         RecordModelAtts recordModelAtts = AttModelUtils.splitModelAttributes(attributes);
 
-        RecordsResult<RecordMeta> resolvedAtts = recordsService.getAttributes(
+        List<RecordAtts> resolvedAtts = recordsService.getAtts(
             query.getRecords(),
             recordModelAtts.getRecordAtts()
         );
         if (!recordModelAtts.getModelAtts().isEmpty()) {
-            RecordMeta modelAtts = recordsMetaService.getMeta(
+            RecordAtts modelAtts = recordsMetaService.getAtts(
                 QueryContext.getCurrent().getAttributes(),
                 recordModelAtts.getModelAtts()
             );
-            resolvedAtts.getRecords().forEach(rec -> modelAtts.forEach(rec::set));
+            resolvedAtts.forEach(rec -> modelAtts.forEach(rec::set));
         }
 
         int idx = 0;
-        for (RecordMeta record : resolvedAtts.getRecords()) {
+        for (RecordAtts record : resolvedAtts) {
 
             List<Boolean> checkResult = new ArrayList<>();
             RecordElement element = new RecordElement(record);

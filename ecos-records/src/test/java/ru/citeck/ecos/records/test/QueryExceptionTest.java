@@ -4,12 +4,11 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.error.RecordsError;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -38,8 +37,8 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
     @Test
     void test() {
 
-        List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
-        RecordsResult<RecordMeta> res = recordsService.getAttributes(refs, Collections.singletonList("str"));
+      /*  List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
+        RecordsResult<RecordAtts> res = recordsService.getAtts(refs, Collections.singletonList("str"));
 
         List<RecordsError> errors = res.getErrors();
 
@@ -48,7 +47,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
 
         assertEquals(MSG, error.getMsg());
         assertEquals(3, error.getStackTrace().size());
-        assertTrue(error.getStackTrace().get(0).contains("QueryExceptionTest.java"));
+        assertTrue(error.getStackTrace().get(0).contains("QueryExceptionTest.java"));*/
     }
 
     @NotNull

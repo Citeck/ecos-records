@@ -6,15 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.graphql.meta.value.CreateVariant;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaEdge;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.CreateVariant;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -55,9 +54,9 @@ public class MetaEdgeTest extends LocalRecordsDao
 
         String att = ".edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json}}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
-        RecordsResult<RecordMeta> result = recordsService.getAttributes(records, Collections.singletonMap("edge", att));
+        List<RecordAtts> result = recordsService.getAtts(records, Collections.singletonMap("edge", att));
 
-        RecordMeta meta = result.getRecords().get(0);
+        RecordAtts meta = result.get(0);
 
         DataValue edgeNode = meta.get("edge");
 
@@ -84,9 +83,9 @@ public class MetaEdgeTest extends LocalRecordsDao
 
         assertEquals(String.class.getName(), edgeNode.get("javaClass").asText());
 
-        RecordsResult<JavaClassDto> classMeta = recordsService.getMeta(records, JavaClassDto.class);
-        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass());
-        assertEquals(String.class, classMeta.getRecords().get(0).getJavaClass2());
+        List<JavaClassDto> classMeta = recordsService.getAtts(records, JavaClassDto.class);
+        assertEquals(String.class, classMeta.get(0).getJavaClass());
+        assertEquals(String.class, classMeta.get(0).getJavaClass2());
     }
 
     public static class JavaClassDto {
@@ -114,7 +113,7 @@ public class MetaEdgeTest extends LocalRecordsDao
         }
     }
 
-    public static class MetaTestVal implements MetaValue {
+    public static class MetaTestVal implements AttValue {
 
         @Override
         public String getString() {
@@ -122,12 +121,12 @@ public class MetaEdgeTest extends LocalRecordsDao
         }
 
         @Override
-        public MetaEdge getEdge(String name) {
+        public AttEdge getEdge(@NotNull String name) {
             return new MetaTestEdge(name);
         }
     }
 
-    public static class MetaTestEdge implements MetaEdge {
+    public static class MetaTestEdge implements AttEdge {
 
         static String EDITOR_KEY = "editor key";
         static String TYPE = "_type_";

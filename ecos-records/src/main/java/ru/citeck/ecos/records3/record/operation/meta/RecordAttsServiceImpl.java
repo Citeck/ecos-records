@@ -4,15 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttsSchema;
+import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.ResolveArgs;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,11 +21,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordAttsServiceImpl implements RecordAttsService {
 
-    private static final String ID_ATT_ALIAS = "___id___";
+    private static final String REF_ATT_ALIAS = "___ref___";
 
     private final AttSchemaReader schemaReader;
     private final DtoSchemaResolver dtoSchemaResolver;
-    private final AttSchemaResolver schemaResolver;
+    private final AttResolver schemaResolver;
 
     public RecordAttsServiceImpl(RecordsServiceFactory factory) {
         this.dtoSchemaResolver = factory.getDtoMetaResolver();
@@ -33,22 +34,22 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     }
 
     @Override
-    public RecordMeta getAtts(Object value, Map<String, String> attributes) {
+    public RecordAtts getAtts(Object value, Map<String, String> attributes) {
         return getAtts(value, attributes, false);
     }
 
     @Override
-    public RecordMeta getAtts(Object value, Collection<String> attributes) {
+    public RecordAtts getAtts(Object value, Collection<String> attributes) {
         return getAtts(value, attributes, false);
     }
 
     @Override
-    public RecordMeta getAtts(Object value, Collection<String> attributes, boolean rawAtts) {
+    public RecordAtts getAtts(Object value, Collection<String> attributes, boolean rawAtts) {
         return getAtts(value, toAttsMap(attributes), rawAtts);
     }
 
     @Override
-    public RecordMeta getAtts(Object value, Map<String, String> attributes, boolean rawAtts) {
+    public RecordAtts getAtts(Object value, Map<String, String> attributes, boolean rawAtts) {
         List<Object> values = Collections.singletonList(value);
         return getFirst(getAtts(values, attributes, rawAtts), attributes, values);
     }
@@ -60,17 +61,17 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     }
 
     @Override
-    public List<RecordMeta> getAtts(List<Object> values, Collection<String> attributes) {
+    public List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes) {
         return getAtts(values, attributes, false);
     }
 
     @Override
-    public List<RecordMeta> getAtts(List<Object> values, Map<String, String> attributes) {
+    public List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes) {
         return getAtts(values, attributes, false);
     }
 
     @Override
-    public List<RecordMeta> getAtts(List<Object> values, Collection<String> attributes, boolean rawAtts) {
+    public List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes, boolean rawAtts) {
         return getAtts(values, toAttsMap(attributes), rawAtts);
     }
 
@@ -84,28 +85,39 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     }
 
     @Override
-    public List<RecordMeta> getAtts(List<Object> values, Map<String, String> attributes, boolean rawAtts) {
-        AttsSchema schema = schemaReader.read(attributes);
+    public List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes, boolean rawAtts) {
+
+        AttSchema schema = schemaReader.read(attributes);
+
         List<SchemaRootAtt> rootAtts = new ArrayList<>(schema.getAttributes());
+
         rootAtts.add(new SchemaRootAtt(
-            new SchemaAtt(ID_ATT_ALIAS, ".id", false),
-            Collections.emptyList(),
-            Json.getMapper().getType(String.class))
+            SchemaAtt.create()
+                .setAlias(REF_ATT_ALIAS)
+                .setName("?ref")
+                .build(),
+            Collections.emptyList())
         );
-        List<ObjectData> data = schemaResolver.resolve(values, rootAtts, rawAtts);
+
+        List<ObjectData> data = schemaResolver.resolve(ResolveArgs.create()
+            .setValues(values)
+            .setAtts(rootAtts)
+            .setRawAtts(rawAtts)
+            .build());
+
         return data.stream()
             .map(this::toRecMeta)
             .collect(Collectors.toList());
     }
 
-    private RecordMeta toRecMeta(ObjectData data) {
-        String id = data.get(ID_ATT_ALIAS).asText();
+    private RecordAtts toRecMeta(ObjectData data) {
+        String id = data.get(REF_ATT_ALIAS).asText();
         if (StringUtils.isBlank(id)) {
             id = UUID.randomUUID().toString();
         }
         data = data.deepCopy();
-        data.remove(ID_ATT_ALIAS);
-        return new RecordMeta(RecordRef.create("", id), data);
+        data.remove(REF_ATT_ALIAS);
+        return new RecordAtts(RecordRef.create("", id), data);
     }
 
     private <T> T getFirst(List<T> elements, Object atts, List<Object> srcValues) {

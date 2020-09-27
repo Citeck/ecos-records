@@ -10,11 +10,13 @@ import ru.citeck.ecos.commons.utils.ScriptUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.MetaValueDelegate;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.RecordConstants;
-import ru.citeck.ecos.records3.RecordMeta;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.graphql.meta.value.*;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.type.ComputedAttribute;
@@ -36,22 +38,22 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     private final Map<String, ComputedAttribute> computedAtts = new HashMap<>();
 
-    private final MetaValuesConverter metaValuesConverter;
+    private final AttValuesConverter attValuesConverter;
     private QueryContext context;
 
     private boolean initialized = false;
 
-    public AttributesMixinMetaValue(MetaValue impl,
+    public AttributesMixinMetaValue(AttValue impl,
                                     RecordAttsService recordsMetaService,
                                     RecordTypeService recordTypeService,
-                                    MetaValuesConverter metaValuesConverter,
+                                    AttValuesConverter attValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
         super(impl);
         this.mixins = mixins;
         this.recordTypeService = recordTypeService;
         this.recordsMetaService = recordsMetaService;
-        this.metaValuesConverter = metaValuesConverter;
+        this.attValuesConverter = attValuesConverter;
         this.metaCache = metaCache != null ? metaCache : new ConcurrentHashMap<>();
     }
 
@@ -67,7 +69,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
         this.context = context;
 
-        RecordRef typeRef = getRecordType();
+        RecordRef typeRef = getTypeRef();
 
         if (!RecordRef.isEmpty(typeRef) && !QueryContext.getCurrent().isComputedAttsDisabled()) {
 
@@ -119,7 +121,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                              Class<?> resMetaType,
                              UncheckedFunction<Object, R> action) throws Exception {
 
-        if (MetaValue.class.equals(resMetaType)) {
+        /*if (AttValue.class.equals(resMetaType)) {
             return action.apply(this);
         } else if (RecordRef.class.equals(resMetaType)) {
             return action.apply(RecordRef.valueOf(getId()));
@@ -138,8 +140,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             if (reqMeta instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, String> attributes = (Map<String, String>) reqMeta;
-                RecordMeta resMeta = recordsMetaService.getMeta(this, attributes);
-                if (resMetaType.isAssignableFrom(RecordMeta.class)) {
+                RecordAtts resMeta = recordsMetaService.getMeta(this, attributes);
+                if (resMetaType.isAssignableFrom(RecordAtts.class)) {
                     return resMeta;
                 }
                 return recordsMetaService.instantiateMeta(resMetaType, resMeta);
@@ -150,11 +152,12 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             }
         });
 
-        return action.apply(requiredMeta);
+        return action.apply(requiredMeta);*/
+        return null;
     }
 
     @Override
-    public Object getAttribute(String attribute) {
+    public Object getAttribute(@NotNull String attribute) {
         /*Object result = getAttributeImpl(attribute, () -> super.getAttribute(attribute));
         if (result instanceof RecordRef) {
             return result;
@@ -188,7 +191,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         if (RecordConstants.ATT_ECOS_TYPE.equals(attribute)
             || RecordConstants.ATT_TYPE.equals(attribute)) {
 
-            return getRecordType();
+            return getTypeRef();
         }
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
@@ -224,7 +227,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
             if (meta == this) {
 
-                MetaValue implMeta = getImpl();
+                AttValue implMeta = getImpl();
 
                 return mixin.getAttribute(attribute, new MetaValueDelegate(this) {
                     @Override
@@ -275,7 +278,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     @Override
-    public MetaEdge getEdge(@NotNull String attribute) throws Exception {
+    public AttEdge getEdge(@NotNull String attribute) throws Exception {
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
 
@@ -287,14 +290,14 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
             return doWithMeta(mixin, meta -> {
 
-                MetaValue implMeta = getImpl();
-                UncheckedSupplier<MetaEdge> edgeSupplier = () -> implMeta.getEdge(attribute);
+                AttValue implMeta = getImpl();
+                UncheckedSupplier<AttEdge> edgeSupplier = () -> implMeta.getEdge(attribute);
 
                 if (meta == this) {
 
                     return mixin.getEdge(attribute, new MetaValueDelegate(this) {
                         @Override
-                        public MetaEdge getEdge(@NotNull String name) throws Exception {
+                        public AttEdge getEdge(@NotNull String name) throws Exception {
                             if (attribute.equals(name)) {
                                 return implMeta.getEdge(name);
                             }

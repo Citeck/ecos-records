@@ -5,13 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDelResult;
-import ru.citeck.ecos.records3.record.operation.delete.request.RecordsDeletion;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutResult;
-import ru.citeck.ecos.records3.record.operation.mutate.request.RecordsMutation;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
@@ -41,65 +37,63 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
 
     @Nullable
     @Override
-    public RecsQueryRes<RecordMeta> queryRecords(@NotNull RecordsQuery query,
-                                                 @NotNull Map<String, String> attributes,
-                                                 boolean flat) {
+    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                             @NotNull Map<String, String> attributes,
+                                             boolean rawAtts) {
 
         String sourceId = query.getSourceId();
 
         if (remote == null || !isRemoteSourceId(sourceId)) {
-            return local.queryRecords(query, attributes, flat);
+            return local.query(query, attributes, rawAtts);
         }
-        return remote.queryRecords(query, attributes, flat);
+        return remote.query(query, attributes, rawAtts);
     }
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getMeta(@NotNull Collection<RecordRef> records,
+    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
                                              @NotNull Map<String, String> attributes,
-                                             boolean flat) {
+                                             boolean rawAtts) {
 
         if (remote == null || records.isEmpty()) {
-            return local.getMeta(records, attributes, flat);
+            return local.getAtts(records, attributes, rawAtts);
         }
-        RecordsResult<RecordMeta> result = new RecordsResult<>();
+        List<RecordAtts> result = new ArrayList<>();
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
-            if (!isRemoteSourceId(sourceId)) {
-                result.merge(local.getMeta(records, attributes, flat));
+            /*if (!isRemoteSourceId(sourceId)) {
+                result.merge(local.getMeta(records, attributes, rawAtts));
             } else if (isRemoteRef(records.stream().findFirst().orElse(null))) {
-                result.merge(remote.getMeta(records, attributes, flat));
+                result.merge(remote.getMeta(records, attributes, rawAtts));
             } else {
-                result.merge(local.getMeta(records, attributes, flat));
-            }
+                result.merge(local.getMeta(records, attributes, rawAtts));
+            }*/
         });
         return result;
     }
 
     @Nullable
     @Override
-    public RecordsMutResult mutate(@NotNull RecordsMutation mutation) {
-        List<RecordMeta> records = mutation.getRecords();
+    public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
         if (remote == null || records.isEmpty()) {
-            return local.mutate(mutation);
+            return local.mutate(records);
         }
         if (isRemoteRef(records.get(0))) {
-            return remote.mutate(mutation);
+            return remote.mutate(records);
         }
-        return local.mutate(mutation);
+        return local.mutate(records);
     }
 
     @NotNull
     @Override
-    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
-        List<RecordRef> records = deletion.getRecords();
+    public List<DelStatus> delete(@NotNull List<RecordRef> records) {
         if (remote == null || records.isEmpty()) {
-            return local.delete(deletion);
+            return local.delete(records);
         }
         if (isRemoteRef(records.get(0))) {
-            return remote.delete(deletion);
+            return remote.delete(records);
         }
-        return local.delete(deletion);
+        return local.delete(records);
     }
 
     @Nullable
@@ -119,7 +113,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return result;
     }
 
-    private boolean isRemoteRef(RecordMeta meta) {
+    private boolean isRemoteRef(RecordAtts meta) {
         return isRemoteRef(meta.getId());
     }
 

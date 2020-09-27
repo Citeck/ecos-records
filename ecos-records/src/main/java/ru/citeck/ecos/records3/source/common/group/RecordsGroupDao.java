@@ -5,8 +5,8 @@ import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
@@ -24,11 +24,11 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
     }
 
     @Override
-    public RecsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery query) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {
-            return new RecsQueryRes<>();
+            return new RecordsQueryRes<>();
         }
 
         RecordsQuery groupsBaseQuery = new RecordsQuery(query);
@@ -53,13 +53,13 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
             List<DistinctValue> values = getDistinctValues(query.getSourceId(), basePredicate, groupAtt, max);
 
             if (values.isEmpty()) {
-                return new RecsQueryRes<>();
+                return new RecordsQueryRes<>();
             }
 
             distinctValues.add(values);
         }
 
-        RecsQueryRes<RecordsGroup> result = new RecsQueryRes<>();
+        RecordsQueryRes<RecordsGroup> result = new RecordsQueryRes<>();
         result.setRecords(getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts));
 
         return result;
@@ -128,7 +128,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
         recordsQuery.setSourceId(sourceId);
         recordsQuery.setQuery(distinctQuery);
 
-        RecsQueryRes<DistinctValue> values = recordsService.queryRecords(recordsQuery, DistinctValue.class);
+        RecordsQueryRes<DistinctValue> values = recordsService.query(recordsQuery, DistinctValue.class);
         return values.getRecords();
     }
 

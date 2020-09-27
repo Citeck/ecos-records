@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records3.source.common;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records3.RecordMeta;
+import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.RecsQueryRes;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
 
@@ -22,9 +22,9 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
-
-        RecsQueryRes<RecordMeta> result = new RecsQueryRes<>();
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+/*
+        RecordsQueryRes<RecordAtts> result = new RecordsQueryRes<>();
 
         RecordsQuery localQuery = new RecordsQuery(query);
 
@@ -41,7 +41,7 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
             localQuery.setMaxItems(query.getMaxItems() - result.getRecords().size());
             RecordsQueryDao recordsDao = this.recordsDao.get(sourceIdx);
-            RecsQueryRes<?> daoRecords = recordsDao.queryRecords(localQuery);
+            RecordsQueryRes<?> daoRecords = recordsDao.queryRecords(localQuery);
 
             //todo
             result.merge(daoRecords);
@@ -63,7 +63,8 @@ public class MultiRecordsDao extends AbstractRecordsDao
             result.setTotalCount(result.getTotalCount() + 1);
         }
 
-        return result;
+        return result;*/
+        return null;
     }
 
     public void setRecordsDao(List<RecordsQueryDao> records) {

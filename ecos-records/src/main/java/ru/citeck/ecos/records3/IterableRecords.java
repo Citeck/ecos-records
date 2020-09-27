@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
-import ru.citeck.ecos.records3.record.operation.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 
 import java.util.Iterator;
 import java.util.List;
@@ -66,7 +66,7 @@ public class IterableRecords implements Iterable<RecordRef> {
             query.setAfterId(lastId);
             query.setMaxItems(SEARCH_MAX_ITEMS);
 
-            records = recordsService.queryRecords(query).getRecords();
+            records = recordsService.query(query).getRecords();
 
             if (records.size() > 0) {
                 RecordRef newLastId = records.get(records.size() - 1);

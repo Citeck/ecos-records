@@ -8,7 +8,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -32,7 +32,7 @@ public class MetaNumberTest extends LocalRecordsDao
 
     @Test
     public void test() {
-        DataValue value = recordsService.getAttribute(RecordRef.create("test", ""), ".num");
+        DataValue value = recordsService.getAtt(RecordRef.create("test", ""), ".num");
         String strValue = value.asText();
         //assertEquals("1000000000.0", strValue); //todo
     }
@@ -43,7 +43,7 @@ public class MetaNumberTest extends LocalRecordsDao
         return records.stream().map(TestValue::new).collect(Collectors.toList());
     }
 
-    static class TestValue implements MetaValue {
+    static class TestValue implements AttValue {
 
         private final RecordRef ref;
 

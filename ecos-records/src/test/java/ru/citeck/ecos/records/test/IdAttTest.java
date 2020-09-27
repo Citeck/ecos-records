@@ -9,7 +9,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -43,7 +43,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     @Test
     void test() {
-        DataValue attribute = recordsService.getAttribute(RecordRef.create(ID, "test"), "id");
+        DataValue attribute = recordsService.getAtt(RecordRef.create(ID, "test"), "id");
         assertEquals("test-id", attribute.asText());
     }
 
@@ -52,10 +52,10 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
         RecordRef testRef = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAttribute(testRef, "otherRef?str");
+        DataValue attribute = recordsService.getAtt(testRef, "otherRef?str");
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
-        MetaClass meta = recordsService.getMeta(testRef, MetaClass.class);
+        MetaClass meta = recordsService.getAtts(testRef, MetaClass.class);
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
     }
 
@@ -70,7 +70,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         private RecordRef otherRef;
     }
 
-    public static class ValueByRef implements MetaValue {
+    public static class ValueByRef implements AttValue {
 
         @Override
         public String getString() {
@@ -78,7 +78,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
     }
 
-    public static class Value implements MetaValue {
+    public static class Value implements AttValue {
 
         private RecordRef ref;
 

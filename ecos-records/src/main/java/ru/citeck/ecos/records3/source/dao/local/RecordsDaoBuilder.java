@@ -44,6 +44,7 @@ public class RecordsDaoBuilder {
         }
         InMemRecordsDao<Object> dao = new InMemRecordsDao<>(id);
         dao.setRecords(records);
-        return dao;
+        //return dao;
+        return null;
     }
 }

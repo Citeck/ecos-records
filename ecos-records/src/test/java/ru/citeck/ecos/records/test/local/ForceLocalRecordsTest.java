@@ -25,7 +25,7 @@ public class ForceLocalRecordsTest {
 
         recordsService.register(new TypesDao());
 
-        TypeParents typeInfo = recordsService.getMeta(TypesDao.type2Ref, TypeParents.class);
+        TypeParents typeInfo = recordsService.getAtts(TypesDao.type2Ref, TypeParents.class);
 
         List<RecordRef> fromQuery = new ArrayList<>(typeInfo.parents);
         List<RecordRef> expected = new ArrayList<>(Arrays.asList(TypesDao.type1Ref, TypesDao.type0Ref));

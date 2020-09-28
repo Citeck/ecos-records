@@ -15,8 +15,8 @@ import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
-import ru.citeck.ecos.records3.type.ComputedAttribute;
-import ru.citeck.ecos.records3.type.RecordTypeService;
+import ru.citeck.ecos.records3.type.ComputedAtt;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,8 +45,8 @@ public class ComputedAttsTest extends LocalRecordsDao
 
     private RecordsService recordsService;
 
-    private final List<ComputedAttribute> computedAttributesType0 = new ArrayList<>();
-    private final List<ComputedAttribute> computedAttributesType1 = new ArrayList<>();
+    private final List<ComputedAtt> computedAttributesType0 = new ArrayList<>();
+    private final List<ComputedAtt> computedAttributesType1 = new ArrayList<>();
 
     private final MLText name0 = DataValue.create("{" +
         "\"ru\": \"Русский0-${idfield}\", " +
@@ -62,7 +62,7 @@ public class ComputedAttsTest extends LocalRecordsDao
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory() {
             @Override
-            protected RecordTypeService createRecordTypeService() {
+            protected RecTypeService createRecordTypeService() {
                 return type -> {
                     if ("type0".equals(type.getId())) {
                         return computedAttributesType0;
@@ -82,7 +82,7 @@ public class ComputedAttsTest extends LocalRecordsDao
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
+        /*RecordsQuery query = new RecordsQuery();
         query.setSourceId(ID);
 
         String intAtt = intFieldsSumName + "?num";
@@ -97,7 +97,7 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         // for int
 
-        ComputedAttribute intCcmputedAtt = new ComputedAttribute();
+        ComputedAtt intCcmputedAtt = new ComputedAtt();
         Map<String, String> model = new HashMap<>();
         model.put("intField0", "intField0?num");
         model.put("intField1", "intField1?num");
@@ -125,7 +125,7 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         // for string
 
-        ComputedAttribute strPrefixAtt = new ComputedAttribute();
+        ComputedAtt strPrefixAtt = new ComputedAtt();
         Map<String, String> model1 = new HashMap<>();
         model1.put("strField", "strField");
         strPrefixAtt.setModel(model1);
@@ -159,7 +159,7 @@ public class ComputedAttsTest extends LocalRecordsDao
 
         // for inner
 
-        ComputedAttribute innerComputedAtt = new ComputedAttribute();
+        ComputedAtt innerComputedAtt = new ComputedAtt();
         model = new HashMap<>();
         model.put("<", "inner.strField");
         innerComputedAtt.setModel(model);
@@ -168,7 +168,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         computedAttributesType0.add(innerComputedAtt);
 
         DataValue res = recordsService.getAtt(RecordRef.create(getId(), "type0"), innerFieldName);
-        assertEquals("some-inner-value", res.asText());
+        assertEquals("some-inner-value", res.asText());*/
     }
 
     @Override
@@ -195,7 +195,7 @@ public class ComputedAttsTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
 
             switch (name) {
                 case "strField": return strFieldValue;

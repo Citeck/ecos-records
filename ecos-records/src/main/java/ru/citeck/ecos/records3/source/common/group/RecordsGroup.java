@@ -59,7 +59,7 @@ public class RecordsGroup implements AttValue {
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) {
+    public Object getAtt(@NotNull String name) {
 
         switch (name) {
             case FIELD_PREDICATE:
@@ -134,7 +134,7 @@ public class RecordsGroup implements AttValue {
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             return value.getDisplayName();
         }
 

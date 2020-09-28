@@ -26,7 +26,6 @@ import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
-import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -60,6 +59,18 @@ public class AttResolver {
 
     public DataValue resolve(Object value, SchemaRootAtt attribute) {
         return resolve(value, attribute, false);
+    }
+
+    public DataValue resolve(Object value, SchemaRootAtt attribute, List<AttMixin> mixins) {
+        return resolve(ResolveArgs.create()
+                .setValues(Collections.singletonList(value))
+                .setAtt(attribute)
+                .setMixins(mixins)
+                .build()
+        ).stream()
+            .map(v -> v.get(attribute.getAttribute().getAliasForValue()))
+            .findFirst()
+            .orElseThrow(() -> new ResolveException("Resolving failed. Att: " + attribute + " Value: " + value));
     }
 
     public DataValue resolve(Object value, SchemaRootAtt attribute, boolean rawAtts) {
@@ -252,45 +263,40 @@ public class AttResolver {
 
         Map<String, Object> result = new LinkedHashMap<>();
         AttContext attContext = context.getAttContext();
-        String prevAttPath = context.getPath();
-        Map<String, AttMixin> mixins = context.getMixins();
+        String currentValuePath = context.getPath();
+        Set<String> disabledMixinPaths = context.getDisabledMixinPaths();
 
         for (SchemaAtt att : attributes) {
 
             String attPath;
-            if (prevAttPath.isEmpty()) {
+            if (currentValuePath.isEmpty()) {
                 attPath = (att.isScalar() ? "?" : "") + att.getName();
             } else {
-                attPath = prevAttPath + (att.isScalar() ? "?" : ".") + att.getName();
+                attPath = currentValuePath + (att.isScalar() ? "?" : ".") + att.getName();
             }
             context.setPath(attPath);
 
             attContext.setSchemaAtt(att);
 
             AttMixin mixin = null;
-            String mixinAttribute = "";
 
-            if (!mixins.isEmpty()) {
-                mixinAttribute = "^" + attPath;
-                mixin = mixins.get(mixinAttribute);
-                if (mixin == null) {
-                    for (String mixinAtt : mixins.keySet()) {
-                        if (attPath.endsWith(mixinAtt)) {
-                            mixin = mixins.get(mixinAtt);
-                            mixinAttribute = mixinAtt;
-                            break;
-                        }
-                    }
+            for (AttMixin attMixin : context.getMixins()) {
+                if (attMixin.isProvides(attPath)) {
+                    mixin = attMixin;
+                    break;
                 }
             }
 
             Object attValue;
-            if (mixin != null) {
+            if (mixin != null && !disabledMixinPaths.contains(attPath)) {
+                disabledMixinPaths.add(attPath);
                 try {
-                    attValue = mixin.getAtt(mixinAttribute, new AttValueResolveCtx(context, value));
+                    attValue = mixin.getAtt(attPath, new AttValueResolveCtx(currentValuePath, context, value));
                 } catch (Exception e) {
                     log.error("Resolving error. Path: " + attPath, e);
                     attValue = null;
+                } finally {
+                    disabledMixinPaths.remove(attPath);
                 }
             } else {
                 attValue = value.resolve(attContext);
@@ -325,7 +331,7 @@ public class AttResolver {
             }
         }
 
-        context.setPath(prevAttPath);
+        context.setPath(currentValuePath);
 
         return result;
     }
@@ -410,7 +416,9 @@ public class AttResolver {
 
         public Object resolve(AttContext attContext) {
 
-            String name = attContext.getSchemaAtt().getName();
+            SchemaAtt schemaAtt = attContext.getSchemaAtt();
+            String name = schemaAtt.getName();
+            boolean isScalar = schemaAtt.isScalar();
             String cacheKey = attContext.getSchemaAtt().isScalar() ? "?" + name : name;
 
             Object res;
@@ -419,7 +427,7 @@ public class AttResolver {
             } else {
                 attContext.setSchemaAttWasRequested(false);
                 try {
-                    res = resolveImpl(attContext.getSchemaAtt());
+                    res = resolveImpl(name, isScalar);
                 } catch (Exception e) {
                     log.error("Attribute resolving error. Attribute: " + name + " Value: " + value + " ");
                     res = null;
@@ -432,11 +440,9 @@ public class AttResolver {
             return res;
         }
 
-        private Object resolveImpl(SchemaAtt schemaAtt) throws Exception {
+        private Object resolveImpl(String attribute, boolean isScalar) throws Exception {
 
-            String attribute = schemaAtt.getName();
-
-            if (schemaAtt.isScalar()) {
+            if (isScalar) {
                 return getScalar(attribute);
             }
 
@@ -452,12 +458,12 @@ public class AttResolver {
                     if (attribute.startsWith("\\_")) {
                         attribute = attribute.substring(1);
                     }
-                    return value.getAttribute(attribute);
+                    return value.getAtt(attribute);
             }
         }
 
-        public String getLocalId() throws Exception {
-            return value.getLocalId();
+        public String getId() throws Exception {
+            return value.getId();
         }
 
         public RecordRef getValueRef() throws Exception {
@@ -474,10 +480,10 @@ public class AttResolver {
                 case "assoc":
                     return value.getString();
                 case "disp":
-                    return value.getDisplayName();
+                    return value.getDispName();
                 case "id":
                 case "localId":
-                    return getLocalId();
+                    return getId();
                 case "ref":
                     return getValueRef();
                 case "type":
@@ -507,7 +513,10 @@ public class AttResolver {
         private final AttContext attContext;
         @Getter
         @NotNull
-        private final Map<String, AttMixin> mixins;
+        private final List<AttMixin> mixins;
+
+        @Getter
+        private final Set<String> disabledMixinPaths = new HashSet<>();
 
         @Getter
         @Setter
@@ -554,6 +563,7 @@ public class AttResolver {
     @RequiredArgsConstructor
     public class AttValueResolveCtx implements AttValueCtx {
 
+        private final String basePath;
         private final ResolveContext resolveCtx;
         private final ValueContext valueCtx;
 
@@ -565,14 +575,8 @@ public class AttResolver {
 
         @NotNull
         @Override
-        public String getLocalId() throws Exception {
-            return valueCtx.getLocalId();
-        }
-
-        @NotNull
-        @Override
-        public ObjectData getAtts(@NotNull Collection<String> attributes) {
-            return getAtts(AttUtils.toMap(attributes));
+        public String getId() throws Exception {
+            return valueCtx.getId();
         }
 
         @NotNull
@@ -594,12 +598,19 @@ public class AttResolver {
 
             AttSchema schema = attSchemaReader.read(attributes);
 
-            Map<String, Object> result = resolve(valueCtx, schema.getAttributes()
-                .stream()
-                .map(SchemaRootAtt::getAttribute)
-                .collect(Collectors.toList()), resolveCtx);
+            String attPathBefore = resolveCtx.getPath();
+            resolveCtx.setPath(basePath);
 
-            return postProcess(result, ResolveArgs.create().setSchema(schema).build());
+            try {
+                Map<String, Object> result = resolve(valueCtx, schema.getAttributes()
+                    .stream()
+                    .map(SchemaRootAtt::getAttribute)
+                    .collect(Collectors.toList()), resolveCtx);
+
+                return postProcess(result, ResolveArgs.create().setSchema(schema).build());
+            } finally {
+                resolveCtx.setPath(attPathBefore);
+            }
         }
     }
 }

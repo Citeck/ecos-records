@@ -34,7 +34,7 @@ public class SimpleAttEdge implements AttEdge {
         if (getValueFunc != null) {
             return getValueFunc.get();
         } else if (scope != null) {
-            return scope.getAttribute(getName());
+            return scope.getAtt(getName());
         } else {
             log.warn("Scope and getValueFunc is null");
             return null;

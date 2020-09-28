@@ -134,6 +134,7 @@ public class AttSchemaReader {
             .collect(Collectors.toList());
     }
 
+
     private SchemaAtt readInnerAtt(String innerAtt,
                                    boolean dotContext,
                                    boolean multipleAtts,
@@ -141,12 +142,18 @@ public class AttSchemaReader {
                                    BiFunction<String, String, SchemaAtt> parserFunc) {
 
         String att = innerAtt.trim();
+
         int aliasDelimIdx = AttStrUtils.indexOf(att, ":");
 
         String alias = "";
         if (aliasDelimIdx > 0) {
             alias = NameUtils.unescape(att.substring(0, aliasDelimIdx));
+            alias = removeQuotes(alias);
             att = att.substring(aliasDelimIdx + 1);
+        }
+
+        if (!dotContext) {
+            att = removeQuotes(att);
         }
 
         if (alias.isEmpty() && multipleAtts) {
@@ -154,7 +161,7 @@ public class AttSchemaReader {
                 alias = "" + KEYS.charAt(idx);
             } else {
                 int questionIdx = att.indexOf('?');
-                if (questionIdx >= 0) {
+                if (questionIdx > 0) {
                     alias = att.substring(0, questionIdx);
                 } else {
                     alias = att;
@@ -165,6 +172,14 @@ public class AttSchemaReader {
     }
 
     private SchemaAtt readLastSimpleAtt(String alias, String attribute) {
+
+        if (attribute.charAt(0) == '?') {
+            return SchemaAtt.create()
+                .setAlias(alias)
+                .setName(attribute.substring(1))
+                .setScalar(true)
+                .build();
+        }
 
         String att = attribute;
         int questionIdx = AttStrUtils.indexOf(att, "?");
@@ -192,7 +207,7 @@ public class AttSchemaReader {
 
         return SchemaAtt.create()
             .setAlias(alias)
-            .setName(attribute.substring(0, openBraceIdx))
+            .setName(removeQuotes(attribute.substring(0, openBraceIdx)))
             .setMultiple(isMultiple)
             .setInner(readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readInner))
             .build();
@@ -219,7 +234,7 @@ public class AttSchemaReader {
 
             schemaAtt = SchemaAtt.create()
                 .setAlias(i == 0 ? alias : "")
-                .setName(pathElem)
+                .setName(removeQuotes(pathElem))
                 .setMultiple(isMultiple)
                 .setInner(schemaAtt)
                 .build();
@@ -436,4 +451,20 @@ public class AttSchemaReader {
 
         return result;
     }
+
+    private String removeQuotes(String value) {
+
+        if (value == null || value.length() < 2) {
+            return value;
+        }
+        char first = value.charAt(0);
+        char last = value.charAt(value.length() - 1);
+
+        if (first == last && first == '"' || first == '\'') {
+            value = value.substring(1, value.length() - 1);
+        }
+
+        return value;
+    }
+
 }

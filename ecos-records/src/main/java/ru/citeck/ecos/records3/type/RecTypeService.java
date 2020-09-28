@@ -5,8 +5,8 @@ import ru.citeck.ecos.records3.RecordRef;
 
 import java.util.List;
 
-public interface RecordTypeService {
+public interface RecTypeService {
 
     @NotNull
-    List<ComputedAttribute> getComputedAttributes(RecordRef type);
+    List<ComputedAtt> getComputedAtts(RecordRef type);
 }

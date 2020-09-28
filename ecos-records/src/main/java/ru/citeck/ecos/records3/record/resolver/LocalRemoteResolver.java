@@ -13,7 +13,6 @@ import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 

@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.record.operation.meta.schema.resolver;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
@@ -21,11 +20,13 @@ public class ResolveArgs {
     @NotNull
     private final List<Object> values;
     @NotNull
+    private final String sourceId;
+    @NotNull
     private final List<RecordRef> valueRefs;
     @NotNull
     private final AttSchema schema;
     @NotNull
-    private final Map<String, AttMixin> mixins;
+    private final List<AttMixin> mixins;
 
     private final boolean rawAtts;
 
@@ -35,6 +36,7 @@ public class ResolveArgs {
 
     public static class Builder {
 
+        private String sourceId = "";
         private List<Object> values = new ArrayList<>();
         private List<RecordRef> valueRefs = Collections.emptyList();
         private AttSchema schema;
@@ -42,7 +44,12 @@ public class ResolveArgs {
         @Getter
         private boolean rawAtts;
 
-        private Map<String, AttMixin> mixins = Collections.emptyMap();
+        private List<AttMixin> mixins = new ArrayList<>();
+
+        public Builder setSourceId(String sourceId) {
+            this.sourceId = sourceId;
+            return this;
+        }
 
         public Builder setRawAtts(boolean value) {
             rawAtts = value;
@@ -64,20 +71,9 @@ public class ResolveArgs {
         @NotNull
         public Builder setMixins(@Nullable Collection<AttMixin> mixins) {
             if (mixins == null) {
-                this.mixins = Collections.emptyMap();
+                this.mixins = new ArrayList<>();
             } else {
-                this.mixins = new LinkedHashMap<>();
-                mixins.forEach(m -> m.getAtts().forEach(a -> this.mixins.put(a, m)));
-            }
-            return this;
-        }
-
-        @NotNull
-        public Builder setMixins(@Nullable Map<String, AttMixin> mixins) {
-            if (mixins == null) {
-                this.mixins = Collections.emptyMap();
-            } else {
-                this.mixins = new LinkedHashMap<>(mixins);
+                this.mixins = new ArrayList<>(mixins);
             }
             return this;
         }
@@ -106,7 +102,7 @@ public class ResolveArgs {
             if (!valueRefs.isEmpty() && valueRefs.size() != values.size()) {
                 throw new RuntimeException("valueRefs should have same size with values");
             }
-            return new ResolveArgs(values, valueRefs, schema, mixins, rawAtts);
+            return new ResolveArgs(values, sourceId, valueRefs, schema, mixins, rawAtts);
         }
     }
 }

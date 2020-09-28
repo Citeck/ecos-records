@@ -39,7 +39,7 @@ public class MLTextValueFactory implements AttValueFactory<MLText> {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             if (name.equals("closest")) {
                 return new Value(value, true);
             }

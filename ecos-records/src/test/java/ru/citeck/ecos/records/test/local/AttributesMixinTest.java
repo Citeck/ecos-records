@@ -182,7 +182,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
 
             switch (name) {
                 case "strField": return strFieldValue;
@@ -204,7 +204,7 @@ public class AttributesMixinTest extends LocalRecordsDao
 
         @Override
         public Object getAttribute(String attribute, AttValue meta) throws Exception {
-            return meta.getAttribute(attribute);
+            return meta.getAtt(attribute);
         }
 
         @Override

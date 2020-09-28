@@ -12,7 +12,7 @@ public class EmptyValue implements AttValue {
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) {
+    public Object getAtt(@NotNull String name) {
         if (RecordConstants.ATT_NOT_EXISTS.equals(name)) {
             return true;
         }

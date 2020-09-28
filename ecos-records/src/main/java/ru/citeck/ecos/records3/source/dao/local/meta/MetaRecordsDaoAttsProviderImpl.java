@@ -23,7 +23,7 @@ public class MetaRecordsDaoAttsProviderImpl implements MetaRecordsDaoAttsProvide
     public class Attributes implements AttValue {
 
         @Override
-        public Object getAttribute(@NotNull String name) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
             MetaAttributesSupplier supplier = suppliers.get(name);
             if (supplier == null) {
                 return null;

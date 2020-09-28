@@ -27,13 +27,12 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
             sb.append(NameUtils.escape(alias)).append(":");
         }
 
-        char firstCharInName = name.charAt(0);
-
-        if (firstCharInName == '.') {
-            sb.append(name.substring(1));
+        if (attribute.isScalar()) {
+            sb.append(name);
             return;
         }
-        if (firstCharInName == '_' && inner.size() == 1) {
+
+        if (name.charAt(0) == '_' && inner.size() == 1) {
             if (name.equals(RecordConstants.ATT_EDGE)) {
                 writeEdge(attribute, sb);
                 return;

@@ -5,13 +5,19 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.meta.value.factory.AttValueFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AttValuesConverter {
 
-    private final Map<Class<?>, AttValueFactory<Object>> valueFactories = new ConcurrentHashMap<>();
+    private Map<Class<?>, AttValueFactory<Object>> valueFactories = null;
+    private final RecordsServiceFactory factory;
 
     public AttValuesConverter(RecordsServiceFactory factory) {
+        this.factory = factory;
+    }
+
+    private Map<Class<?>, AttValueFactory<Object>> initFactories() {
+
+        Map<Class<?>, AttValueFactory<Object>> valueFactories = new LinkedHashMap<>();
 
         for (AttValueFactory<?> valueFactory : factory.getMetaValueFactories()) {
             for (Class<?> type : valueFactory.getValueTypes()) {
@@ -20,9 +26,15 @@ public class AttValuesConverter {
                 valueFactories.put(type, objFactory);
             }
         }
+
+        return valueFactories;
     }
 
     public AttValue toAttValue(Object value) {
+
+        if (valueFactories == null) {
+            valueFactories = initFactories();
+        }
 
         if (value == null || value instanceof RecordRef && RecordRef.isEmpty((RecordRef) value)) {
             return null;

@@ -41,7 +41,11 @@ public class BeanTypeUtils {
             if (metaAttAnn != null) {
                 String metaAttName = metaAttAnn.value();
                 if (metaAttName.contains("?")) {
-                    metaAttName = metaAttName.substring(0, metaAttName.indexOf('?'));
+                    if (metaAttName.charAt(0) != '?') {
+                        metaAttName = metaAttName.substring(0, metaAttName.indexOf('?'));
+                    } else {
+                        getters.put('.' + metaAttName.substring(1), getter);
+                    }
                 }
                 getters.put(metaAttName, getter);
             }

@@ -9,26 +9,26 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import java.util.Collections;
 import java.util.List;
 
-public class DefaultRecordTypeService implements RecordTypeService {
+public class DefaultRecTypeService implements RecTypeService {
 
     private final RecordsService recordsService;
 
-    public DefaultRecordTypeService(RecordsServiceFactory factory) {
+    public DefaultRecTypeService(RecordsServiceFactory factory) {
         recordsService = factory.getRecordsService();
     }
 
     @NotNull
-    public List<ComputedAttribute> getComputedAttributes(RecordRef type) {
+    public List<ComputedAtt> getComputedAtts(RecordRef type) {
 
         ComputedAttsMeta meta = recordsService.getAtts(type, ComputedAttsMeta.class);
-        if (meta == null || meta.computedAttributes == null) {
+        if (meta == null || meta.computedAtts == null) {
             return Collections.emptyList();
         }
-        return meta.getComputedAttributes();
+        return meta.getComputedAtts();
     }
 
     @Data
     public static final class ComputedAttsMeta {
-        private List<ComputedAttribute> computedAttributes;
+        private List<ComputedAtt> computedAtts;
     }
 }

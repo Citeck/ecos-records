@@ -92,7 +92,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
             switch (name) {
                 case "id": return "test-id";
                 case "otherRef": return RecordRef.create(ID, ValueByRef.class.getSimpleName());

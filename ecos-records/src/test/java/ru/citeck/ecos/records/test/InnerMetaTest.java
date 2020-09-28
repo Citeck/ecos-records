@@ -97,7 +97,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }*/
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             return new InnerMetaValue(attributes.get(name));
         }
     }
@@ -113,7 +113,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             switch (name) {
                 case "field0" :
                     return "field0";
@@ -126,7 +126,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             return "INNER_DISP";
         }
 

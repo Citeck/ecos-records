@@ -48,7 +48,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             switch (name) {
                 case "rec":
                     return new Records();
@@ -65,7 +65,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     public static class Time implements AttValue {
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
 
             switch (name) {
                 case "started":
@@ -122,7 +122,7 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     public static class Records implements AttValue {
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             return RecordRef.valueOf(name);
         }
     }

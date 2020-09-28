@@ -88,6 +88,8 @@ public class SchemaTest {
     @Test
     public void attTest() {
 
+        assertAtt(".str", "?str");
+
         assertAtt(".att(n:\"cm:title\"){att(n:\"cm:name\"){str}}", "cm:title.cm:name?str");
 
         assertAtt(".att(n:\"cm:name\"){str}", ".att(n:\"cm:name\"){str}");
@@ -117,7 +119,6 @@ public class SchemaTest {
         "}", "cm:name[]{'cm:name','cm:title'}");
 
         assertAtt(".att(n:\"cm:name\"){disp}", "cm:name");
-        assertAtt(".att(n:\"cm:na.me\"){disp}", "'cm:na.me'");
         assertAtt(".att(n:\"cm:na\"){att(n:\"me\"){disp}}", "cm:na.me");
 
         assertAtt(".att(n:\"cm:name[]\"){disp}", "\"cm:name[]\"");
@@ -130,9 +131,15 @@ public class SchemaTest {
     }
 
     @Test
+    public void testPathWithQuotes() {
+
+        assertAtt(".att(n:\"cm:na.me\"){disp}", "'cm:na.me'");
+    }
+
+    @Test
     public void testInnerAliases() {
-        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
         assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{'.disp',\".str\"}");
+        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
     }
 
     private void assertAtt(String expected, String source) {

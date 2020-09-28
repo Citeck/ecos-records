@@ -3,11 +3,8 @@ package ru.citeck.ecos.records3.source.common;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
-import ru.citeck.ecos.commons.utils.ScriptUtils;
-import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
@@ -16,11 +13,10 @@ import ru.citeck.ecos.records3.record.operation.meta.value.impl.MetaValueDelegat
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
 import ru.citeck.ecos.records3.record.operation.query.QueryContext;
 import ru.citeck.ecos.records3.RecordConstants;
-import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.type.ComputedAttribute;
-import ru.citeck.ecos.records3.type.RecordTypeService;
+import ru.citeck.ecos.records3.type.ComputedAtt;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -31,12 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     private final RecordAttsService recordsMetaService;
-    private final RecordTypeService recordTypeService;
+    private final RecTypeService recordTypeService;
 
     private final Map<String, ParameterizedAttsMixin> mixins;
     private final Map<Object, Object> metaCache;
 
-    private final Map<String, ComputedAttribute> computedAtts = new HashMap<>();
+    private final Map<String, ComputedAtt> computedAtts = new HashMap<>();
 
     private final AttValuesConverter attValuesConverter;
     private QueryContext context;
@@ -45,7 +41,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     public AttributesMixinMetaValue(AttValue impl,
                                     RecordAttsService recordsMetaService,
-                                    RecordTypeService recordTypeService,
+                                    RecTypeService recordTypeService,
                                     AttValuesConverter attValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
@@ -67,28 +63,28 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             //super.init(context, field);
         }
 
-        this.context = context;
+        /*this.context = context;
 
         RecordRef typeRef = getTypeRef();
 
         if (!RecordRef.isEmpty(typeRef) && !QueryContext.getCurrent().isComputedAttsDisabled()) {
 
-            List<ComputedAttribute> atts = QueryContext.withoutComputedAtts(() ->
-                recordTypeService.getComputedAttributes(typeRef));
+            List<ComputedAtt> atts = QueryContext.withoutComputedAtts(() ->
+                recordTypeService.getComputedAtts(typeRef));
 
             if (atts != null) {
-                for (ComputedAttribute att : atts) {
+                for (ComputedAtt att : atts) {
                     this.computedAtts.put(att.getId(), att);
                 }
             }
-        }
+        }*/
 
         initialized = true;
     }
 
     @Override
-    public String getDisplayName() throws Exception {
-        return getAttributeImpl(".disp", String.class, super::getDisplayName);
+    public String getDispName() throws Exception {
+        return getAttributeImpl(".disp", String.class, super::getDispName);
     }
 
     @Override
@@ -157,7 +153,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     @Override
-    public Object getAttribute(@NotNull String attribute) {
+    public Object getAtt(@NotNull String attribute) {
         /*Object result = getAttributeImpl(attribute, () -> super.getAttribute(attribute));
         if (result instanceof RecordRef) {
             return result;
@@ -204,7 +200,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             }
         }
 
-        ComputedAttribute computedAtt = computedAtts.get(attribute);
+        ComputedAtt computedAtt = computedAtts.get(attribute);
         if (computedAtt != null) {
             try {
                 return computeAttribute(computedAtt);
@@ -231,11 +227,11 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
                 return mixin.getAttribute(attribute, new MetaValueDelegate(this) {
                     @Override
-                    public Object getAttribute(@NotNull String name) throws Exception {
+                    public Object getAtt(@NotNull String name) throws Exception {
                         if (attribute.equals(name)) {
-                            return implMeta.getAttribute(name);
+                            return implMeta.getAtt(name);
                         }
-                        return super.getAttribute(name);
+                        return super.getAtt(name);
                     }
                 });
             }
@@ -244,9 +240,9 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         });
     }
 
-    private Object computeAttribute(ComputedAttribute computedAtt) throws Exception {
+    private Object computeAttribute(ComputedAtt computedAtt) throws Exception {
 
-        return this.doWithMeta(computedAtt.getModel(), ObjectData.class, meta -> {
+        /*return this.doWithMeta(computedAtt.getModel(), ObjectData.class, meta -> {
 
             ObjectData metaObj = ObjectData.create(meta);
             String type = computedAtt.getType();
@@ -274,7 +270,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                 log.error("Computed attribute type is not supported: '" + type + "'. att: " + computedAtt);
             }
             return null;
-        });
+        });*/
+        return null;
     }
 
     @Override

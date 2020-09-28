@@ -13,8 +13,8 @@ import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
 import ru.citeck.ecos.records3.source.common.AttributesMixin;
 import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.type.ComputedAttribute;
-import ru.citeck.ecos.records3.type.RecordTypeService;
+import ru.citeck.ecos.records3.type.ComputedAtt;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,17 +36,17 @@ public class InnerMixinTest extends LocalRecordsDao
     @BeforeAll
     void init() {
 
-        RecordsServiceFactory factory = new RecordsServiceFactory() {
+        /*RecordsServiceFactory factory = new RecordsServiceFactory() {
             @Override
-            protected RecordTypeService createRecordTypeService() {
+            protected RecTypeService createRecordTypeService() {
                 return type -> {
                     if (type.equals(TEST_TYPE0)) {
-                        ComputedAttribute att = new ComputedAttribute();
+                        ComputedAtt att = new ComputedAtt();
                         att.setId("computed");
                         att.setModel(Collections.singletonMap("<", "computedAtt0"));
                         return Collections.singletonList(att);
                     } else if (type.equals(TEST_TYPE1)) {
-                        ComputedAttribute att = new ComputedAttribute();
+                        ComputedAtt att = new ComputedAtt();
                         att.setId("computed");
                         att.setModel(Collections.singletonMap("<", "computedAtt1"));
                         return Collections.singletonList(att);
@@ -75,7 +75,7 @@ public class InnerMixinTest extends LocalRecordsDao
             public Void getMetaToRequest() {
                 return null;
             }
-        });
+        });*/
     }
 
     @Test

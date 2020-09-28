@@ -45,9 +45,9 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public String getLocalId() {
-            if (typeCtx.hasProperty(".localId")) {
-                return getAttWithType(".localId", String.class);
+        public String getId() {
+            if (typeCtx.hasProperty(".id")) {
+                return getAttWithType(".id", String.class);
             }
             try {
                 Object id = PropertyUtils.getProperty(bean, "id");
@@ -80,7 +80,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             if (typeCtx.hasProperty(".disp")) {
                 return getAttWithType(".disp", String.class);
             }
@@ -96,7 +96,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
             if (bean instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> beanAsMap = (Map<String, Object>) bean;
@@ -129,7 +129,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
 
         private <T> T getAttWithType(String name, Class<T> type) {
             try {
-                return Json.getMapper().convert(getAttribute(name), type);
+                return Json.getMapper().convert(getAtt(name), type);
             } catch (Exception e) {
                 return null;
             }

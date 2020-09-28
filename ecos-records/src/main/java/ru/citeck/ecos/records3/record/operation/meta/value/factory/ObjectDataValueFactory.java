@@ -21,7 +21,7 @@ public class ObjectDataValueFactory implements AttValueFactory<ObjectData> {
             }
 
             @Override
-            public Object getAttribute(@NotNull String name) {
+            public Object getAtt(@NotNull String name) {
                 return value.get(name);
             }
 

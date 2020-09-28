@@ -113,12 +113,12 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             return DISP_VALUE;
         }
 
         @Override
-        public String getLocalId() {
+        public String getId() {
             return ID_VALUE;
         }
 
@@ -154,7 +154,7 @@ public class MetaValueTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             if (name.equals("schema")) {
                 //todo
                 //schemaConsumer.accept(field.getInnerSchema());

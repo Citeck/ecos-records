@@ -13,7 +13,7 @@ public class AttFuncValue implements AttValue {
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) throws Exception {
+    public Object getAtt(@NotNull String name) throws Exception {
         return impl.apply(name);
     }
 }

@@ -26,18 +26,13 @@ public class MetaValueDelegate implements AttValue {
     }
 
     @Override
-    public String getDisplayName() throws Exception {
-        return impl.getDisplayName();
+    public String getDispName() throws Exception {
+        return impl.getDispName();
     }
 
-    @Override
-    public String getLocalId() throws Exception {
-        return impl.getLocalId();
-    }
-
-    @Override
-    public Object getAttribute(@NotNull String name) throws Exception {
-        return impl.getAttribute(name);
+   @Override
+    public Object getAtt(@NotNull String name) throws Exception {
+        return impl.getAtt(name);
     }
 
     @Override

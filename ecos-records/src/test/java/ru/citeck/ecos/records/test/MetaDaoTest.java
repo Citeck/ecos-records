@@ -80,7 +80,7 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao {
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             if (name.equals("field")) {
                 return ref.getId();
             } else if (name.equals("enum")) {

@@ -15,7 +15,7 @@ public class MetaEdgeValue implements AttValue {
     private final AttEdge edge;
 
     @Override
-    public Object getAttribute(@NotNull String name) throws Exception {
+    public Object getAtt(@NotNull String name) throws Exception {
         switch (name) {
             case "name":
                 return edge.getName();

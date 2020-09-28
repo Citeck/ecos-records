@@ -35,7 +35,7 @@ public class InnerMetaValue implements AttValue, HasCollectionView<InnerMetaValu
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) {
+    public Object getAtt(@NotNull String name) {
 
         SchemaAtt field = AttContext.getCurrentSchemaAtt();
 
@@ -81,7 +81,7 @@ public class InnerMetaValue implements AttValue, HasCollectionView<InnerMetaValu
     }
 
     @Override
-    public String getDisplayName() {
+    public String getDispName() {
         return getScalar(value, "disp", JsonNode::asText);
     }
 
@@ -93,11 +93,6 @@ public class InnerMetaValue implements AttValue, HasCollectionView<InnerMetaValu
     @Override
     public String getId() {
         return getScalar(value, "id", JsonNode::asText);
-    }
-
-    @Override
-    public String getLocalId() {
-        return getScalar(value, "localId", JsonNode::asText);
     }
 
     @Override

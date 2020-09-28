@@ -12,7 +12,7 @@ import ru.citeck.ecos.records3.source.common.AttributesMixin;
 import ru.citeck.ecos.records3.source.common.ParameterizedAttsMixin;
 import ru.citeck.ecos.records3.source.dao.*;
 import ru.citeck.ecos.records3.source.dao.local.v2.*;
-import ru.citeck.ecos.records3.type.RecordTypeService;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +41,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     protected RecordAttsService recordsMetaService;
     protected AttValuesConverter attValuesConverter;
     protected RecordsServiceFactory serviceFactory;
-    protected RecordTypeService recordTypeService;
+    protected RecTypeService recordTypeService;
 
     private boolean addSourceId = true;
     private final Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();

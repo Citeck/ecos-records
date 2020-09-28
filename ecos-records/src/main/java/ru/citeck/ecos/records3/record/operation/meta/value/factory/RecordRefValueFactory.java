@@ -15,8 +15,8 @@ import java.util.*;
 
 public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
 
-    private static final String ATT_ID = ".id";
-    private static final String ATT_STR = ".str";
+    private static final String ATT_ID = "?id";
+    private static final String ATT_STR = "?str";
 
     private final RecordsService recordsService;
     private final AttSchemaWriter schemaWriter = new AttSchemaGqlWriter();
@@ -38,7 +38,7 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
     public class RecordRefValue implements AttValue {
 
         private final RecordRef ref;
-        private final RecordAtts meta;
+        private final RecordAtts atts;
 
         RecordRefValue(RecordRef recordRef) {
 
@@ -59,13 +59,13 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
             }
 
             if (attsMap.size() > 0) {
-                this.meta = recordsService.getAtts(ref, attsMap);
+                this.atts = recordsService.getAtts(ref, attsMap);
             } else {
-                this.meta = new RecordAtts(ref);
+                this.atts = new RecordAtts(ref);
             }
 
-            if (attsMap.containsKey(".assoc") && !attsMap.containsKey(".str")) {
-                meta.set(".str", meta.getStringOrNull(".assoc"));
+            if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
+                atts.set("?str", atts.getStringOrNull("?assoc"));
             }
         }
 
@@ -75,43 +75,38 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
         }
 
         @Override
-        public String getDisplayName() {
-            return meta.getStringOrNull(".disp");
+        public String getDispName() {
+            return atts.getStringOrNull("?disp");
         }
 
         @Override
         public Double getDouble() {
-            return meta.getDoubleOrNull(".num");
+            return atts.getDoubleOrNull("?num");
         }
 
         @Override
         public Boolean getBool() {
-            return meta.getBoolOrNull(".bool");
+            return atts.getBoolOrNull("?bool");
         }
 
         @Override
         public Object getJson() {
-            return meta.getAttribute(".json");
+            return atts.getAttribute("?json");
         }
 
         @Override
         public boolean has(@NotNull String name) {
-            return meta.getAttribute(".has").asBoolean();
+            return atts.getAttribute("?has").asBoolean();
         }
 
         @Override
         public Object getAs(@NotNull String type) {
-            return new InnerMetaValue(meta.getAttribute(".as"));
+            return new InnerMetaValue(atts.getAttribute("?as"));
         }
 
         @Override
-        public String getLocalId() {
-            return ref.getId();
-        }
-
-        @Override
-        public Object getAttribute(@NotNull String name) {
-            DataValue result = meta.get(name);
+        public Object getAtt(@NotNull String name) {
+            DataValue result = atts.get(name);
             if (result.isArray()) {
                 List<InnerMetaValue> resultList = new ArrayList<>();
                 for (DataValue node : result) {

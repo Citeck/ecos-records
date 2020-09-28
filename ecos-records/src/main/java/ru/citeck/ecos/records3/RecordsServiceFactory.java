@@ -37,8 +37,8 @@ import ru.citeck.ecos.records3.source.dao.local.meta.MetaRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.meta.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records3.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl;
 import ru.citeck.ecos.records3.source.dao.local.source.RecordsSourceRecordsDao;
-import ru.citeck.ecos.records3.type.DefaultRecordTypeService;
-import ru.citeck.ecos.records3.type.RecordTypeService;
+import ru.citeck.ecos.records3.type.DefaultRecTypeService;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class RecordsServiceFactory {
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
     private List<RecordsDao> defaultRecordsDao;
-    private RecordTypeService recordTypeService;
+    private RecTypeService recordTypeService;
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
     private AttSchemaReader attSchemaReader;
@@ -371,11 +371,11 @@ public class RecordsServiceFactory {
         return metaRecordsDaoAttsProvider;
     }
 
-    protected RecordTypeService createRecordTypeService() {
-        return new DefaultRecordTypeService(this);
+    protected RecTypeService createRecordTypeService() {
+        return new DefaultRecTypeService(this);
     }
 
-    public final synchronized RecordTypeService getRecordTypeService() {
+    public final synchronized RecTypeService getRecordTypeService() {
         if (recordTypeService == null) {
             recordTypeService = createRecordTypeService();
         }

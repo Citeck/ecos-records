@@ -23,7 +23,7 @@ public class RecordMetaValue implements AttValue {
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) {
+    public Object getAtt(@NotNull String name) {
         return meta.get(name);
     }
 }

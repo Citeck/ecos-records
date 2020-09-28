@@ -166,7 +166,7 @@ public class RecordPredicateElementTest extends LocalRecordsDao implements Local
         }
 
         @Override
-        public Object getAttribute(@NotNull String name) {
+        public Object getAtt(@NotNull String name) {
             return new AttValue(attributes.get(ref.getId()).get(name));
         }
 
@@ -184,7 +184,7 @@ public class RecordPredicateElementTest extends LocalRecordsDao implements Local
             }
 
             @Override
-            public String getDisplayName() {
+            public String getDispName() {
                 return str + "-disp";
             }
         }

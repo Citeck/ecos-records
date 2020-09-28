@@ -34,7 +34,7 @@ public class JsonNodeValueFactory implements AttValueFactory<JsonNode> {
             }
 
             @Override
-            public Object getAttribute(@NotNull String name) {
+            public Object getAtt(@NotNull String name) {
                 JsonNode node = value.get(name);
                 if (node != null && node.isArray()) {
                     List<JsonNode> result = new ArrayList<>();

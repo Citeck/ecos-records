@@ -65,7 +65,7 @@ public class MetaFieldTest extends LocalRecordsDao
     }
 
     @Override
-    public Object getAttribute(@NotNull String name) {
+    public Object getAtt(@NotNull String name) {
 
         //todo
        /* if ("field0".equals(field.getAlias())) {

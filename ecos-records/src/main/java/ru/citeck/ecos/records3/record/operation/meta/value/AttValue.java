@@ -17,7 +17,8 @@ public interface AttValue {
      * Global reference to this value
      */
     default RecordRef getRef() throws Exception {
-        return RecordRef.EMPTY;
+        String id = getId();
+        return id != null ? RecordRef.create("", id) : RecordRef.EMPTY;
     }
 
     /**
@@ -28,27 +29,20 @@ public interface AttValue {
     }
 
     /**
-     * Local identifier
-     */
-    default String getLocalId() throws Exception {
-        return null;
-    }
-
-    /**
      * String representation.
      */
     default String getString() throws Exception {
         return toString();
     }
 
-    default String getDisplayName() throws Exception {
+    default String getDispName() throws Exception {
         return getString();
     }
 
     /**
      * Get value attribute.
      */
-    default Object getAttribute(@NotNull String name) throws Exception {
+    default Object getAtt(@NotNull String name) throws Exception {
         return Collections.emptyList();
     }
 

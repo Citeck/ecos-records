@@ -6,7 +6,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.RecordRef;
 
-import java.util.Collection;
 import java.util.Map;
 
 public interface AttValueCtx {
@@ -15,7 +14,7 @@ public interface AttValueCtx {
     RecordRef getRef() throws Exception;
 
     @NotNull
-    String getLocalId() throws Exception;
+    String getId() throws Exception;
 
     @NotNull
     DataValue getAtt(@NotNull String attribute) throws Exception;
@@ -25,7 +24,4 @@ public interface AttValueCtx {
 
     @NotNull
     ObjectData getAtts(@NotNull Map<String, String> attributes) throws Exception;
-
-    @NotNull
-    ObjectData getAtts(@NotNull Collection<String> attributes) throws Exception;
 }

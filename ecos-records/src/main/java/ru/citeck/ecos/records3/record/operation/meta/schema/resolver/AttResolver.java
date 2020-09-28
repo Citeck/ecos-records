@@ -227,6 +227,8 @@ public class AttResolver {
                                             List<SchemaRootAtt> rootAttributes,
                                             ResolveContext context) {
 
+        context.setRootValue(value);
+
         List<SchemaAtt> attributes = new ArrayList<>();
         Set<String> attributesToLoad = new HashSet<>();
 
@@ -281,7 +283,7 @@ public class AttResolver {
             AttMixin mixin = null;
 
             for (AttMixin attMixin : context.getMixins()) {
-                if (attMixin.isProvides(attPath)) {
+                if (attMixin.getProvidedAtts().contains(attPath)) {
                     mixin = attMixin;
                     break;
                 }
@@ -291,7 +293,10 @@ public class AttResolver {
             if (mixin != null && !disabledMixinPaths.contains(attPath)) {
                 disabledMixinPaths.add(attPath);
                 try {
-                    attValue = mixin.getAtt(attPath, new AttValueResolveCtx(currentValuePath, context, value));
+                    attValue = mixin.getAtt(attPath, new AttValueResolveCtx(
+                        currentValuePath,
+                        context,
+                        context.getRootValue()));
                 } catch (Exception e) {
                     log.error("Resolving error. Path: " + attPath, e);
                     attValue = null;
@@ -521,6 +526,10 @@ public class AttResolver {
         @Getter
         @Setter
         private String path = "";
+
+        @Getter
+        @Setter
+        private ValueContext rootValue;
 
         @NotNull
         private AttValue convertToMetaValue(@NotNull Object value) {

@@ -1,8 +1,10 @@
 package ru.citeck.ecos.records3.source.common;
 
+import java.util.Collection;
+
 public interface AttMixin {
 
     Object getAtt(String path, AttValueCtx value) throws Exception;
 
-    boolean isProvides(String path);
+    Collection<String> getProvidedAtts();
 }

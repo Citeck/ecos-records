@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.utils.ScriptUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +61,12 @@ public class ResolverTest {
             "\"innerField\": \"inner\"" +
             "}", createMixin("inner?disp", (n, ctx) -> "CUSTOM MIXIN VAL"));
 
-        System.out.println(ScriptUtils.eval("return dto;", Collections.singletonMap("dto", dto)));
+        testAtt(dto, "inner?disp", "InnerDisp");
+        testAtt(dto, "inner.innerField?str", "inner");
+        testAtt(dto, "inner.innerField?disp", "inner");
+
+        testAtt(dto, "inner.innerField{?disp,?str}", "{\"?disp\":\"inner-dispName\",\"?str\":\"inner\"}",
+            createMixin("inner.innerField?disp", (n, ctx) -> ctx.getAtt("inner.innerField?str").asText() + "-dispName"));
     }
 
     private AttMixin createMixin(String att, UncheckedBiFunction<String, AttValueCtx, Object> getter) {
@@ -74,8 +79,8 @@ public class ResolverTest {
                 return null;
             }
             @Override
-            public boolean isProvides(String path) {
-                return att.equals(path);
+            public Collection<String> getProvidedAtts() {
+                return Collections.singleton(att);
             }
         };
     }

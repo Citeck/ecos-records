@@ -5,7 +5,6 @@ import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records3.record.operation.meta.schema.exception.AttSchemaException;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 @Data
 public class SchemaAtt {
@@ -33,6 +32,10 @@ public class SchemaAtt {
         this.inner = inner;
     }
 
+    public Builder modify() {
+        return new Builder(this);
+    }
+
     public String getScalarName() {
         if (isScalar()) {
             return getName();
@@ -58,6 +61,17 @@ public class SchemaAtt {
         private boolean scalar;
         private boolean multiple;
         private List<SchemaAtt> inner = Collections.emptyList();
+
+        public Builder() {
+        }
+
+        public Builder(SchemaAtt base) {
+            this.alias = base.getAlias();
+            this.name = base.getName();
+            this.scalar = base.isScalar();
+            this.multiple = base.isMultiple();
+            this.inner = base.getInner();
+        }
 
         public Builder setAlias(String alias) {
             this.alias = alias;
@@ -103,7 +117,7 @@ public class SchemaAtt {
                 throw new AttSchemaException("Attribute can't be not a scalar and has empty inner attributes");
             }
 
-            return new SchemaAtt(alias, name, scalar, multiple, inner);
+            return new SchemaAtt(alias, name, scalar, multiple, Collections.unmodifiableList(inner));
         }
     }
 }

@@ -1,11 +1,10 @@
 package ru.citeck.ecos.records3.record.operation.meta.attproc;
 
-import ecos.com.fasterxml.jackson210.databind.JavaType;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +17,8 @@ public class AttProcService {
     public DataValue process(ObjectData meta,
                              DataValue value,
                              List<AttProcessorDef> processorsDef,
-                             JavaType expectedType) {
+                             SchemaAtt schemaAtt) {
+
 
         if (processorsDef.size() == 0) {
             return value;
@@ -39,13 +39,13 @@ public class AttProcService {
         }
 
         if (!Objects.equals(value, newValue)) {
-            value = Json.getMapper().convert(newValue, expectedType);
+            value = newValue;
         }
 
         return value;
     }
 
-    public Set<String> getAttributesToLoad(List<AttProcessorDef> processorsDef) {
+    public Set<String> getAttsToLoad(List<AttProcessorDef> processorsDef) {
 
         if (processorsDef.isEmpty()) {
             return Collections.emptySet();
@@ -56,7 +56,7 @@ public class AttProcService {
         for (AttProcessorDef def : processorsDef) {
             AttProcessor proc = getProcessor(def.getType());
             if (proc != null) {
-                attributes.addAll(proc.getAttributesToLoad(def.getArguments()).values());
+                attributes.addAll(proc.getAttributesToLoad(def.getArguments()));
             }
         }
 

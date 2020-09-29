@@ -46,8 +46,8 @@ public class BeanValueFactory implements AttValueFactory<Object> {
 
         @Override
         public String getId() {
-            if (typeCtx.hasProperty(".id")) {
-                return getAttWithType(".id", String.class);
+            if (typeCtx.hasProperty("?id")) {
+                return getAttWithType("?id", String.class);
             }
             try {
                 Object id = PropertyUtils.getProperty(bean, "id");
@@ -58,9 +58,17 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
+        public RecordRef getRef() throws Exception {
+            if (typeCtx.hasProperty("?ref")) {
+                return getAttWithType("?ref", RecordRef.class);
+            }
+            return null;
+        }
+
+        @Override
         public Double getDouble() {
-            if (typeCtx.hasProperty(".num")) {
-                return getAttWithType(".num", Double.class);
+            if (typeCtx.hasProperty("?num")) {
+                return getAttWithType("?num", Double.class);
             }
             String str = getString();
             return str != null ? Double.parseDouble(str) : null;
@@ -68,29 +76,29 @@ public class BeanValueFactory implements AttValueFactory<Object> {
 
         @Override
         public Boolean getBool() {
-            if (typeCtx.hasProperty(".bool")) {
-                return getAttWithType(".bool", Boolean.class);
+            if (typeCtx.hasProperty("?bool")) {
+                return getAttWithType("?bool", Boolean.class);
             }
             return Boolean.parseBoolean(getString());
         }
 
         @Override
         public RecordRef getTypeRef() {
-            return getAttWithType(".type", RecordRef.class);
+            return getAttWithType("?type", RecordRef.class);
         }
 
         @Override
         public String getDispName() {
-            if (typeCtx.hasProperty(".disp")) {
-                return getAttWithType(".disp", String.class);
+            if (typeCtx.hasProperty("?disp")) {
+                return getAttWithType("?disp", String.class);
             }
             return getString();
         }
 
         @Override
         public String getString() {
-            if (typeCtx.hasProperty(".str")) {
-                return getAttWithType(".str", String.class);
+            if (typeCtx.hasProperty("?str")) {
+                return getAttWithType("?str", String.class);
             }
             return bean.toString();
         }
@@ -112,8 +120,8 @@ public class BeanValueFactory implements AttValueFactory<Object> {
 
         @Override
         public Object getJson() {
-            if (typeCtx.hasProperty(".json")) {
-                return getAttWithType(".json", DataValue.class);
+            if (typeCtx.hasProperty("?json")) {
+                return getAttWithType("?json", DataValue.class);
             }
             return Json.getMapper().toJson(bean);
         }

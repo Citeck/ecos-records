@@ -12,7 +12,6 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaUtils;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.AttFuncValue;
@@ -33,7 +32,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AttResolver {
+public class AttSchemaResolver {
 
     private static final List<Class<?>> FORCE_CACHE_TYPES = Collections.singletonList(
         String.class
@@ -50,7 +49,7 @@ public class AttResolver {
     // todo: move types logic to this resolver
     // private final RecordTypeService recordTypeService;
 
-    public AttResolver(RecordsServiceFactory factory) {
+    public AttSchemaResolver(RecordsServiceFactory factory) {
         attValuesConverter = factory.getAttValuesConverter();
         attProcService = factory.getAttProcService();
         attSchemaReader = factory.getAttSchemaReader();
@@ -104,7 +103,30 @@ public class AttResolver {
     public List<ObjectData> resolve(ResolveArgs args) {
 
         List<Object> values = args.getValues();
-        List<SchemaRootAtt> schemaAtts = args.getSchema().getAttributes();
+        List<SchemaRootAtt> schemaAttsToLoad = args.getAttributes();
+
+        if (!args.isRawAtts()) {
+
+            Set<String> attributesToLoad = new HashSet<>();
+
+            for (SchemaRootAtt rootAtt : schemaAttsToLoad) {
+                attributesToLoad.addAll(attProcService.getAttsToLoad(rootAtt.getProcessors()));
+            }
+
+            if (!attributesToLoad.isEmpty()) {
+
+                Map<String, String> procAtts = new HashMap<>();
+
+                for (String att : attributesToLoad) {
+                    procAtts.put(PROC_ATT_ALIAS_PREFIX + att, att);
+                }
+
+                schemaAttsToLoad = new ArrayList<>(schemaAttsToLoad);
+                schemaAttsToLoad.addAll(attSchemaReader.read(procAtts));
+            }
+        }
+
+        List<SchemaRootAtt> schemaAtts = schemaAttsToLoad;
 
         List<Map<String, Object>> result = AttContext.doInContext(attContext -> {
 
@@ -135,22 +157,34 @@ public class AttResolver {
         });
 
         return result.stream()
-            .map(v -> postProcess(v, args))
+            .map(v -> postProcess(v, schemaAtts, args.isRawAtts()))
             .collect(Collectors.toList());
     }
 
-    private ObjectData postProcess(Map<String, Object> data, ResolveArgs args) {
+    private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schemaAtts, boolean isRawAtts) {
 
         // processors will be ignored if attributes is not flat (raw)
-        if (args.isRawAtts()) {
+        if (isRawAtts) {
             return ObjectData.create(data);
         }
 
-        List<SchemaRootAtt> schemaAtts = args.getSchema().getAttributes();
-
         ObjectData flatData = ObjectData.create(toFlatMap(data, schemaAtts));
+        ObjectData procData = ObjectData.create();
+
+        flatData.forEach((k, v) -> {
+            if (k.startsWith(PROC_ATT_ALIAS_PREFIX)) {
+                procData.set(k.replaceFirst(PROC_ATT_ALIAS_PREFIX, ""), v);
+            }
+        });
 
         for (SchemaRootAtt rootAtt : schemaAtts) {
+
+            SchemaAtt schemaAtt = rootAtt.getAttribute();
+
+            if (schemaAtt.getAlias().startsWith(PROC_ATT_ALIAS_PREFIX)) {
+                flatData.remove(schemaAtt.getAlias());
+                continue;
+            }
 
             List<AttProcessorDef> processors = rootAtt.getProcessors();
             if (processors.isEmpty()) {
@@ -158,9 +192,9 @@ public class AttResolver {
             }
 
             String alias = rootAtt.getAttribute().getAliasForValue();
-
             DataValue value = flatData.get(alias);
-            value = attProcService.process(flatData, value, processors, AttSchemaUtils.getFlatAttType(rootAtt));
+
+            value = attProcService.process(procData, value, processors, rootAtt.getAttribute());
 
             flatData.set(alias, value);
         }
@@ -228,20 +262,6 @@ public class AttResolver {
                                             ResolveContext context) {
 
         context.setRootValue(value);
-
-        List<SchemaAtt> attributes = new ArrayList<>();
-        Set<String> attributesToLoad = new HashSet<>();
-
-        for (SchemaRootAtt rootAtt : rootAttributes) {
-            SchemaAtt attribute = rootAtt.getAttribute();
-            attributes.add(attribute);
-            attributesToLoad.addAll(attProcService.getAttributesToLoad(rootAtt.getProcessors()));
-        }
-
-        if (!attributesToLoad.isEmpty()) {
-            //todo
-            //attSchemaReader.read()
-        }
 
         return resolve(
             value,
@@ -475,7 +495,8 @@ public class AttResolver {
             if (RecordRef.isNotEmpty(valueRef)) {
                 return valueRef;
             }
-            return value.getRef();
+            RecordRef result = value.getRef();
+            return RecordRef.isNotEmpty(result) ? result : RecordRef.EMPTY;
         }
 
         private Object getScalar(String scalar) throws Exception {
@@ -605,18 +626,18 @@ public class AttResolver {
         @Override
         public ObjectData getAtts(@NotNull Map<String, String> attributes) {
 
-            AttSchema schema = attSchemaReader.read(attributes);
+            List<SchemaRootAtt> schemaAtts = attSchemaReader.read(attributes);
 
             String attPathBefore = resolveCtx.getPath();
             resolveCtx.setPath(basePath);
 
             try {
-                Map<String, Object> result = resolve(valueCtx, schema.getAttributes()
+                Map<String, Object> result = resolve(valueCtx, schemaAtts
                     .stream()
                     .map(SchemaRootAtt::getAttribute)
                     .collect(Collectors.toList()), resolveCtx);
 
-                return postProcess(result, ResolveArgs.create().setSchema(schema).build());
+                return postProcess(result, schemaAtts, false);
             } finally {
                 resolveCtx.setPath(attPathBefore);
             }

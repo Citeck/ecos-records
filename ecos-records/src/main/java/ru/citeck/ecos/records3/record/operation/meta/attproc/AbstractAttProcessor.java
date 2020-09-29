@@ -8,10 +8,19 @@ import java.util.List;
 
 public abstract class AbstractAttProcessor<T> implements AttProcessor {
 
+    private boolean allowNull;
+
+    public AbstractAttProcessor(boolean allowNull) {
+        this.allowNull = allowNull;
+    }
+
+    public AbstractAttProcessor() {
+    }
+
     @NotNull
     public Object process(@NotNull ObjectData meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
 
-        if (value.isNull()) {
+        if (!allowNull && value.isNull()) {
             return value;
         }
 

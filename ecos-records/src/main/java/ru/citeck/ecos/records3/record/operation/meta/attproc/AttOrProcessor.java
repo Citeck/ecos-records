@@ -4,25 +4,25 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class AttOrProcessor implements AttProcessor {
+public class AttOrProcessor extends AbstractAttProcessor<List<DataValue>> {
 
-    private static final String ATTS_PREFIX = "__or_proc_att";
+    public AttOrProcessor() {
+        super(true);
+    }
 
-    @NotNull
     @Override
-    public Object process(@NotNull ObjectData meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
+    protected Object processOne(@NotNull ObjectData meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
 
         if (arguments.isEmpty() || value.isNotNull()) {
             return value;
         }
+
         for (DataValue orElseAtt : arguments) {
             String txtAtt = orElseAtt.asText();
-            if (isMetaAttValue(txtAtt)) {
-                value = meta.get(ATTS_PREFIX + txtAtt);
+            if (isAttToLoadValue(txtAtt)) {
+                value = meta.get(txtAtt);
             } else {
                 value = DataValue.createStr(txtAtt.substring(1, txtAtt.length() - 1));
             }
@@ -30,7 +30,13 @@ public class AttOrProcessor implements AttProcessor {
                 return value;
             }
         }
+
         return value;
+    }
+
+    @Override
+    protected List<DataValue> parseArgs(@NotNull List<DataValue> arguments) {
+        return arguments;
     }
 
     @NotNull
@@ -41,24 +47,24 @@ public class AttOrProcessor implements AttProcessor {
 
     @NotNull
     @Override
-    public Map<String, String> getAttributesToLoad(@NotNull List<DataValue> arguments) {
+    public Collection<String> getAttributesToLoad(@NotNull List<DataValue> arguments) {
 
-        Map<String, String> attsToLoad = new HashMap<>();
+        Set<String> attsToLoad = new HashSet<>();
 
         for (DataValue orElseAtt : arguments) {
             if (orElseAtt.isNull() || orElseAtt.asText().isEmpty()) {
                 continue;
             }
             String att = orElseAtt.asText();
-            if (isMetaAttValue(att)) {
-                attsToLoad.put(ATTS_PREFIX + att, att);
+            if (isAttToLoadValue(att)) {
+                attsToLoad.add(att);
             }
         }
 
         return attsToLoad;
     }
 
-    private boolean isMetaAttValue(String value) {
+    private boolean isAttToLoadValue(String value) {
         return value.charAt(0) != '\'' && value.charAt(0) != '"';
     }
 }

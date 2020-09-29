@@ -2,17 +2,15 @@ package ru.citeck.ecos.records3.record.operation.meta;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.ResolveArgs;
 
 import java.util.*;
@@ -25,7 +23,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
     private final AttSchemaReader schemaReader;
     private final DtoSchemaResolver dtoSchemaResolver;
-    private final AttResolver schemaResolver;
+    private final AttSchemaResolver schemaResolver;
 
     public RecordAttsServiceImpl(RecordsServiceFactory factory) {
         this.dtoSchemaResolver = factory.getDtoMetaResolver();
@@ -87,9 +85,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     @Override
     public List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes, boolean rawAtts) {
 
-        AttSchema schema = schemaReader.read(attributes);
-
-        List<SchemaRootAtt> rootAtts = new ArrayList<>(schema.getAttributes());
+        List<SchemaRootAtt> rootAtts = new ArrayList<>(schemaReader.read(attributes));
 
         rootAtts.add(new SchemaRootAtt(
             SchemaAtt.create()

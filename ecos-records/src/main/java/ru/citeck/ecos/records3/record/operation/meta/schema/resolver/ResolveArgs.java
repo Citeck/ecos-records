@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 
@@ -24,7 +23,7 @@ public class ResolveArgs {
     @NotNull
     private final List<RecordRef> valueRefs;
     @NotNull
-    private final AttSchema schema;
+    private final List<SchemaRootAtt> attributes;
     @NotNull
     private final List<AttMixin> mixins;
 
@@ -39,7 +38,7 @@ public class ResolveArgs {
         private String sourceId = "";
         private List<Object> values = new ArrayList<>();
         private List<RecordRef> valueRefs = Collections.emptyList();
-        private AttSchema schema;
+        private List<SchemaRootAtt> attributes;
 
         @Getter
         private boolean rawAtts;
@@ -80,7 +79,7 @@ public class ResolveArgs {
 
         @NotNull
         public Builder setAtts(@Nullable List<SchemaRootAtt> attributes) {
-            this.schema = new AttSchema(attributes != null ? new ArrayList<>(attributes) : Collections.emptyList());
+            this.attributes = attributes != null ? new ArrayList<>(attributes) : Collections.emptyList();
             return this;
         }
 
@@ -89,20 +88,15 @@ public class ResolveArgs {
             return setAtts(attribute != null ? Collections.singletonList(attribute) : null);
         }
 
-        public Builder setSchema(AttSchema schema) {
-            this.schema = schema;
-            return this;
-        }
-
         public ResolveArgs build() {
 
-            MandatoryParam.check("schema", schema);
+            MandatoryParam.check("schema", attributes);
             MandatoryParam.check("values", values);
 
             if (!valueRefs.isEmpty() && valueRefs.size() != values.size()) {
                 throw new RuntimeException("valueRefs should have same size with values");
             }
-            return new ResolveArgs(values, sourceId, valueRefs, schema, mixins, rawAtts);
+            return new ResolveArgs(values, sourceId, valueRefs, attributes, mixins, rawAtts);
         }
     }
 }

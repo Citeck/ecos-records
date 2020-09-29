@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.read;
 
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,7 +9,6 @@ import ru.citeck.ecos.commons.utils.NameUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.exception.AttSchemaException;
@@ -37,16 +37,28 @@ public class AttSchemaReader {
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
     @NotNull
-    public AttSchema read(@Nullable Map<String, String> attributes) {
+    public List<SchemaRootAtt> read(@Nullable Collection<String> attributes) {
 
         if (attributes == null || attributes.isEmpty()) {
-            return new AttSchema();
+            return Collections.emptyList();
+        }
+
+        Map<String, String> atts = new LinkedHashMap<>();
+        attributes.forEach(att -> atts.put(att, att));
+        return read(atts);
+    }
+
+    @NotNull
+    public List<SchemaRootAtt> read(@Nullable Map<String, String> attributes) {
+
+        if (attributes == null || attributes.isEmpty()) {
+            return Collections.emptyList();
         }
 
         List<SchemaRootAtt> schemaAtts = new ArrayList<>();
         attributes.forEach((k, v) -> schemaAtts.add(readRoot(k, v)));
 
-        return new AttSchema(schemaAtts);
+        return schemaAtts;
     }
 
     /**
@@ -443,10 +455,10 @@ public class AttSchemaReader {
             return result;
         }
 
-        argsStr = argsStr.replace("'", "\"");
         AttStrUtils.split(argsStr, ",").stream()
             .map(String::trim)
-            .map(DataValue::create)
+            .map(AttStrUtils::removeQuotes)
+            .map(DataValue::createStr)
             .forEach(result::add);
 
         return result;

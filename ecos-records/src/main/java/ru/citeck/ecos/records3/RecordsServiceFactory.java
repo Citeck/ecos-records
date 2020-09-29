@@ -14,7 +14,7 @@ import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsServiceImpl;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.*;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.template.RecordsTemplateService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.predicate.PredicateService;
@@ -71,7 +71,7 @@ public class RecordsServiceFactory {
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
     private AttSchemaReader attSchemaReader;
-    private AttResolver attSchemaResolver;
+    private AttSchemaResolver attSchemaResolver;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
@@ -404,11 +404,11 @@ public class RecordsServiceFactory {
         return attSchemaReader;
     }
 
-    protected AttResolver createAttSchemaResolver() {
-        return new AttResolver(this);
+    protected AttSchemaResolver createAttSchemaResolver() {
+        return new AttSchemaResolver(this);
     }
 
-    public final synchronized AttResolver getAttSchemaResolver() {
+    public final synchronized AttSchemaResolver getAttSchemaResolver() {
         if (attSchemaResolver == null) {
             attSchemaResolver = createAttSchemaResolver();
         }
@@ -419,7 +419,8 @@ public class RecordsServiceFactory {
         return Arrays.asList(
             new AttFormatProcessor(),
             new AttPrefixSuffixProcessor(),
-            new AttOrProcessor()
+            new AttOrProcessor(),
+            new AttJoinProcessor()
         );
     }
 

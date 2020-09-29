@@ -6,23 +6,25 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
+import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ResolverTest {
 
     private final RecordsServiceFactory factory = new RecordsServiceFactory();
-    private final AttResolver resolver = new AttResolver(factory);
+    private final AttSchemaResolver resolver = new AttSchemaResolver(factory);
     private final AttSchemaReader reader = new AttSchemaReader();
 
     @Test
@@ -67,6 +69,36 @@ public class ResolverTest {
 
         testAtt(dto, "inner.innerField{?disp,?str}", "{\"?disp\":\"inner-dispName\",\"?str\":\"inner\"}",
             createMixin("inner.innerField?disp", (n, ctx) -> ctx.getAtt("inner.innerField?str").asText() + "-dispName"));
+
+        testAtt(dto, "inner.innerField?disp", "aa@bb",
+            createMixin("inner.innerField?disp", (n, ctx) -> ctx.getRef()));
+    }
+
+    @Test
+    void attProcTest() {
+
+        TestClass dto = new TestClass();
+
+        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!'false'", "false");
+        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!\"false\"", "false");
+
+        testAtt(dto, "unknown!inner.innerField", "inner");
+        testAtt(dto, "inner.innerField!unknown", "inner");
+        testAtt(dto, "inner.innerField!unknown|presuf('prefix-', '-postfix')", "prefix-inner-postfix");
+        testAtt(dto, "inner.innerField22!unknown|presuf('prefix-', '-postfix')", null);
+
+        testAtt(dto, "inner.innerBoolField?bool!unknown", true);
+        testAtt(dto, "inner.unknown?bool!inner.innerBoolField?bool", true);
+
+        testAtt(dto, "inner.unknown?bool!inner.innerBoolField23?bool", null);
+
+        testAtt(dto, "inner.innerField[]|presuf('prefix-')", "[\"prefix-inner\"]");
+        testAtt(dto, "inner.innerFieldArr[]|join()", "inner0,inner1,inner2");
+        testAtt(dto, "inner.innerFieldArr[]|join(', ')", "inner0, inner1, inner2");
+        testAtt(dto, "inner.innerFieldArr[]|join('#')", "inner0#inner1#inner2");
+        testAtt(dto, "inner.innerFieldArr[]|join('#')|presuf('[',']')", DataValue.createStr("[inner0#inner1#inner2]"));
+
+        testAtt(dto, "number|fmt('0000.0')", "0011.0");
     }
 
     private AttMixin createMixin(String att, UncheckedBiFunction<String, AttValueCtx, Object> getter) {
@@ -98,11 +130,17 @@ public class ResolverTest {
     }
 
     private void testAtt(Object value, String att, Object expected, AttMixin... mixins) {
-        assertEquals(DataValue.create(expected), resolver.resolve(value, reader.read(att), Arrays.asList(mixins)));
+        if (!(expected instanceof DataValue)) {
+            expected = DataValue.create(expected);
+        }
+        assertEquals(expected, resolver.resolve(value, reader.read(att), Arrays.asList(mixins)));
     }
 
     private void testAtt(Object value, String att, Object expected) {
-        assertEquals(DataValue.create(expected), resolver.resolve(value, reader.read(att)));
+        if (!(expected instanceof DataValue)) {
+            expected = DataValue.create(expected);
+        }
+        assertEquals(expected, resolver.resolve(value, reader.read(att)));
     }
 
     @Data
@@ -110,6 +148,12 @@ public class ResolverTest {
 
         private String field0 = "abc";
         private InnerTest inner = new InnerTest();
+        private int number = 11;
+
+        @MetaAtt("?ref")
+        public RecordRef getRef() {
+            return RecordRef.create("aa", "bb");
+        }
 
         @Override
         public String toString() {
@@ -121,6 +165,9 @@ public class ResolverTest {
     public static class InnerTest {
 
         private String innerField = "inner";
+        private Boolean innerBoolField = true;
+
+        private List<String> innerFieldArr = Arrays.asList("inner0", "inner1", "inner2");
 
         @Getter
         private int someValueCounter = 0;

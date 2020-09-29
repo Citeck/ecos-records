@@ -79,8 +79,8 @@ public class ResolverTest {
 
         TestClass dto = new TestClass();
 
-        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!'false'", "false");
-        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!\"false\"", "false");
+        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!'false'|cast('bool')", false);
+        testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!\"false\"|cast('bool')", false);
 
         testAtt(dto, "unknown!inner.innerField", "inner");
         testAtt(dto, "inner.innerField!unknown", "inner");

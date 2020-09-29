@@ -420,7 +420,8 @@ public class RecordsServiceFactory {
             new AttFormatProcessor(),
             new AttPrefixSuffixProcessor(),
             new AttOrProcessor(),
-            new AttJoinProcessor()
+            new AttJoinProcessor(),
+            new AttCastProcessor()
         );
     }
 

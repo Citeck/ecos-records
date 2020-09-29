@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,8 +15,7 @@ public class AttProcService {
 
     public DataValue process(ObjectData meta,
                              DataValue value,
-                             List<AttProcessorDef> processorsDef,
-                             SchemaAtt schemaAtt) {
+                             List<AttProcessorDef> processorsDef) {
 
 
         if (processorsDef.size() == 0) {

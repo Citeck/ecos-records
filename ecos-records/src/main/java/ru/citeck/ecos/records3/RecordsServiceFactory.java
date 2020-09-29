@@ -419,7 +419,7 @@ public class RecordsServiceFactory {
         return Arrays.asList(
             new AttFormatProcessor(),
             new AttPrefixSuffixProcessor(),
-            new AttOrProcessor(),
+            new AttOrElseProcessor(),
             new AttJoinProcessor(),
             new AttCastProcessor()
         );

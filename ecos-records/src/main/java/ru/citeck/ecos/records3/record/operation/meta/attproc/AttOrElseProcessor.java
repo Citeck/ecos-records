@@ -6,9 +6,9 @@ import ru.citeck.ecos.commons.data.ObjectData;
 
 import java.util.*;
 
-public class AttOrProcessor extends AbstractAttProcessor<List<DataValue>> {
+public class AttOrElseProcessor extends AbstractAttProcessor<List<DataValue>> {
 
-    public AttOrProcessor() {
+    public AttOrElseProcessor() {
         super(true);
     }
 
@@ -24,7 +24,17 @@ public class AttOrProcessor extends AbstractAttProcessor<List<DataValue>> {
             if (isAttToLoadValue(txtAtt)) {
                 value = meta.get(txtAtt);
             } else {
-                value = DataValue.createStr(txtAtt.substring(1, txtAtt.length() - 1));
+                if (txtAtt.length() > 0) {
+                    if (Character.isDigit(txtAtt.charAt(0))) {
+                        value = DataValue.create(orElseAtt.asDouble());
+                    } else if (isBool(txtAtt)) {
+                        value = DataValue.create(orElseAtt.asBoolean());
+                    } else {
+                        value = DataValue.create(txtAtt.substring(1, txtAtt.length() - 1));
+                    }
+                } else {
+                    value = orElseAtt;
+                }
             }
             if (value.isNotNull() && (!value.isTextual() || !value.asText().isEmpty())) {
                 return value;
@@ -64,7 +74,15 @@ public class AttOrProcessor extends AbstractAttProcessor<List<DataValue>> {
         return attsToLoad;
     }
 
+    private boolean isBool(String value) {
+        return Boolean.TRUE.toString().equals(value)
+            || Boolean.FALSE.toString().equals(value);
+    }
+
     private boolean isAttToLoadValue(String value) {
+        if (isBool(value) || Character.isDigit(value.charAt(0))) {
+            return false;
+        }
         return value.charAt(0) != '\'' && value.charAt(0) != '"';
     }
 }

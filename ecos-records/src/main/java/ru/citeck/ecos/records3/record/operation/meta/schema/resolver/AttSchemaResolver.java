@@ -12,7 +12,6 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaUtils;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.AttFuncValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.HasCollectionView;
@@ -194,7 +193,7 @@ public class AttSchemaResolver {
             String alias = rootAtt.getAttribute().getAliasForValue();
             DataValue value = flatData.get(alias);
 
-            value = attProcService.process(procData, value, processors, rootAtt.getAttribute());
+            value = attProcService.process(procData, value, processors);
 
             flatData.set(alias, value);
         }

@@ -10,17 +10,12 @@ import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.dto.typed.RecordsMetaQueryRes;
-import ru.citeck.ecos.records3.record.operation.delete.DeletionBody;
-import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RemoteRecordsResolver implements RecordsResolver {
@@ -78,7 +73,7 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @Override
-    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
+    public List<RecordAtts> getAtts(@NotNull List<?> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
 

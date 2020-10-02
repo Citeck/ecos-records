@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +35,7 @@ public class MLTextValueFactory implements AttValueFactory<MLText> {
 
         @Override
         public String getString() {
-            return value.getClosestValue(QueryContext.getCurrent().getLocale());
+            return value.getClosestValue(RequestContext.getCurrent().getLocale());
         }
 
         @Override

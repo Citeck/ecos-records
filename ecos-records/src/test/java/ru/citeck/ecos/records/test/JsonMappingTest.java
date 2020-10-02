@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.error.RecordsError;
+import ru.citeck.ecos.records3.record.request.error.RecordError;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -14,12 +14,12 @@ class JsonMappingTest {
     @Test
     void testRecordsError() {
 
-        RecordsError error = new RecordsError();
+        RecordError error = new RecordError();
         error.setMsg("Test");
         error.setType("Type test");
 
         String json = Json.getMapper().toString(error);
-        RecordsError error2 = Json.getMapper().convert(json, RecordsError.class);
+        RecordError error2 = Json.getMapper().convert(json, RecordError.class);
 
         assertEquals(error, error2);
 

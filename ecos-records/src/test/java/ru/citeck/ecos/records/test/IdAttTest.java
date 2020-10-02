@@ -9,9 +9,9 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "test";
 
@@ -61,7 +61,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(metaValues::get).collect(Collectors.toList());
     }
 

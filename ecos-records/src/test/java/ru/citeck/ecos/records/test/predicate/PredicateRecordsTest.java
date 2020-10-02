@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -83,7 +83,7 @@ public class PredicateRecordsTest {
         Map<String, Object> ctxAtts = new HashMap<>();
         ctxAtts.put("ctxatt", RecordRef.valueOf("test@ccc"));
 
-        QueryContext.withContext(recordsServiceFactory, () -> {
+        RequestContext.withCtx(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
 
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
 
@@ -91,17 +91,19 @@ public class PredicateRecordsTest {
             newAtts.put("ctxatt", RecordRef.valueOf("test@aaa"));
             newAtts.put("ctxatt2", RecordRef.valueOf("test@bbb"));
 
-            QueryContext.withAttributes(newAtts, () -> {
+            RequestContext.withAtts(newAtts, () -> {
                 assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.intField", "${$ctxatt2.intField}")));
+                return null;
             });
 
-            assertNull(QueryContext.getCurrent().getAttributes().get("ctxatt2"));
+            assertNull(RequestContext.getCurrentNotNull().getAttributes().get("ctxatt2"));
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
             assertFalse(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
 
-        }, ctxAtts);
+            return null;
+        });
     }
 
     private boolean check(String id, Predicate predicate) {

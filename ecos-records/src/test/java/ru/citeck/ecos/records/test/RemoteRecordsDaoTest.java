@@ -7,14 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.rest.RestHandler;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.remote.RecordsRestConnection;
 import ru.citeck.ecos.records3.source.dao.remote.RemoteRecordsDao;
 
@@ -22,8 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteRecordsDaoTest {
@@ -66,7 +63,7 @@ class RemoteRecordsDaoTest {
         //assertEquals(TestDto.OBJ_DATA_VALUE.getData(), attValues.get("data"));
     }
 
-    public static class TestSource extends LocalRecordsDao implements LocalRecordsMetaDao {
+    public static class TestSource extends AbstractRecordsDao implements RecordsAttsDao {
 
         static final String ID = "";
 
@@ -76,7 +73,7 @@ class RemoteRecordsDaoTest {
 
         @NotNull
         @Override
-        public List<TestDto> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+        public List<TestDto> getRecordsAtts(@NotNull List<String> records) {
             return records.stream()
                 .map(r -> new TestDto(r.toString()))
                 .collect(Collectors.toList());

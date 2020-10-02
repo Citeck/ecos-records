@@ -1,16 +1,18 @@
 package ru.citeck.ecos.records.test.sourcedao;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +21,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements LocalRecordsQueryDao {
+public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements RecordsQueryDao {
 
     private static final String ID = "test";
     private static final List<String> SUPPORTED_LANGUAGES = new ArrayList<>(Arrays.asList("one", "two", "three"));
@@ -36,10 +38,11 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
     }
 
     @Override
-    public RecordsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+    public RecordsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
         return new RecordsQueryRes<>();
     }
 
+    @NotNull
     @Override
     public List<String> getSupportedLanguages() {
         return SUPPORTED_LANGUAGES;

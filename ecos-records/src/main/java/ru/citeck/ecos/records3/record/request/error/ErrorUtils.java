@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records3.record.error;
+package ru.citeck.ecos.records3.record.request.error;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
@@ -9,7 +9,7 @@ import java.util.List;
 @Slf4j
 public class ErrorUtils {
 
-    public static RecordsError convertException(Throwable exception) {
+    public static RecordError convertException(Throwable exception) {
 
         MandatoryParam.check("exception", exception);
 
@@ -27,10 +27,9 @@ public class ErrorUtils {
             }
         }
 
-        RecordsError error = new RecordsError();
+        RecordError error = new RecordError();
         error.setType(throwable.getClass().getSimpleName());
         error.setMsg(throwable.getLocalizedMessage());
-        error.setStackTrace(errorStackTrace);
 
         return error;
     }

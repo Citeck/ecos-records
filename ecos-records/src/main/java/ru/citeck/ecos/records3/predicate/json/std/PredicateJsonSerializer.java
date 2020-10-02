@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class PredicateJsonSerializer extends StdSerializer<Predicate> {
 
-    private JsonMapper mapper = Json.newMapper(new JsonOptions.Builder()
+    private final JsonMapper mapper = Json.newMapper(new JsonOptions.Builder()
         .excludeSerializers(Predicate.class)
         .build());
 

@@ -16,11 +16,13 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaGqlWriter;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -28,20 +30,19 @@ import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class DtoSchemaResolver {
-
-    private static final Pattern ATT_WITHOUT_SCALAR = Pattern.compile("(.+\\))([}]+)");
+public class DtoSchemaReader {
 
     private final Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
-    private final Map<Class<?>, Map<String, String>> attributesCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<SchemaRootAtt>> attributesCache = new ConcurrentHashMap<>();
 
-    private final AttSchemaWriter attSchemaWriter = new AttSchemaGqlWriter();
+    private final AttSchemaReader attSchemaReader;
 
-    public DtoSchemaResolver(RecordsServiceFactory factory) {
+    public DtoSchemaReader(RecordsServiceFactory factory) {
+
+        attSchemaReader = factory.getAttSchemaReader();
 
         Arrays.asList(
             new ScalarField<>(String.class, "disp"),
@@ -81,25 +82,25 @@ public class DtoSchemaResolver {
     }
 
     @NotNull
-    public Map<String, String> getAttributes(Class<?> metaClass) {
-        return getAttributes(metaClass, null);
+    public List<SchemaRootAtt> read(Class<?> attsClass) {
+        return getAttributes(attsClass, null);
     }
 
-    private Map<String, String> getAttributes(Class<?> metaClass, Set<Class<?>> visited) {
+    public <T> T instantiate(Class<T> metaClass, ObjectData attributes) {
+        return Json.getMapper().convert(attributes, metaClass);
+    }
 
-        Map<String, String> attributes = attributesCache.get(metaClass);
+    private List<SchemaRootAtt> getAttributes(Class<?> attsClass, Set<Class<?>> visited) {
+
+        List<SchemaRootAtt> attributes = attributesCache.get(attsClass);
         if (attributes == null) {
-            attributes = getAttributesImpl(metaClass, visited != null ? visited : new HashSet<>());
-            attributesCache.putIfAbsent(metaClass, attributes);
+            attributes = getAttributesImpl(attsClass, visited != null ? visited : new HashSet<>());
+            attributesCache.putIfAbsent(attsClass, attributes);
         }
         return attributes;
     }
 
-    public <T> T instantiateMeta(Class<T> metaClass, ObjectData attributes) {
-        return Json.getMapper().convert(attributes, metaClass);
-    }
-
-    private Map<String, String> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
+    private List<SchemaRootAtt> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
 
         if (!visited.add(metaClass)) {
             throw new IllegalArgumentException("Recursive meta fields is not supported! "
@@ -107,9 +108,7 @@ public class DtoSchemaResolver {
         }
 
         PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(metaClass);
-        Map<String, String> attributes = new HashMap<>();
-
-        StringBuilder schema = new StringBuilder();
+        List<SchemaRootAtt> attributes = new ArrayList<>();
 
         for (PropertyDescriptor descriptor : descriptors) {
 
@@ -138,50 +137,14 @@ public class DtoSchemaResolver {
 
             ScalarField<?> scalarField = scalars.get(propType);
 
-            String attributeSchema = getAttributeSchema(metaClass,
+            attributes.add(getAttributeSchema(metaClass,
                 writeMethod,
                 descriptor.getName(),
                 isMultiple,
-                scalarField);
+                scalarField,
+                propType,
+                visited));
 
-            schema.setLength(0);
-            char lastChar = attributeSchema.charAt(attributeSchema.length() - 1);
-
-            if (lastChar == '}' || !attributeSchema.startsWith(".att")) {
-                attributes.put(descriptor.getName(), attributeSchema);
-                continue;
-            }
-
-            schema.append(attributeSchema).append("{");
-
-            if (scalarField == null) {
-
-                if (propType.isEnum()) {
-                    schema.append("str");
-                } else {
-                    Map<String, String> propSchema = getAttributes(propType, visited);
-                    attSchemaWriter.writeInnerAtts(propSchema, schema);
-                }
-
-            } else {
-
-                schema.append(scalarField.getSchema());
-            }
-
-            if (schema.charAt(schema.length() - 1) != '{') {
-
-                int openBraces = StringUtils.countMatches(schema, "{");
-                int closeBraces = StringUtils.countMatches(schema, "}");
-
-                while (openBraces > closeBraces++) {
-                    schema.append("}");
-                }
-                attributes.put(descriptor.getName(), schema.toString());
-
-            } else {
-
-                log.error("Class without attributes: " + propType + " property: " + descriptor.getName());
-            }
         }
 
         visited.remove(metaClass);
@@ -189,46 +152,89 @@ public class DtoSchemaResolver {
         return attributes;
     }
 
-    private String getAttributeSchema(Class<?> scope,
-                                      Method writeMethod,
-                                      String fieldName,
-                                      boolean multiple,
-                                      ScalarField<?> scalarField) {
+    private SchemaRootAtt getAttributeSchema(Class<?> scope,
+                                             Method writeMethod,
+                                             String fieldName,
+                                             boolean multiple,
+                                             ScalarField<?> scalarField,
+                                             Class<?> propType,
+                                             Set<Class<?>> visited) {
 
-        MetaAtt attInfo = writeMethod.getAnnotation(MetaAtt.class);
+        List<SchemaAtt> innerAtts;
 
-        if (attInfo == null) {
+        if (scalarField == null) {
+            if (propType.isEnum()) {
+                innerAtts = Collections.singletonList(SchemaAtt.create()
+                    .setName("str")
+                    .setScalar(true)
+                    .build());
+            } else {
+                innerAtts = getAttributes(propType, visited).stream()
+                    .map(SchemaRootAtt::getAttribute)
+                    .collect(Collectors.toList());
+            }
+        } else {
+            innerAtts = Collections.singletonList(SchemaAtt.create()
+                .setName(scalarField.getSchema())
+                .setScalar(true)
+                .build());
+        }
+
+        AttName attName = getAnnotation(writeMethod, scope, fieldName, AttName.class);
+
+        SchemaAtt.Builder att;
+
+        List<AttProcessorDef> processors = Collections.emptyList();
+
+        String attNameAnn = attName != null ? attName.value() : "";
+        if (StringUtils.isNotBlank(attNameAnn)) {
+
+            AttWithProc attWithProc = attSchemaReader.readProcessors(attNameAnn);
+            processors = attWithProc.getProcessors();
+            attNameAnn = attWithProc.getAttribute().trim();
+
+            SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameAnn, innerAtts);
+            att = schemaAtt.modify();
+
+            if (multiple && !schemaAtt.isMultiple()) {
+                SchemaAtt innerAtt = schemaAtt;
+                while (!innerAtt.isMultiple() && innerAtt.getInner().size() == 1) {
+                    innerAtt = innerAtt.getInner().get(0);
+                }
+                if (!innerAtt.isMultiple()) {
+                    att.setMultiple(true);
+                }
+            }
+
+        } else {
+
+            att = SchemaAtt.create();
+            att.setMultiple(multiple);
+            att.setAlias(fieldName);
+            att.setName(fieldName);
+            att.setInner(innerAtts);
+        }
+
+        return new SchemaRootAtt(att.build(), processors);
+    }
+
+    private <T extends Annotation> T getAnnotation(Method writeMethod,
+                                                   Class<?> scope,
+                                                   String fieldName,
+                                                   Class<T> type) {
+
+        T annotation = writeMethod.getAnnotation(type);
+
+        if (annotation == null) {
             Field field;
             try {
                 field = scope.getDeclaredField(fieldName);
-                attInfo = field.getAnnotation(MetaAtt.class);
+                annotation = field.getAnnotation(type);
             } catch (NoSuchFieldException e) {
                 log.error("Field not found: " + fieldName, e);
             }
         }
-
-        String schema;
-        if (attInfo == null || attInfo.value().isEmpty()) {
-            if ("id".equals(fieldName)) {
-                schema = ".id";
-            } else {
-                schema = ".att" + (multiple ? "s" : "") + "(n:'" + fieldName + "')";
-            }
-        } else {
-            String att = attInfo.value();
-            if (att.startsWith(".")) {
-
-                Matcher matcher = ATT_WITHOUT_SCALAR.matcher(att);
-                if (matcher.matches()) {
-                    schema = matcher.group(1) + '{' + scalarField.getSchema() + '}' + matcher.group(2);
-                } else {
-                    schema = att;
-                }
-            } else {
-                schema = att;
-            }
-        }
-        return schema;
+        return annotation;
     }
 
     @AllArgsConstructor

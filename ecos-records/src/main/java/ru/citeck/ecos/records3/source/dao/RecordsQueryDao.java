@@ -24,7 +24,7 @@ public interface RecordsQueryDao extends RecordsDao {
      *
      * @return list of languages
      */
-    @Nullable
+    @NotNull
     default List<String> getSupportedLanguages() {
         return Collections.emptyList();
     }

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema;
 
 import lombok.Data;
+import lombok.ToString;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records3.record.operation.meta.schema.exception.AttSchemaException;
 
@@ -54,6 +55,7 @@ public class SchemaAtt {
         return alias;
     }
 
+    @ToString
     public static class Builder {
 
         private String alias = "";
@@ -88,9 +90,17 @@ public class SchemaAtt {
             return this;
         }
 
+        public boolean isScalar() {
+            return scalar;
+        }
+
         public Builder setMultiple(boolean multiple) {
             this.multiple = multiple;
             return this;
+        }
+
+        public boolean isMultiple() {
+            return this.multiple;
         }
 
         public Builder setInner(List<SchemaAtt> inner) {
@@ -111,10 +121,10 @@ public class SchemaAtt {
             MandatoryParam.check("name", name);
 
             if (scalar && !inner.isEmpty()) {
-                throw new AttSchemaException("Attribute can't be a scalar and has inner attributes");
+                throw new AttSchemaException("Attribute can't be a scalar and has inner attributes. " + this);
             }
             if (!scalar && inner.isEmpty()) {
-                throw new AttSchemaException("Attribute can't be not a scalar and has empty inner attributes");
+                throw new AttSchemaException("Attribute can't be not a scalar and has empty inner attributes. " + this);
             }
 
             return new SchemaAtt(alias, name, scalar, multiple, Collections.unmodifiableList(inner));

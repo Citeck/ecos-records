@@ -6,8 +6,8 @@ import ru.citeck.ecos.records3.source.dao.RecordsDao;
 
 import java.util.List;
 
-public interface RecordsMetaDao extends RecordsDao {
+public interface RecordsAttsDao extends RecordsDao {
 
     @Nullable
-    List<?> getRecordsMeta(@NotNull List<String> records);
+    List<?> getRecordsAtts(@NotNull List<String> records);
 }

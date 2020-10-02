@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.predicate.Element;
 import ru.citeck.ecos.records3.predicate.PredicateService;
@@ -14,8 +15,7 @@ import ru.citeck.ecos.records3.predicate.RecordElement;
 import ru.citeck.ecos.records3.predicate.RecordElements;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordPredicateElementTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class RecordPredicateElementTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private PredicateService predicates;
     private RecordsService recordsService;
@@ -146,8 +146,9 @@ public class RecordPredicateElementTest extends LocalRecordsDao implements Local
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream()
+                        .map(RecordRef::valueOf)
                       .map(TestValue::new)
                       .collect(Collectors.toList());
     }

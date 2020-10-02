@@ -13,14 +13,14 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.query.QueryConstants;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class AbstractRecordsService implements RecordsService {
@@ -151,27 +151,22 @@ public abstract class AbstractRecordsService implements RecordsService {
                                                       RecordsQuery query,
                                                       Function<RecordsQuery, RecordsQueryRes<T>> queryImpl) {
 
-        return QueryContext.withContext(serviceFactory, () -> {
+        return RequestContext.withCtx(serviceFactory, context -> {
 
             RecordsQueryRes<List<T>> result = new RecordsQueryRes<>();
 
-            int idx = 0;
-
             for (DataValue eachIt : foreach) {
+
+                context.addMsg(MsgLevel.DEBUG, () -> "Start forEach: '" + eachIt + "'");
 
                 RecordsQuery eachRecordsQuery = new RecordsQuery(query);
                 eachRecordsQuery.setQuery(replaceIt(mapper.toJson(query.getQuery()), mapper.toJson(eachIt)));
                 RecordsQueryRes<T> eachRes = queryImpl.apply(eachRecordsQuery);
 
+                context.addMsg(MsgLevel.DEBUG, () -> "ForEach: '" + eachIt + "' res: " + eachRes);
+
                 result.setTotalCount(result.getTotalCount() + eachRes.getTotalCount());
                 result.addRecord(eachRes.getRecords());
-                //todo
-                //result.addErrors(eachRes.getErrors());
-                /*if (eachRes.getDebug() != null) {
-                    result.setDebugInfo(AbstractRecordsService.class, "each_" + idx, eachRes.getDebug());
-                }*/
-
-                idx++;
             }
 
             return result;
@@ -209,7 +204,7 @@ public abstract class AbstractRecordsService implements RecordsService {
             Iterator<String> names = query.fieldNames();
             while (names.hasNext()) {
                 String name = names.next();
-                newObject.put(name, replaceIt(query.get(name), value));
+                newObject.set(name, replaceIt(query.get(name), value));
             }
             return newObject;
         }
@@ -221,7 +216,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public DataValue getAtt(RecordRef record, String attribute) {
+    public DataValue getAtt(Object record, String attribute) {
 
         if (record == null) {
             return DataValue.NULL;
@@ -237,43 +232,43 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<RecordRef> records, Collection<String> attributes) {
+    public List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes) {
         return getAtts(records, AttUtils.toMap(attributes), false);
     }
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<RecordRef> records, Collection<String> attributes, boolean rawAtts) {
+    public List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes, boolean rawAtts) {
         return getAtts(records, AttUtils.toMap(attributes), rawAtts);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(RecordRef record, Collection<String> attributes) {
-        return extractOne(getAtts(Collections.singletonList(record), attributes, false), record);
+    public RecordAtts getAtts(Object record, Collection<String> attributes) {
+        return getAtts(Collections.singletonList(record), attributes, false).get(0);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(RecordRef record, Collection<String> attributes, boolean rawAtts) {
-        return extractOne(getAtts(Collections.singletonList(record), attributes, rawAtts), record);
+    public RecordAtts getAtts(Object record, Collection<String> attributes, boolean rawAtts) {
+        return getAtts(Collections.singletonList(record), attributes, rawAtts).get(0);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(RecordRef record, Map<String, String> attributes) {
-        return extractOne(getAtts(Collections.singletonList(record), attributes, false), record);
+    public RecordAtts getAtts(Object record, Map<String, String> attributes) {
+        return getAtts(Collections.singletonList(record), attributes, false).get(0);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(RecordRef record, Map<String, String> attributes, boolean rawAtts) {
-        return extractOne(getAtts(Collections.singletonList(record), attributes, rawAtts), record);
+    public RecordAtts getAtts(Object record, Map<String, String> attributes, boolean rawAtts) {
+        return getAtts(Collections.singletonList(record), attributes, rawAtts).get(0);
     }
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<RecordRef> records, Map<String, String> attributes) {
+    public List<RecordAtts> getAtts(Collection<?> records, Map<String, String> attributes) {
         return getAtts(records, attributes, false);
     }
 
@@ -324,38 +319,5 @@ public abstract class AbstractRecordsService implements RecordsService {
         }
 
         return result.get(0);
-    }
-
-    /* UTILS */
-
-    private RecordAtts extractOne(List<RecordAtts> values, RecordRef record) {
-
-        if (values.isEmpty()) {
-            return new RecordAtts(record);
-        }
-        RecordAtts meta;
-        if (values.size() == 1) {
-            meta = values.get(0);
-            if (!record.equals(meta.getId())) {
-                meta = new RecordAtts(meta, record);
-            }
-            return meta;
-        }
-
-        meta = values.stream()
-                     .filter(r -> record.equals(r.getId()))
-                     .findFirst()
-                     .orElse(null);
-
-        if (meta == null && values.size() > 0) {
-            log.warn("Records is not empty but '" + record + "' is not found. Records: "
-                + values.stream()
-                        .map(m -> "'" + m.getId() + "'")
-                        .collect(Collectors.joining(", ")));
-        }
-        if (meta == null) {
-            meta = new RecordAtts(record);
-        }
-        return meta;
     }
 }

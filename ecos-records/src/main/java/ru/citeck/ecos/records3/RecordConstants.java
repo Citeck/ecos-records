@@ -4,6 +4,8 @@ public final class RecordConstants {
 
     private RecordConstants() {}
 
+    public static final String ATT_NULL = "_null";
+
     public static final String ATT_TYPE = "_type";
     public static final String ATT_ECOS_TYPE = "_etype";
     public static final String ATT_NOT_EXISTS = "_notExists";

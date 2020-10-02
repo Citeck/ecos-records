@@ -9,9 +9,9 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class EvaluatorsWithModelTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "test";
 
@@ -54,9 +54,9 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(r -> {
-            switch (r.getId()) {
+            switch (r) {
                 case "user": return new UserValue();
                 case "record": return new OtherValue();
             }
@@ -120,13 +120,13 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
         public static final String FIXED_STR_VALUE = "Fixed str value";
         public static final int FIXED_INT_VALUE = 42;
 
-        @MetaAtt("$user.userName")
+        @AttName("$user.userName")
         private String userName;
         private String someField;
 
-        @MetaAtt("$fixedStrValue")
+        @AttName("$fixedStrValue")
         private String fixedStrValue;
-        @MetaAtt("$fixedIntValue")
+        @AttName("$fixedIntValue")
         private int fixedIntValue;
     }
 }

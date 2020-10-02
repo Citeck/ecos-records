@@ -4,22 +4,15 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.error.RecordsError;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
-import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class QueryExceptionTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String MSG = "SomeMessage";
 
@@ -52,7 +45,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         try {
             try {
                 throw new IllegalArgumentException(MSG);

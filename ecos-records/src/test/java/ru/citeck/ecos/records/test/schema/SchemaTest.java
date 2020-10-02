@@ -49,7 +49,7 @@ public class SchemaTest {
         String edgeName = "cm:name";
         String att = ".edge(n:\"" + edgeName + "\"){" + inner + "}";
 
-        SchemaRootAtt schemaAtt = reader.read(att);
+        SchemaRootAtt schemaAtt = reader.readRoot(att);
         assertEquals(1, schemaAtt.getAttribute().getInner().size());
         assertEquals(1, schemaAtt.getAttribute().getInner().get(0).getInner().size());
         assertEquals(inner, schemaAtt.getAttribute().getInner().get(0).getInner().get(0).getName());
@@ -143,8 +143,8 @@ public class SchemaTest {
     }
 
     private void assertAtt(String expected, String source) {
-        String gqlAtt = writer.write(reader.read(source));
+        String gqlAtt = writer.write(reader.readRoot(source));
         assertEquals(expected, gqlAtt);
-        assertEquals(gqlAtt, writer.write(reader.read(gqlAtt)));
+        assertEquals(gqlAtt, writer.write(reader.readRoot(gqlAtt)));
     }
 }

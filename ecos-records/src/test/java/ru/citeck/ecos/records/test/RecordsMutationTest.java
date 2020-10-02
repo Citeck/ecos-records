@@ -1,13 +1,12 @@
 package ru.citeck.ecos.records.test;
 
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.MutableRecordsLocalDao;
 
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsMutationTest extends LocalRecordsDao
+public class RecordsMutationTest extends AbstractRecordsDao
                                 implements MutableRecordsLocalDao<RecordsMutationTest.TestDto> {
 
     private static final String SOURCE_ID = "test-source-id";
@@ -174,6 +173,12 @@ public class RecordsMutationTest extends LocalRecordsDao
 
         return super.mutateImpl(mutation);
     }*/
+
+    @Nullable
+    @Override
+    public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
+        return null;
+    }
 
     @NotNull
     @Override

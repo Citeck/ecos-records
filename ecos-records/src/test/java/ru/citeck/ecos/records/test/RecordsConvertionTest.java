@@ -3,12 +3,11 @@ package ru.citeck.ecos.records.test;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsConvertionTest extends LocalRecordsDao implements LocalRecordsQueryDao {
+public class RecordsConvertionTest extends AbstractRecordsDao implements RecordsQueryDao {
 
     private static final String ID = "test";
 
@@ -44,11 +43,12 @@ public class RecordsConvertionTest extends LocalRecordsDao implements LocalRecor
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
         assertEquals(CONVERTED_LANG, query.getLanguage());
         return new RecordsQueryRes<>();
     }
 
+    @NotNull
     @Override
     public List<String> getSupportedLanguages() {
         return Collections.singletonList(CONVERTED_LANG);

@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.InnerMetaValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
 
-    private static String ID = "";
+    private static final String ID = "";
     private RecordsService recordsService;
 
     @BeforeAll
@@ -69,9 +69,9 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
 
     @NotNull
     @Override
-    public List<AttValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(r -> {
-            if (r.getId().contains("inner")) {
+            if (r.contains("inner")) {
                 return new InnerMeta();
             }
             return new Meta();
@@ -161,7 +161,7 @@ class InnerMetaTest extends LocalRecordsDao implements LocalRecordsMetaDao {
             this.field1 = field1;
         }
 
-        @MetaAtt(".disp")
+        @AttName(".disp")
         public String getDisplay() {
             return "DISPLAY";
         }

@@ -3,15 +3,9 @@ package ru.citeck.ecos.records3.source.dao.local;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
-import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.operation.query.dto.SortBy;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.source.dao.local.job.Job;
@@ -29,7 +23,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
 
     private final Class<T> model;
-    private AttSchema schema;
+    private Map<String, String> schema;
 
     private final CompletableFuture<Boolean> firstSyncFuture = new CompletableFuture<>();
     private RemoteRecordsResolver remoteRecordsResolver;

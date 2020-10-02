@@ -8,10 +8,12 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttReadException;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.resolver.RecordsDaoRegistry;
@@ -28,13 +30,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private final RecordsResolver recordsResolver;
     private final AttSchemaReader attSchemaReader;
-    private final DtoSchemaResolver dtoAttributesResolver;
+    private final DtoSchemaReader dtoAttsSchemaReader;
+    private final AttSchemaWriter attSchemaWriter;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
-        dtoAttributesResolver = serviceFactory.getDtoMetaResolver();
+        dtoAttsSchemaReader = serviceFactory.getDtoSchemaResolver();
         recordsResolver = serviceFactory.getRecordsResolver();
         attSchemaReader = serviceFactory.getAttSchemaReader();
+        attSchemaWriter = serviceFactory.getAttSchemaWriter();
     }
 
     /* QUERY */
@@ -56,13 +60,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> RecordsQueryRes<T> query(RecordsQuery query, Class<T> metaClass) {
 
-        Map<String, String> attributes = dtoAttributesResolver.getAttributes(metaClass);
+        List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
-        RecordsQueryRes<RecordAtts> meta = query(query, attributes);
+        RecordsQueryRes<RecordAtts> meta = query(query, attSchemaWriter.writeToMap(attributes));
 
-        return new RecordsQueryRes<>(meta, m -> dtoAttributesResolver.instantiateMeta(metaClass, m.getAttributes()));
+        return new RecordsQueryRes<>(meta, m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()));
     }
 
     @NotNull
@@ -84,23 +88,17 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<RecordRef> records,
+    public List<RecordAtts> getAtts(Collection<?> records,
                                     Map<String, String> attributes,
                                     boolean rawAtts) {
 
-        if (attributes.isEmpty()) {
-            return records.stream().map(RecordAtts::new).collect(Collectors.toList());
-        }
-
-        List<RecordAtts> meta = handleRecordsListRead(() ->
+        return handleRecordsListRead(() ->
             recordsResolver.getAtts(new ArrayList<>(records), attributes, rawAtts));
-
-        return meta != null ? meta : Collections.emptyList();
     }
 
     @NotNull
     @Override
-    public <T> T getAtts(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
+    public <T> T getAtts(@NotNull Object recordRef, @NotNull Class<T> metaClass) {
 
         List<T> meta = getAtts(Collections.singletonList(recordRef), metaClass);
         if (meta.size() == 0) {
@@ -111,17 +109,17 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public <T> List<T> getAtts(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
+    public <T> List<T> getAtts(@NotNull Collection<?> records, @NotNull Class<T> metaClass) {
 
-        Map<String, String> attributes = dtoAttributesResolver.getAttributes(metaClass);
+        List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
             log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
 
-        List<RecordAtts> meta = getAtts(records, attributes);
+        List<RecordAtts> meta = getAtts(records, attSchemaWriter.writeToMap(attributes));
 
         return meta.stream()
-            .map(m -> dtoAttributesResolver.instantiateMeta(metaClass, m.getAttributes()))
+            .map(m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()))
             .collect(Collectors.toList());
     }
 
@@ -144,7 +142,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
                 try {
 
-                    SchemaAtt parsedAtt = attSchemaReader.read(name).getAttribute();
+                    SchemaAtt parsedAtt = attSchemaReader.readRoot(name).getAttribute();
                     String scalarName = parsedAtt.getScalarName();
 
                     if (".assoc".equals(scalarName)) {
@@ -218,7 +216,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsQueryRes<T> result;
 
         try {
-            result = QueryContext.withContext(serviceFactory, supplier);
+            result = RequestContext.withCtx(serviceFactory, ctx -> supplier.get());
         } catch (Throwable e) {
             log.error("Records resolving error", e);
             result = new RecordsQueryRes<>();
@@ -232,7 +230,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         List<T> result;
 
         try {
-            result = QueryContext.withContext(serviceFactory, impl);
+            result = RequestContext.withCtx(serviceFactory, ctx -> impl.get());
         } catch (Throwable e) {
             log.error("Records resolving error", e);
             result = Collections.emptyList();

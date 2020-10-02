@@ -23,7 +23,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         String name = attribute.getName();
         List<SchemaAtt> inner = attribute.getInner();
 
-        if (sb.length() > 0 && !alias.isEmpty()) {
+        if (sb.length() > 1 && !alias.isEmpty()) {
             sb.append(NameUtils.escape(alias)).append(":");
         }
 

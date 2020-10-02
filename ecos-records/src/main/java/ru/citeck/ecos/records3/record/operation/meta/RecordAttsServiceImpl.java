@@ -9,9 +9,10 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.ResolveArgs;
+import ru.citeck.ecos.records3.source.common.AttMixin;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,11 +23,11 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     private static final String REF_ATT_ALIAS = "___ref___";
 
     private final AttSchemaReader schemaReader;
-    private final DtoSchemaResolver dtoSchemaResolver;
+    private final DtoSchemaReader dtoSchemaReader;
     private final AttSchemaResolver schemaResolver;
 
     public RecordAttsServiceImpl(RecordsServiceFactory factory) {
-        this.dtoSchemaResolver = factory.getDtoMetaResolver();
+        this.dtoSchemaReader = factory.getDtoSchemaResolver();
         this.schemaReader = factory.getAttSchemaReader();
         this.schemaResolver = factory.getAttSchemaResolver();
     }
@@ -59,38 +60,46 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     }
 
     @Override
-    public List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes) {
+    public List<RecordAtts> getAtts(List<?> values, Collection<String> attributes) {
         return getAtts(values, attributes, false);
     }
 
     @Override
-    public List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes) {
+    public List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes) {
         return getAtts(values, attributes, false);
     }
 
     @Override
-    public List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes, boolean rawAtts) {
+    public List<RecordAtts> getAtts(List<?> values, Collection<String> attributes, boolean rawAtts) {
         return getAtts(values, toAttsMap(attributes), rawAtts);
     }
 
     @Override
-    public <T> List<T> getAtts(List<Object> values, Class<T> attsDto) {
-        Map<String, String> attributes = dtoSchemaResolver.getAttributes(attsDto);
-        return values.stream()
-            .map(v -> getAtts(v, attributes))
-            .map(v -> dtoSchemaResolver.instantiateMeta(attsDto, v.getAttributes()))
+    public <T> List<T> getAtts(List<?> values, Class<T> attsDto) {
+
+        List<SchemaRootAtt> attributes = dtoSchemaReader.read(attsDto);
+
+        return getAttsBySchema(values, attributes, false, Collections.emptyList())
+            .stream()
+            .map(v -> dtoSchemaReader.instantiate(attsDto, v.getAttributes()))
             .collect(Collectors.toList());
     }
 
     @Override
-    public List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes, boolean rawAtts) {
+    public List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts) {
+        return getAtts(values, attributes, rawAtts, Collections.emptyList());
+    }
 
-        List<SchemaRootAtt> rootAtts = new ArrayList<>(schemaReader.read(attributes));
+    private List<RecordAtts> getAttsBySchema(List<?> values,
+                                    List<SchemaRootAtt> rootAtts,
+                                    boolean rawAtts,
+                                    List<AttMixin> mixins) {
 
         rootAtts.add(new SchemaRootAtt(
             SchemaAtt.create()
                 .setAlias(REF_ATT_ALIAS)
-                .setName("?ref")
+                .setName("ref")
+                .setScalar(true)
                 .build(),
             Collections.emptyList())
         );
@@ -99,11 +108,21 @@ public class RecordAttsServiceImpl implements RecordAttsService {
             .setValues(values)
             .setAtts(rootAtts)
             .setRawAtts(rawAtts)
+            .setMixins(mixins)
             .build());
 
         return data.stream()
             .map(this::toRecMeta)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<RecordAtts> getAtts(List<?> values,
+                                    Map<String, String> attributes,
+                                    boolean rawAtts,
+                                    List<AttMixin> mixins) {
+
+        return getAttsBySchema(values, schemaReader.readRoot(attributes), rawAtts, mixins);
     }
 
     private RecordAtts toRecMeta(ObjectData data) {

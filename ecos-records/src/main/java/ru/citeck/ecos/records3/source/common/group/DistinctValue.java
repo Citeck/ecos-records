@@ -1,15 +1,15 @@
 package ru.citeck.ecos.records3.source.common.group;
 
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 
 public class DistinctValue {
 
     private String id;
 
-    @MetaAtt(".str")
+    @AttName(".str")
     private String value;
 
-    @MetaAtt(".disp")
+    @AttName(".disp")
     private String displayName;
 
     public String getId() {

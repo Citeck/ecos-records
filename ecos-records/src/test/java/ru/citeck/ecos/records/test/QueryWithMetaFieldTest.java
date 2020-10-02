@@ -7,20 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalRecordsQueryDao {
+public class QueryWithMetaFieldTest extends AbstractRecordsDao implements RecordsQueryDao {
 
     private static final String ID = "test";
 
@@ -36,7 +36,7 @@ public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalReco
     }
 
     @Override
-    public RecordsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
 
         SchemaAtt field = AttContext.getCurrentSchemaAtt();
         //todo
@@ -94,13 +94,13 @@ public class QueryWithMetaFieldTest extends LocalRecordsDao implements LocalReco
         private int field1;
         private List<String> field2;
 
-        @MetaAtt("sum(\"field1\")")
+        @AttName("sum(\"field1\")")
         private int sum;
 
-        @MetaAtt("sum(\\\"field2\\\")")
+        @AttName("sum(\\\"field2\\\")")
         private int sum2;
 
-        @MetaAtt("#field0(\"param\")?options")
+        @AttName("#field0(\"param\")?options")
         private List<Object> options;
     }
 }

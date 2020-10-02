@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordAtts;
@@ -12,13 +14,12 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.ServiceFactoryAware;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.delete.RecordsDeleteDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
 import ru.citeck.ecos.records3.record.operation.query.lang.exception.LanguageNotSupportedException;
-import ru.citeck.ecos.records3.record.exception.RecordsException;
 import ru.citeck.ecos.records3.record.exception.RecsSourceNotFoundException;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
 import ru.citeck.ecos.records3.predicate.model.OrPredicate;
@@ -26,23 +27,26 @@ import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryWithLang;
-import ru.citeck.ecos.records3.record.error.RecordsError;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
+import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.source.dao.*;
+import ru.citeck.ecos.records3.source.info.RecsDaoFeature;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.source.dao.local.job.Job;
 import ru.citeck.ecos.records3.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records3.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
+import ru.citeck.ecos.records3.utils.ValueWithIdx;
 
+import javax.management.Query;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,15 +56,16 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private static final String DEBUG_META_SCHEMA = "schema";
 
     private final Map<String, RecordsDao> allDao = new ConcurrentHashMap<>();
-    private final Map<String, RecordsMetaDao> metaDao = new ConcurrentHashMap<>();
+    private final Map<String, RecordsAttsDao> attsDao = new ConcurrentHashMap<>();
     private final Map<String, RecordsQueryDao> queryDao = new ConcurrentHashMap<>();
-    private final Map<String, RecordsMutateDao> mutableDao = new ConcurrentHashMap<>();
+    private final Map<String, RecordsMutateDao> mutateDao = new ConcurrentHashMap<>();
+    private final Map<String, RecordsDeleteDao> deleteDao = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends RecordsDao>, Map<String, ? extends RecordsDao>> daoMapByType;
 
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
-    private final RecordAttsService recordsMetaService;
+    private final RecordAttsService recordsAttsService;
 
     private final String currentApp;
 
@@ -69,25 +74,27 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
-        this.recordsMetaService = serviceFactory.getRecordsMetaService();
+        this.recordsAttsService = serviceFactory.getRecordsMetaService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
 
         daoMapByType = new HashMap<>();
-        daoMapByType.put(RecordsMetaDao.class, metaDao);
+        daoMapByType.put(RecordsAttsDao.class, attsDao);
         daoMapByType.put(RecordsQueryDao.class, queryDao);
-        daoMapByType.put(RecordsMutateDao.class, mutableDao);
+        daoMapByType.put(RecordsMutateDao.class, mutateDao);
     }
 
     public void initJobs(ScheduledExecutorService executor) {
         this.jobExecutor.init(executor);
     }
 
-    @NotNull
+    @Nullable
     @Override
     public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
                                              @NotNull Map<String, String> attributes,
                                              boolean rawAtts) {
+
+        RequestContext context = RequestContext.getCurrentNotNull();
 
         String sourceId = query.getSourceId();
         int appDelimIdx = sourceId.indexOf('/');
@@ -117,46 +124,70 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                 RecordsQuery convertedQuery = updateQueryLanguage(query, groupsSource);
 
                 if (convertedQuery == null) {
+
                     String errorMsg = "GroupBy is not supported by language: "
                                       + query.getLanguage() + ". Query: " + query;
-                    log.warn(errorMsg);
-                    //recordsResult = queryWithSchema(finalQuery, attributes, rawAtts);
-                    //todo
-                    //recordsResult.addError(new RecordsError(errorMsg));
+                    context.addMsg(MsgLevel.ERROR, () -> errorMsg);
+
                 } else {
-                    /*recordsResult = doWithSchema(attributes, rawAtts,
-                        schema -> groupsSource.query(convertedQuery));*/
+                    RecordsQueryRes<?> queryRes = groupsSource.queryRecords(convertedQuery);
+                    if (queryRes != null) {
+                        List<RecordAtts> atts = recordsAttsService.getAtts(queryRes.getRecords(), attributes, rawAtts);
+                        recordsResult = new RecordsQueryRes<>(atts);
+                        recordsResult.setHasMore(queryRes.getHasMore());
+                        recordsResult.setTotalCount(queryRes.getTotalCount());
+                    }
+                }
+            }
+        } else {
+
+            if (DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
+
+                Optional<RecordsQueryDao> recordsQueryDao = getRecordsDao(sourceId, RecordsQueryDao.class);
+
+                List<String> languages = recordsQueryDao.map(RecordsQueryDao::getSupportedLanguages)
+                    .orElse(Collections.emptyList());
+
+                if (!languages.contains(DistinctQuery.LANGUAGE)) {
+
+                    DistinctQuery distinctQuery = query.getQuery(DistinctQuery.class);
+                    recordsResult = new RecordsQueryRes<>();
+
+                    recordsResult.setRecords(getDistinctValues(sourceId,
+                        distinctQuery,
+                        finalQuery.getMaxItems(),
+                        attributes
+                    ));
+                }
+            } else {
+
+                RecordsQueryDao dao = getRecordsDao(sourceId, RecordsQueryDao.class).orElse(null);
+
+                if (dao == null) {
+
+                    String msg = "RecordsQueryDao is not found for id = '" + sourceId + "'";
+                    context.addMsg(MsgLevel.ERROR, () -> msg);
+
+                } else {
+
+                    recordsResult = new RecordsQueryRes<>();
+
+                    RecordsQueryRes<?> queryRes = dao.queryRecords(query);
+
+                    if (queryRes != null) {
+
+                        List<RecordAtts> recAtts = getAtts(queryRes.getRecords(), attributes, rawAtts);
+
+                        recordsResult.setRecords(recAtts);
+                        recordsResult.setTotalCount(queryRes.getTotalCount());
+                        recordsResult.setHasMore(queryRes.getHasMore());
+                    }
                 }
             }
         }
 
-        if (recordsResult == null && DistinctQuery.LANGUAGE.equals(query.getLanguage())) {
-
-            Optional<RecordsQueryDao> recordsQueryDao = getRecordsDao(sourceId, RecordsQueryDao.class);
-
-            List<String> languages = recordsQueryDao.map(RecordsQueryDao::getSupportedLanguages)
-                    .orElse(Collections.emptyList());
-
-            if (!languages.contains(DistinctQuery.LANGUAGE)) {
-
-                DistinctQuery distinctQuery = query.getQuery(DistinctQuery.class);
-                recordsResult = new RecordsQueryRes<>();
-
-                String finalSourceId = sourceId;
-                //todo
-                /*recordsResult.setRecords(doWithSchema(attributes, rawAtts, schema ->
-                    new RecordsResult<>(getDistinctValues(finalSourceId,
-                        distinctQuery,
-                        finalQuery.getMaxItems(),
-                        schema
-                    )
-                )).getRecords());*/
-
-            }
-        }
-
         if (recordsResult == null) {
-            //recordsResult = queryWithSchema(finalQuery, attributes, rawAtts);
+            recordsResult = new RecordsQueryRes<>();
         }
 
         return RecordsUtils.metaWithDefaultApp(recordsResult, currentApp);
@@ -165,7 +196,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private List<RecordAtts> getDistinctValues(String sourceId,
                                                DistinctQuery distinctQuery,
                                                int max,
-                                               AttSchema schema) {
+                                               Map<String, String> schema) {
 
         if (max == -1) {
             max = 50;
@@ -196,9 +227,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         String distinctValueAlias = "_distinctValue";
         String distinctValueIdAlias = "_distinctValueId";
 
-        return null;
-
-        /*Map<String, String> innerAttributes = new HashMap<>(schema.getAttributes());
+        Map<String, String> innerAttributes = new HashMap<>(schema);
         innerAttributes.put(distinctValueAlias, ".str");
         innerAttributes.put(distinctValueIdAlias, ".id");
 
@@ -215,10 +244,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         do {
 
             recordsQuery.setQuery(fullPredicate);
-            RecordsQueryResult<RecordMeta> queryResult = query(recordsQuery, attributes, true);
+            RecordsQueryRes<RecordAtts> queryResult = query(recordsQuery, attributes, true);
+            if (queryResult == null) {
+                queryResult = new RecordsQueryRes<>();
+            }
             found = queryResult.getRecords().size();
 
-            for (RecordMeta value : queryResult.getRecords()) {
+            for (RecordAtts value : queryResult.getRecords()) {
 
                 DataValue att = value.get("att");
                 String attStr = att.get(distinctValueAlias).asText();
@@ -243,8 +275,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             atts.remove(distinctValueAlias);
             atts.remove(distinctValueIdAlias);
 
-            return new RecordMeta(ref, atts);
-        }).collect(Collectors.toList());*/
+            return new RecordAtts(ref, atts);
+        }).collect(Collectors.toList());
     }
 
     private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryDao dao) {
@@ -255,7 +287,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
         List<String> supportedLanguages = dao.getSupportedLanguages();
 
-        if (supportedLanguages == null || supportedLanguages.isEmpty()) {
+        if (supportedLanguages.isEmpty()) {
             return recordsQuery;
         }
 
@@ -274,286 +306,216 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         return null;
     }
 
-    private QueryResult queryRecordsImpl(RecordsQuery query, AttSchema schema) {
-
-        QueryResult records = null;
-        List<RecordsException> exceptions = new ArrayList<>();
-
-        try {
-            records = queryRecordsWithMeta(query, schema);
-        } catch (RecordsException e) {
-            exceptions.add(e);
-        }
-
-        if (records == null) {
-
-            log.error("Query failed. \n" + query + "\nSchema:\n" + schema);
-            log.error("Exceptions: \n" + exceptions.stream()
-                                                         .map(Throwable::getMessage)
-                                                         .collect(Collectors.joining("\n")));
-            records = new QueryResult(new RecordsQueryRes<>(), null);
-            //todo
-            /*records.getResult().setErrors(exceptions.stream()
-                                        .map(e -> new RecordsError(e.getMessage()))
-                                        .collect(Collectors.toList()));*/
-        }
-
-        if (query.isDebug()) {
-            /*records.getResult().setDebugInfo(getClass(), DEBUG_META_SCHEMA, schema);*/
-        }
-
-        return records;
-    }
-
-    private QueryResult queryRecordsWithMeta(RecordsQuery query, AttSchema schema) {
-
-        /*DaoWithConvQuery daoWithQuery = getDaoWithQuery(query);
-
-        if (log.isDebugEnabled()) {
-            log.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
-        }
-
-        long queryStart = System.currentTimeMillis();
-        RecordsQueryRes<?> records = daoWithQuery.dao.query(daoWithQuery.query);
-        if (records == null) {
-            records = new RecordsQueryRes<>();
-        }
-        long queryDuration = System.currentTimeMillis() - queryStart;
-
-        if (log.isDebugEnabled()) {
-            log.debug("Stop records with meta query. Duration: " + queryDuration);
-        }
-
-        if (query.isDebug()) {
-            records.setDebugInfo(getClass(), DEBUG_QUERY_TIME, queryDuration);
-        }
-
-        return new QueryResult(records, daoWithQuery.dao);*/
-        return null;
-    }
-
-    @NotNull
+    @Nullable
     @Override
-    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
+    public List<RecordAtts> getAtts(@NotNull List<?> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
+
+        RequestContext context = RequestContext.getCurrentNotNull();
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta start.\nRecords: " + records + " attributes: " + attributes);
         }
 
-        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+        List<ValueWithIdx<Object>> recordObjs = new ArrayList<>();
+        List<ValueWithIdx<RecordRef>> recordRefs = new ArrayList<>();
 
-        records = records.stream().map(ref -> {
-            if (ref.getAppName().equals(currentApp)) {
-                RecordRef newRef = ref.removeAppName();
-                refsMapping.put(newRef, ref);
-                ref = newRef;
+        int idx = 0;
+        for (Object rec : records) {
+            if (rec instanceof RecordRef) {
+                RecordRef ref = (RecordRef) rec;
+                if (ref.getAppName().equals(currentApp)) {
+                    ref = ref.removeAppName();
+                }
+                recordRefs.add(new ValueWithIdx<>(ref, idx));
+            } else {
+                recordObjs.add(new ValueWithIdx<>(rec, idx));
             }
-            return ref;
-        }).collect(Collectors.toList());
+            idx++;
+        }
 
-        /*Collection<RecordRef> finalRecords = records;
-        RecordsResult<RecordAtts> results = doWithSchema(
-            attributes,
-            rawAtts,
-            schema -> getMetaImpl(finalRecords, schema)
-        );
+        List<ValueWithIdx<RecordAtts>> result = new ArrayList<>();
+        List<RecordAtts> refsAtts = getMetaImpl(recordRefs.stream()
+            .map(ValueWithIdx::getValue)
+            .collect(Collectors.toList()), attributes, rawAtts);
+
+        if (refsAtts != null && refsAtts.size() == recordRefs.size()) {
+            for (int i = 0; i < refsAtts.size(); i++) {
+                result.add(new ValueWithIdx<>(refsAtts.get(i), recordRefs.get(i).getIdx()));
+            }
+        } else {
+            context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
+                "requested. refsAtts: " + refsAtts + " recordRefs: " + recordRefs);
+        }
+
+        List<RecordAtts> atts = recordsAttsService.getAtts(recordObjs.stream()
+            .map(ValueWithIdx::getValue)
+            .collect(Collectors.toList()), attributes, rawAtts);
+
+        if (atts != null && atts.size() == recordObjs.size()) {
+
+            for (int i = 0; i < atts.size(); i++) {
+                result.add(new ValueWithIdx<>(atts.get(i), recordObjs.get(i).getIdx()));
+            }
+
+        } else {
+            context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
+                "requested. atts: " + atts + " recordObjs: " + recordObjs);
+        }
 
         if (log.isDebugEnabled()) {
             log.debug("getMeta end.\nRecords: " + records + " attributes: " + attributes);
         }
 
-        results.setRecords(results.getRecords()
-            .stream()
-            .map(meta -> {
-                RecordRef ref = meta.getId();
-                return meta.withId(refsMapping.getOrDefault(ref, ref));
-            })
-            .collect(Collectors.toList())
-        );
+        result.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
 
-        return results;*/
-        return null;
+        return result.stream()
+            .map(ValueWithIdx::getValue)
+            .collect(Collectors.toList());
     }
 
-    /*private RecordsResult<RecordMetaWithDao> getMetaImpl(Collection<RecordRef> records, AttSchema schema) {
+    private List<RecordAtts> getMetaImpl(Collection<RecordRef> records,
+                                         Map<String, String> attributes,
+                                         boolean rawAtts) {
 
-        RecordsResult<RecordMetaWithDao> results = new RecordsResult<>();
-        if (schema.getAttributes().isEmpty()) {
-            results.setRecords(records.stream()
-                .map(RecordAtts::new)
-                .map(m -> new RecordMetaWithDao(m, null))
-                .collect(Collectors.toList()));
-            return results;
+        if (records.isEmpty()) {
+            return Collections.emptyList();
         }
+
+        RequestContext context = RequestContext.getCurrentNotNull();
+
+        if (attributes.isEmpty()) {
+            return records.stream()
+                .map(RecordAtts::new)
+                .collect(Collectors.toList());
+        }
+
+        List<ValueWithIdx<RecordAtts>> results = new ArrayList<>();
 
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
-            Optional<RecordsMetaDao> recordsDao = getRecordsDao(sourceId, RecordsMetaDao.class);
-            RecordsResult<RecordMetaWithDao> meta;
+            RecordsAttsDao recordsDao = getRecordsDao(sourceId, RecordsAttsDao.class).orElse(null);
 
-            if (recordsDao.isPresent()) {
+            if (recordsDao == null) {
 
-                meta = new RecordsResult<>(
-                    recordsDao.get().getRecordsMeta(new ArrayList<>(records)),
-                    m -> new RecordMetaWithDao(m, recordsDao.get())
-                );
+                context.addMsg(MsgLevel.ERROR, () ->
+                    "RecordsAttsDao is not found with ID: '" + sourceId + "'");
+
+                for (ValueWithIdx<RecordRef> ref : recs) {
+                    results.add(ref.map(RecordAtts::new));
+                }
 
             } else {
 
-                meta = new RecordsResult<>();
-                meta.setRecords(recs.stream()
-                    .map(RecordAtts::new)
-                    .map(m -> new RecordMetaWithDao(m, null))
+                List<?> recAtts = recordsDao.getRecordsAtts(recs.stream()
+                    .map(r -> r.getValue().getId())
                     .collect(Collectors.toList()));
-                meta.addError(new RecordsError("Records source '" + sourceId + "' can't return attributes"));
 
-                log.debug("Records source '" + sourceId + "' can't return attributes");
+                if (recAtts == null) {
+
+                    for (ValueWithIdx<RecordRef> ref : recs) {
+                        results.add(ref.map(RecordAtts::new));
+                    }
+
+                } else {
+
+                    if (recAtts.size() != recs.size()) {
+
+                        context.addMsg(MsgLevel.ERROR, () ->
+                            "getRecordAtts should return " +
+                                "same amount of values as in argument. " +
+                                "SourceId: " + sourceId + "' " +
+                                "Expected length: " + recs.size() + " " +
+                                "Actual length: " + recAtts.size() + " " +
+                                "Refs: " + recs + " Atts: " + recAtts);
+
+                        for (ValueWithIdx<RecordRef> ref : recs) {
+                            results.add(ref.map(RecordAtts::new));
+                        }
+
+                    } else {
+
+                        List<RecordAtts> atts = recordsAttsService.getAtts(recAtts, attributes, rawAtts);
+
+                        for (int i = 0; i < recs.size(); i++) {
+                            results.add(new ValueWithIdx<>(atts.get(i), i));
+                        }
+                    }
+                }
             }
-
-            results.merge(meta);
         });
 
-        return results;
-    }*/
-
-    /*private <T extends RecordsResult<?>,
-             R extends RecordsResult<RecordAtts>> R queryWithSchema(RecordsQuery query,
-                                                                    Map<String, String> attributes,
-                                                                    boolean flatAttributes) {
-        return doWithSchema(attributes, flatAttributes, schema -> {
-
-            QueryResult queryResult = queryRecordsImpl(query, schema);
-            if (queryResult.getRecordsDao() != null) {
-                return new RecordsQueryRes<>(queryResult.getResult(),
-                    m -> new RecordMetaWithDao(m, queryResult.getRecordsDao()));
-            }
-            return queryResult.getResult();
-        });
+        results.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        return results.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
     }
-
-    private <T extends RecordsResult<?>,
-             R extends RecordsResult<RecordAtts>> R doWithSchema(Map<String, String> attributes,
-                                                                 boolean flatAttributes,
-                                                                 Function<AttSchema, T> action) {
-
-        AttSchema schema = recordsMetaService.createSchema(attributes);
-        T metaRes = action.apply(schema);
-        List<RecordAtts> metaList = new ArrayList<>();
-
-        for (Object record : metaRes.getRecords()) {
-
-            boolean flattingRequired;
-            Object meta;
-
-            if (record instanceof RecordMetaWithDao) {
-
-                RecordMetaWithDao metaWithDao = (RecordMetaWithDao) record;
-                flattingRequired = flatAttributes
-                    && metaWithDao.getDao() != null
-                    && metaWithDao.getDao().isRawAttributesProvided();
-                meta = metaWithDao.getMeta();
-
-            } else if (record instanceof RecordAtts) {
-
-                flattingRequired = flatAttributes;
-                meta = (RecordAtts) record;
-
-            } else {
-
-                log.error("Unknown record type will be skipped: " + record);
-
-                continue;
-            }
-
-            // todo
-            //metaList.add(recordsMetaService.convertMetaResult(meta, schema, flattingRequired));
-        }
-
-        @SuppressWarnings("unchecked")
-        R result = (R) metaRes;
-        result.setRecords(metaList);
-
-        return result;
-    }*/
 
     @NotNull
     @Override
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
 
-        /*RecordsMutResult result = new RecordsMutResult();
+        List<RecordRef> daoResult = new ArrayList<>();
 
         Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
 
-        mutation.getRecords().forEach(record -> {
+        records.forEach(record -> {
 
-            if (currentApp.equals(record.getId().getAppName())) {
+            String appName = record.getId().getSourceId();
+            String sourceId = record.getId().getSourceId();
+
+            if (currentApp.equals(appName)) {
 
                 RecordRef newId = record.getId().removeAppName();
                 refsMapping.put(newId, record.getId());
                 record = new RecordAtts(record, newId);
             }
 
-            RecordsMutateDao dao = needRecordsDao(record.getId().getSourceId(), RecordsMutateDao.class);
-            RecordsMutation sourceMut = new RecordsMutation();
-            sourceMut.setRecords(Collections.singletonList(record));
-            sourceMut.setDebug(mutation.isDebug());
-            result.merge(dao.mutate(sourceMut));
+            RecordsMutateDao dao = needRecordsDao(sourceId, RecordsMutateDao.class);
+            RecordRef localRef = RecordRef.create("", record.getId().getId());
+
+            List<RecordRef> mutRes = dao.mutate(Collections.singletonList(new RecordAtts(record, localRef)));
+            if (mutRes == null) {
+                mutRes = Collections.singletonList(record.getId());
+            } else {
+                mutRes = mutRes.stream()
+                    .map(r -> {
+                        if (StringUtils.isBlank(r.getSourceId())) {
+                            return RecordRef.create(sourceId, r.getId());
+                        }
+                        return r;
+                    }).collect(Collectors.toList());
+            }
+
+            daoResult.addAll(mutRes);
         });
 
+        List<RecordRef> result = daoResult;
         if (!refsMapping.isEmpty()) {
-            result.setRecords(result.getRecords()
+            result = daoResult
                 .stream()
-                .map(meta -> {
-                    RecordRef ref = meta.getId();
-                    return meta.withId(refsMapping.getOrDefault(ref, ref));
-                })
-                .collect(Collectors.toList())
-            );
+                .map(ref -> refsMapping.getOrDefault(ref, ref))
+                .collect(Collectors.toList());
         }
-        return result;*/
-        return null;
+        return result;
     }
 
     @NotNull
     @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
 
-        /*RecordsDelResult result = new RecordsDelResult();
+        List<DelStatus> daoResult = new ArrayList<>();
 
-        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+        records.forEach(record -> {
 
-        RecordsUtils.groupRefBySource(deletion.getRecords()).forEach((sourceId, sourceRecords) -> {
+            String sourceId = record.getSourceId();
 
-            RecordsMutateDao source = needRecordsDao(sourceId, RecordsMutateDao.class);
+            RecordsDeleteDao dao = needRecordsDao(sourceId, RecordsDeleteDao.class);
 
-            RecordsDeletion sourceDeletion = new RecordsDeletion();
-            sourceDeletion.setRecords(sourceRecords.stream().map(ref -> {
-                if (ref.getAppName().equals(currentApp)) {
-                    RecordRef newRef = ref.removeAppName();
-                    refsMapping.put(newRef, ref);
-                    ref = newRef;
-                }
-                return ref;
-            }).collect(Collectors.toList()));
-
-            result.merge(source.delete(sourceDeletion));
+            List<DelStatus> delResult = dao.delete(Collections.singletonList(record.getId()));
+            daoResult.add(delResult != null && !delResult.isEmpty() ? delResult.get(0) : DelStatus.OK);
         });
 
-        if (!refsMapping.isEmpty()) {
-            result.setRecords(result.getRecords()
-                .stream()
-                .map(meta -> {
-                    RecordRef ref = meta.getId();
-                    return meta.withId(refsMapping.getOrDefault(ref, ref));
-                })
-                .collect(Collectors.toList())
-            );
-        }
-
-        return result;*/
-        return null;
+        return daoResult;
     }
 
     private DaoWithConvQuery getDaoWithQuery(RecordsQuery query) {
@@ -589,9 +551,10 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         }
 
         allDao.put(sourceId, recordsDao);
-        register(sourceId, metaDao, RecordsMetaDao.class, recordsDao);
+        register(sourceId, attsDao, RecordsAttsDao.class, recordsDao);
         register(sourceId, queryDao, RecordsQueryDao.class, recordsDao);
-        register(sourceId, mutableDao, RecordsMutateDao.class, recordsDao);
+        register(sourceId, mutateDao, RecordsMutateDao.class, recordsDao);
+        register(sourceId, deleteDao, RecordsDeleteDao.class, recordsDao);
 
         if (recordsDao instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
@@ -627,18 +590,15 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
         if (recordsDao instanceof RecordsQueryDao) {
             RecordsQueryDao queryDao = (RecordsQueryDao) recordsDao;
-            List<String> languages = queryDao.getSupportedLanguages();
-            recordsSourceInfo.setSupportedLanguages(languages != null ? languages : Collections.emptyList());
-            //recordsSourceInfo.setQuerySupported(true);
-            //recordsSourceInfo.setQueryWithMetaSupported(true);
+            recordsSourceInfo.setSupportedLanguages(queryDao.getSupportedLanguages());
+            recordsSourceInfo.setFeature(RecsDaoFeature.QUERY, true);
+        } else {
+            recordsSourceInfo.setFeature(RecsDaoFeature.QUERY, false);
         }
-        //todo
-        /*if (recordsDao instanceof RecordsMutateDao) {
-            recordsSourceInfo.setMutationSupported(true);
-        }
-        if (recordsDao instanceof RecordsMetaDao) {
-            recordsSourceInfo.setMetaSupported(true);
-        }*/
+
+        recordsSourceInfo.setFeature(RecsDaoFeature.MUTATE, recordsDao instanceof RecordsMutateDao);
+        recordsSourceInfo.setFeature(RecsDaoFeature.DELETE, recordsDao instanceof RecordsDeleteDao);
+        recordsSourceInfo.setFeature(RecsDaoFeature.GET_ATTS, recordsDao instanceof RecordsAttsDao);
 
         ColumnsSourceId columnsSourceId = recordsDao.getClass().getAnnotation(ColumnsSourceId.class);
         if (columnsSourceId != null && StringUtils.isNotBlank(columnsSourceId.value())) {
@@ -699,14 +659,5 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
             this.dao = dao;
             this.query = query;
         }
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class RecordMetaWithDao {
-        @NotNull
-        private Object meta;
-        @Nullable
-        private RecordsDao dao;
     }
 }

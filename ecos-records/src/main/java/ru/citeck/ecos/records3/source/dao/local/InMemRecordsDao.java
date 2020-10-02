@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.ServiceFactoryAware;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.predicate.PredicateService;
@@ -12,9 +11,6 @@ import ru.citeck.ecos.records3.predicate.RecordElements;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsMetaDao;
-import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

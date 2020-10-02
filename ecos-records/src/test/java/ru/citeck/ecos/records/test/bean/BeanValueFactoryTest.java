@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records.test.bean;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -8,9 +10,9 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,8 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BeanValueFactoryTest extends LocalRecordsDao
-    implements LocalRecordsMetaDao {
+public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "test";
     private RecordsService recordsService;
@@ -49,13 +50,14 @@ public class BeanValueFactoryTest extends LocalRecordsDao
         assertEquals(DataValue.createStr(dto1.toString()), recordsService.getAtt(ref1, ".str"));
     }
 
+    @Nullable
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream()
             .map(r -> {
-                if (r.getId().equals("0")) {
+                if (r.equals("0")) {
                     return new ValueDto0();
-                } else if (r.getId().equals("1")) {
+                } else if (r.equals("1")) {
                     return new ValueDto1();
                 }
                 throw new IllegalStateException("Unknown ref: " + r);
@@ -64,9 +66,9 @@ public class BeanValueFactoryTest extends LocalRecordsDao
 
     @Data
     public static class ValueDto0 {
-        @MetaAtt(".disp")
+        @AttName(".disp")
         private String displayName = "dispName";
-        @MetaAtt(".str")
+        @AttName(".str")
         private String strValue = "strValue";
     }
 

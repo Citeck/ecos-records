@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.operation.meta.value.factory.bean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
@@ -37,14 +37,16 @@ public class BeanTypeUtils {
 
             getters.put(descriptor.getName(), getter);
 
-            MetaAtt metaAttAnn = getReadAnnotation(type, descriptor, MetaAtt.class);
-            if (metaAttAnn != null) {
-                String metaAttName = metaAttAnn.value();
-                if (metaAttName.contains("?")) {
-                    if (metaAttName.charAt(0) != '?') {
+            AttName attNameAnn = getReadAnnotation(type, descriptor, AttName.class);
+            if (attNameAnn != null) {
+                String metaAttName = attNameAnn.value();
+                if (metaAttName.charAt(0) == '.' || metaAttName.charAt(0) == '?') {
+                    String name = metaAttName.substring(1);
+                    getters.put('.' + name, getter);
+                    getters.put('?' + name, getter);
+                } else {
+                    if (metaAttName.contains("?")) {
                         metaAttName = metaAttName.substring(0, metaAttName.indexOf('?'));
-                    } else {
-                        getters.put('.' + metaAttName.substring(1), getter);
                     }
                 }
                 getters.put(metaAttName, getter);

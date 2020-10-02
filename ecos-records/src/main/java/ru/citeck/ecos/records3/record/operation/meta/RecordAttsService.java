@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.operation.meta;
 
 import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.source.common.AttMixin;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,13 +19,15 @@ public interface RecordAttsService {
 
     <T> T getAtts(Object value, Class<T> attsDto);
 
-    List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes);
+    <T> List<T> getAtts(List<?> values, Class<T> attsDto);
 
-    List<RecordAtts> getAtts(List<Object> values, Map<String, String> attributes, boolean rawAtts);
+    List<RecordAtts> getAtts(List<?> values, Collection<String> attributes);
 
-    List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes);
+    List<RecordAtts> getAtts(List<?> values, Collection<String> attributes, boolean rawAtts);
 
-    List<RecordAtts> getAtts(List<Object> values, Collection<String> attributes, boolean rawAtts);
+    List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes);
 
-    <T> List<T> getAtts(List<Object> values, Class<T> attsDto);
+    List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts);
+
+    List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts, List<AttMixin> mixins);
 }

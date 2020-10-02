@@ -7,9 +7,9 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
 
@@ -17,8 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaFieldTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao, AttValue {
+public class MetaFieldTest extends AbstractRecordsDao
+                           implements RecordsAttsDao, AttValue {
 
     private static final String SOURCE_ID = "test-source";
     private static final RecordRef RECORD_REF = RecordRef.create(SOURCE_ID, "test");
@@ -29,7 +29,7 @@ public class MetaFieldTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(this);
     }
 

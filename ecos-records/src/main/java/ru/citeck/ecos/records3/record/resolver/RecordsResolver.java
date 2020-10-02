@@ -20,7 +20,7 @@ public interface RecordsResolver {
                                       boolean rawAtts);
 
     @Nullable
-    List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
+    List<RecordAtts> getAtts(@NotNull List<?> records,
                              @NotNull Map<String, String> attributes,
                              boolean rawAtts);
 

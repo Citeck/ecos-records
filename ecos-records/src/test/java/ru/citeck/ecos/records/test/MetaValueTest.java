@@ -11,9 +11,10 @@ import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -22,8 +23,8 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaValueTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao {
+public class MetaValueTest extends AbstractRecordsDao
+                           implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -32,7 +33,7 @@ public class MetaValueTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(new MetaVal(s -> innerSchema = s));
     }
 
@@ -156,8 +157,7 @@ public class MetaValueTest extends LocalRecordsDao
         @Override
         public Object getAtt(@NotNull String name) {
             if (name.equals("schema")) {
-                //todo
-                //schemaConsumer.accept(field.getInnerSchema());
+                schemaConsumer.accept(AttContext.getCurrentSchemaAttInnerStr());
             }
             if (name.equals("date")) {
                 return DATE_VALUE;

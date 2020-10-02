@@ -7,24 +7,19 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
-import ru.citeck.ecos.records3.source.common.AttributesMixin;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.type.ComputedAtt;
-import ru.citeck.ecos.records3.type.RecTypeService;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class InnerMixinTest extends LocalRecordsDao
-                            implements LocalRecordsMetaDao {
+public class InnerMixinTest extends AbstractRecordsDao
+                            implements RecordsAttsDao {
 
     private static final String ID = "mixinSourceId";
     private static final RecordRef DTO_REC_REF = RecordRef.create(ID, "test");
@@ -106,9 +101,9 @@ public class InnerMixinTest extends LocalRecordsDao
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(ref -> {
-            if (ref.getId().equals(DTO_REC_REF.getId())) {
+            if (ref.equals(DTO_REC_REF.getId())) {
                 return new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE1)));
             }
             return EmptyValue.INSTANCE;
@@ -132,7 +127,7 @@ public class InnerMixinTest extends LocalRecordsDao
             this.type = type;
         }
 
-        @MetaAtt(".type")
+        @AttName(".type")
         public RecordRef getType() {
             return type;
         }

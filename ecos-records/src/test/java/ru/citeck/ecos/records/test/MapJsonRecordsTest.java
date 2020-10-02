@@ -10,8 +10,8 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MapJsonRecordsTest extends LocalRecordsDao
-                                implements LocalRecordsMetaDao {
+public class MapJsonRecordsTest extends AbstractRecordsDao
+                                implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
@@ -41,7 +41,7 @@ public class MapJsonRecordsTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(r -> {
             Map<String, Object> result = new HashMap<>();
             ObjectNode var = JsonNodeFactory.instance.objectNode();

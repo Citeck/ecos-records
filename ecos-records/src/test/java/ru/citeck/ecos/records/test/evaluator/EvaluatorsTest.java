@@ -14,8 +14,8 @@ import ru.citeck.ecos.records3.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records3.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaDao,
+public class EvaluatorsTest extends AbstractRecordsDao implements RecordsAttsDao,
                                                                RecordEvaluator<EvaluatorsTest.RequiredMeta,
                                                                    EvaluatorsTest.RequiredMeta,
                                                                    Object> {
@@ -256,9 +256,9 @@ public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaD
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream()
-            .map(r -> r.getId().equals("Meta0") ? new Meta0() : new Meta1())
+            .map(r -> r.equals("Meta0") ? new Meta0() : new Meta1())
             .collect(Collectors.toList());
     }
 

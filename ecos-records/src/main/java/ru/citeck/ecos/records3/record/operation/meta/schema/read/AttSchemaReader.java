@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.read;
 
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,6 +29,9 @@ public class AttSchemaReader {
     private static final String GQL_ONE_ARG_ATT_WITH_INNER = GQL_ONE_ARG_ATT + "\\{(.+)}";
 
     private static final Pattern GQL_ATT_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "atts?"));
+    private static final Pattern GQL_ATT_WITHOUT_INNER_PATTERN =
+        Pattern.compile(String.format(GQL_ONE_ARG_ATT, "atts?"));
+
     private static final Pattern GQL_EDGE_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "edge"));
     private static final Pattern GQL_AS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "as"));
     private static final Pattern GQL_HAS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT, "has"));
@@ -37,7 +39,7 @@ public class AttSchemaReader {
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
     @NotNull
-    public List<SchemaRootAtt> read(@Nullable Collection<String> attributes) {
+    public List<SchemaRootAtt> readRoot(@Nullable Collection<String> attributes) {
 
         if (attributes == null || attributes.isEmpty()) {
             return Collections.emptyList();
@@ -45,11 +47,11 @@ public class AttSchemaReader {
 
         Map<String, String> atts = new LinkedHashMap<>();
         attributes.forEach(att -> atts.put(att, att));
-        return read(atts);
+        return readRoot(atts);
     }
 
     @NotNull
-    public List<SchemaRootAtt> read(@Nullable Map<String, String> attributes) {
+    public List<SchemaRootAtt> readRoot(@Nullable Map<String, String> attributes) {
 
         if (attributes == null || attributes.isEmpty()) {
             return Collections.emptyList();
@@ -64,17 +66,22 @@ public class AttSchemaReader {
     /**
      * @throws AttReadException when attribute can't be read
      */
-    public SchemaRootAtt read(String attribute) {
+    public SchemaRootAtt readRoot(String attribute) {
         return readRoot("", attribute);
     }
 
-    /* === PRIVATE === */
+    public SchemaAtt readInner(String alias, String attribute) {
+        return readInner(alias, attribute, Collections.emptyList());
+    }
 
-    private SchemaRootAtt readRoot(String alias, String attribute) {
-
-        if (StringUtils.isBlank(attribute)) {
-            throw new AttReadException(alias, attribute, "Empty attribute");
+    public SchemaAtt readInner(String alias, String attribute, List<SchemaAtt> innerAtts) {
+        if (attribute.charAt(0) == '.') {
+            return readDotAtt(alias, attribute.substring(1), innerAtts);
         }
+        return readSimpleAtt(alias, attribute, innerAtts);
+    }
+
+    public AttWithProc readProcessors(String attribute) {
 
         List<AttProcessorDef> processors;
 
@@ -107,6 +114,20 @@ public class AttSchemaReader {
             processors = Collections.emptyList();
         }
 
+        return new AttWithProc(att, processors);
+    }
+
+    /* === PRIVATE === */
+
+    private SchemaRootAtt readRoot(String alias, String attribute) {
+
+        if (StringUtils.isBlank(attribute)) {
+            throw new AttReadException(alias, attribute, "Empty attribute");
+        }
+
+        AttWithProc attWithProc = readProcessors(attribute);
+        String att = attWithProc.getAttribute();
+
         if (att.charAt(0) == '#') {
 
             int questionIdx = att.indexOf('?');
@@ -122,14 +143,7 @@ public class AttSchemaReader {
         }
 
         SchemaAtt schemaAtt = readInner(alias, att);
-        return new SchemaRootAtt(schemaAtt, processors);
-    }
-
-    private SchemaAtt readInner(String alias, String attribute) {
-        if (attribute.charAt(0) == '.') {
-            return readDotAtt(alias, attribute.substring(1));
-        }
-        return readSimpleAtt(alias, attribute);
+        return new SchemaRootAtt(schemaAtt, attWithProc.getProcessors());
     }
 
     private List<SchemaAtt> readInnerAtts(String innerAtts,
@@ -183,7 +197,7 @@ public class AttSchemaReader {
         return parserFunc.apply(alias, dotContext ? "." + att : att);
     }
 
-    private SchemaAtt readLastSimpleAtt(String alias, String attribute) {
+    private SchemaAtt readLastSimpleAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
 
         if (attribute.charAt(0) == '?') {
             return SchemaAtt.create()
@@ -196,7 +210,7 @@ public class AttSchemaReader {
         String att = attribute;
         int questionIdx = AttStrUtils.indexOf(att, "?");
         if (questionIdx != -1) {
-            att = att.substring(0, questionIdx) + "{." + att.substring(questionIdx + 1) + "}";
+            att = att.substring(0, questionIdx) + "{?" + att.substring(questionIdx + 1) + "}";
         }
 
         int arrIdx = AttStrUtils.indexOf(att, "[]");
@@ -206,32 +220,47 @@ public class AttSchemaReader {
             att = att.substring(0, arrIdx) + att.substring(arrIdx + 2);
         }
 
-        int openBraceIdx = AttStrUtils.indexOf(att, '{');
-        if (openBraceIdx == -1) {
-            openBraceIdx = att.length();
-            att += "{.disp}";
+        String attName = att;
+        String innerAttsStr = null;
+        int openBraceIdx = AttStrUtils.indexOf(attName, '{');
+        if (openBraceIdx > -1) {
+
+            attName = attName.substring(0, openBraceIdx);
+
+            int closeBraceIdx = AttStrUtils.indexOf(att, '}');
+            if (closeBraceIdx == -1) {
+                closeBraceIdx = att.length();
+            }
+
+            innerAttsStr = att.substring(openBraceIdx + 1, closeBraceIdx);
         }
-        int closeBraceIdx = AttStrUtils.indexOf(att, '}');
-        if (closeBraceIdx == -1) {
-            closeBraceIdx = att.length();
-            att += "}";
+
+        List<SchemaAtt> resInnerAtts;
+        if (innerAttsStr == null) {
+            if (!innerAtts.isEmpty()) {
+                resInnerAtts = innerAtts;
+            } else {
+                resInnerAtts = readInnerAtts("?disp", false, this::readInner);
+            }
+        } else {
+            resInnerAtts = readInnerAtts(innerAttsStr, false, this::readInner);
         }
 
         return SchemaAtt.create()
             .setAlias(alias)
-            .setName(removeQuotes(attribute.substring(0, openBraceIdx)))
+            .setName(removeQuotes(attName))
             .setMultiple(isMultiple)
-            .setInner(readInnerAtts(att.substring(openBraceIdx + 1, closeBraceIdx), false, this::readInner))
+            .setInner(resInnerAtts)
             .build();
     }
 
-    private SchemaAtt readSimpleAtt(String alias, String attribute) {
+    private SchemaAtt readSimpleAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
 
         List<String> dotPath = AttStrUtils.split(attribute, '.');
 
         String lastPathElem = dotPath.get(dotPath.size() - 1);
 
-        SchemaAtt schemaAtt = readLastSimpleAtt(dotPath.size() == 1 ? alias : "", lastPathElem);
+        SchemaAtt schemaAtt = readLastSimpleAtt(dotPath.size() == 1 ? alias : "", lastPathElem, innerAtts);
 
         for (int i = dotPath.size() - 2; i >= 0; i--) {
 
@@ -258,10 +287,10 @@ public class AttSchemaReader {
     /**
      * @param attribute - attribute without dot
      */
-    private SchemaAtt readDotAtt(String alias, String attribute) {
+    private SchemaAtt readDotAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
 
         if (attribute.startsWith("att")) {
-            return parseGqlAtt(alias, attribute);
+            return parseGqlAtt(alias, attribute, innerAtts);
         }
         if (attribute.startsWith("edge")) {
             return readEdgeAtt(alias, attribute);
@@ -409,23 +438,33 @@ public class AttSchemaReader {
         throw new AttReadException(alias, attribute, "Unknown 'edge inner' attribute");
     }
 
-    private SchemaAtt parseGqlAtt(String alias, String attribute) {
+    private SchemaAtt parseGqlAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
+
+        List<SchemaAtt> gqlInnerAtts = Collections.emptyList();
+        String attName = null;
+        boolean multiple = attribute.startsWith("atts");
 
         Matcher matcher = GQL_ATT_PATTERN.matcher(attribute);
         if (!matcher.matches()) {
-            log.error("Incorrect att attribute: '" + attribute);
-            return null;
+            if (innerAtts.size() > 0) {
+                matcher = GQL_ATT_WITHOUT_INNER_PATTERN.matcher(attribute);
+                if (matcher.matches()) {
+                    attName = matcher.group(2);
+                    gqlInnerAtts = innerAtts;
+                }
+            }
+        } else {
+            attName = matcher.group(2);
+            gqlInnerAtts = readInnerAtts(matcher.group(3), true, (a, n) -> readInner(a, n, innerAtts));
         }
-
-        String attName  = matcher.group(2);
-        boolean multiple = attribute.startsWith("atts");
-        List<SchemaAtt> innerAtts = readInnerAtts(matcher.group(3), true, this::readInner);
-
+        if (attName == null || gqlInnerAtts == null || gqlInnerAtts.isEmpty()) {
+            throw new AttReadException(alias, attribute, "Incorrect att attribute");
+        }
         return SchemaAtt.create()
             .setAlias(alias)
             .setName(attName)
             .setMultiple(multiple)
-            .setInner(innerAtts)
+            .setInner(gqlInnerAtts)
             .build();
     }
 

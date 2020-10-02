@@ -8,16 +8,16 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaNumberTest extends LocalRecordsDao
-                            implements LocalRecordsMetaDao {
+public class MetaNumberTest extends AbstractRecordsDao
+                            implements RecordsAttsDao {
 
     RecordsService recordsService;
 
@@ -39,7 +39,7 @@ public class MetaNumberTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(TestValue::new).collect(Collectors.toList());
     }
 
@@ -47,8 +47,8 @@ public class MetaNumberTest extends LocalRecordsDao
 
         private final RecordRef ref;
 
-        public TestValue(RecordRef ref) {
-            this.ref = ref;
+        public TestValue(String ref) {
+            this.ref = RecordRef.create("test", ref);
         }
 
         @Override

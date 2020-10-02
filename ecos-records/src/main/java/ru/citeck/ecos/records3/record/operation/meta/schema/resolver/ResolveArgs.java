@@ -56,7 +56,7 @@ public class ResolveArgs {
         }
 
         @NotNull
-        public Builder setValues(@Nullable List<Object> values) {
+        public Builder setValues(@Nullable List<?> values) {
             this.values = values != null ? new ArrayList<>(values) : Collections.emptyList();
             return this;
         }

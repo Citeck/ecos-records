@@ -9,16 +9,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsMetaQueryTest {
@@ -92,28 +87,28 @@ public class RecordsMetaQueryTest {
 
     public static class SimplePojo {
 
-        @MetaAtt("cm:name")
+        @AttName("cm:name")
         private String value0;
 
-        @MetaAtt("cm:caseStatus.cm:statusName")
+        @AttName("cm:caseStatus.cm:statusName")
         private String status;
 
-        @MetaAtt("cm:caseStatus.cm:statusName?str")
+        @AttName("cm:caseStatus.cm:statusName?str")
         private String status1;
 
-        @MetaAtt("cm:caseStatus.cm:statusName?str")
+        @AttName("cm:caseStatus.cm:statusName?str")
         private List<String> statuses;
 
-        @MetaAtt("cm:caseStatus.cm:statusName[]?str")
+        @AttName("cm:caseStatus.cm:statusName[]?str")
         private List<String> statuses1;
 
-        @MetaAtt(".att(n:'aaa'){atts(n:'bbb')}")
+        @AttName(".att(n:'aaa'){atts(n:'bbb')}")
         private List<String> someatt;
 
-        @MetaAtt("#cm:title?multiple")
+        @AttName("#cm:title?multiple")
         private boolean edge;
 
-        @MetaAtt("#cm:field?options")
+        @AttName("#cm:field?options")
         private List<Map<String, String>> options;
 
         private JsonNode jsonNode;

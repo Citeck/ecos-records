@@ -11,12 +11,12 @@ import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RecordRefValueFactoryTest extends LocalRecordsDao
-                                implements LocalRecordsMetaDao,
-                                           LocalRecordsQueryDao {
+class RecordRefValueFactoryTest extends AbstractRecordsDao
+                                implements RecordsAttsDao,
+                                           RecordsQueryDao {
 
     private static final String ID = "sourceId";
 
@@ -116,7 +116,7 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryRes<AttValue> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
         RecordsQueryRes<AttValue> result = new RecordsQueryRes<>();
         result.addRecord(Val.val0);
         return result;
@@ -124,13 +124,13 @@ class RecordRefValueFactoryTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<AttValue> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(r -> {
-            if (r.equals(RecordRef.valueOf(Val.val0.getId()))) {
+            if (r.equals(Val.val0.getId())) {
                 return Val.val0;
-            } else if (r.equals(RecordRef.valueOf(Val.val1.getId()))) {
+            } else if (r.equals(Val.val1.getId())) {
                 return Val.val1;
-            } else if (r.equals(RecordRef.valueOf(Val.val2.getId()))) {
+            } else if (r.equals(Val.val2.getId())) {
                 return Val.val2;
             } else {
                 throw new IllegalStateException("Unknown ref: " + r);

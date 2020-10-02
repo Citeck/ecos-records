@@ -7,6 +7,8 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records3.evaluator.evaluators.*;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaGqlWriter;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
 import ru.citeck.ecos.records3.record.operation.meta.value.factory.*;
 import ru.citeck.ecos.records3.record.operation.meta.value.factory.bean.BeanValueFactory;
@@ -16,14 +18,14 @@ import ru.citeck.ecos.records3.record.operation.meta.attproc.*;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.template.RecordsTemplateService;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records3.predicate.api.records.PredicateRecords;
 import ru.citeck.ecos.records3.predicate.json.std.PredicateJsonDeserializer;
 import ru.citeck.ecos.records3.predicate.json.std.PredicateJsonSerializer;
 import ru.citeck.ecos.records3.predicate.json.std.PredicateTypes;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangServiceImpl;
 import ru.citeck.ecos.records3.rest.RestHandler;
@@ -53,7 +55,7 @@ public class RecordsServiceFactory {
 
     private RestHandler restHandler;
     private RecordsService recordsService;
-    private DtoSchemaResolver dtoMetaResolver;
+    private DtoSchemaReader dtoMetaResolver;
     private RecordsResolver recordsResolver;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
@@ -61,7 +63,7 @@ public class RecordsServiceFactory {
     private List<AttValueFactory<?>> metaValueFactories;
     private LocalRecordsResolver localRecordsResolver;
     private RemoteRecordsResolver remoteRecordsResolver;
-    private Supplier<? extends QueryContext> queryContextSupplier;
+    private Supplier<? extends RequestContext> requestContextSupplier;
     private AttValuesConverter attValuesConverter;
     private RecordEvaluatorService recordEvaluatorService;
     private PredicateJsonDeserializer predicateJsonDeserializer;
@@ -71,6 +73,7 @@ public class RecordsServiceFactory {
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
     private AttSchemaReader attSchemaReader;
+    private AttSchemaWriter attSchemaWriter;
     private AttSchemaResolver attSchemaResolver;
 
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
@@ -310,30 +313,30 @@ public class RecordsServiceFactory {
         return metaValueFactories;
     }
 
-    public final synchronized DtoSchemaResolver getDtoMetaResolver() {
+    public final synchronized DtoSchemaReader getDtoSchemaResolver() {
         if (dtoMetaResolver == null) {
             dtoMetaResolver = createDtoMetaResolver();
         }
         return dtoMetaResolver;
     }
 
-    protected DtoSchemaResolver createDtoMetaResolver() {
-        return new DtoSchemaResolver(this);
+    protected DtoSchemaReader createDtoMetaResolver() {
+        return new DtoSchemaReader(this);
     }
 
-    public final synchronized Supplier<? extends QueryContext> getQueryContextSupplier() {
-        if (queryContextSupplier == null) {
-            queryContextSupplier = createQueryContextSupplier();
+    public final synchronized Supplier<? extends RequestContext> getRequestContextSupplier() {
+        if (requestContextSupplier == null) {
+            requestContextSupplier = createRequestContextSupplier();
         }
-        return queryContextSupplier;
+        return requestContextSupplier;
     }
 
-    protected Supplier<? extends QueryContext> createQueryContextSupplier() {
-        return QueryContext::new;
+    protected Supplier<? extends RequestContext> createRequestContextSupplier() {
+        return RequestContext::new;
     }
 
-    public final synchronized QueryContext createQueryContext() {
-        QueryContext context = getQueryContextSupplier().get();
+    public final synchronized RequestContext createRequestContext() {
+        RequestContext context = getRequestContextSupplier().get();
         context.setServiceFactory(this);
         return context;
     }
@@ -402,6 +405,17 @@ public class RecordsServiceFactory {
             attSchemaReader = createAttSchemaReader();
         }
         return attSchemaReader;
+    }
+
+    protected AttSchemaWriter createAttSchemaWriter() {
+        return new AttSchemaGqlWriter();
+    }
+
+    public final synchronized AttSchemaWriter getAttSchemaWriter() {
+        if (attSchemaWriter == null) {
+            attSchemaWriter = createAttSchemaWriter();
+        }
+        return attSchemaWriter;
     }
 
     protected AttSchemaResolver createAttSchemaResolver() {

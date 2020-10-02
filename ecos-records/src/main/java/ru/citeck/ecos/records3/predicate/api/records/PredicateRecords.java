@@ -4,7 +4,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
@@ -14,15 +15,14 @@ import ru.citeck.ecos.records3.predicate.RecordElement;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
 
 @SuppressFBWarnings(value = {
     "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"
 })
-public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQueryDao {
+public class PredicateRecords extends AbstractRecordsDao implements RecordsQueryDao {
 
     public static final String ID = "predicate";
 
@@ -31,7 +31,7 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
     }
 
     @Override
-    public RecordsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
 
         PredicateCheckQuery query = recordsQuery.getQuery(PredicateCheckQuery.class);
 
@@ -53,8 +53,8 @@ public class PredicateRecords extends LocalRecordsDao implements LocalRecordsQue
             recordModelAtts.getRecordAtts()
         );
         if (!recordModelAtts.getModelAtts().isEmpty()) {
-            RecordAtts modelAtts = recordsMetaService.getAtts(
-                QueryContext.getCurrent().getAttributes(),
+            RecordAtts modelAtts = recordsService.getAtts(
+                RequestContext.getCurrentNotNull().getAttributes(),
                 recordModelAtts.getModelAtts()
             );
             resolvedAtts.forEach(rec -> modelAtts.forEach(rec::set));

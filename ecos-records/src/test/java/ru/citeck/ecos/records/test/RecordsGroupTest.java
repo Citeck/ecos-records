@@ -7,15 +7,16 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.*;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+
 
 import java.io.IOException;
 import java.util.*;
@@ -25,8 +26,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RecordsGroupTest extends LocalRecordsDao
-                       implements LocalRecordsQueryDao {
+class RecordsGroupTest extends AbstractRecordsDao
+                       implements RecordsQueryDao {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -166,7 +167,7 @@ class RecordsGroupTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
 
         RecordsQueryRes<Object> result = new RecordsQueryRes<>();
 
@@ -299,7 +300,7 @@ class RecordsGroupTest extends LocalRecordsDao
 
     public static class DistinctValue {
 
-        @MetaAtt(".str")
+        @AttName(".str")
         private String value;
 
         public String getValue() {
@@ -320,10 +321,10 @@ class RecordsGroupTest extends LocalRecordsDao
 
     public static class Result {
 
-        @MetaAtt("sum(number)")
+        @AttName("sum(number)")
         private Double sum;
 
-        @MetaAtt(".atts(n:'values'){strVal: att(n:'strVal'){str}, number:att(n:'number'){num}}")
+        @AttName(".atts(n:'values'){strVal: att(n:'strVal'){str}, number:att(n:'number'){num}}")
         private List<Val> values;
 
         private String strVal;

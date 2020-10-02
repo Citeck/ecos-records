@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.time.Instant;
 import java.util.Date;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "test";
     private RecordsService recordsService;
@@ -76,7 +76,7 @@ class AttributesProcessorTest extends LocalRecordsDao implements LocalRecordsMet
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(r -> new Record()).collect(Collectors.toList());
     }
 

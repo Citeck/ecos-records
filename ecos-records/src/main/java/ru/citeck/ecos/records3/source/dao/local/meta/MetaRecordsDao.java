@@ -3,10 +3,10 @@ package ru.citeck.ecos.records3.source.dao.local.meta;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class MetaRecordsDao extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final Instant STARTED_TIME = Instant.now();
 
@@ -28,10 +28,10 @@ public class MetaRecordsDao extends LocalRecordsDao implements LocalRecordsMetaD
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
 
         return records.stream().map(r -> {
-            if (r.getId().isEmpty()) {
+            if (r.isEmpty()) {
                 return new MetaRoot(metaRecordsDaoAttsProvider);
             } else {
                 return EmptyValue.INSTANCE;

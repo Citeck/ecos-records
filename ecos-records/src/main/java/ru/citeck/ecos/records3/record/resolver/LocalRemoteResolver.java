@@ -8,13 +8,15 @@ import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
+import ru.citeck.ecos.records3.utils.ValueWithIdx;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry {
 
@@ -48,27 +50,93 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return remote.query(query, attributes, rawAtts);
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
-                                             @NotNull Map<String, String> attributes,
-                                             boolean rawAtts) {
+    public List<RecordAtts> getAtts(@NotNull List<?> records,
+                                    @NotNull Map<String, String> attributes,
+                                    boolean rawAtts) {
 
-        if (remote == null || records.isEmpty()) {
+        if (records.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (remote == null) {
             return local.getAtts(records, attributes, rawAtts);
         }
-        List<RecordAtts> result = new ArrayList<>();
-        RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
-            /*if (!isRemoteSourceId(sourceId)) {
-                result.merge(local.getMeta(records, attributes, rawAtts));
-            } else if (isRemoteRef(records.stream().findFirst().orElse(null))) {
-                result.merge(remote.getMeta(records, attributes, rawAtts));
+        RequestContext context = RequestContext.getCurrentNotNull();
+
+        List<ValueWithIdx<Object>> recordObjs = new ArrayList<>();
+        List<ValueWithIdx<RecordRef>> recordRefs = new ArrayList<>();
+
+        int idx = 0;
+        for (Object rec : records) {
+            if (rec instanceof RecordRef) {
+                recordRefs.add(new ValueWithIdx<>((RecordRef) rec, idx));
             } else {
-                result.merge(local.getMeta(records, attributes, rawAtts));
-            }*/
+                recordObjs.add(new ValueWithIdx<>(rec, idx));
+            }
+            idx++;
+        }
+
+        List<ValueWithIdx<RecordAtts>> results = new ArrayList<>();
+
+        List<Object> recordsObjValue = recordObjs.stream()
+            .map(ValueWithIdx::getValue)
+            .collect(Collectors.toList());
+
+        List<RecordAtts> objAtts = local.getAtts(recordsObjValue, attributes, rawAtts);
+        if (objAtts != null && objAtts.size() == recordsObjValue.size()) {
+            for (int i = 0; i < objAtts.size(); i++) {
+                results.add(new ValueWithIdx<>(objAtts.get(i), recordObjs.get(i).getIdx()));
+            }
+        } else {
+            context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
+                "requested. objAtts: " + objAtts + " recordsObjValue: " + recordsObjValue);
+            return null;
+        }
+
+        RecordsUtils.groupRefBySourceWithIdx(recordRefs).forEach((sourceId, recs) -> {
+
+            List<RecordRef> refs = recs.stream()
+                .map(ValueWithIdx::getValue)
+                .collect(Collectors.toList());
+
+            List<RecordAtts> atts;
+
+            if (!isRemoteSourceId(sourceId)) {
+
+                atts = local.getAtts(refs, attributes, rawAtts);
+
+            } else if (isRemoteRef(recs.stream()
+                            .map(ValueWithIdx::getValue)
+                            .findFirst()
+                            .orElse(null))) {
+
+                atts = remote.getAtts(refs, attributes, rawAtts);
+
+            } else {
+
+                atts = local.getAtts(refs, attributes, rawAtts);
+            }
+
+            if (atts == null || atts.size() != refs.size()) {
+
+                context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
+                    "requested. Atts: " + atts + " refs: " + refs);
+
+                for (ValueWithIdx<RecordRef> record : recs) {
+                    results.add(new ValueWithIdx<>(new RecordAtts(record.getValue()), record.getIdx()));
+                }
+            } else {
+                for (int i = 0; i < refs.size(); i++) {
+                    results.add(new ValueWithIdx<>(atts.get(i), recs.get(i).getIdx()));
+                }
+            }
         });
-        return result;
+
+        results.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        return results.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
     }
 
     @Nullable
@@ -83,7 +151,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         return local.mutate(records);
     }
 
-    @NotNull
+    @Nullable
     @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
         if (remote == null || records.isEmpty()) {

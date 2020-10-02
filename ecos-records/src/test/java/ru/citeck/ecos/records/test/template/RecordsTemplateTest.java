@@ -7,11 +7,11 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.template.RecordsTemplateService;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsTemplateTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "first";
 
@@ -50,9 +50,9 @@ public class RecordsTemplateTest extends LocalRecordsDao implements LocalRecords
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(r -> {
-            if (r.getId().equals("rec")) {
+            if (r.equals("rec")) {
                 return new RecData();
             } else {
                 return EmptyValue.INSTANCE;
@@ -64,7 +64,7 @@ public class RecordsTemplateTest extends LocalRecordsDao implements LocalRecords
     public static class RecData {
         private String contractor = "Поставщик №1";
         private int field1 = 11;
-        @MetaAtt("_docNum")
+        @AttName("_docNum")
         private int docNum = 100;
     }
 }

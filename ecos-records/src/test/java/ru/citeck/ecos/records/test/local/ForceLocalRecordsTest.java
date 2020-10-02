@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ public class ForceLocalRecordsTest {
         private List<RecordRef> parents;
     }
 
-    public static class TypesDao extends LocalRecordsDao implements LocalRecordsMetaDao {
+    public static class TypesDao extends AbstractRecordsDao implements RecordsAttsDao {
 
         public static final String ID = "emodel/type";
 
@@ -64,8 +65,8 @@ public class ForceLocalRecordsTest {
         }
 
         @Override
-        public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
-            return records.stream().map(r -> this.records.get(r.getId())).collect(Collectors.toList());
+        public List<?> getRecordsAtts(List<String> records) {
+            return records.stream().map(r -> this.records.get(r)).collect(Collectors.toList());
         }
 
         @Data

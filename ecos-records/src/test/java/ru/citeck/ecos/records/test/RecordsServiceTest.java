@@ -11,12 +11,12 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsServiceTest extends LocalRecordsDao
-                                implements LocalRecordsQueryDao,
-                                           LocalRecordsMetaDao {
+public class RecordsServiceTest extends AbstractRecordsDao
+                                implements RecordsQueryDao,
+                                           RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
@@ -45,21 +45,18 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<Object> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(r -> new PojoMeta(r.toString())).collect(Collectors.toList());
     }
 
     @NotNull
     @Override
-    public RecordsQueryRes<Object> queryLocalRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
 
         ExactIdsQuery query = recordsQuery.getQuery(ExactIdsQuery.class);
 
         RecordsQueryRes<Object> result = new RecordsQueryRes<>();
-        result.setRecords(getLocalRecordsMeta(query.getIds()
-                                             .stream()
-                                             .map(RecordRef::valueOf)
-                                             .collect(Collectors.toList())));
+        result.setRecords(getRecordsAtts(query.getIds()));
 
         result.setHasMore(false);
         result.setTotalCount(query.getIds().size());
@@ -115,7 +112,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         DataValue expected = DataValue.create(TEST_REF.getId() + PojoMeta.STR_FIELD_0_POSTFIX);
 
         if (!expected.equals(value)) {
-            String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
+            String info = "(" + value.getClass().getName() + ") " + value;
             fail("Return value is incorrect: " + info);
         }
     }
@@ -128,7 +125,7 @@ public class RecordsServiceTest extends LocalRecordsDao
         DataValue expected = DataValue.create(ISO8601Utils.format(PojoMeta.DATE_TEST_VALUE));
 
         if (!expected.equals(value)) {
-            String info = "(" + (value != null ? value.getClass().getName() : null) + ") " + value;
+            String info = "(" + value.getClass().getName() + ") " + value;
             fail("Return value is incorrect: " + info);
         }
     }
@@ -247,7 +244,7 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     public static class PojoMetaInnerTest {
 
-        @MetaAtt("fieldStr0")
+        @AttName("fieldStr0")
         private String str0;
         private ComplexInner fieldMap;
 
@@ -292,11 +289,11 @@ public class RecordsServiceTest extends LocalRecordsDao
 
     public static class PojoMetaWithAnnotations {
 
-        @MetaAtt("fieldDate")
+        @AttName("fieldDate")
         private Date date;
-        @MetaAtt("fieldStr0")
+        @AttName("fieldStr0")
         private String str0;
-        @MetaAtt("fieldStr1")
+        @AttName("fieldStr1")
         private String str1;
 
         public Date getDate() {
@@ -394,7 +391,6 @@ public class RecordsServiceTest extends LocalRecordsDao
 
             fieldDate = DATE_TEST_VALUE;
 
-
             journals = new ArrayList<>();
             Map<String, String> attributes = new HashMap<>();
             attributes.put("name", "FirstName");
@@ -407,7 +403,7 @@ public class RecordsServiceTest extends LocalRecordsDao
             journals.add(attributes);
         }
 
-        @MetaAtt(".disp")
+        @AttName(".disp")
         public String getDisplay() {
             return DISPLAY_NAME;
         }

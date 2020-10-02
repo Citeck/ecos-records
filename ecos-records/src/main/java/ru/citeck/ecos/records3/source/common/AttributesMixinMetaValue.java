@@ -3,16 +3,11 @@ package ru.citeck.ecos.records3.source.common;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
-import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.MetaValueDelegate;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValuesConverter;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
-import ru.citeck.ecos.records3.RecordConstants;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.type.ComputedAtt;
@@ -28,14 +23,12 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     private final RecordAttsService recordsMetaService;
     private final RecTypeService recordTypeService;
-
-    private final Map<String, ParameterizedAttsMixin> mixins;
     private final Map<Object, Object> metaCache;
 
     private final Map<String, ComputedAtt> computedAtts = new HashMap<>();
 
     private final AttValuesConverter attValuesConverter;
-    private QueryContext context;
+    private RequestContext context;
 
     private boolean initialized = false;
 
@@ -43,17 +36,15 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                                     RecordAttsService recordsMetaService,
                                     RecTypeService recordTypeService,
                                     AttValuesConverter attValuesConverter,
-                                    Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
         super(impl);
-        this.mixins = mixins;
         this.recordTypeService = recordTypeService;
         this.recordsMetaService = recordsMetaService;
         this.attValuesConverter = attValuesConverter;
         this.metaCache = metaCache != null ? metaCache : new ConcurrentHashMap<>();
     }
 
-    private void initImpl(QueryContext context, SchemaAtt field, boolean initSuper) throws Exception {
+    private void initImpl(RequestContext context, SchemaAtt field, boolean initSuper) throws Exception {
 
         if (initialized) {
             return;
@@ -104,13 +95,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
     @Override
     public Object getJson() throws Exception {
-        return getAttributeImpl(".json", super::getJson);
-    }
-
-    private <R, M> R doWithMeta(ParameterizedAttsMixin mixin,
-                                UncheckedFunction<Object, R> action) throws Exception {
-
-        return doWithMeta(mixin.getMetaToRequest(), mixin.getResMetaType(), action);
+        //return getAttributeImpl(".json", super::getJson);
+        return null;
     }
 
     private <R> R doWithMeta(Object metaToRequest,
@@ -176,13 +162,14 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     private <T> T getAttributeImpl(String attribute, Class<T> type, Callable<T> fallback) throws Exception {
-        @SuppressWarnings("unchecked")
-        Callable<Object> objFallback = (Callable<Object>) fallback;
-        Object res = getAttributeImpl(attribute, objFallback);
-        return Json.getMapper().convert(res, type);
+        //@SuppressWarnings("unchecked")
+        //Callable<Object> objFallback = (Callable<Object>) fallback;
+        //Object res = getAttributeImpl(attribute, objFallback);
+        //return Json.getMapper().convert(res, type);
+        return null;
     }
 
-    private Object getAttributeImpl(String attribute, Callable<Object> fallback) throws Exception {
+    /*private Object getAttributeImpl(String attribute, Callable<Object> fallback) throws Exception {
 
         if (RecordConstants.ATT_ECOS_TYPE.equals(attribute)
             || RecordConstants.ATT_TYPE.equals(attribute)) {
@@ -215,9 +202,9 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             ExceptionUtils.throwException(e);
         }
         return null;
-    }
+    }*/
 
-    private Object computeAttribute(ParameterizedAttsMixin mixin, String attribute) throws Exception {
+/*    private Object computeAttribute(ParameterizedAttsMixin mixin, String attribute) throws Exception {
 
         return doWithMeta(mixin, meta -> {
 
@@ -238,7 +225,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
             return mixin.getAttribute(attribute, meta);
         });
-    }
+    }*/
 
     private Object computeAttribute(ComputedAtt computedAtt) throws Exception {
 
@@ -274,7 +261,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         return null;
     }
 
-    @Override
+/*    @Override
     public AttEdge getEdge(@NotNull String attribute) throws Exception {
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
@@ -310,10 +297,11 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             ExceptionUtils.throwException(e);
             return null;
         }
-    }
+    }*/
 
     @Override
     public boolean has(@NotNull String name) throws Exception {
-        return mixins.containsKey(name) || computedAtts.containsKey(name) || super.has(name);
+        //return mixins.containsKey(name) || computedAtts.containsKey(name) || super.has(name);
+        return false;
     }
 }

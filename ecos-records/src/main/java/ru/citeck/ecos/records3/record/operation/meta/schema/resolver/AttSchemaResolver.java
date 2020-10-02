@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.resolver;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,11 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.AttFuncValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.HasCollectionView;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
@@ -43,16 +45,19 @@ public class AttSchemaResolver {
     private final AttProcService attProcService;
 
     private final AttSchemaReader attSchemaReader;
-    private final DtoSchemaResolver dtoSchemaResolver;
+    private final DtoSchemaReader dtoSchemaReader;
+
+    private final RecordsServiceFactory serviceFactory;
 
     // todo: move types logic to this resolver
     // private final RecordTypeService recordTypeService;
 
     public AttSchemaResolver(RecordsServiceFactory factory) {
+        serviceFactory = factory;
         attValuesConverter = factory.getAttValuesConverter();
         attProcService = factory.getAttProcService();
         attSchemaReader = factory.getAttSchemaReader();
-        dtoSchemaResolver = factory.getDtoMetaResolver();
+        dtoSchemaReader = factory.getDtoSchemaResolver();
     }
 
     public DataValue resolve(Object value, SchemaRootAtt attribute) {
@@ -121,13 +126,13 @@ public class AttSchemaResolver {
                 }
 
                 schemaAttsToLoad = new ArrayList<>(schemaAttsToLoad);
-                schemaAttsToLoad.addAll(attSchemaReader.read(procAtts));
+                schemaAttsToLoad.addAll(attSchemaReader.readRoot(procAtts));
             }
         }
 
         List<SchemaRootAtt> schemaAtts = schemaAttsToLoad;
 
-        List<Map<String, Object>> result = AttContext.doInContext(attContext -> {
+        List<Map<String, Object>> result = AttContext.doInContext(serviceFactory, attContext -> {
 
             ResolveContext context = new ResolveContext(attValuesConverter, attContext, args.getMixins());
 
@@ -466,6 +471,10 @@ public class AttSchemaResolver {
 
         private Object resolveImpl(String attribute, boolean isScalar) throws Exception {
 
+            if (RecordConstants.ATT_NULL.equals(attribute)) {
+                return null;
+            }
+
             if (isScalar) {
                 return getScalar(attribute);
             }
@@ -518,7 +527,13 @@ public class AttSchemaResolver {
                 case "bool":
                     return value.getBool();
                 case "json":
-                    return value.getJson();
+                    Object json = value.getJson();
+                    if (json instanceof String) {
+                        json = Json.getMapper().read((String) json);
+                    } else {
+                        json = Json.getMapper().toJson(json);
+                    }
+                    return json;
                 default:
                     throw new ResolveException("Unknown scalar type: '" + scalar + "'");
             }
@@ -617,15 +632,18 @@ public class AttSchemaResolver {
 
         @Override
         public <T> T getAtts(@NotNull Class<T> type) {
-            Map<String, String> attributes = dtoSchemaResolver.getAttributes(type);
-            return dtoSchemaResolver.instantiateMeta(type, getAtts(attributes));
+            List<SchemaRootAtt> attributes = dtoSchemaReader.read(type);
+            return dtoSchemaReader.instantiate(type, getAtts(attributes));
         }
 
         @NotNull
         @Override
         public ObjectData getAtts(@NotNull Map<String, String> attributes) {
+            return getAtts(attSchemaReader.readRoot(attributes));
+        }
 
-            List<SchemaRootAtt> schemaAtts = attSchemaReader.read(attributes);
+        @NotNull
+        private ObjectData getAtts(@NotNull List<SchemaRootAtt> schemaAtts) {
 
             String attPathBefore = resolveCtx.getPath();
             resolveCtx.setPath(basePath);

@@ -14,20 +14,20 @@ import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
 import ru.citeck.ecos.records3.predicate.model.ValuePredicate;
 import ru.citeck.ecos.records3.predicate.model.VoidPredicate;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.rest.QueryBody;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -111,8 +111,8 @@ public class RemoteSyncRecordsDaoTest {
         assertEquals(origDto, resultWithMeta.getRecords().get(0));
     }
 
-    static class RecordsWithMetaSource extends LocalRecordsDao
-        implements LocalRecordsQueryDao {
+    static class RecordsWithMetaSource extends AbstractRecordsDao
+        implements RecordsQueryDao {
 
         static final String ID = "remote-source";
 
@@ -149,7 +149,7 @@ public class RemoteSyncRecordsDaoTest {
         }
 
         @Override
-        public RecordsQueryRes<ValueDto> queryLocalRecords(RecordsQuery query) {
+        public RecordsQueryRes<ValueDto> queryRecords(RecordsQuery query) {
 
             if (!query.getLanguage().equals(PredicateService.LANGUAGE_PREDICATE)) {
                 throw new IllegalArgumentException("Language is not supported! " + query.getLanguage());
@@ -200,7 +200,7 @@ public class RemoteSyncRecordsDaoTest {
 
     @Data
     public static class ValueDto implements Comparable<ValueDto> {
-        @MetaAtt("_modified")
+        @AttName("_modified")
         private Instant modified;
         private String id;
         private MLText name;

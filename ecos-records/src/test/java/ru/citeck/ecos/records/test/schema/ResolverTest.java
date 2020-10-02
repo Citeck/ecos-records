@@ -8,7 +8,7 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.source.common.AttMixin;
@@ -139,14 +139,14 @@ public class ResolverTest {
         if (!(expected instanceof DataValue)) {
             expected = DataValue.create(expected);
         }
-        assertEquals(expected, resolver.resolve(value, reader.read(att), Arrays.asList(mixins)));
+        assertEquals(expected, resolver.resolve(value, reader.readRoot(att), Arrays.asList(mixins)));
     }
 
     private void testAtt(Object value, String att, Object expected) {
         if (!(expected instanceof DataValue)) {
             expected = DataValue.create(expected);
         }
-        assertEquals(expected, resolver.resolve(value, reader.read(att)));
+        assertEquals(expected, resolver.resolve(value, reader.readRoot(att)));
     }
 
     @Data
@@ -156,7 +156,7 @@ public class ResolverTest {
         private InnerTest inner = new InnerTest();
         private int number = 11;
 
-        @MetaAtt("?ref")
+        @AttName("?ref")
         public RecordRef getRef() {
             return RecordRef.create("aa", "bb");
         }
@@ -178,12 +178,12 @@ public class ResolverTest {
         @Getter
         private int someValueCounter = 0;
 
-        @MetaAtt("?disp")
+        @AttName("?disp")
         public String getDisplay() {
             return "InnerDisp";
         }
 
-        @MetaAtt("?json")
+        @AttName("?json")
         public ObjectData getJson() {
             return ObjectData.create("{\"key\":\"value\"}");
         }

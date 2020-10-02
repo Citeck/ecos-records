@@ -7,27 +7,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.*;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.type.ComputedAtt;
 import ru.citeck.ecos.records3.type.RecTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ComputedAttsTest extends LocalRecordsDao
-    implements LocalRecordsQueryDao,
-    LocalRecordsMetaDao {
+public class ComputedAttsTest extends AbstractRecordsDao
+    implements RecordsQueryDao,
+    RecordsAttsDao {
 
     private static final String ID = "mixinSourceId";
 
@@ -172,13 +169,13 @@ public class ComputedAttsTest extends LocalRecordsDao
     }
 
     @Override
-    public RecordsQueryRes<Object> queryLocalRecords(RecordsQuery query) {
+    public RecordsQueryRes<Object> queryRecords(RecordsQuery query) {
         return RecordsQueryRes.of(new MetaValueRecord("type0"), new MetaValueRecord("type1"));
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
-        return records.stream().map(r -> new MetaValueRecord(r.getId())).collect(Collectors.toList());
+    public List<?> getRecordsAtts(List<String> records) {
+        return records.stream().map(r -> new MetaValueRecord(r)).collect(Collectors.toList());
     }
 
     public static class MetaValueRecord implements AttValue {

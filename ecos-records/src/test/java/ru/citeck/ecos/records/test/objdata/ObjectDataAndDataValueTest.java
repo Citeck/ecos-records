@@ -11,8 +11,8 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ObjectDataAndDataValueTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class ObjectDataAndDataValueTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String JSON = "{\"a\":\"b\"}";
 
@@ -63,14 +63,16 @@ public class ObjectDataAndDataValueTest extends LocalRecordsDao implements Local
     void dtoTest() {
 
         TestDataMeta dtoValue = recordsService.getAtts(RecordRef.valueOf("test"), TestDataMeta.class);
-        TestDataMeta expected = new TestDataMeta(new TestData(RecordRef.valueOf("test")));
+        TestDataMeta expected = new TestDataMeta(new TestData("test"));
         assertEquals(expected, dtoValue);
     }
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
-        return records.stream().map(TestData::new).collect(Collectors.toList());
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
+        return records.stream()
+            .map(TestData::new)
+            .collect(Collectors.toList());
     }
 
     @Data
@@ -79,7 +81,7 @@ public class ObjectDataAndDataValueTest extends LocalRecordsDao implements Local
         private ObjectData data = ObjectData.create(Json.getMapper().read(JSON, Object.class));
         private DataValue dataValue = DataValue.create(JSON);
 
-        TestData(RecordRef ref) {
+        TestData(String ref) {
         }
     }
 

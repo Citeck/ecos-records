@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.record.operation.query.QueryContext;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class RequestContextTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source-id";
 
@@ -39,7 +39,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
     @Test
     void test() {
 
-        assertNull(QueryContext.getCurrent());
+        assertNull(RequestContext.getCurrent());
 
         recordsService.getAtts(Arrays.asList(
             RecordRef.create(SOURCE_ID, "1"),
@@ -47,11 +47,11 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
             RecordRef.create(SOURCE_ID, "3")
         ), TestMeta.class);
 
-        assertNull(QueryContext.getCurrent());
+        assertNull(RequestContext.getCurrent());
     }
 
     public static class TestMeta {
-        @MetaAtt(".str")
+        @AttName(".str")
         public String value;
 
         public String getValue() {
@@ -65,21 +65,21 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
 
-        QueryContext.getCurrent().incrementCount("test");
-        QueryContext.getCurrent().incrementCount("test");
-        QueryContext.getCurrent().incrementCount("test");
-        QueryContext.getCurrent().incrementCount("test");
+        RequestContext.getCurrent().incrementCount("test");
+        RequestContext.getCurrent().incrementCount("test");
+        RequestContext.getCurrent().incrementCount("test");
+        RequestContext.getCurrent().incrementCount("test");
 
-        assertEquals(4, QueryContext.getCurrent().getCount("test"));
+        assertEquals(4, RequestContext.getCurrent().getCount("test"));
 
-        QueryContext.getCurrent().incrementCount("test2");
-        QueryContext.getCurrent().incrementCount("test2");
-        QueryContext.getCurrent().incrementCount("test2");
+        RequestContext.getCurrent().incrementCount("test2");
+        RequestContext.getCurrent().incrementCount("test2");
+        RequestContext.getCurrent().incrementCount("test2");
 
-        assertEquals(4, QueryContext.getCurrent().getCount("test"));
-        assertEquals(3, QueryContext.getCurrent().getCount("test2"));
+        assertEquals(4, RequestContext.getCurrent().getCount("test"));
+        assertEquals(3, RequestContext.getCurrent().getCount("test2"));
 
         return records.stream().map(Record::new).collect(Collectors.toList());
     }
@@ -88,8 +88,8 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
         private RecordRef id;
 
-        Record(RecordRef id) {
-            this.id = id;
+        Record(String id) {
+            this.id = RecordRef.valueOf(id);
         }
 
         @Override
@@ -106,7 +106,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
         @Override
         public String getString() {
-            assertEquals(3, QueryContext.getCurrent().getList("testList").size());
+            assertEquals(3, RequestContext.getCurrent().getList("testList").size());
             return "123";
         }
     }

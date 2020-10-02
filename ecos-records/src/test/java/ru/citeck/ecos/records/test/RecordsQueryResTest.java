@@ -1,8 +1,6 @@
 package ru.citeck.ecos.records.test;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records3.record.error.RecordsError;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import java.util.*;
 import java.util.stream.Collectors;

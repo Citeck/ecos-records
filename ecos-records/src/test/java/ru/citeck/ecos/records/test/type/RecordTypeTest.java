@@ -8,10 +8,10 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordTypeTest extends LocalRecordsDao implements LocalRecordsMetaDao {
+public class RecordTypeTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "test";
 
@@ -43,11 +43,11 @@ public class RecordTypeTest extends LocalRecordsDao implements LocalRecordsMetaD
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records) {
+    public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(ref -> {
-            if (TypeInfo.class.getName().equals(ref.getId())) {
+            if (TypeInfo.class.getName().equals(ref)) {
                 return new TypeInfo();
-            } else if (TestRecord.class.getName().equals(ref.getId())) {
+            } else if (TestRecord.class.getName().equals(ref)) {
                 return new TestRecord();
             }
             return EmptyValue.INSTANCE;
@@ -56,7 +56,7 @@ public class RecordTypeTest extends LocalRecordsDao implements LocalRecordsMetaD
 
     @Data
     public static class TestRecord {
-        @MetaAtt(".type")
+        @AttName(".type")
         private RecordRef typeRef = RecordRef.create(ID, TypeInfo.class.getName());
     }
 

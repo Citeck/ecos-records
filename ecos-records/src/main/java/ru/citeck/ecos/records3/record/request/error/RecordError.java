@@ -1,25 +1,26 @@
-package ru.citeck.ecos.records3.record.error;
+package ru.citeck.ecos.records3.record.request.error;
 
-import java.util.ArrayList;
-import java.util.List;
+import ru.citeck.ecos.commons.data.ObjectData;
+
 import java.util.Objects;
 
-public class RecordsError {
+public class RecordError {
 
     private String type = "";
     private String msg = "";
-    private List<String> stackTrace = new ArrayList<>();
+    private ObjectData data = ObjectData.create();
 
-    public RecordsError() {
+    public RecordError() {
     }
 
-    public RecordsError(String msg) {
+    public RecordError(String msg) {
         this.msg = msg;
     }
 
-    public RecordsError(String type, String msg) {
+    public RecordError(String type, String msg, Object data) {
         this.type = type;
         this.msg = msg;
+        this.data = ObjectData.create(data);
     }
 
     public String getType() {
@@ -38,12 +39,12 @@ public class RecordsError {
         this.msg = msg;
     }
 
-    public List<String> getStackTrace() {
-        return stackTrace;
+    public ObjectData getData() {
+        return data;
     }
 
-    public void setStackTrace(List<String> stackTrace) {
-        this.stackTrace = stackTrace != null ? stackTrace : new ArrayList<>();
+    public void setData(Object data) {
+        this.data = ObjectData.create(data);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class RecordsError {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        RecordsError error = (RecordsError) o;
+        RecordError error = (RecordError) o;
         return Objects.equals(type, error.type)
             && Objects.equals(msg, error.msg);
     }

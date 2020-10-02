@@ -10,12 +10,13 @@ import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.MetaAtt;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.CreateVariant;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttEdge;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,8 +26,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaEdgeTest extends LocalRecordsDao
-                          implements LocalRecordsMetaDao {
+public class MetaEdgeTest extends AbstractRecordsDao
+                          implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source";
     private static final String EDGE_FIELD_NAME = "test00";
@@ -35,7 +36,7 @@ public class MetaEdgeTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(new MetaTestVal());
     }
 
@@ -90,10 +91,10 @@ public class MetaEdgeTest extends LocalRecordsDao
 
     public static class JavaClassDto {
 
-        @MetaAtt(".edge(n:'test'){javaClass}")
+        @AttName(".edge(n:'test'){javaClass}")
         private Class<?> javaClass;
 
-        @MetaAtt("#test?javaClass")
+        @AttName("#test?javaClass")
         private Class<?> javaClass2;
 
         public Class<?> getJavaClass2() {

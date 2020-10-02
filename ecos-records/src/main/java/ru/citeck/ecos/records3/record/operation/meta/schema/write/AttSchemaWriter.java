@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.operation.meta.schema.write;
 
 import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
-import ru.citeck.ecos.records3.record.operation.meta.schema.AttSchema;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 
@@ -12,17 +11,17 @@ import java.util.Map;
 
 public interface AttSchemaWriter {
 
-    default Map<String, String> writeAsMap(AttSchema schema) {
+    default Map<String, String> writeToMap(List<SchemaRootAtt> schema) {
 
         Map<String, String> result = new HashMap<>();
-        schema.getAttributes().forEach(att ->
+        schema.forEach(att ->
             result.put(att.getAttribute().getAlias(), write(att))
         );
         return result;
     }
 
-    default void writeInnerAtts(AttSchema schema, StringBuilder sb) {
-        writeInnerAtts(writeAsMap(schema), sb);
+    default void writeInnerAtts(List<SchemaRootAtt> schema, StringBuilder sb) {
+        writeInnerAtts(writeToMap(schema), sb);
     }
 
     default void writeInnerAtts(Map<String, String> attributes, StringBuilder sb) {
@@ -47,6 +46,12 @@ public interface AttSchemaWriter {
             }
         }
 
+        return sb.toString();
+    }
+
+    default String write(SchemaAtt attribute) {
+        StringBuilder sb = new StringBuilder();
+        write(attribute, sb);
         return sb.toString();
     }
 

@@ -1,15 +1,10 @@
 package ru.citeck.ecos.records3.rest;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.operation.delete.DeletionBody;
 import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
-
-import java.util.List;
 
 @Slf4j
 public class RestHandler {

@@ -5,15 +5,15 @@ import ru.citeck.ecos.records3.predicate.PredicateService;
 import ru.citeck.ecos.records3.predicate.model.AndPredicate;
 import ru.citeck.ecos.records3.predicate.model.Predicate;
 import ru.citeck.ecos.records3.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
 
-public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQueryDao {
+public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryDao {
 
     public static final String ID = "group";
 
@@ -24,7 +24,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
     }
 
     @Override
-    public RecordsQueryRes<?> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {
@@ -132,6 +132,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
         return values.getRecords();
     }
 
+    @NotNull
     @Override
     public List<String> getSupportedLanguages() {
         return Collections.singletonList(PredicateService.LANGUAGE_PREDICATE);

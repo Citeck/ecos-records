@@ -1,14 +1,13 @@
-package ru.citeck.ecos.records.test;
-
-import org.jetbrains.annotations.NotNull;
+package ru.citeck.ecos.records.test;import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
+
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 
 import java.util.Arrays;
@@ -20,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RecordsUtilsTest extends LocalRecordsDao
-    implements LocalRecordsMetaDao {
+class RecordsUtilsTest extends AbstractRecordsDao
+    implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source";
 
@@ -39,8 +38,8 @@ class RecordsUtilsTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
-        if (records.size() == 1 && records.get(0) == RecordRef.EMPTY) {
+    public List<?> getRecordsAtts(@NotNull List<String> records) {
+        if (records.size() == 1 && records.get(0).isEmpty()) {
             return Collections.singletonList(new TestDto());
         }
         return null;

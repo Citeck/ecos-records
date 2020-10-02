@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records.test;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -8,12 +9,11 @@ import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records3.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,16 +64,22 @@ class LocalRecordsTest {
         assertEquals(1, result.getRecords().size());
     }
 
-    static class RecordsQueryDaoImpl extends LocalRecordsDao implements RecordsQueryDao {
+    static class RecordsQueryDaoImpl extends AbstractRecordsDao implements RecordsQueryDao {
 
         static String ID = "RecordsQueryDaoImpl";
 
         RecordsQueryDaoImpl() {
             setId(ID);
         }
+
+        @Nullable
+        @Override
+        public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+            return null;
+        }
     }
 
-    static class RecordsSource extends LocalRecordsDao implements LocalRecordsMetaDao {
+    static class RecordsSource extends AbstractRecordsDao implements RecordsAttsDao {
 
         static String ID = "recs-source";
 
@@ -83,8 +89,8 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public List<Meta> getLocalRecordsMeta(@NotNull List<RecordRef> records) {
-            return records.stream().map(r -> new Meta(r.toString(), r.getId())).collect(Collectors.toList());
+        public List<Meta> getRecordsAtts(@NotNull List<String> records) {
+            return records.stream().map(r -> new Meta(r, r)).collect(Collectors.toList());
         }
 
         public static class Meta {
@@ -116,8 +122,8 @@ class LocalRecordsTest {
         }
     }
 
-    static class RecordsWithMetaSource extends LocalRecordsDao
-        implements LocalRecordsQueryDao {
+    static class RecordsWithMetaSource extends AbstractRecordsDao
+        implements RecordsQueryDao {
 
         static final String ID = "with-meta";
 
@@ -127,7 +133,7 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public RecordsQueryRes<Meta> queryLocalRecords(@NotNull RecordsQuery query) {
+        public RecordsQueryRes<Meta> queryRecords(@NotNull RecordsQuery query) {
             RecordsQueryRes<Meta> result = new RecordsQueryRes<>();
             result.addRecord(new Meta());
             return result;

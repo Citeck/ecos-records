@@ -108,10 +108,6 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    /*public static RecordsResult<RecordRef> toScoped(String sourceId, RecordsResult<RecordRef> result) {
-        return new RecordsResult<>(result, r -> RecordRef.create(sourceId, r));
-    }*/
-
     public static RecordsQueryRes<RecordRef> toScoped(String sourceId, RecordsQueryRes<RecordRef> result) {
         return new RecordsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
     }
@@ -128,11 +124,16 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    public static Map<String, List<RecordRef>> groupRefBySource(Collection<RecordRef> records) {
+    public static Map<String, List<ValueWithIdx<RecordRef>>> groupRefBySource(Collection<RecordRef> records) {
         return groupBySource(records, r -> r, (r, d) -> r);
     }
 
-    public static Map<String, List<RecordAtts>> groupMetaBySource(Collection<RecordAtts> records) {
+    public static Map<String, List<ValueWithIdx<RecordRef>>> groupRefBySourceWithIdx(
+                                                                    Collection<ValueWithIdx<RecordRef>> records) {
+        return groupBySourceWithIdx(records, r -> r, (r, d) -> r);
+    }
+
+    public static Map<String, List<ValueWithIdx<RecordAtts>>> groupMetaBySource(Collection<RecordAtts> records) {
         return groupBySource(records, RecordAtts::getId, (r, d) -> d);
     }
 
@@ -152,17 +153,36 @@ public class RecordsUtils {
         return toScopedRecordsMeta(sourceId, data);
     }
 
-    private static <I, O> Map<String, List<O>> groupBySource(Collection<I> records,
-                                                             Function<I, RecordRef> getRecordRef,
-                                                             BiFunction<RecordRef, I, O> toOutput) {
-        Map<String, List<O>> result = new HashMap<>();
+    private static <I, O> Map<String, List<ValueWithIdx<O>>> groupBySource(Collection<I> records,
+                                                                           Function<I, RecordRef> getRecordRef,
+                                                                           BiFunction<RecordRef, I, O> toOutput) {
+
+        Map<String, List<ValueWithIdx<O>>> result = new HashMap<>();
+        int idx = 0;
         for (I recordData : records) {
             RecordRef record = getRecordRef.apply(recordData);
             String appName = record.getAppName();
             String sourceId = record.getSourceId();
             String sourceWithApp = StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
-            List<O> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
-            outList.add(toOutput.apply(record, recordData));
+            List<ValueWithIdx<O>> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
+            outList.add(new ValueWithIdx<>(toOutput.apply(record, recordData),  idx++));
+        }
+        return result;
+    }
+
+    private static <I, O> Map<String, List<ValueWithIdx<O>>> groupBySourceWithIdx(
+                                                                           Collection<ValueWithIdx<I>> records,
+                                                                           Function<I, RecordRef> getRecordRef,
+                                                                           BiFunction<RecordRef, I, O> toOutput) {
+
+        Map<String, List<ValueWithIdx<O>>> result = new HashMap<>();
+        for (ValueWithIdx<I> recordData : records) {
+            RecordRef record = getRecordRef.apply(recordData.getValue());
+            String appName = record.getAppName();
+            String sourceId = record.getSourceId();
+            String sourceWithApp = StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
+            List<ValueWithIdx<O>> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
+            outList.add(new ValueWithIdx<>(toOutput.apply(record, recordData.getValue()),  recordData.getIdx()));
         }
         return result;
     }

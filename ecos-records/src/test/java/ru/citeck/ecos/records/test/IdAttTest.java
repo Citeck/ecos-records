@@ -62,7 +62,8 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
     @NotNull
     @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
-        return records.stream().map(metaValues::get).collect(Collectors.toList());
+        return records.stream().map(rec ->
+            metaValues.get(RecordRef.create("", rec))).collect(Collectors.toList());
     }
 
     @Data

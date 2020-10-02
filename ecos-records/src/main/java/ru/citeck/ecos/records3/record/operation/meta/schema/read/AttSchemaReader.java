@@ -200,9 +200,15 @@ public class AttSchemaReader {
     private SchemaAtt readLastSimpleAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
 
         if (attribute.charAt(0) == '?') {
+            attribute = attribute.substring(1);
+            if (attribute.startsWith("has(")) {
+                return parseHasAtt(alias, attribute);
+            } else if (attribute.startsWith("as(")) {
+                return parseAsAtt(alias, attribute);
+            }
             return SchemaAtt.create()
                 .setAlias(alias)
-                .setName(attribute.substring(1))
+                .setName(attribute)
                 .setScalar(true)
                 .build();
         }

@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema.resolver;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -24,6 +24,7 @@ import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
 
@@ -439,6 +440,8 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ValueContext {
 
+        public static final ValueContext EMPTY = new ValueContext(EmptyValue.INSTANCE, RecordRef.EMPTY);
+
         private final AttValue value;
         private final RecordRef valueRef;
         private final Map<String, Object> attributesCache = new HashMap<>();
@@ -580,7 +583,11 @@ public class AttSchemaResolver {
         }
 
         @NotNull
-        ValueContext toValueContext(@NotNull Object value) {
+        ValueContext toValueContext(@Nullable Object value) {
+
+            if (value == null) {
+                return ValueContext.EMPTY;
+            }
 
             Map<Object, ValueContext> cache;
             if (FORCE_CACHE_TYPES.contains(value.getClass())) {

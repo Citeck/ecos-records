@@ -91,9 +91,9 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     }
 
     private List<RecordAtts> getAttsBySchema(List<?> values,
-                                    List<SchemaRootAtt> rootAtts,
-                                    boolean rawAtts,
-                                    List<AttMixin> mixins) {
+                                             List<SchemaRootAtt> rootAtts,
+                                             boolean rawAtts,
+                                             List<AttMixin> mixins) {
 
         rootAtts.add(new SchemaRootAtt(
             SchemaAtt.create()

@@ -17,6 +17,7 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
 
     private static final String ATT_ID = "?id";
     private static final String ATT_STR = "?str";
+    private static final String ATT_REF = "?ref";
 
     private final RecordsService recordsService;
     private final AttSchemaWriter schemaWriter = new AttSchemaGqlWriter();
@@ -51,7 +52,7 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
             StringBuilder sb = new StringBuilder();
             for (SchemaAtt inner : schemaAtt.getInner()) {
                 String innerName = inner.getName();
-                if (!innerName.equals(ATT_ID) && !innerName.equals(ATT_STR)) {
+                if (!innerName.equals(ATT_ID) && !innerName.equals(ATT_STR) && !innerName.equals(ATT_REF)) {
                     schemaWriter.write(inner, sb);
                     attsMap.put(inner.getAliasForValue(), sb.toString());
                     sb.setLength(0);

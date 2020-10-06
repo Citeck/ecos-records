@@ -614,8 +614,6 @@ public class AttSchemaResolver {
                     return getValueRef();
                 case "?localId":
                     return getLocalId();
-                case "?type":
-                    return value.getTypeRef();
                 case "?num":
                     return value.getDouble();
                 case "?bool":

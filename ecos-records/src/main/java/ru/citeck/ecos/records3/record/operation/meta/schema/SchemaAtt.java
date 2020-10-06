@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.operation.meta.schema;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records3.record.operation.meta.schema.exception.AttSchemaException;
@@ -10,6 +11,8 @@ import java.util.stream.Collectors;
 
 @Data
 public class SchemaAtt {
+
+
 
     private final String alias;
     private final String name;
@@ -140,6 +143,9 @@ public class SchemaAtt {
             }
             if (att.isScalar() && att.isMultiple()) {
                 throw new AttSchemaException("Scalar can't hold multiple values. " + this);
+            }
+            if (att.isScalar() && !ScalarType.getBySchema(att.getName()).isPresent()) {
+                throw new AttSchemaException("Unknown scalar: '" + att.getName() + "'");
             }
 
             return att;

@@ -18,6 +18,7 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
+import ru.citeck.ecos.records3.record.operation.meta.schema.ScalarType;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 
@@ -45,38 +46,38 @@ public class DtoSchemaReader {
         attSchemaReader = factory.getAttSchemaReader();
 
         Arrays.asList(
-            new ScalarField<>(String.class, "disp"),
-            new ScalarField<>(Boolean.class, "bool"),
-            new ScalarField<>(boolean.class, "bool"),
-            new ScalarField<>(Double.class, "num"),
-            new ScalarField<>(double.class, "num"),
-            new ScalarField<>(Float.class, "num"),
-            new ScalarField<>(float.class, "num"),
-            new ScalarField<>(Integer.class, "num"),
-            new ScalarField<>(int.class, "num"),
-            new ScalarField<>(Long.class, "num"),
-            new ScalarField<>(long.class, "num"),
-            new ScalarField<>(Short.class, "num"),
-            new ScalarField<>(short.class, "num"),
-            new ScalarField<>(Byte.class, "num"),
-            new ScalarField<>(byte.class, "num"),
-            new ScalarField<>(Date.class, "str"),
-            new ScalarField<>(Instant.class, "str"),
-            new ScalarField<>(MLText.class, "json"),
-            new ScalarField<>(JsonNode.class, "json"),
-            new ScalarField<>(ObjectNode.class, "json"),
-            new ScalarField<>(ArrayNode.class, "json"),
-            new ScalarField<>(ObjectData.class, "json"),
-            new ScalarField<>(DataValue.class, "json"),
-            new ScalarField<>(RecordRef.class, "id"),
-            new ScalarField<>(Map.class, "json")
+            new ScalarField<>(String.class, ScalarType.DISP),
+            new ScalarField<>(Boolean.class, ScalarType.BOOL),
+            new ScalarField<>(boolean.class, ScalarType.BOOL),
+            new ScalarField<>(Double.class, ScalarType.NUM),
+            new ScalarField<>(double.class, ScalarType.NUM),
+            new ScalarField<>(Float.class, ScalarType.NUM),
+            new ScalarField<>(float.class, ScalarType.NUM),
+            new ScalarField<>(Integer.class, ScalarType.NUM),
+            new ScalarField<>(int.class, ScalarType.NUM),
+            new ScalarField<>(Long.class, ScalarType.NUM),
+            new ScalarField<>(long.class, ScalarType.NUM),
+            new ScalarField<>(Short.class, ScalarType.NUM),
+            new ScalarField<>(short.class, ScalarType.NUM),
+            new ScalarField<>(Byte.class, ScalarType.NUM),
+            new ScalarField<>(byte.class, ScalarType.NUM),
+            new ScalarField<>(Date.class, ScalarType.STR),
+            new ScalarField<>(Instant.class, ScalarType.STR),
+            new ScalarField<>(MLText.class, ScalarType.JSON),
+            new ScalarField<>(JsonNode.class, ScalarType.JSON),
+            new ScalarField<>(ObjectNode.class, ScalarType.JSON),
+            new ScalarField<>(ArrayNode.class, ScalarType.JSON),
+            new ScalarField<>(ObjectData.class, ScalarType.JSON),
+            new ScalarField<>(DataValue.class, ScalarType.JSON),
+            new ScalarField<>(RecordRef.class, ScalarType.ID),
+            new ScalarField<>(Map.class, ScalarType.JSON)
         ).forEach(s -> scalars.put(s.getFieldType(), s));
 
         if (LibsUtils.isJacksonPresent()) {
             Arrays.asList(
-                new ScalarField<>(com.fasterxml.jackson.databind.JsonNode.class, "json"),
-                new ScalarField<>(com.fasterxml.jackson.databind.node.ObjectNode.class, "json"),
-                new ScalarField<>(com.fasterxml.jackson.databind.node.ArrayNode.class, "json")
+                new ScalarField<>(com.fasterxml.jackson.databind.JsonNode.class, ScalarType.JSON),
+                new ScalarField<>(com.fasterxml.jackson.databind.node.ObjectNode.class, ScalarType.JSON),
+                new ScalarField<>(com.fasterxml.jackson.databind.node.ArrayNode.class, ScalarType.JSON)
             ).forEach(s -> scalars.put(s.getFieldType(), s));
         }
     }
@@ -174,7 +175,7 @@ public class DtoSchemaReader {
             }
         } else {
             innerAtts = Collections.singletonList(SchemaAtt.create()
-                .setName("?" + scalarField.getSchema())
+                .setName(scalarField.getScalarType().getSchema())
                 .build());
         }
 
@@ -238,6 +239,6 @@ public class DtoSchemaReader {
     @AllArgsConstructor
     private static class ScalarField<FieldTypeT> {
         @Getter private final Class<FieldTypeT> fieldType;
-        @Getter private final String schema;
+        @Getter private final ScalarType scalarType;
     }
 }

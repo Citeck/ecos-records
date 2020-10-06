@@ -39,7 +39,7 @@ public class RecordTypeTest extends AbstractRecordsDao implements RecordsAttsDao
         RecordRef recRef = RecordRef.create(ID, TestRecord.class.getName());
         RecordRef typeRef = RecordRef.create(ID, TypeInfo.class.getName());
 
-        assertEquals(DataValue.createStr(typeRef.toString()), recordsService.getAtt(recRef, ".type{id}"));
+        assertEquals(DataValue.createStr(typeRef.toString()), recordsService.getAtt(recRef, "_type?id"));
     }
 
     @Override

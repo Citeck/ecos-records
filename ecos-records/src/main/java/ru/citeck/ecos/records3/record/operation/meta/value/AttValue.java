@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records3.record.operation.meta.value;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.SimpleAttEdge;
 
@@ -15,17 +14,9 @@ import java.util.Collections;
 public interface AttValue {
 
     /**
-     * Global reference to this value
+     * Value identifier. Can be RecordRef or String
      */
-    default RecordRef getRef() throws Exception {
-        String id = getId();
-        return id != null ? RecordRef.create("", id) : RecordRef.EMPTY;
-    }
-
-    /**
-     * Identifier
-     */
-    default String getId() throws Exception {
+    default Object getId() {
         return null;
     }
 
@@ -36,7 +27,7 @@ public interface AttValue {
         return toString();
     }
 
-    default String getDispName() throws Exception {
+    default String getDisplayName() throws Exception {
         return getString();
     }
 
@@ -61,7 +52,7 @@ public interface AttValue {
     }
 
     default Boolean getBool() throws Exception {
-        return Boolean.parseBoolean(getString());
+        return null;
     }
 
     default Object getJson() throws Exception {

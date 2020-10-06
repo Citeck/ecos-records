@@ -55,5 +55,6 @@ public abstract class AbstractRecordsDao implements RecordsDao,
     public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
         this.recordsService = serviceFactory.getRecordsService();
+        this.predicateService = serviceFactory.getPredicateService();
     }
 }

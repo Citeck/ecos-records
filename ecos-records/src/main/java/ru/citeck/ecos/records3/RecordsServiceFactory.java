@@ -31,7 +31,6 @@ import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangServiceImpl;
 import ru.citeck.ecos.records3.rest.RestHandler;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
-import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
@@ -56,7 +55,7 @@ public class RecordsServiceFactory {
     private RestHandler restHandler;
     private RecordsService recordsService;
     private DtoSchemaReader dtoMetaResolver;
-    private RecordsResolver recordsResolver;
+    private LocalRemoteResolver recordsResolver;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
     private RecordAttsService recordsMetaService;
@@ -198,14 +197,14 @@ public class RecordsServiceFactory {
         return defaultRecordsDao;
     }
 
-    public final synchronized RecordsResolver getRecordsResolver() {
+    public final synchronized LocalRemoteResolver getRecordsResolver() {
         if (recordsResolver == null) {
             recordsResolver = createRecordsResolver();
         }
         return recordsResolver;
     }
 
-    protected RecordsResolver createRecordsResolver() {
+    protected LocalRemoteResolver createRecordsResolver() {
         return new LocalRemoteResolver(this);
     }
 
@@ -313,7 +312,7 @@ public class RecordsServiceFactory {
         return metaValueFactories;
     }
 
-    public final synchronized DtoSchemaReader getDtoSchemaResolver() {
+    public final synchronized DtoSchemaReader getDtoSchemaReader() {
         if (dtoMetaResolver == null) {
             dtoMetaResolver = createDtoMetaResolver();
         }

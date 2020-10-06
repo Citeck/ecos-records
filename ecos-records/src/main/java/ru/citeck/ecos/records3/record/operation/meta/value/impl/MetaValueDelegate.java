@@ -16,8 +16,8 @@ public class MetaValueDelegate implements AttValue {
     }
 
     @Override
-    public RecordRef getRef() throws Exception {
-        return impl.getRef();
+    public Object getId() {
+        return impl.getId();
     }
 
     @Override
@@ -26,8 +26,8 @@ public class MetaValueDelegate implements AttValue {
     }
 
     @Override
-    public String getDispName() throws Exception {
-        return impl.getDispName();
+    public String getDisplayName() throws Exception {
+        return impl.getDisplayName();
     }
 
    @Override

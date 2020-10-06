@@ -68,7 +68,7 @@ public class DtoSchemaReader {
             new ScalarField<>(ArrayNode.class, "json"),
             new ScalarField<>(ObjectData.class, "json"),
             new ScalarField<>(DataValue.class, "json"),
-            new ScalarField<>(RecordRef.class, "ref"),
+            new ScalarField<>(RecordRef.class, "id"),
             new ScalarField<>(Map.class, "json")
         ).forEach(s -> scalars.put(s.getFieldType(), s));
 
@@ -100,14 +100,14 @@ public class DtoSchemaReader {
         return attributes;
     }
 
-    private List<SchemaRootAtt> getAttributesImpl(Class<?> metaClass, Set<Class<?>> visited) {
+    private List<SchemaRootAtt> getAttributesImpl(Class<?> attsClass, Set<Class<?>> visited) {
 
-        if (!visited.add(metaClass)) {
+        if (!visited.add(attsClass)) {
             throw new IllegalArgumentException("Recursive meta fields is not supported! "
-                + "Class: " + metaClass + " visited: " + visited);
+                + "Class: " + attsClass + " visited: " + visited);
         }
 
-        PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(metaClass);
+        PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(attsClass);
         List<SchemaRootAtt> attributes = new ArrayList<>();
 
         for (PropertyDescriptor descriptor : descriptors) {
@@ -137,7 +137,7 @@ public class DtoSchemaReader {
 
             ScalarField<?> scalarField = scalars.get(propType);
 
-            attributes.add(getAttributeSchema(metaClass,
+            attributes.add(getAttributeSchema(attsClass,
                 writeMethod,
                 descriptor.getName(),
                 isMultiple,
@@ -147,7 +147,7 @@ public class DtoSchemaReader {
 
         }
 
-        visited.remove(metaClass);
+        visited.remove(attsClass);
 
         return attributes;
     }
@@ -165,8 +165,7 @@ public class DtoSchemaReader {
         if (scalarField == null) {
             if (propType.isEnum()) {
                 innerAtts = Collections.singletonList(SchemaAtt.create()
-                    .setName("str")
-                    .setScalar(true)
+                    .setName("?str")
                     .build());
             } else {
                 innerAtts = getAttributes(propType, visited).stream()
@@ -175,8 +174,7 @@ public class DtoSchemaReader {
             }
         } else {
             innerAtts = Collections.singletonList(SchemaAtt.create()
-                .setName(scalarField.getSchema())
-                .setScalar(true)
+                .setName("?" + scalarField.getSchema())
                 .build());
         }
 

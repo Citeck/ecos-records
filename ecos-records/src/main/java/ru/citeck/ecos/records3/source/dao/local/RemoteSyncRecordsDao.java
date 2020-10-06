@@ -52,7 +52,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T> implements JobsP
     }
 
     @Override
-    public Optional<T> getRecord(RecordRef recordRef) {
+    public Optional<T> getRecord(String recordRef) {
         waitUntilSyncCompleted();
         return super.getRecord(recordRef);
     }

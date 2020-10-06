@@ -43,7 +43,8 @@ public class MetaEdgeValue implements AttValue {
             case "options":
                 return edge.getOptions();
             case "javaClass":
-                return edge.getJavaClass();
+                Class<?> clazz = edge.getJavaClass();
+                return clazz != null ? clazz.getName() : null;
             case "editorKey":
                 return edge.getEditorKey();
             case "type":

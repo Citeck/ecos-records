@@ -58,14 +58,6 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public RecordRef getRef() throws Exception {
-            if (typeCtx.hasProperty("?ref")) {
-                return getAttWithType("?ref", RecordRef.class);
-            }
-            return null;
-        }
-
-        @Override
         public Double getDouble() {
             if (typeCtx.hasProperty("?num")) {
                 return getAttWithType("?num", Double.class);
@@ -88,7 +80,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             if (typeCtx.hasProperty("?disp")) {
                 return getAttWithType("?disp", String.class);
             }

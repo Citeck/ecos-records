@@ -6,6 +6,10 @@ import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
@@ -16,19 +20,24 @@ import ru.citeck.ecos.records3.utils.RecordsUtils;
 import ru.citeck.ecos.records3.utils.ValueWithIdx;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry {
+public class LocalRemoteResolver implements RecordsDaoRegistry {
 
     private final LocalRecordsResolver local;
-    private final RecordsResolver remote;
+    private final RemoteRecordsResolver remote;
+    private final AttSchemaReader reader;
+    private final RecordsServiceFactory serviceFactory;
 
     private final String currentAppSourceIdPrefix;
 
     public LocalRemoteResolver(RecordsServiceFactory serviceFactory) {
 
+        this.serviceFactory = serviceFactory;
         this.remote = serviceFactory.getRemoteRecordsResolver();
         this.local = serviceFactory.getLocalRecordsResolver();
+        this.reader = serviceFactory.getAttSchemaReader();
 
         RecordsProperties props = serviceFactory.getProperties();
         this.currentAppSourceIdPrefix = props.getAppName() + "/";
@@ -37,7 +46,6 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @Nullable
-    @Override
     public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
                                              @NotNull Map<String, String> attributes,
                                              boolean rawAtts) {
@@ -45,13 +53,30 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         String sourceId = query.getSourceId();
 
         if (remote == null || !isRemoteSourceId(sourceId)) {
-            return local.query(query, attributes, rawAtts);
+            return doWithSchema(attributes, schema -> local.query(query, schema, rawAtts));
         }
         return remote.query(query, attributes, rawAtts);
     }
 
+    private <T> T doWithSchema(Map<String, String> attributes, Function<List<SchemaRootAtt>, T> action) {
+
+        List<SchemaRootAtt> atts = reader.readRoot(attributes);
+        return AttContext.doInContext(serviceFactory, attContext -> {
+
+            if (!atts.isEmpty()) {
+                attContext.setSchemaAtt(SchemaAtt.create()
+                    .setName("")
+                    .setInner(atts.stream()
+                        .map(SchemaRootAtt::getAttribute)
+                        .collect(Collectors.toList()))
+                    .build());
+            }
+
+            return action.apply(atts);
+        });
+    }
+
     @Nullable
-    @Override
     public List<RecordAtts> getAtts(@NotNull List<?> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
@@ -61,7 +86,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
         }
 
         if (remote == null) {
-            return local.getAtts(records, attributes, rawAtts);
+            return doWithSchema(attributes, atts -> local.getAtts(records, atts, rawAtts));
         }
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -85,7 +110,8 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
             .map(ValueWithIdx::getValue)
             .collect(Collectors.toList());
 
-        List<RecordAtts> objAtts = local.getAtts(recordsObjValue, attributes, rawAtts);
+        List<RecordAtts> objAtts = doWithSchema(attributes, atts -> local.getAtts(recordsObjValue, atts, rawAtts));
+
         if (objAtts != null && objAtts.size() == recordsObjValue.size()) {
             for (int i = 0; i < objAtts.size(); i++) {
                 results.add(new ValueWithIdx<>(objAtts.get(i), recordObjs.get(i).getIdx()));
@@ -106,7 +132,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
 
             if (!isRemoteSourceId(sourceId)) {
 
-                atts = local.getAtts(refs, attributes, rawAtts);
+                atts = doWithSchema(attributes, schema -> local.getAtts(refs, schema, rawAtts));
 
             } else if (isRemoteRef(recs.stream()
                             .map(ValueWithIdx::getValue)
@@ -117,7 +143,7 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
 
             } else {
 
-                atts = local.getAtts(refs, attributes, rawAtts);
+                atts = doWithSchema(attributes, schema -> local.getAtts(refs, schema, rawAtts));
             }
 
             if (atts == null || atts.size() != refs.size()) {
@@ -140,7 +166,6 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @Nullable
-    @Override
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
         if (remote == null || records.isEmpty()) {
             return local.mutate(records);
@@ -152,7 +177,6 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @Nullable
-    @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
         if (remote == null || records.isEmpty()) {
             return local.delete(records);
@@ -164,7 +188,6 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @Nullable
-    @Override
     public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
         if (isRemoteSourceId(sourceId)) {
             return remote.getSourceInfo(sourceId);
@@ -173,7 +196,6 @@ public class LocalRemoteResolver implements RecordsResolver, RecordsDaoRegistry 
     }
 
     @NotNull
-    @Override
     public List<RecsSourceInfo> getSourceInfo() {
         List<RecsSourceInfo> result = new ArrayList<>(local.getSourceInfo());
         result.addAll(remote.getSourceInfo());

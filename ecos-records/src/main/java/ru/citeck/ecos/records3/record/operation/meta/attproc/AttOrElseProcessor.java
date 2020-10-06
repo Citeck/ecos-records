@@ -8,33 +8,32 @@ import java.util.*;
 
 public class AttOrElseProcessor extends AbstractAttProcessor<List<DataValue>> {
 
+    public static final String ATT_PREFIX = "a:";
+
     public AttOrElseProcessor() {
         super(true);
     }
 
     @Override
-    protected Object processOne(@NotNull ObjectData meta, @NotNull DataValue value, @NotNull List<DataValue> arguments) {
+    protected Object processOne(@NotNull ObjectData meta,
+                                @NotNull DataValue value,
+                                @NotNull List<DataValue> arguments) {
 
         if (arguments.isEmpty() || value.isNotNull()) {
             return value;
         }
 
         for (DataValue orElseAtt : arguments) {
-            String txtAtt = orElseAtt.asText();
-            if (isAttToLoadValue(txtAtt)) {
-                value = meta.get(txtAtt);
-            } else {
-                if (txtAtt.length() > 0) {
-                    if (Character.isDigit(txtAtt.charAt(0))) {
-                        value = DataValue.create(orElseAtt.asDouble());
-                    } else if (isBool(txtAtt)) {
-                        value = DataValue.create(orElseAtt.asBoolean());
-                    } else {
-                        value = DataValue.create(txtAtt.substring(1, txtAtt.length() - 1));
-                    }
+
+            if (orElseAtt.isTextual()) {
+                String txtAtt = orElseAtt.asText();
+                if (txtAtt.startsWith(ATT_PREFIX)) {
+                    value = meta.get(txtAtt.substring(ATT_PREFIX.length()));
                 } else {
                     value = orElseAtt;
                 }
+            } else {
+                value = orElseAtt;
             }
             if (value.isNotNull() && (!value.isTextual() || !value.asText().isEmpty())) {
                 return value;
@@ -62,27 +61,15 @@ public class AttOrElseProcessor extends AbstractAttProcessor<List<DataValue>> {
         Set<String> attsToLoad = new HashSet<>();
 
         for (DataValue orElseAtt : arguments) {
-            if (orElseAtt.isNull() || orElseAtt.asText().isEmpty()) {
+            if (!orElseAtt.isTextual()) {
                 continue;
             }
-            String att = orElseAtt.asText();
-            if (isAttToLoadValue(att)) {
-                attsToLoad.add(att);
+            String txtAtt = orElseAtt.asText();
+            if (txtAtt.startsWith(ATT_PREFIX) && txtAtt.length() > ATT_PREFIX.length()) {
+                attsToLoad.add(txtAtt.substring(ATT_PREFIX.length()));
             }
         }
 
         return attsToLoad;
-    }
-
-    private boolean isBool(String value) {
-        return Boolean.TRUE.toString().equals(value)
-            || Boolean.FALSE.toString().equals(value);
-    }
-
-    private boolean isAttToLoadValue(String value) {
-        if (isBool(value) || Character.isDigit(value.charAt(0))) {
-            return false;
-        }
-        return value.charAt(0) != '\'' && value.charAt(0) != '"';
     }
 }

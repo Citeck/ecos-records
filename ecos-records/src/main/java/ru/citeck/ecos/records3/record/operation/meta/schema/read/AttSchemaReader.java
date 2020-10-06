@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.utils.NameUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordConstants;
+import ru.citeck.ecos.records3.record.operation.meta.attproc.AttOrElseProcessor;
 import ru.citeck.ecos.records3.record.operation.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
@@ -26,7 +27,7 @@ public class AttSchemaReader {
     private static final String KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final String GQL_ONE_ARG_ATT = "^%s\\((n:)?['\"](.+?)['\"]\\)";
-    private static final String GQL_ONE_ARG_ATT_WITH_INNER = GQL_ONE_ARG_ATT + "\\{(.+)}";
+    private static final String GQL_ONE_ARG_ATT_WITH_INNER = GQL_ONE_ARG_ATT + "\\s*\\{(.+)}";
 
     private static final Pattern GQL_ATT_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "atts?"));
     private static final Pattern GQL_ATT_WITHOUT_INNER_PATTERN =
@@ -35,6 +36,7 @@ public class AttSchemaReader {
     private static final Pattern GQL_EDGE_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "edge"));
     private static final Pattern GQL_AS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "as"));
     private static final Pattern GQL_HAS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT, "has"));
+    private static final Pattern GQL_SIMPLE_AS_PATTERN = Pattern.compile("\\?as\\((n:)?[\\'\"](.+?)[\\'\"]\\)");
 
     private static final Pattern PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)");
 
@@ -75,6 +77,25 @@ public class AttSchemaReader {
     }
 
     public SchemaAtt readInner(String alias, String attribute, List<SchemaAtt> innerAtts) {
+
+        if (attribute.charAt(0) == '#') {
+
+            int questionIdx = attribute.indexOf('?');
+            if (questionIdx == -1) {
+                throw new AttReadException(
+                    alias,
+                    attribute,
+                    "Scalar type is mandatory for attributes with #. E.g.: #name?protected"
+                );
+            } else {
+                if (attribute.endsWith("?options")) {
+                    attribute += "{label:disp,value:str}";
+                }
+            }
+            attribute = ".edge(n:\"" + attribute.substring(1, questionIdx).replace("\"", "\\\"") + "\"){"
+                + attribute.substring(questionIdx + 1) + "}";
+        }
+
         if (attribute.charAt(0) == '.') {
             return readDotAtt(alias, attribute.substring(1), innerAtts);
         }
@@ -100,7 +121,24 @@ public class AttSchemaReader {
             }
 
             String orElsePart = att.substring(orElseDelimIdx + 1, nextDelim);
-            att = att.substring(0, orElseDelimIdx) + "|or('" + orElsePart + "')"
+
+            if (!AttStrUtils.isInQuotes(orElsePart)) {
+
+                if (orElsePart.isEmpty()) {
+                    orElsePart = "''";
+                } else if (!orElsePart.equals("null")
+                        && !orElsePart.equals(Boolean.TRUE.toString())
+                        && !orElsePart.equals(Boolean.FALSE.toString())
+                        && !Character.isDigit(orElsePart.charAt(0))) {
+
+                    orElsePart = "'"
+                        + AttOrElseProcessor.ATT_PREFIX
+                        + orElsePart.replace("'", "\\'")
+                        + "'";
+                }
+            }
+
+            att = att.substring(0, orElseDelimIdx) + "|or(" + orElsePart + ")"
                 + (att.length() > nextDelim ? att.substring(nextDelim) : "");
 
             orElseDelimIdx = AttStrUtils.indexOf(att, '!');
@@ -127,20 +165,6 @@ public class AttSchemaReader {
 
         AttWithProc attWithProc = readProcessors(attribute);
         String att = attWithProc.getAttribute();
-
-        if (att.charAt(0) == '#') {
-
-            int questionIdx = att.indexOf('?');
-            if (questionIdx == -1) {
-                throw new AttReadException(
-                    alias,
-                    attribute,
-                    "Scalar type is mandatory for attributes with #. E.g.: #name?protected"
-                );
-            }
-            att = ".edge(n:\"" + attribute.substring(1, questionIdx) + "\"){"
-                + attribute.substring(questionIdx + 1) + "}";
-        }
 
         SchemaAtt schemaAtt = readInner(alias, att);
         return new SchemaRootAtt(schemaAtt, attWithProc.getProcessors());
@@ -184,7 +208,8 @@ public class AttSchemaReader {
 
         if (alias.isEmpty() && multipleAtts) {
             if (dotContext) {
-                alias = "" + KEYS.charAt(idx);
+                int braceIdx = att.indexOf('{');
+                alias = braceIdx > 0 ? att.substring(0, braceIdx) : att;
             } else {
                 int questionIdx = att.indexOf('?');
                 if (questionIdx > 0) {
@@ -194,7 +219,8 @@ public class AttSchemaReader {
                 }
             }
         }
-        return parserFunc.apply(alias, dotContext ? "." + att : att);
+        att = att.trim();
+        return parserFunc.apply(alias.trim(), dotContext ? "." + att : att);
     }
 
     private SchemaAtt readLastSimpleAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
@@ -208,8 +234,7 @@ public class AttSchemaReader {
             }
             return SchemaAtt.create()
                 .setAlias(alias)
-                .setName(attribute)
-                .setScalar(true)
+                .setName('?' + attribute)
                 .build();
         }
 
@@ -262,6 +287,14 @@ public class AttSchemaReader {
 
     private SchemaAtt readSimpleAtt(String alias, String attribute, List<SchemaAtt> innerAtts) {
 
+        if (attribute.contains("?as(")) {
+            Matcher matcher = GQL_SIMPLE_AS_PATTERN.matcher(attribute);
+            while (matcher.find()) {
+                attribute = attribute.replace(matcher.group(0), "._as." + matcher.group(2));
+                matcher = GQL_SIMPLE_AS_PATTERN.matcher(attribute);
+            }
+        }
+
         List<String> dotPath = AttStrUtils.split(attribute, '.');
 
         String lastPathElem = dotPath.get(dotPath.size() - 1);
@@ -306,8 +339,7 @@ public class AttSchemaReader {
         if (braceIdx == -1) {
             return SchemaAtt.create()
                 .setAlias(alias)
-                .setName(attribute)
-                .setScalar(true)
+                .setName('?' + attribute)
                 .build();
         }
 
@@ -355,9 +387,7 @@ public class AttSchemaReader {
             .setName(RecordConstants.ATT_HAS)
             .setInner(SchemaAtt.create()
                 .setName(attName)
-                .setInner(SchemaAtt.create()
-                    .setName("bool")
-                    .setScalar(true))
+                .setInner(SchemaAtt.create().setName("?bool"))
             ).build();
     }
 
@@ -388,7 +418,7 @@ public class AttSchemaReader {
         return SchemaAtt.create()
             .setAlias(alias)
             .setName(RecordConstants.ATT_EDGE)
-            .setInner(SchemaAtt.create().setName(attName).setInner(schemaInnerAtts))
+            .setInner(SchemaAtt.create().setName(AttStrUtils.removeEscaping(attName)).setInner(schemaInnerAtts))
             .build();
     }
 
@@ -405,17 +435,14 @@ public class AttSchemaReader {
             case "javaClass":
             case "editorKey":
             case "type":
-                return attBuilder.setInner(SchemaAtt.create()
-                        .setName("str")
-                        .setScalar(true)
+                return attBuilder.setInner(SchemaAtt.create().setName("?str")
                 ).build();
             case "protected":
             case "canBeRead":
             case "multiple":
             case "isAssoc":
                 return attBuilder.setInner(SchemaAtt.create()
-                    .setName("bool")
-                    .setScalar(true)
+                    .setName("?bool")
                 ).build();
         }
 
@@ -468,7 +495,7 @@ public class AttSchemaReader {
         }
         return SchemaAtt.create()
             .setAlias(alias)
-            .setName(attName)
+            .setName(AttStrUtils.removeEscaping(attName))
             .setMultiple(multiple)
             .setInner(gqlInnerAtts)
             .build();
@@ -502,8 +529,23 @@ public class AttSchemaReader {
 
         AttStrUtils.split(argsStr, ",").stream()
             .map(String::trim)
-            .map(AttStrUtils::removeQuotes)
-            .map(DataValue::createStr)
+            .map(arg -> {
+                if (arg.isEmpty()) {
+                    return DataValue.createStr("");
+                }
+                if (arg.equals("null")) {
+                    return DataValue.NULL;
+                } else if (Boolean.TRUE.toString().equals(arg)) {
+                    return DataValue.TRUE;
+                } else if (Boolean.FALSE.toString().equals(arg)) {
+                    return DataValue.FALSE;
+                } else if (Character.isDigit(arg.charAt(0))) {
+                    return DataValue.create(Double.parseDouble(arg));
+                } else {
+                    arg = AttStrUtils.removeQuotes(arg);
+                    return DataValue.createStr(AttStrUtils.removeEscaping(arg));
+                }
+            })
             .forEach(result::add);
 
         return result;

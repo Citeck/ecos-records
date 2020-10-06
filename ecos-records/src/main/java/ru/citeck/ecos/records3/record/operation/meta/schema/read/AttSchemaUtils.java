@@ -5,7 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AttSchemaUtils {
 

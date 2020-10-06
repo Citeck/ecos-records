@@ -8,10 +8,13 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,25 +70,29 @@ public class MetaFieldTest extends AbstractRecordsDao
     @Override
     public Object getAtt(@NotNull String name) {
 
-        //todo
-       /* if ("field0".equals(field.getAlias())) {
+        SchemaAtt schemaAtt = AttContext.getCurrentSchemaAtt();
+
+        if ("one".equals(schemaAtt.getAlias())) {
 
             Map<String, String> expectedAttsMap = new HashMap<>();
-            expectedAttsMap.put("innerOne", ".att(n:\"innerOne\"){str}");
-            expectedAttsMap.put("innerTwo", ".atts(n:\"innerTwo\"){att(n:\"innerInnerTest\"){json}}");
-            expectedAttsMap.put(".disp", ".disp");
+            expectedAttsMap.put("innerOne", ".att(n:\"innerOne\"){_u003F_str:str}");
+            expectedAttsMap.put("innerTwo", ".atts(n:\"innerTwo\"){innerInnerTest:att(n:\"innerInnerTest\"){_u003F_json:json}}");
+            expectedAttsMap.put("?disp", ".disp");
 
-            assertEquals(expectedAttsMap, new HashMap<>(field.getInnerAttributesMap()));
+            assertEquals(expectedAttsMap, new HashMap<>(AttContext.getInnerAttsMap()));
 
             List<String> expectedAttsList = new ArrayList<>();
             expectedAttsList.add("innerOne");
             expectedAttsList.add("innerTwo");
-            expectedAttsList.add(".disp");
+            expectedAttsList.add("?disp");
 
-            assertEquals(expectedAttsList, new ArrayList<>(field.getInnerAttributes()));
+            assertEquals(expectedAttsList, new ArrayList<>(schemaAtt.getInner()
+                .stream()
+                .map(SchemaAtt::getName)
+                .collect(Collectors.toList())));
 
             assertsPassed = true;
-        }*/
+        }
         return this;
     }
 

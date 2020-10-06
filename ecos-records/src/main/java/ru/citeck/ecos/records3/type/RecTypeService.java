@@ -8,5 +8,5 @@ import java.util.List;
 public interface RecTypeService {
 
     @NotNull
-    List<ComputedAtt> getComputedAtts(RecordRef type);
+    List<ComputedAtt> getComputedAtts(RecordRef typeRef);
 }

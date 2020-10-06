@@ -74,8 +74,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     }
 
     @Override
-    public String getDispName() throws Exception {
-        return getAttributeImpl(".disp", String.class, super::getDispName);
+    public String getDisplayName() throws Exception {
+        return getAttributeImpl(".disp", String.class, super::getDisplayName);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records3.record.operation.meta;
 
 import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 
 import java.util.Collection;
@@ -30,4 +32,12 @@ public interface RecordAttsService {
     List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts);
 
     List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts, List<AttMixin> mixins);
+
+    List<RecordAtts> getAtts(List<?> values, List<SchemaRootAtt> attributes, boolean rawAtts, List<AttMixin> mixins);
+
+    List<RecordAtts> getAtts(List<?> values,
+                             List<SchemaRootAtt> attributes,
+                             boolean rawAtts,
+                             List<AttMixin> mixins,
+                             List<RecordRef> recordRefs);
 }

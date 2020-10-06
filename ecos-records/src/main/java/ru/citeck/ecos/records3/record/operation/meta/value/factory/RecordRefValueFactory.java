@@ -1,8 +1,6 @@
 package ru.citeck.ecos.records3.record.operation.meta.value.factory;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.InnerMetaValue;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
@@ -16,8 +14,7 @@ import java.util.*;
 public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
 
     private static final String ATT_ID = "?id";
-    private static final String ATT_STR = "?str";
-    private static final String ATT_REF = "?ref";
+    private static final String ATT_LOCAL_ID = "?localId";
 
     private final RecordsService recordsService;
     private final AttSchemaWriter schemaWriter = new AttSchemaGqlWriter();
@@ -39,83 +36,85 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
     public class RecordRefValue implements AttValue {
 
         private final RecordRef ref;
-        private final RecordAtts atts;
+        private final InnerMetaValue innerAtts;
 
         RecordRefValue(RecordRef recordRef) {
 
             SchemaAtt schemaAtt = AttContext.getCurrentSchemaAtt();
+            List<SchemaAtt> innerSchema = schemaAtt.getInner();
 
             ref = recordRef;
 
             Map<String, String> attsMap = new HashMap<>();
 
             StringBuilder sb = new StringBuilder();
-            for (SchemaAtt inner : schemaAtt.getInner()) {
+            for (SchemaAtt inner : innerSchema) {
                 String innerName = inner.getName();
-                if (!innerName.equals(ATT_ID) && !innerName.equals(ATT_STR) && !innerName.equals(ATT_REF)) {
+                if (!innerName.equals(ATT_ID) && !innerName.equals(ATT_LOCAL_ID)) {
                     schemaWriter.write(inner, sb);
-                    attsMap.put(inner.getAliasForValue(), sb.toString());
+                    attsMap.put(inner.getName(), sb.toString());
                     sb.setLength(0);
                 }
             }
 
+            RecordAtts atts;
             if (attsMap.size() > 0) {
-                this.atts = recordsService.getAtts(ref, attsMap);
+                atts = recordsService.getAtts(ref, attsMap, true);
             } else {
-                this.atts = new RecordAtts(ref);
+                atts = new RecordAtts(ref);
             }
 
+            innerAtts = new InnerMetaValue(atts.getAttributes().getData().asJson());
+
+            //todo
             if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
                 atts.set("?str", atts.getStringOrNull("?assoc"));
             }
         }
 
         @Override
-        public String getString() {
-            return ref.toString();
+        public RecordRef getId() {
+            return ref;
         }
 
         @Override
-        public String getDispName() {
-            return atts.getStringOrNull("?disp");
+        public String getString() {
+            return innerAtts.getString();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return innerAtts.getDisplayName();
         }
 
         @Override
         public Double getDouble() {
-            return atts.getDoubleOrNull("?num");
+            return innerAtts.getDouble();
         }
 
         @Override
         public Boolean getBool() {
-            return atts.getBoolOrNull("?bool");
+            return innerAtts.getBool();
         }
 
         @Override
         public Object getJson() {
-            return atts.getAttribute("?json");
+            return innerAtts.getJson();
         }
 
         @Override
         public boolean has(@NotNull String name) {
-            return atts.getAttribute("?has").asBoolean();
+            return innerAtts.has(name);
         }
 
         @Override
         public Object getAs(@NotNull String type) {
-            return new InnerMetaValue(atts.getAttribute("?as"));
+            return innerAtts.getAs(type);
         }
 
         @Override
         public Object getAtt(@NotNull String name) {
-            DataValue result = atts.get(name);
-            if (result.isArray()) {
-                List<InnerMetaValue> resultList = new ArrayList<>();
-                for (DataValue node : result) {
-                    resultList.add(new InnerMetaValue(Json.getMapper().toJson(node)));
-                }
-                return resultList;
-            }
-            return result.isNotNull() ? new InnerMetaValue(Json.getMapper().toJson(result)) : null;
+            return innerAtts.getAtt(name);
         }
 
         public RecordRef getRef() {

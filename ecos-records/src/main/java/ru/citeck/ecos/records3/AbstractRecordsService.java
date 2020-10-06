@@ -151,7 +151,7 @@ public abstract class AbstractRecordsService implements RecordsService {
                                                       RecordsQuery query,
                                                       Function<RecordsQuery, RecordsQueryRes<T>> queryImpl) {
 
-        return RequestContext.withCtx(serviceFactory, context -> {
+        return RequestContext.doWithCtx(serviceFactory, context -> {
 
             RecordsQueryRes<List<T>> result = new RecordsQueryRes<>();
 

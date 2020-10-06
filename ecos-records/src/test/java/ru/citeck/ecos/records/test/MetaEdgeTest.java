@@ -65,19 +65,19 @@ public class MetaEdgeTest extends AbstractRecordsDao
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
         assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
-        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants/0"), CreateVariant.class);
+        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants{json}/0"), CreateVariant.class);
         assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());
 
         List<String> distinctVars = new ArrayList<>();
-        for (DataValue value : edgeNode.get("distinct")) {
+        for (DataValue value : edgeNode.get("distinct{str,disp}")) {
             distinctVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.distinctVariants, distinctVars);
 
         List<String> optionsVars = new ArrayList<>();
-        for (DataValue value : edgeNode.get("options")) {
+        for (DataValue value : edgeNode.get("options{str,disp}")) {
             optionsVars.add(value.get("str").asText());
         }
         assertEquals(MetaTestEdge.optionsVariants, optionsVars);

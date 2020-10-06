@@ -49,7 +49,7 @@ public class RecordsUtils {
                                                              Class<?> defaultClass,
                                                              RecordsService recordsService) {
 
-        /*Map<String, String> attJavaClasses = new HashMap<>();
+        Map<String, String> attJavaClasses = new HashMap<>();
         for (String attribute : attributes) {
             attJavaClasses.put(attribute, "#" + attribute + "?javaClass");
         }
@@ -72,8 +72,7 @@ public class RecordsUtils {
             }
         }
 
-        return result;*/
-        return null;
+        return result;
     }
 
     public static List<RecordRef> toLocalRecords(Collection<RecordRef> records) {

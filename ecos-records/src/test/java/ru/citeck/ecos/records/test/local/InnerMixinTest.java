@@ -5,13 +5,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
+import ru.citeck.ecos.records3.source.common.AttMixin;
+import ru.citeck.ecos.records3.source.common.AttValueCtx;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.type.ComputedAtt;
+import ru.citeck.ecos.records3.type.RecTypeService;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,19 +39,21 @@ public class InnerMixinTest extends AbstractRecordsDao
     @BeforeAll
     void init() {
 
-        /*RecordsServiceFactory factory = new RecordsServiceFactory() {
+        RecordsServiceFactory factory = new RecordsServiceFactory() {
             @Override
             protected RecTypeService createRecordTypeService() {
                 return type -> {
                     if (type.equals(TEST_TYPE0)) {
                         ComputedAtt att = new ComputedAtt();
-                        att.setId("computed");
-                        att.setModel(Collections.singletonMap("<", "computedAtt0"));
+                        att.setName("computed");
+                        att.setType("attribute");
+                        att.setConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
                         return Collections.singletonList(att);
                     } else if (type.equals(TEST_TYPE1)) {
                         ComputedAtt att = new ComputedAtt();
-                        att.setId("computed");
-                        att.setModel(Collections.singletonMap("<", "computedAtt1"));
+                        att.setName("computed");
+                        att.setType("attribute");
+                        att.setConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
                         return Collections.singletonList(att);
                     }
                     return Collections.emptyList();
@@ -54,23 +64,19 @@ public class InnerMixinTest extends AbstractRecordsDao
         setId(ID);
         recordsService.register(this);
 
-        addAttributesMixin(new AttributesMixin<Void, Void>() {
+        addAttributesMixin(new AttMixin() {
             @Override
-            public List<String> getAttributesList() {
-                return Collections.singletonList("innerMeta");
-            }
-            @Override
-            public Object getAttribute(String attribute, Void meta) {
-                if (attribute.equals("innerMeta")) {
+            public Object getAtt(String path, AttValueCtx value) throws Exception {
+                if (path.equals("innerMeta")) {
                     return "innerValue";
                 }
                 return null;
             }
             @Override
-            public Void getMetaToRequest() {
-                return null;
+            public Collection<String> getProvidedAtts() {
+                return Collections.singletonList("innerMeta");
             }
-        });*/
+        });
     }
 
     @Test

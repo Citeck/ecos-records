@@ -27,7 +27,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     private final AttSchemaResolver schemaResolver;
 
     public RecordAttsServiceImpl(RecordsServiceFactory factory) {
-        this.dtoSchemaReader = factory.getDtoSchemaResolver();
+        this.dtoSchemaReader = factory.getDtoSchemaReader();
         this.schemaReader = factory.getAttSchemaReader();
         this.schemaResolver = factory.getAttSchemaResolver();
     }
@@ -79,7 +79,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
         List<SchemaRootAtt> attributes = dtoSchemaReader.read(attsDto);
 
-        return getAttsBySchema(values, attributes, false, Collections.emptyList())
+        return getAtts(values, attributes, false, Collections.emptyList())
             .stream()
             .map(v -> dtoSchemaReader.instantiate(attsDto, v.getAttributes()))
             .collect(Collectors.toList());
@@ -90,30 +90,54 @@ public class RecordAttsServiceImpl implements RecordAttsService {
         return getAtts(values, attributes, rawAtts, Collections.emptyList());
     }
 
-    private List<RecordAtts> getAttsBySchema(List<?> values,
-                                             List<SchemaRootAtt> rootAtts,
-                                             boolean rawAtts,
-                                             List<AttMixin> mixins) {
+    @Override
+    public List<RecordAtts> getAtts(List<?> values,
+                                    List<SchemaRootAtt> rootAtts,
+                                    boolean rawAtts,
+                                    List<AttMixin> mixins) {
 
-        rootAtts.add(new SchemaRootAtt(
-            SchemaAtt.create()
-                .setAlias(REF_ATT_ALIAS)
-                .setName("ref")
-                .setScalar(true)
-                .build(),
-            Collections.emptyList())
-        );
+        return getAtts(values, rootAtts, rawAtts, mixins, Collections.emptyList());
+    }
+
+    @Override
+    public List<RecordAtts> getAtts(List<?> values,
+                                    List<SchemaRootAtt> rootAtts,
+                                    boolean rawAtts,
+                                    List<AttMixin> mixins,
+                                    List<RecordRef> valuesRefs) {
+
+        boolean valueRefsProvided = valuesRefs.size() == values.size();
+
+        rootAtts = new ArrayList<>(rootAtts);
+        if (!valueRefsProvided) {
+            rootAtts.add(new SchemaRootAtt(
+                SchemaAtt.create()
+                    .setAlias(REF_ATT_ALIAS)
+                    .setName("?id")
+                    .build(),
+                Collections.emptyList())
+            );
+        }
 
         List<ObjectData> data = schemaResolver.resolve(ResolveArgs.create()
             .setValues(values)
             .setAtts(rootAtts)
             .setRawAtts(rawAtts)
             .setMixins(mixins)
+            .setValueRefs(valuesRefs)
             .build());
 
-        return data.stream()
-            .map(this::toRecMeta)
-            .collect(Collectors.toList());
+        List<RecordAtts> recordAtts = new ArrayList<>();
+        if (valueRefsProvided) {
+            for (int i = 0; i < data.size(); i++) {
+                recordAtts.add(toRecAtts(data.get(i), valuesRefs.get(i)));
+            }
+        } else {
+            for (ObjectData elem : data) {
+                recordAtts.add(toRecAtts(elem, RecordRef.EMPTY));
+            }
+        }
+        return recordAtts;
     }
 
     @Override
@@ -122,17 +146,19 @@ public class RecordAttsServiceImpl implements RecordAttsService {
                                     boolean rawAtts,
                                     List<AttMixin> mixins) {
 
-        return getAttsBySchema(values, schemaReader.readRoot(attributes), rawAtts, mixins);
+        return getAtts(values, schemaReader.readRoot(attributes), rawAtts, mixins);
     }
 
-    private RecordAtts toRecMeta(ObjectData data) {
-        String id = data.get(REF_ATT_ALIAS).asText();
-        if (StringUtils.isBlank(id)) {
-            id = UUID.randomUUID().toString();
+    private RecordAtts toRecAtts(ObjectData data, RecordRef id) {
+        if (id == RecordRef.EMPTY) {
+            id = RecordRef.valueOf(data.get(REF_ATT_ALIAS).asText());
+            if (StringUtils.isBlank(id.getId())) {
+                id = RecordRef.create(id.getAppName(), id.getSourceId(), UUID.randomUUID().toString());
+            }
+            data = data.deepCopy();
+            data.remove(REF_ATT_ALIAS);
         }
-        data = data.deepCopy();
-        data.remove(REF_ATT_ALIAS);
-        return new RecordAtts(RecordRef.create("", id), data);
+        return new RecordAtts(id, data);
     }
 
     private <T> T getFirst(List<T> elements, Object atts, List<Object> srcValues) {

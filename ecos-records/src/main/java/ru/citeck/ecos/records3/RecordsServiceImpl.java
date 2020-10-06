@@ -16,8 +16,7 @@ import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWrite
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.resolver.RecordsDaoRegistry;
-import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
+import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 
@@ -28,14 +27,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordsServiceImpl extends AbstractRecordsService {
 
-    private final RecordsResolver recordsResolver;
+    private final LocalRemoteResolver recordsResolver;
     private final AttSchemaReader attSchemaReader;
     private final DtoSchemaReader dtoAttsSchemaReader;
     private final AttSchemaWriter attSchemaWriter;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
-        dtoAttsSchemaReader = serviceFactory.getDtoSchemaResolver();
+        dtoAttsSchemaReader = serviceFactory.getDtoSchemaReader();
         recordsResolver = serviceFactory.getRecordsResolver();
         attSchemaReader = serviceFactory.getAttSchemaReader();
         attSchemaWriter = serviceFactory.getAttSchemaWriter();
@@ -76,7 +75,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                                              boolean rawAtts) {
 
         RecordsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
-            recordsResolver.query(query, attributes, true));
+            recordsResolver.query(query, attributes, rawAtts));
 
         if (result == null) {
             result = new RecordsQueryRes<>();
@@ -216,7 +215,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsQueryRes<T> result;
 
         try {
-            result = RequestContext.withCtx(serviceFactory, ctx -> supplier.get());
+            result = RequestContext.doWithCtx(serviceFactory, ctx -> supplier.get());
         } catch (Throwable e) {
             log.error("Records resolving error", e);
             result = new RecordsQueryRes<>();
@@ -230,7 +229,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         List<T> result;
 
         try {
-            result = RequestContext.withCtx(serviceFactory, ctx -> impl.get());
+            result = RequestContext.doWithCtx(serviceFactory, ctx -> impl.get());
         } catch (Throwable e) {
             log.error("Records resolving error", e);
             result = Collections.emptyList();
@@ -263,11 +262,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public void register(String sourceId, RecordsDao recordsSource) {
-        if (recordsResolver instanceof RecordsDaoRegistry) {
-            ((RecordsDaoRegistry) recordsResolver).register(sourceId, recordsSource);
-        } else {
-            log.warn("Records resolver doesn't support source registration. "
-                + "Source: " + sourceId + " " + recordsSource.getClass());
-        }
+        recordsResolver.register(sourceId, recordsSource);
     }
 }

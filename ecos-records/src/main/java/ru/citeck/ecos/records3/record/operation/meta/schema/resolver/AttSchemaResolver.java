@@ -11,6 +11,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.LibsUtils;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -25,6 +26,8 @@ import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
+import ru.citeck.ecos.records3.record.operation.meta.value.impl.MetaEdgeValue;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
 
@@ -36,9 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AttSchemaResolver {
 
-    private static final List<Class<?>> FORCE_CACHE_TYPES = Collections.singletonList(
-        String.class
-    );
+    public final static String CTX_SOURCE_ID_KEY = "ctx-source-id";
 
     private final static String PROC_ATT_ALIAS_PREFIX = "__proc_att_";
 
@@ -58,7 +59,7 @@ public class AttSchemaResolver {
         attValuesConverter = factory.getAttValuesConverter();
         attProcService = factory.getAttProcService();
         attSchemaReader = factory.getAttSchemaReader();
-        dtoSchemaReader = factory.getDtoSchemaResolver();
+        dtoSchemaReader = factory.getDtoSchemaReader();
     }
 
     public DataValue resolve(Object value, SchemaRootAtt attribute) {
@@ -106,6 +107,15 @@ public class AttSchemaResolver {
     }
 
     public List<ObjectData> resolve(ResolveArgs args) {
+        AttContext context = AttContext.getCurrent();
+        if (context == null) {
+            return AttContext.doInContext(serviceFactory, ctx -> resolveInAttCtx(args));
+        } else {
+            return resolveInAttCtx(args);
+        }
+    }
+
+    private List<ObjectData> resolveInAttCtx(ResolveArgs args) {
 
         List<Object> values = args.getValues();
         List<SchemaRootAtt> schemaAttsToLoad = args.getAttributes();
@@ -132,38 +142,105 @@ public class AttSchemaResolver {
         }
 
         List<SchemaRootAtt> schemaAtts = schemaAttsToLoad;
+        ResolveContext context = new ResolveContext(attValuesConverter, args.getMixins());
 
-        List<Map<String, Object>> result = AttContext.doInContext(serviceFactory, attContext -> {
+        List<ValueContext> attValues = new ArrayList<>();
+        for (int i = 0; i < values.size(); i++) {
+            RecordRef ref = args.getValueRefs().isEmpty() ? RecordRef.EMPTY : args.getValueRefs().get(i);
+            attValues.add(context.toRootValueContext(values.get(i), ref));
+        }
 
-            ResolveContext context = new ResolveContext(attValuesConverter, attContext, args.getMixins());
+        List<SchemaAtt> attsToResolve = schemaAtts.stream()
+            .map(SchemaRootAtt::getAttribute)
+            .collect(Collectors.toList());
 
-            List<SchemaAtt> innerAtts = schemaAtts.stream()
-                .map(SchemaRootAtt::getAttribute)
-                .collect(Collectors.toList());
-
-            attContext.setSchemaAtt(SchemaAtt.create()
-                .setName("")
-                .setInner(innerAtts)
-                .build());
-
-            List<ValueContext> attValues;
-            if (args.getValueRefs().isEmpty()) {
-                attValues = values.stream()
-                    .map(context::toValueContext)
-                    .collect(Collectors.toList());
-            } else {
-                attValues = new ArrayList<>();
-                for (int i = 0; i < values.size(); i++) {
-                    attValues.add(context.toValueContext(values.get(i), args.getValueRefs().get(i)));
-                }
-            }
-
-            return resolveRoot(attValues, schemaAtts, context);
-        });
+        List<SchemaAtt> simpleAtts = simplifySchema(attsToResolve);
+        List<Map<String, Object>> result = resolveRoot(attValues, simpleAtts, context);
+        result = resolveWithAliases(result, attsToResolve);
 
         return result.stream()
             .map(v -> postProcess(v, schemaAtts, args.isRawAtts()))
             .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> resolveWithAliases(List<Map<String, Object>> values, List<SchemaAtt> atts) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> value : values) {
+            result.add(resolveMapWithAliases(value, atts));
+        }
+        return result;
+    }
+
+    private Map<String, Object> resolveMapWithAliases(Map<String, Object> value, List<SchemaAtt> atts) {
+
+        Object resolved = resolveWithAliases(value, atts, false);
+        if (resolved instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = (Map<String, Object>) resolved;
+            return result;
+        }
+        throw new IllegalStateException("Expected Map, but found " + resolved + ". Value: " + value + " atts: " + atts);
+    }
+
+    private Object resolveWithAliases(Object value, List<SchemaAtt> atts, boolean isMultiple) {
+
+        if (value == null || atts.isEmpty()) {
+            return value;
+        }
+        if (isMultiple) {
+            return ((List<?>) value)
+                .stream()
+                .map(v -> resolveWithAliases(v, atts, false))
+                .collect(Collectors.toList());
+        } else {
+            if (value instanceof List) {
+                List<?> valueList = (List<?>) value;
+                if (valueList.isEmpty()) {
+                    return null;
+                }
+                value = valueList.get(0);
+            }
+        }
+        if (value instanceof Map) {
+            Map<String, Object> result = new HashMap<>();
+            for (SchemaAtt att : atts) {
+                Object attValue = ((Map<?, ?>) value).get(att.getName());
+                result.put(att.getAliasForValue(), resolveWithAliases(attValue, att.getInner(), att.isMultiple()));
+            }
+            return result;
+        } else {
+            throw new IllegalStateException("Unknown value: " + value + ". Atts: " + atts);
+        }
+    }
+
+    private List<SchemaAtt> simplifySchema(List<SchemaAtt> schema) {
+
+        if (schema.isEmpty()) {
+            return schema;
+        }
+
+        Map<String, SchemaAtt.Builder> result = new HashMap<>();
+        for (SchemaAtt att : schema) {
+            SchemaAtt.Builder resAtt = result.get(att.getName());
+            if (resAtt == null) {
+                resAtt = att.modify().setAlias(att.getName());
+                result.put(att.getName(), resAtt);
+            } else {
+                resAtt.setMultiple(resAtt.isMultiple() || att.isMultiple());
+                List<SchemaAtt> innerAtts = new ArrayList<>();
+                innerAtts.addAll(resAtt.getInner());
+                innerAtts.addAll(att.getInner());
+                resAtt.setInner(innerAtts);
+            }
+        }
+
+        List<SchemaAtt> resultAtts = new ArrayList<>();
+        for (SchemaAtt.Builder att : result.values()) {
+            att.setInner(simplifySchema(att.getInner()));
+            resultAtts.add(att.build());
+        }
+
+        return resultAtts;
     }
 
     private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schemaAtts, boolean isRawAtts) {
@@ -255,7 +332,7 @@ public class AttSchemaResolver {
     }
 
     private List<Map<String, Object>> resolveRoot(List<ValueContext> values,
-                                                  List<SchemaRootAtt> attributes,
+                                                  List<SchemaAtt> attributes,
                                                   ResolveContext context) {
         return values.stream()
             .map(v -> resolveRoot(v, attributes, context))
@@ -263,17 +340,16 @@ public class AttSchemaResolver {
     }
 
     private Map<String, Object> resolveRoot(ValueContext value,
-                                            List<SchemaRootAtt> rootAttributes,
+                                            List<SchemaAtt> attributes,
                                             ResolveContext context) {
 
+        ValueContext rootBefore = context.getRootValue();
         context.setRootValue(value);
-
-        return resolve(
-            value,
-            rootAttributes.stream()
-                .map(SchemaRootAtt::getAttribute)
-                .collect(Collectors.toList()
-        ), context);
+        try {
+            return resolve(value, attributes, context);
+        } finally {
+            context.setRootValue(rootBefore);
+        }
     }
 
     private List<Map<String, Object>> resolve(List<ValueContext> values,
@@ -297,9 +373,9 @@ public class AttSchemaResolver {
 
             String attPath;
             if (currentValuePath.isEmpty()) {
-                attPath = (att.isScalar() ? "?" : "") + att.getName();
+                attPath = att.getName();
             } else {
-                attPath = currentValuePath + (att.isScalar() ? "?" : ".") + att.getName();
+                attPath = currentValuePath + (!att.isScalar() ? "." : "") + att.getName();
             }
             context.setPath(attPath);
 
@@ -440,34 +516,35 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ValueContext {
 
-        public static final ValueContext EMPTY = new ValueContext(EmptyValue.INSTANCE, RecordRef.EMPTY);
+        public static final ValueContext EMPTY = new ValueContext(EmptyValue.INSTANCE, RecordRef.EMPTY, null);
 
         private final AttValue value;
         private final RecordRef valueRef;
-        private final Map<String, Object> attributesCache = new HashMap<>();
+        private final String ctxSourceId;
+        private RecordRef computedRef;
 
         public Object resolve(AttContext attContext) {
 
             SchemaAtt schemaAtt = attContext.getSchemaAtt();
             String name = schemaAtt.getName();
             boolean isScalar = schemaAtt.isScalar();
-            String cacheKey = attContext.getSchemaAtt().isScalar() ? "?" + name : name;
+
+            if (log.isTraceEnabled()) {
+            }
+            log.info("Resolve " + schemaAtt);
 
             Object res;
-            if (attributesCache.containsKey(cacheKey)) {
-                res = attributesCache.get(cacheKey);
-            } else {
-                attContext.setSchemaAttWasRequested(false);
-                try {
-                    res = resolveImpl(name, isScalar);
-                } catch (Exception e) {
-                    log.error("Attribute resolving error. Attribute: " + name + " Value: " + value + " ");
-                    res = null;
-                }
-                if (!attContext.isSchemaAttWasRequested()) {
-                    attributesCache.put(cacheKey, res);
-                }
+            attContext.setSchemaAttWasRequested(false);
+            try {
+                res = resolveImpl(name, isScalar);
+            } catch (Exception e) {
+                log.error("Attribute resolving error. Attribute: " + name + " Value: " + value + " ", e);
+                res = null;
             }
+
+            if (log.isTraceEnabled()) {
+            }
+            log.info("Result: " + res);
 
             return res;
         }
@@ -490,6 +567,8 @@ public class AttSchemaResolver {
                     return new AttFuncValue(value::getAs);
                 case RecordConstants.ATT_HAS:
                     return new AttFuncValue(value::has);
+                case RecordConstants.ATT_EDGE:
+                    return new AttFuncValue(a -> new MetaEdgeValue(value.getEdge(a)));
                 default:
                     if (attribute.startsWith("\\_")) {
                         attribute = attribute.substring(1);
@@ -498,38 +577,50 @@ public class AttSchemaResolver {
             }
         }
 
-        public String getId() throws Exception {
-            return value.getId();
+        public String getLocalId() {
+            return getValueRef().getId();
         }
 
-        public RecordRef getValueRef() throws Exception {
+        public RecordRef getValueRef() {
             if (RecordRef.isNotEmpty(valueRef)) {
                 return valueRef;
             }
-            RecordRef result = value.getRef();
-            return RecordRef.isNotEmpty(result) ? result : RecordRef.EMPTY;
+            if (computedRef == null) {
+                String ctxSourceId = this.ctxSourceId == null ? "" : this.ctxSourceId;
+                Object id = value.getId();
+                if (id == null || (id instanceof String) && StringUtils.isBlank((String) id)) {
+                    computedRef = RecordRef.create(ctxSourceId, UUID.randomUUID().toString());
+                } else if (id instanceof RecordRef) {
+                    computedRef = (RecordRef) id;
+                } else {
+                    computedRef = RecordRef.create(ctxSourceId, String.valueOf(id));
+                }
+                if (!ctxSourceId.isEmpty() && computedRef.getSourceId().isEmpty()) {
+                    computedRef = RecordRef.create(ctxSourceId, computedRef.getId());
+                }
+            }
+            return computedRef;
         }
 
         private Object getScalar(String scalar) throws Exception {
 
             switch (scalar) {
-                case "str":
-                case "assoc":
+                case "?str":
                     return value.getString();
-                case "disp":
-                    return value.getDispName();
-                case "id":
-                case "localId":
-                    return getId();
-                case "ref":
+                case "?disp":
+                    return value.getDisplayName();
+                case "?id":
+                case "?assoc":
                     return getValueRef();
-                case "type":
+                case "?localId":
+                    return getLocalId();
+                case "?type":
                     return value.getTypeRef();
-                case "num":
+                case "?num":
                     return value.getDouble();
-                case "bool":
+                case "?bool":
                     return value.getBool();
-                case "json":
+                case "?json":
                     Object json = value.getJson();
                     if (json instanceof String) {
                         json = Json.getMapper().read((String) json);
@@ -546,14 +637,13 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ResolveContext {
 
-        private final Map<Object, ValueContext> valueHashCtxCache = new HashMap<>();
-        private final Map<Object, ValueContext> valueIdentityCtxCache = new IdentityHashMap<>();
-
         private final AttValuesConverter converter;
 
         @Getter
         @NotNull
-        private final AttContext attContext;
+        private final AttContext attContext = AttContext.getCurrentNotNull();
+        private final RequestContext reqContext = RequestContext.getCurrentNotNull();
+
         @Getter
         @NotNull
         private final List<AttMixin> mixins;
@@ -578,36 +668,16 @@ public class AttSchemaResolver {
         }
 
         @NotNull
-        ValueContext toValueContext(@NotNull Object value, RecordRef valueRef) {
-            return new ValueContext(convertToMetaValue(value), valueRef);
+        ValueContext toRootValueContext(@NotNull Object value, RecordRef valueRef) {
+            return new ValueContext(convertToMetaValue(value), valueRef, reqContext.getVar(CTX_SOURCE_ID_KEY));
         }
 
         @NotNull
         ValueContext toValueContext(@Nullable Object value) {
-
             if (value == null) {
                 return ValueContext.EMPTY;
             }
-
-            Map<Object, ValueContext> cache;
-            if (FORCE_CACHE_TYPES.contains(value.getClass())) {
-                cache = valueHashCtxCache;
-            } else {
-                cache = valueIdentityCtxCache;
-            }
-
-            if (cache.containsKey(value)) {
-                return cache.get(value);
-            }
-
-            attContext.setSchemaAttWasRequested(false);
-
-            ValueContext result = new ValueContext(convertToMetaValue(value), RecordRef.EMPTY);
-
-            if (!attContext.isSchemaAttWasRequested()) {
-                cache.put(value, result);
-            }
-            return result;
+            return new ValueContext(convertToMetaValue(value), RecordRef.EMPTY, null);
         }
     }
 
@@ -626,8 +696,8 @@ public class AttSchemaResolver {
 
         @NotNull
         @Override
-        public String getId() throws Exception {
-            return valueCtx.getId();
+        public String getLocalId() throws Exception {
+            return valueCtx.getLocalId();
         }
 
         @NotNull
@@ -656,10 +726,14 @@ public class AttSchemaResolver {
             resolveCtx.setPath(basePath);
 
             try {
-                Map<String, Object> result = resolve(valueCtx, schemaAtts
-                    .stream()
+
+                List<SchemaAtt> attsToResolve = schemaAtts.stream()
                     .map(SchemaRootAtt::getAttribute)
-                    .collect(Collectors.toList()), resolveCtx);
+                    .collect(Collectors.toList());
+
+                List<SchemaAtt> simpleAtts = simplifySchema(attsToResolve);
+                Map<String, Object> result = resolve(valueCtx, simpleAtts, resolveCtx);
+                result = resolveMapWithAliases(result, attsToResolve);
 
                 return postProcess(result, schemaAtts, false);
             } finally {

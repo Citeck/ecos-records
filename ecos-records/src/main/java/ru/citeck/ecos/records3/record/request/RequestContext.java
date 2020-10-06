@@ -48,28 +48,28 @@ public class RequestContext {
         return context;
     }
 
-    public static <T> T withAtts(@NotNull Map<String, Object> atts,
-                                 @NotNull Function<RequestContext, T> action) {
-        return withCtx(null, b -> b.setCtxAtts(atts), action);
+    public static <T> T doWithAtts(@NotNull Map<String, Object> atts,
+                                   @NotNull Function<RequestContext, T> action) {
+        return doWithCtx(null, b -> b.setCtxAtts(atts), action);
     }
 
-    public static <T> T withAtts(@NotNull Map<String, Object> atts,
-                                 @NotNull Supplier<T> action) {
-        return withCtx(null, b -> b.setCtxAtts(atts), ctx -> action.get());
+    public static <T> T doWithAtts(@NotNull Map<String, Object> atts,
+                                   @NotNull Supplier<T> action) {
+        return doWithCtx(null, b -> b.setCtxAtts(atts), ctx -> action.get());
     }
 
-    public static <T> T withCtx(@NotNull Function<RequestContext, T> action) {
-        return withCtx(null, action);
+    public static <T> T doWithCtx(@NotNull Function<RequestContext, T> action) {
+        return doWithCtx(null, action);
     }
 
-    public static <T> T withCtx(@Nullable RecordsServiceFactory factory,
-                                @NotNull Function<RequestContext, T> action) {
+    public static <T> T doWithCtx(@Nullable RecordsServiceFactory factory,
+                                  @NotNull Function<RequestContext, T> action) {
 
-        return withCtx(factory, null, action);
+        return doWithCtx(factory, null, action);
     }
-    public static <T> T withCtx(@Nullable RecordsServiceFactory factory,
-                                @Nullable Consumer<RequestCtxData.Builder<T>> ctxData,
-                                @NotNull Function<RequestContext, T> action) {
+    public static <T> T doWithCtx(@Nullable RecordsServiceFactory factory,
+                                  @Nullable Consumer<RequestCtxData.Builder<T>> ctxData,
+                                  @NotNull Function<RequestContext, T> action) {
 
         RequestContext current = RequestContext.getCurrent();
 
@@ -137,6 +137,20 @@ public class RequestContext {
                     }
                 });
                 RequestContext.removeCurrent();
+            }
+        }
+    }
+
+    public <T> T doWithVar(String key, Object data, Supplier<T> action) {
+        Object prevValue = getVar(key);
+        putVar(key, data);
+        try {
+            return action.get();
+        } finally {
+            if (prevValue == null) {
+                removeVar(key);
+            } else {
+                putVar(key, prevValue);
             }
         }
     }

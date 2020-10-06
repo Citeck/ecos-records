@@ -28,7 +28,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         }
 
         if (attribute.isScalar()) {
-            sb.append(name);
+            sb.append(name, 1, name.length());
             return;
         }
 
@@ -52,7 +52,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
             sb.append("s");
         }
         sb.append("(n:\"")
-            .append(name)
+            .append(name.replace("\"", "\\\""))
             .append("\"){");
 
         for (int i = 0; i < inner.size(); i++) {
@@ -69,11 +69,15 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         SchemaAtt innerAtt = attribute.getInner().get(0);
 
         sb.append("edge(n:\"")
-            .append(innerAtt.getName())
+            .append(innerAtt.getName().replace("\"", "\\\""))
             .append("\"){");
 
         for (SchemaAtt att : innerAtt.getInner()) {
             writeEdgeInner(att, sb);
+            sb.append(",");
+        }
+        if (innerAtt.getInner().size() > 0) {
+            sb.setLength(sb.length() - 1);
         }
 
         sb.append("}");
@@ -96,6 +100,10 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
                 sb.append("{");
                 for (SchemaAtt att : attribute.getInner()) {
                     writeInner(att, sb);
+                    sb.append(",");
+                }
+                if (!attribute.getInner().isEmpty()) {
+                    sb.setLength(sb.length() - 1);
                 }
                 sb.append("}");
         }
@@ -106,7 +114,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         SchemaAtt innerAtt = attribute.getInner().get(0);
 
         sb.append("as(n:\"")
-            .append(innerAtt.getName())
+            .append(innerAtt.getName().replace("\"", "\\\""))
             .append("\"){");
 
         for (SchemaAtt att : innerAtt.getInner()) {
@@ -118,7 +126,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
 
     private void writeHas(SchemaAtt attribute, StringBuilder sb) {
         sb.append("has(n:\"")
-            .append(attribute.getInner().get(0).getName())
+            .append(attribute.getInner().get(0).getName().replace("\"", "\\\""))
             .append("\")");;
     }
 }

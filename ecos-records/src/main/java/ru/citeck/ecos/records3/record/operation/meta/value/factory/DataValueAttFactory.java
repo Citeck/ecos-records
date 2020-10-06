@@ -27,6 +27,11 @@ public class DataValueAttFactory implements AttValueFactory<DataValue> {
             public Object getAtt(@NotNull String name) {
                 return value.get(name);
             }
+
+            @Override
+            public Boolean getBool() {
+                return value.asBoolean();
+            }
         };
     }
 

@@ -6,7 +6,7 @@ import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 
 import java.util.List;
 

@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
 import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.HashMap;
@@ -50,7 +51,10 @@ public class EvaluatorsWithModelTest extends AbstractRecordsDao implements Recor
         config.someParam = EvalConfig.PARAM_VALUE;
         evaluatorDto.setConfig(Json.getMapper().convert(config, ObjectData.class));
 
-        assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto, model));
+        RequestContext.doWithCtx(factory, ctx -> {
+            assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto, model));
+            return null;
+        });
     }
 
     @Override

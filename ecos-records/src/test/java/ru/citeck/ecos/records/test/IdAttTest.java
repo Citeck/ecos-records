@@ -52,7 +52,7 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
 
         RecordRef testRef = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAtt(testRef, "otherRef?str");
+        DataValue attribute = recordsService.getAtt(testRef, "otherRef?id");
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
         MetaClass meta = recordsService.getAtts(testRef, MetaClass.class);

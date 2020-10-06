@@ -7,6 +7,8 @@ import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records3.evaluator.details.EvalDetailsImpl;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
+import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.operation.meta.util.AttModelUtils;
 import ru.citeck.ecos.records3.record.operation.meta.util.RecordModelAtts;
 
@@ -19,6 +21,8 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
 
     private final RecordsService recordsService;
     private final RecordAttsService recordsMetaService;
+    private final DtoSchemaReader dtoSchemaReader;
+    private final AttSchemaWriter attSchemaWriter;
 
     private final Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 
@@ -28,6 +32,8 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         this.factory = factory;
         recordsService = factory.getRecordsService();
         recordsMetaService = factory.getRecordsMetaService();
+        attSchemaWriter = factory.getAttSchemaWriter();
+        dtoSchemaReader = factory.getDtoSchemaReader();
     }
 
     @Override
@@ -276,10 +282,9 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
                     Map<String, String> typedAttributes = (Map<String, String>) requiredMeta;
                     attributes = typedAttributes;
                 } else if (requiredMeta instanceof Class) {
-                    //todo
-                    //attributes = recordsMetaService.getAttributes((Class<?>) requiredMeta);
+                    attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read((Class<?>) requiredMeta));
                 } else {
-                    //attributes = recordsMetaService.getAttributes(requiredMeta.getClass());
+                    attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(requiredMeta.getClass()));
                 }
             }
         } catch (Exception e) {

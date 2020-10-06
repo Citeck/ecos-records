@@ -83,7 +83,7 @@ public class PredicateRecordsTest {
         Map<String, Object> ctxAtts = new HashMap<>();
         ctxAtts.put("ctxatt", RecordRef.valueOf("test@ccc"));
 
-        RequestContext.withCtx(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
+        RequestContext.doWithCtx(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
 
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
 
@@ -91,7 +91,7 @@ public class PredicateRecordsTest {
             newAtts.put("ctxatt", RecordRef.valueOf("test@aaa"));
             newAtts.put("ctxatt2", RecordRef.valueOf("test@bbb"));
 
-            RequestContext.withAtts(newAtts, () -> {
+            RequestContext.doWithAtts(newAtts, () -> {
                 assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.intField", "${$ctxatt2.intField}")));

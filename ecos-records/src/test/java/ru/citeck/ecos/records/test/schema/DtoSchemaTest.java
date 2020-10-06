@@ -22,7 +22,7 @@ public class DtoSchemaTest {
 
         RecordsServiceFactory serviceFactory = new RecordsServiceFactory();
 
-        DtoSchemaReader dtoSchemaReader = serviceFactory.getDtoSchemaResolver();
+        DtoSchemaReader dtoSchemaReader = serviceFactory.getDtoSchemaReader();
 
         List<SchemaRootAtt> attributesSchema = dtoSchemaReader.read(TestDto.class);
         AttSchemaWriter writer = serviceFactory.getAttSchemaWriter();

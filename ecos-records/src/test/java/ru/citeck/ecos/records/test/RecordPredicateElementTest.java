@@ -163,7 +163,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
 
         @Override
         public String getId() {
-            return ref.toString();
+            return ref.getId();
         }
 
         @Override
@@ -185,7 +185,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             }
 
             @Override
-            public String getDispName() {
+            public String getDisplayName() {
                 return str + "-disp";
             }
         }

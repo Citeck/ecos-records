@@ -8,17 +8,18 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.impl.InnerMetaValue;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
+class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private static final String ID = "";
     private RecordsService recordsService;
@@ -35,18 +36,21 @@ class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
     void test() {
 
         RecordRef ref = RecordRef.create(ID, "test");
+        DataValue attribute;
 
-        DataValue attribute = recordsService.getAtt(ref, "field0");
+        //
+        attribute = recordsService.getAtt(ref, "innerHasTrue?bool");
+        assertTrue(attribute.isBoolean() && attribute.asBoolean());
+        //
+
+        attribute = recordsService.getAtt(ref, "field0");
         assertEquals("field0", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "inner.field1");
+        attribute = recordsService.getAtt(ref, "innerField1");
         assertEquals("FIELD1", attribute.asText());
 
         attribute = recordsService.getAtt(ref, "display");
         assertEquals("DISPLAY", attribute.asText());
-
-        attribute = recordsService.getAtt(ref, "innerDisp");
-        assertEquals("INNER_DISP", attribute.asText());
 
         attribute = recordsService.getAtt(ref, "innerDisp");
         assertEquals("INNER_DISP", attribute.asText());
@@ -72,7 +76,7 @@ class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(r -> {
             if (r.contains("inner")) {
-                return new InnerMeta();
+                return new InnerAtts();
             }
             return new Meta();
         }).collect(Collectors.toList());
@@ -82,10 +86,9 @@ class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
 
         private RecordAtts attributes;
 
-        //todo
-        /*@Override
-        public <T extends QueryContext> void init(T context, SchemaAtt field) {
-            Map<String, String> atts = field.getInnerAttributesMap();
+        public Meta() {
+
+            Map<String, String> atts = AttContext.getInnerAttsMap();
             atts.put("display", "inner?disp");
             atts.put("innerDisp", ".disp");
             atts.put("innerStr", ".str");
@@ -93,16 +96,16 @@ class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
             atts.put("innerField1Disp", "inner.field1?disp");
             atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
             atts.put("innerHasFalse", ".att(n:\"inner2\"){has(n:\"has_false\")}");
-            attributes = recordsService.getRawAttributes(RecordRef.create(ID, "inner"), atts);
-        }*/
+            attributes = recordsService.getAtts(RecordRef.create(ID, "inner"), atts, false);
+        }
 
         @Override
         public Object getAtt(@NotNull String name) {
-            return new InnerMetaValue(attributes.get(name));
+            return attributes.get(name);
         }
     }
 
-    class InnerMeta implements AttValue {
+    class InnerAtts implements AttValue {
 
         InnerInnerMeta inner = new InnerInnerMeta();
         InnerInnerMeta2 inner2 = new InnerInnerMeta2();
@@ -126,7 +129,7 @@ class InnerMetaTest extends AbstractRecordsDao implements RecordsAttsDao {
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return "INNER_DISP";
         }
 

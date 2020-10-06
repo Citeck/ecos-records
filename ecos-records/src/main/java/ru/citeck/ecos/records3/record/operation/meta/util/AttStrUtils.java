@@ -10,20 +10,40 @@ import java.util.List;
 public class AttStrUtils {
 
     public static String removeQuotes(String str) {
-        if (str == null || str.length() < 2) {
-            return str;
-        }
-        char firstChar = str.charAt(0);
-        if (firstChar == str.charAt(str.length() - 1)) {
-            if (firstChar == '"' || firstChar == '\'') {
-                return str.substring(1, str.length() - 1);
-            }
+        if (isInQuotes(str)) {
+            return str.substring(1, str.length() - 1);
         }
         return str;
     }
 
-    public static String removeEscaping(String str, char ofChar) {
-        return str.replace("\\" + ofChar, String.valueOf(ofChar));
+    public static boolean isInQuotes(String str) {
+        if (str == null || str.length() < 2) {
+            return false;
+        }
+        char ch = str.charAt(0);
+        return (ch == '"' || ch == '\'') && str.charAt(str.length() - 1) == ch;
+    }
+
+    public static String removeEscaping(String str) {
+
+        if (str == null || !str.contains("\\")) {
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        int idx = 0;
+        for (; idx < str.length() - 1; idx++) {
+            char ch = str.charAt(idx);
+            if (ch == '\\') {
+                sb.append(str.charAt(idx + 1));
+                idx++;
+            } else {
+                sb.append(ch);
+            }
+        }
+        if (idx < str.length()) {
+            sb.append(str.charAt(idx));
+        }
+        return sb.toString();
     }
 
     public static SplitPair splitByFirst(String str, String delim) {
@@ -81,10 +101,16 @@ public class AttStrUtils {
         }
 
         char openContextChar = ' ';
+        int openCounter = 0;
         for (int idx = fromIdx; idx <= (str.length() - subString.length()); idx++) {
 
             char currentChar = str.charAt(idx);
             if (openContextChar != ' ') {
+                if (currentChar == openContextChar
+                    && (currentChar == '(' || currentChar == '{' || currentChar == '[')) {
+
+                    openCounter++;
+                }
                 if (isCloseContextChar(openContextChar, currentChar)) {
                     int slashes = 0;
                     int backIdx = fromIdx;
@@ -94,9 +120,11 @@ public class AttStrUtils {
                     if (slashes % 2 == 1) {
                         continue;
                     }
-                    openContextChar = ' ';
-                    if (containsAt(str, idx, subString)) {
-                        return idx;
+                    if (--openCounter == 0) {
+                        openContextChar = ' ';
+                        if (containsAt(str, idx, subString)) {
+                            return idx;
+                        }
                     }
                 }
                 continue;
@@ -105,6 +133,7 @@ public class AttStrUtils {
                 return idx;
             } else if (isOpenContextChar(currentChar)) {
                 openContextChar = currentChar;
+                openCounter++;
             }
         }
         return -1;

@@ -18,7 +18,7 @@ import ru.citeck.ecos.records3.utils.RecordsUtils;
 import java.util.*;
 
 @Slf4j
-public class RemoteRecordsResolver implements RecordsResolver {
+public class RemoteRecordsResolver {
 
     public static final String BASE_URL = "/api/records/";
     public static final String QUERY_URL = BASE_URL + "query";
@@ -39,7 +39,6 @@ public class RemoteRecordsResolver implements RecordsResolver {
         }
     }
 
-    @Override
     public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
                                              @NotNull Map<String, String> attributes,
                                              boolean rawAtts) {
@@ -72,7 +71,6 @@ public class RemoteRecordsResolver implements RecordsResolver {
         return RecordsUtils.metaWithDefaultApp(appResult, appName);
     }
 
-    @Override
     public List<RecordAtts> getAtts(@NotNull List<?> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
@@ -95,7 +93,6 @@ public class RemoteRecordsResolver implements RecordsResolver {
         return null;
     }
 
-    @Override
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
         /*return this.execRecordsAppRequest(
             mutation.getRecords(),
@@ -117,14 +114,12 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @Nullable
-    @Override
     public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
         //todo
         return null;
     }
 
     @NotNull
-    @Override
     public List<RecsSourceInfo> getSourceInfo() {
         //todo
         return Collections.emptyList();
@@ -139,7 +134,6 @@ public class RemoteRecordsResolver implements RecordsResolver {
     }
 
     @NotNull
-    @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
         /*return execRecordsAppRequest(
             deletion.getRecords(),

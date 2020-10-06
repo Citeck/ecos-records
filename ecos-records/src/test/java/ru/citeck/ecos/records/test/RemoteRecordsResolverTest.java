@@ -4,6 +4,7 @@ import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
@@ -27,7 +28,7 @@ class RemoteRecordsResolverTest {
         }
 
         @Override
-        public RecordsResolver createRecordsResolver() {
+        protected RemoteRecordsResolver createRemoteRecordsResolver() {
             RemoteRecordsResolver resolver = new RemoteRecordsResolver(this, restApi);
             resolver.setDefaultAppName(DEFAULT_APP);
             return resolver;

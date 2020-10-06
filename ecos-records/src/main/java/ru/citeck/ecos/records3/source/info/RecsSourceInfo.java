@@ -22,9 +22,13 @@ public class RecsSourceInfo {
 
     private String columnsSourceId;
 
-    private final Map<RecsDaoFeature, Boolean> features = new HashMap<>();
+    private final Features features = new Features();
 
-    public void setFeature(RecsDaoFeature feature, boolean enabled) {
-        features.put(feature, enabled);
+    @Data
+    public static class Features {
+        private boolean query;
+        private boolean getAtts;
+        private boolean mutate;
+        private boolean delete;
     }
 }

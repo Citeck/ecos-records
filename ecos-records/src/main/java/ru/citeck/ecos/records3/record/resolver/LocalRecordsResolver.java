@@ -16,7 +16,12 @@ import ru.citeck.ecos.records3.ServiceFactoryAware;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
 import ru.citeck.ecos.records3.record.operation.delete.RecordsDeleteDao;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.lang.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records3.record.exception.RecsSourceNotFoundException;
 import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
@@ -32,6 +37,7 @@ import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
+import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.source.dao.*;
@@ -43,14 +49,13 @@ import ru.citeck.ecos.records3.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
 import ru.citeck.ecos.records3.utils.ValueWithIdx;
 
-import javax.management.Query;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry {
+public class LocalRecordsResolver {
 
     private static final String DEBUG_QUERY_TIME = "queryTimeMs";
     private static final String DEBUG_META_SCHEMA = "schema";
@@ -66,6 +71,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
     private final RecordAttsService recordsAttsService;
+    private final AttSchemaWriter schemaWriter;
 
     private final String currentApp;
 
@@ -77,6 +83,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         this.recordsAttsService = serviceFactory.getRecordsMetaService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
+        this.schemaWriter = serviceFactory.getAttSchemaWriter();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsAttsDao.class, attsDao);
@@ -89,9 +96,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @Nullable
-    @Override
     public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Map<String, String> attributes,
+                                             @NotNull List<SchemaRootAtt> attributes,
                                              boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -132,7 +138,12 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
                 } else {
                     RecordsQueryRes<?> queryRes = groupsSource.queryRecords(convertedQuery);
                     if (queryRes != null) {
-                        List<RecordAtts> atts = recordsAttsService.getAtts(queryRes.getRecords(), attributes, rawAtts);
+                        List<RecordAtts> atts = recordsAttsService.getAtts(
+                            queryRes.getRecords(),
+                            attributes,
+                            rawAtts,
+                            Collections.emptyList()
+                        );
                         recordsResult = new RecordsQueryRes<>(atts);
                         recordsResult.setHasMore(queryRes.getHasMore());
                         recordsResult.setTotalCount(queryRes.getTotalCount());
@@ -176,7 +187,11 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
                     if (queryRes != null) {
 
-                        List<RecordAtts> recAtts = getAtts(queryRes.getRecords(), attributes, rawAtts);
+                        List<RecordAtts> recAtts = context.doWithVar(
+                            AttSchemaResolver.CTX_SOURCE_ID_KEY,
+                            query.getSourceId(),
+                            () -> getAtts(queryRes.getRecords(), attributes, rawAtts)
+                        );
 
                         recordsResult.setRecords(recAtts);
                         recordsResult.setTotalCount(queryRes.getTotalCount());
@@ -196,7 +211,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     private List<RecordAtts> getDistinctValues(String sourceId,
                                                DistinctQuery distinctQuery,
                                                int max,
-                                               Map<String, String> schema) {
+                                               List<SchemaRootAtt> schema) {
 
         if (max == -1) {
             max = 50;
@@ -227,16 +242,18 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         String distinctValueAlias = "_distinctValue";
         String distinctValueIdAlias = "_distinctValueId";
 
-        Map<String, String> innerAttributes = new HashMap<>(schema);
-        innerAttributes.put(distinctValueAlias, ".str");
-        innerAttributes.put(distinctValueIdAlias, ".id");
+        List<SchemaAtt> innerSchema = schema.stream()
+            .map(SchemaRootAtt::getAttribute).collect(Collectors.toList());
 
-        StringBuilder distinctAttSchema = new StringBuilder(distinctQuery.getAttribute() + "{");
-        innerAttributes.forEach((k, v) -> distinctAttSchema.append(k).append(":").append(v).append(","));
-        distinctAttSchema.setLength(distinctAttSchema.length() - 1);
-        distinctAttSchema.append("}");
+        innerSchema.add(SchemaAtt.create().setAlias(distinctValueAlias).setName("?str").build());
+        innerSchema.add(SchemaAtt.create().setAlias(distinctValueIdAlias).setName("?id").build());
 
-        Map<String, String> attributes = Collections.singletonMap("att", distinctAttSchema.toString());
+        List<SchemaRootAtt> distinctAttSchema = Collections.singletonList(new SchemaRootAtt(SchemaAtt.create()
+            .setAlias("att")
+            .setName(distinctQuery.getAttribute())
+            .setInner(innerSchema)
+            .build(), Collections.emptyList()));
+
         String distinctAtt = distinctQuery.getAttribute();
 
         HashMap<String, DataValue> values = new HashMap<>();
@@ -244,7 +261,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         do {
 
             recordsQuery.setQuery(fullPredicate);
-            RecordsQueryRes<RecordAtts> queryResult = query(recordsQuery, attributes, true);
+            RecordsQueryRes<RecordAtts> queryResult = query(recordsQuery, distinctAttSchema, true);
             if (queryResult == null) {
                 queryResult = new RecordsQueryRes<>();
             }
@@ -307,9 +324,8 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @Nullable
-    @Override
     public List<RecordAtts> getAtts(@NotNull List<?> records,
-                                    @NotNull Map<String, String> attributes,
+                                    @NotNull List<SchemaRootAtt> attributes,
                                     boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -351,7 +367,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
         List<RecordAtts> atts = recordsAttsService.getAtts(recordObjs.stream()
             .map(ValueWithIdx::getValue)
-            .collect(Collectors.toList()), attributes, rawAtts);
+            .collect(Collectors.toList()), attributes, rawAtts, Collections.emptyList());
 
         if (atts != null && atts.size() == recordObjs.size()) {
 
@@ -376,7 +392,7 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     private List<RecordAtts> getMetaImpl(Collection<RecordRef> records,
-                                         Map<String, String> attributes,
+                                         List<SchemaRootAtt> attributes,
                                          boolean rawAtts) {
 
         if (records.isEmpty()) {
@@ -436,7 +452,13 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
 
                     } else {
 
-                        List<RecordAtts> atts = recordsAttsService.getAtts(recAtts, attributes, rawAtts);
+                        List<AttMixin> mixins = Collections.emptyList();
+                        if (recordsDao instanceof AbstractRecordsDao) {
+                            mixins = ((AbstractRecordsDao) recordsDao).getMixins();
+                        }
+
+                        List<RecordRef> refs = recs.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
+                        List<RecordAtts> atts = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs);
 
                         for (int i = 0; i < recs.size(); i++) {
                             results.add(new ValueWithIdx<>(atts.get(i), i));
@@ -451,7 +473,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @NotNull
-    @Override
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
 
         List<RecordRef> daoResult = new ArrayList<>();
@@ -500,7 +521,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @NotNull
-    @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
 
         List<DelStatus> daoResult = new ArrayList<>();
@@ -577,7 +597,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @Nullable
-    @Override
     public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
 
         RecordsDao recordsDao = allDao.get(sourceId);
@@ -591,14 +610,14 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
         if (recordsDao instanceof RecordsQueryDao) {
             RecordsQueryDao queryDao = (RecordsQueryDao) recordsDao;
             recordsSourceInfo.setSupportedLanguages(queryDao.getSupportedLanguages());
-            recordsSourceInfo.setFeature(RecsDaoFeature.QUERY, true);
+            recordsSourceInfo.getFeatures().setQuery(true);
         } else {
-            recordsSourceInfo.setFeature(RecsDaoFeature.QUERY, false);
+            recordsSourceInfo.getFeatures().setQuery(false);
         }
 
-        recordsSourceInfo.setFeature(RecsDaoFeature.MUTATE, recordsDao instanceof RecordsMutateDao);
-        recordsSourceInfo.setFeature(RecsDaoFeature.DELETE, recordsDao instanceof RecordsDeleteDao);
-        recordsSourceInfo.setFeature(RecsDaoFeature.GET_ATTS, recordsDao instanceof RecordsAttsDao);
+        recordsSourceInfo.getFeatures().setMutate(recordsDao instanceof RecordsMutateDao);
+        recordsSourceInfo.getFeatures().setDelete(recordsDao instanceof RecordsDeleteDao);
+        recordsSourceInfo.getFeatures().setGetAtts(recordsDao instanceof RecordsAttsDao);
 
         ColumnsSourceId columnsSourceId = recordsDao.getClass().getAnnotation(ColumnsSourceId.class);
         if (columnsSourceId != null && StringUtils.isNotBlank(columnsSourceId.value())) {
@@ -609,7 +628,6 @@ public class LocalRecordsResolver implements RecordsResolver, RecordsDaoRegistry
     }
 
     @NotNull
-    @Override
     public List<RecsSourceInfo> getSourceInfo() {
         return allDao.keySet()
             .stream()

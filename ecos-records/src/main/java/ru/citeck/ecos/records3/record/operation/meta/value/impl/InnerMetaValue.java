@@ -2,13 +2,11 @@ package ru.citeck.ecos.records3.record.operation.meta.value.impl;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.RecordConstants;
 import ru.citeck.ecos.records3.record.operation.meta.value.HasCollectionView;
 import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 
@@ -37,30 +35,22 @@ public class InnerMetaValue implements AttValue, HasCollectionView<InnerMetaValu
     @Override
     public Object getAtt(@NotNull String name) {
 
-        SchemaAtt field = AttContext.getCurrentSchemaAtt();
-
-        String fieldName = field.getAlias();
-        if (fieldName == null) {
-            fieldName = field.getName();
+        JsonNode node = value.path(name);
+        if (node.isMissingNode() || node.isNull()) {
+            return null;
         }
-
-        if (fieldName != null) {
-            return new InnerMetaValue(value.path(fieldName));
-        }
-        return null;
+        return new InnerMetaValue(node);
     }
 
     @Override
     public Object getAs(@NotNull String type) {
 
-        SchemaAtt field = AttContext.getCurrentSchemaAtt();
-
-        String fieldName = field.getAlias();
-        if (fieldName == null) {
-            fieldName = "as";
+        JsonNode node = value.path(RecordConstants.ATT_AS).path(type);
+        if (node.isMissingNode() || node.isNull()) {
+            return null;
         }
 
-        return new InnerMetaValue(value.path(fieldName));
+        return new InnerMetaValue(node);
     }
 
     @Override
@@ -77,74 +67,52 @@ public class InnerMetaValue implements AttValue, HasCollectionView<InnerMetaValu
 
     @Override
     public boolean has(@NotNull String name) {
-        return getScalarNode(value, "has").asBoolean();
+
+        JsonNode node = value.path(RecordConstants.ATT_HAS)
+            .path(name)
+            .path("?bool");
+
+        if (node.isMissingNode() || node.isNull()) {
+            return false;
+        }
+        return node.asBoolean();
     }
 
     @Override
-    public String getDispName() {
-        return getScalar(value, "disp", JsonNode::asText);
+    public String getDisplayName() {
+        return getScalar(value, "?disp", JsonNode::asText);
     }
 
     @Override
     public String getString() {
-        return getScalar(value, "str", JsonNode::asText);
+        return getScalar(value, "?str", JsonNode::asText);
     }
 
     @Override
     public String getId() {
-        return getScalar(value, "id", JsonNode::asText);
+        return getScalar(value, "?id", JsonNode::asText);
     }
 
     @Override
     public Double getDouble() {
-        return getScalar(value, "num", JsonNode::asDouble);
+        return getScalar(value, "?num", JsonNode::asDouble);
     }
 
     @Override
     public Boolean getBool() {
-        return getScalar(value, "bool", JsonNode::asBoolean);
+        return getScalar(value, "?bool", JsonNode::asBoolean);
     }
 
     @Override
     public Object getJson() {
-        return getScalarNode(value, "json");
+        return getScalar(value, "?json", n -> n);
     }
 
     private static <T> T getScalar(JsonNode node, String name, Function<JsonNode, T> mapper) {
-        JsonNode scalar = getScalarNode(node, name);
+        JsonNode scalar = node.path(name);
         if (scalar.isNull() || scalar.isMissingNode()) {
             return null;
         }
         return mapper.apply(scalar);
-    }
-
-    private static JsonNode getScalarNode(JsonNode node, String name) {
-        if (node.isValueNode()) {
-            return node;
-        }
-        if (node.isArray()) {
-            ArrayNode array = JsonNodeFactory.instance.arrayNode();
-            for (int i = 0; i < node.size(); i++) {
-                array.add(getScalarNode(node.get(i), name));
-            }
-            return array;
-        }
-        if (!node.isObject() || node.size() == 0) {
-            return NullNode.getInstance();
-        }
-        if (node.has(name)) {
-            return node.get(name);
-        }
-        JsonNode att = node.get("att");
-        if (att == null) {
-            att = node.get("atts");
-            if (att == null) {
-                att = node.get(node.fieldNames().next());
-            }
-        }
-        if (att != null) {
-            return getScalarNode(att, name);
-        }
-        return NullNode.getInstance();
     }
 }

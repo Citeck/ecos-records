@@ -18,10 +18,7 @@ import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +39,21 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
         recordsService.register(this);
+    }
+
+    @Test
+    void testt() {
+
+        RecordsQuery query = new RecordsQuery();
+        query.setSourceId(ID);
+
+        Map<String, String> attsToRequest = new HashMap<>();
+        attsToRequest.put("as_with_alias_has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){alias_for_as:as(n:\"abc\"){has(n:\"has_true\")}}}");
+
+        RecordsQueryRes<RecordAtts> result = recordsService.query(query, attsToRequest);
+
+        RecordAtts meta = result.getRecords().get(0);
+        assertEquals(DataValue.TRUE, meta.get("as_with_alias_has_true"));
     }
 
     @Test
@@ -72,7 +84,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         RecordAtts meta = result.getRecords().get(0);
         assertEquals(Val.val0.value, meta.get("att0", ""));
         assertEquals(Val.val2.value, meta.get("att2", ""));
-        assertEquals(Val.val1.getDispName(), meta.get("disp", ""));
+        assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
         assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
 
         assertEquals(DataValue.TRUE, meta.get("has_true"));
@@ -165,7 +177,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return "DISP OF " + ref;
         }
 

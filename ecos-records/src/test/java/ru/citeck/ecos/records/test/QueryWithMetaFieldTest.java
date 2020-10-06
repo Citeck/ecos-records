@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,38 +40,34 @@ public class QueryWithMetaFieldTest extends AbstractRecordsDao implements Record
     public RecordsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
 
         SchemaAtt field = AttContext.getCurrentSchemaAtt();
-        //todo
-        /*
-        List<String> atts = field.getInnerAttributes();
+
+        List<SchemaAtt> atts = field.getInner();
         assertEquals(6, atts.size());
         assertEquals(new HashSet<>(Arrays.asList(
             "field0",
             "field1",
             "field2",
             "sum(\"field1\")",
-            "sum(\"field2\")",
-            ".edge"//it's ok?
-        )), new HashSet<>(atts));
+            "sum(\\\"field2\\\")",
+            "_edge"
+        )), new HashSet<>(atts.stream().map(SchemaAtt::getName).collect(Collectors.toList())));
 
-        Map<String, String> innerAttributesMap = field.getInnerAttributesMap();
+        Map<String, String> innerAttributesMap = AttContext.getInnerAttsMap();
 
         assertEquals(6, innerAttributesMap.size());
         assertEquals(".att(n:\"field0\"){disp}", innerAttributesMap.get("field0"));
         assertEquals(".att(n:\"field1\"){num}", innerAttributesMap.get("field1"));
         assertEquals(".atts(n:\"field2\"){disp}", innerAttributesMap.get("field2"));
         assertEquals(".att(n:\"sum(\\\"field1\\\")\"){num}", innerAttributesMap.get("sum(\"field1\")"));
-        assertEquals(".att(n:\"sum(\\\"field2\\\")\"){num}", innerAttributesMap.get("sum(\"field2\")"));
-        assertEquals(".edge(n:\"field0(\\\"param\\\")\"){options{label:disp,value:str}}", innerAttributesMap.get(".edge"));
+        assertEquals(".att(n:\"sum(\\\\\"field2\\\\\")\"){num}", innerAttributesMap.get("sum(\\\"field2\\\")"));
+        assertEquals(".edge(n:\"field0(\\\"param\\\")\"){options{label:disp,value:str}}", innerAttributesMap.get("_edge"));
 
         TestDto dto = new TestDto();
         dto.setField0("value0");
         dto.setField1(100);
         dto.setField2(Arrays.asList("1", "2"));
 
-        return new RecordsQueryResult<>(Collections.singletonList(dto));
-
-         */
-        return null;
+        return new RecordsQueryRes<>(Collections.singletonList(dto));
     }
 
     @Test

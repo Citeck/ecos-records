@@ -13,7 +13,7 @@ import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 
 import java.util.Collections;
 import java.util.List;
@@ -90,13 +90,15 @@ class LocalRecordsTest {
         @NotNull
         @Override
         public List<Meta> getRecordsAtts(@NotNull List<String> records) {
-            return records.stream().map(r -> new Meta(r, r)).collect(Collectors.toList());
+            return records.stream()
+                .map(r -> new Meta(r, r))
+                .collect(Collectors.toList());
         }
 
         public static class Meta {
 
             private final String id;
-            private String localId;
+            private final String localId;
             private String field1;
 
             Meta(String id, String localId) {

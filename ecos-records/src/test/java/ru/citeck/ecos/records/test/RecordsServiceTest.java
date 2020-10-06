@@ -46,7 +46,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
     @NotNull
     @Override
     public List<Object> getRecordsAtts(@NotNull List<String> records) {
-        return records.stream().map(r -> new PojoMeta(r.toString())).collect(Collectors.toList());
+        return records.stream().map(r -> new PojoMeta(r)).collect(Collectors.toList());
     }
 
     @NotNull

@@ -40,7 +40,7 @@ public class AttStrUtilsTest {
 
         assertEquals(new AttStrUtils.SplitPair("ab", "cde|fg"), AttStrUtils.splitByFirst("ab|cde|fg", "|"));
         assertEquals(new AttStrUtils.SplitPair("ab\\|cde", "fg"), AttStrUtils.splitByFirst("ab\\|cde|fg", "|"));
-        assertEquals("ab|cde", AttStrUtils.removeEscaping("ab\\|cde", '|'));
+        assertEquals("ab|cde", AttStrUtils.removeEscaping("ab\\|cde"));
 
         assertEquals(new AttStrUtils.SplitPair("a{b|}cde", "fg"), AttStrUtils.splitByFirst("a{b|}cde|fg", "|"));
         assertEquals(new AttStrUtils.SplitPair("a{b|}c(de|fg)", ""), AttStrUtils.splitByFirst("a{b|}c(de|fg)", "|"));
@@ -48,6 +48,13 @@ public class AttStrUtilsTest {
         assertEquals(new AttStrUtils.SplitPair("a{b|}cde", "fg)"), AttStrUtils.splitByFirst("a{b|}cde|fg)", "|"));
 
         assertEquals(new AttStrUtils.SplitPair("abc", "'def'"), AttStrUtils.splitByFirst("abc|'def'", "|"));
+
+    }
+
+    @Test
+    void testRemEsc() {
+        assertEquals("\\", AttStrUtils.removeEscaping("\\\\"));
+        assertEquals("abc", AttStrUtils.removeEscaping("\\abc"));
     }
 
     @Test

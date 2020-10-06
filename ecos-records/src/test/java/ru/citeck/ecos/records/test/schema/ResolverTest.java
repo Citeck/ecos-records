@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.common.AttValueCtx;
 
@@ -135,18 +136,21 @@ public class ResolverTest {
         assertEquals(1, test.getInner().getSomeValueCounter());
     }
 
-    private void testAtt(Object value, String att, Object expected, AttMixin... mixins) {
-        if (!(expected instanceof DataValue)) {
-            expected = DataValue.create(expected);
-        }
-        assertEquals(expected, resolver.resolve(value, reader.readRoot(att), Arrays.asList(mixins)));
+    private void testAtt(Object value, String att, Object expected) {
+        testAtt(value, att, expected, new AttMixin[0]);
     }
 
-    private void testAtt(Object value, String att, Object expected) {
-        if (!(expected instanceof DataValue)) {
-            expected = DataValue.create(expected);
-        }
-        assertEquals(expected, resolver.resolve(value, reader.readRoot(att)));
+    private void testAtt(Object value, String att, Object expected, AttMixin... mixins) {
+        RequestContext.doWithCtx(factory, ctx -> {
+            DataValue expValue;
+            if (!(expected instanceof DataValue)) {
+                expValue = DataValue.create(expected);
+            } else {
+                expValue = (DataValue) expected;
+            }
+            assertEquals(expValue, resolver.resolve(value, reader.readRoot(att), Arrays.asList(mixins)));
+            return null;
+        });
     }
 
     @Data
@@ -156,7 +160,7 @@ public class ResolverTest {
         private InnerTest inner = new InnerTest();
         private int number = 11;
 
-        @AttName("?ref")
+        @AttName("?id")
         public RecordRef getRef() {
             return RecordRef.create("aa", "bb");
         }

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

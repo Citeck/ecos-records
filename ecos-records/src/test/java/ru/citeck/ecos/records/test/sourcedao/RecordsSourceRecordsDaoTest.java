@@ -8,11 +8,11 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
 import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,9 +55,8 @@ public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements R
 
         SourceFlagsMetaInfo meta2 = recordsService.getAtts(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
         assertEquals("meta", meta2.id);
-        assertTrue(meta2.metaSupported);
+        assertTrue(meta2.attsSupported);
         assertFalse(meta2.mutationSupported);
-        assertFalse(meta2.queryWithMetaSupported);
         assertFalse(meta2.querySupported);
     }
 
@@ -69,9 +68,13 @@ public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements R
     @Data
     public static class SourceFlagsMetaInfo {
         private String id = "";
-        private Boolean queryWithMetaSupported;
+        @AttName("features.query")
         private Boolean querySupported;
-        private Boolean metaSupported;
+        @AttName("features.getAtts")
+        private Boolean attsSupported;
+        @AttName("features.mutate")
         private Boolean mutationSupported;
+        @AttName("features.delete")
+        private Boolean deletionSupported;
     }
 }

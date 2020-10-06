@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,14 +19,16 @@ public class DtoMetaResolverTest {
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        DtoSchemaReader dtoMetaResolver = factory.getDtoSchemaResolver();
+        DtoSchemaReader dtoMetaResolver = factory.getDtoSchemaReader();
+        AttSchemaWriter writer = factory.getAttSchemaWriter();
 
         List<SchemaRootAtt> attributes = dtoMetaResolver.read(TestDto.class);
+        Map<String, String> atts = writer.writeToMap(attributes);
 
         Map<String, String> expected = new HashMap<>();
         expected.put("model", ".att(n:\"model\"){json}");
 
-        assertEquals(expected, attributes);
+        assertEquals(expected, atts);
     }
 
     @Data

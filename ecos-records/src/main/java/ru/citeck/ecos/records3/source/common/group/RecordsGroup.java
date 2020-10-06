@@ -32,25 +32,17 @@ public class RecordsGroup implements AttValue {
 
     private final RecordsService recordsService;
 
-    private final String id;
-
     public RecordsGroup(RecordsQuery query,
                         Map<String, DistinctValue> attributes,
                         Predicate predicate,
                         RecordsService recordsService) {
 
-        this.id = UUID.randomUUID().toString();
         this.query = query;
         this.predicate = predicate;
         this.recordsService = recordsService;
 
         this.attributes = new HashMap<>();
         attributes.forEach((n, v) -> this.attributes.put(n, new ValueWrapper(v)));
-    }
-
-    @Override
-    public String getId() {
-        return id;
     }
 
     @Override
@@ -134,7 +126,7 @@ public class RecordsGroup implements AttValue {
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return value.getDisplayName();
         }
 

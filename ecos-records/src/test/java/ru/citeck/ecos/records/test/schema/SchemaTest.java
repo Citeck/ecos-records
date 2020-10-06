@@ -1,10 +1,13 @@
 package ru.citeck.ecos.records.test.schema;
 
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaGqlWriter;
 import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,6 +15,24 @@ public class SchemaTest {
 
     private final AttSchemaReader reader = new AttSchemaReader();
     private final AttSchemaWriter writer = new AttSchemaGqlWriter();
+
+    @Test
+    public void innerAliasTest() {
+
+        String schema = ".edge(n:\"test\"){" +
+            "distinct{str,disp}," +
+            "options{str,disp}," +
+            "createVariants{json}" +
+            "}";
+
+        SchemaAtt att = reader.readRoot(schema).getAttribute();
+        List<SchemaAtt> inner = att.getInner().get(0).getInner();
+
+        assertEquals(3, inner.size());
+        assertEquals("distinct{str,disp}", inner.get(0).getAlias());
+        assertEquals("options{str,disp}", inner.get(1).getAlias());
+        assertEquals("createVariants{json}", inner.get(2).getAlias());
+    }
 
     @Test
     public void edgeGqlTest() {

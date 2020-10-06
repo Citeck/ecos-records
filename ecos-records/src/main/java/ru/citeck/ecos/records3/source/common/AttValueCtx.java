@@ -14,7 +14,7 @@ public interface AttValueCtx {
     RecordRef getRef() throws Exception;
 
     @NotNull
-    String getId() throws Exception;
+    String getLocalId() throws Exception;
 
     @NotNull
     DataValue getAtt(@NotNull String attribute) throws Exception;

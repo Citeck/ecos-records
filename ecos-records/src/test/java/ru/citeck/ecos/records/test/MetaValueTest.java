@@ -50,7 +50,7 @@ public class MetaValueTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        String testInnerSchema = "a:att(n:\"test\"){str},b:att(n:\"number\"){num}";
+        String testInnerSchema = "number:att(n:\"number\"){_u003F_num:num},test:att(n:\"test\"){_u003F_str:str}";
 
         Map<String, String> attributes = new HashMap<>();
         attributes.put("str", ".str");
@@ -77,7 +77,7 @@ public class MetaValueTest extends AbstractRecordsDao
         assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
         assertEquals(true, meta.getAttribute("has", false));
         assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAttribute(".json"));
-        assertEquals(MetaVal.ID_VALUE, meta.getAttribute("id", ""));
+        assertEquals(records.get(0).toString(), meta.getAttribute("id", ""));
         assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").asInt(0));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").asText());
 
@@ -114,7 +114,7 @@ public class MetaValueTest extends AbstractRecordsDao
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return DISP_VALUE;
         }
 

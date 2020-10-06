@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.source.dao.local;
 
-import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.source.dao.RecordsDao;
 
 import java.util.HashMap;
@@ -9,7 +8,7 @@ import java.util.Map;
 public class RecordsDaoBuilder {
 
     private String id;
-    private final Map<RecordRef, Object> records = new HashMap<>();
+    private final Map<String, Object> records = new HashMap<>();
 
     private RecordsDaoBuilder() {
     }
@@ -23,17 +22,12 @@ public class RecordsDaoBuilder {
         return this;
     }
 
-    public RecordsDaoBuilder addRecord(String recordRef, Object value) {
-        addRecord(RecordRef.valueOf(recordRef), value);
+    public RecordsDaoBuilder addRecord(String recordId, Object value) {
+        records.put(recordId, value);
         return this;
     }
 
-    public RecordsDaoBuilder addRecord(RecordRef recordRef, Object value) {
-        this.records.put(recordRef, value);
-        return this;
-    }
-
-    public RecordsDaoBuilder addRecords(Map<RecordRef, Object> values) {
+    public RecordsDaoBuilder addRecords(Map<String, Object> values) {
         this.records.putAll(values);
         return this;
     }
@@ -44,7 +38,6 @@ public class RecordsDaoBuilder {
         }
         InMemRecordsDao<Object> dao = new InMemRecordsDao<>(id);
         dao.setRecords(records);
-        //return dao;
-        return null;
+        return dao;
     }
 }

@@ -19,7 +19,6 @@ import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
 import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.lang.exception.LanguageNotSupportedException;
@@ -41,7 +40,6 @@ import ru.citeck.ecos.records3.source.common.AttMixin;
 import ru.citeck.ecos.records3.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.source.dao.*;
-import ru.citeck.ecos.records3.source.info.RecsDaoFeature;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.source.dao.local.job.Job;
 import ru.citeck.ecos.records3.source.dao.local.job.JobExecutor;
@@ -71,7 +69,8 @@ public class LocalRecordsResolver {
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
     private final RecordAttsService recordsAttsService;
-    private final AttSchemaWriter schemaWriter;
+
+    private final OneRecDaoConverter converter = new OneRecDaoConverter();
 
     private final String currentApp;
 
@@ -83,7 +82,6 @@ public class LocalRecordsResolver {
         this.recordsAttsService = serviceFactory.getRecordsMetaService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
-        this.schemaWriter = serviceFactory.getAttSchemaWriter();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsAttsDao.class, attsDao);
@@ -588,11 +586,17 @@ public class LocalRecordsResolver {
         }
     }
 
-    private <T extends RecordsDao> void register(String id, Map<String, T> map, Class<T> type, RecordsDao value) {
+    private <T extends RecordsDao> void register(String id,
+                                                 Map<String, T> registry,
+                                                 Class<T> type,
+                                                 RecordsDao value) {
+
+        value = converter.convertOneToMultiDao(value);
+
         if (type.isAssignableFrom(value.getClass())) {
             @SuppressWarnings("unchecked")
             T dao = (T) value;
-            map.put(id, dao);
+            registry.put(id, dao);
         }
     }
 

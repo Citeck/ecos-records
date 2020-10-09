@@ -1,30 +1,26 @@
 package ru.citeck.ecos.records3.record.operation.mutate;
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
 import lombok.Data;
 import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.record.request.error.RecordError;
+import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class MutateBody {
+public class MutateResp {
 
-    private boolean debug = false;
-    private boolean isSingleRecord = false;
     private List<RecordAtts> records = new ArrayList<>();
-
-    void setRecord(RecordAtts record) {
-        isSingleRecord = true;
-        getRecords().add(record);
-    }
+    //todo
+    private List<RequestMsg> messages = new ArrayList<>();
+    private List<RecordError> errors = new ArrayList<>();
 
     public List<RecordAtts> getRecords() {
         return records;
     }
 
     public void setRecords(List<RecordAtts> records) {
-        isSingleRecord = true;
         if (records != null) {
             this.records = new ArrayList<>(records);
         } else {
@@ -34,11 +30,5 @@ public class MutateBody {
 
     public void addRecord(RecordAtts meta) {
         this.records.add(meta);
-    }
-
-    @JsonIgnore
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    public boolean isSingleRecord() {
-        return isSingleRecord;
     }
 }

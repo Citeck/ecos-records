@@ -3,19 +3,28 @@ package ru.citeck.ecos.records3.record.resolver;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
+import ru.citeck.ecos.records3.record.operation.delete.DeleteBody;
+import ru.citeck.ecos.records3.record.operation.delete.DeleteResp;
+import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
+import ru.citeck.ecos.records3.record.operation.mutate.MutateResp;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.dto.typed.RecordsMetaQueryRes;
 import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.rest.QueryResp;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
 import ru.citeck.ecos.records3.utils.RecordsUtils;
+import ru.citeck.ecos.records3.utils.ValueWithIdx;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class RemoteRecordsResolver {
@@ -71,46 +80,76 @@ public class RemoteRecordsResolver {
         return RecordsUtils.metaWithDefaultApp(appResult, appName);
     }
 
-    public List<RecordAtts> getAtts(@NotNull List<?> records,
+    public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
 
-        /*return execRecordsAppRequest(
-            records,
-            QUERY_URL,
-            RecordRef::getAppName,
-            RecordRef::removeAppName,
-            this::addAppName,
-            appRecords -> {
-                QueryBody queryBody = new QueryBody();
-                queryBody.setRecords(appRecords);
-                queryBody.setAttributes(attributes);
-                queryBody.setRawAtts(rawAtts);
-                return queryBody;
-            },
-            RecordsMetaQueryRes.class
-        ).getRecords();*/
-        return null;
+        List<ValueWithIdx<RecordAtts>> result = new ArrayList<>();
+
+        Map<String, List<ValueWithIdx<RecordRef>>> refsByApp = RecordsUtils.groupByApp(records);
+        refsByApp.forEach((app, refs) -> {
+
+            if (StringUtils.isBlank(app)) {
+                app = defaultAppName;
+            }
+            QueryBody queryBody = new QueryBody();
+            queryBody.setRecords(refs.stream().map(ValueWithIdx::getValue).collect(Collectors.toList()));
+            queryBody.setAttributes(attributes);
+            queryBody.setRawAtts(rawAtts);
+
+            QueryResp queryResp = postRecords(app, QUERY_URL, queryBody, QueryResp.class);
+
+            if (queryResp == null || queryResp.getRecords() == null || queryResp.getRecords().size() != refs.size()) {
+                log.error("Incorrect response: " + queryBody + "\n query: " + queryBody);
+                for (ValueWithIdx<RecordRef> ref : refs) {
+                    result.add(new ValueWithIdx<>(new RecordAtts(ref.getValue()), ref.getIdx()));
+                }
+            } else {
+                List<RecordAtts> recsAtts = queryResp.getRecords();
+                for (int i = 0; i < refs.size(); i++) {
+                    ValueWithIdx<RecordRef> ref = refs.get(i);
+                    RecordAtts atts = recsAtts.get(i);
+                    result.add(new ValueWithIdx<>(new RecordAtts(atts, ref.getValue()), ref.getIdx()));
+                }
+            }
+        });
+
+        result.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        return result.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
     }
 
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
-        /*return this.execRecordsAppRequest(
-            mutation.getRecords(),
-            MUTATE_URL,
-            m -> m.getId().getAppName(),
-            this::removeAppName,
-            this::addAppName,
-            appRecords -> {
-                MutateBody body = new MutateBody();
-                body.setRecords(appRecords);
-                if (mutation.isDebug()) {
-                    body.setDebug(true);
+
+        List<ValueWithIdx<RecordRef>> result = new ArrayList<>();
+
+        Map<String, List<ValueWithIdx<RecordAtts>>> attsByApp = RecordsUtils.groupAttsByApp(records);
+        attsByApp.forEach((app, atts) -> {
+
+            if (StringUtils.isBlank(app)) {
+                app = defaultAppName;
+            }
+            MutateBody mutateBody = new MutateBody();
+            mutateBody.setRecords(atts.stream().map(ValueWithIdx::getValue).collect(Collectors.toList()));
+
+            MutateResp mutResp = postRecords(app, MUTATE_URL, mutateBody, MutateResp.class);
+
+            if (mutResp == null || mutResp.getRecords() == null || mutResp.getRecords().size() != atts.size()) {
+                log.error("Incorrect response: " + mutResp + "\n query: " + mutateBody);
+                for (ValueWithIdx<RecordAtts> att : atts) {
+                    result.add(new ValueWithIdx<>(att.getValue().getId(), att.getIdx()));
                 }
-                return body;
-            },
-            RecordsMutResult.class
-        );*/
-        return null;
+            } else {
+                List<RecordAtts> recsAtts = mutResp.getRecords();
+                for (int i = 0; i < atts.size(); i++) {
+                    ValueWithIdx<RecordAtts> refAtts = atts.get(i);
+                    RecordAtts respAtts = recsAtts.get(i);
+                    result.add(new ValueWithIdx<>(respAtts.getId(), refAtts.getIdx()));
+                }
+            }
+        });
+
+        result.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        return result.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
     }
 
     @Nullable
@@ -135,89 +174,61 @@ public class RemoteRecordsResolver {
 
     @NotNull
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
-        /*return execRecordsAppRequest(
-            deletion.getRecords(),
-            DELETE_URL,
-            RecordRef::getAppName,
-            RecordRef::removeAppName,
-            this::addAppName,
-            appRecords -> {
-                DeletionBody body = new DeletionBody();
-                body.setRecords(appRecords);
-                return body;
-            },
-            RecordsDelResult.class
-        );*/
-        return null;
+
+        List<ValueWithIdx<DelStatus>> result = new ArrayList<>();
+
+        Map<String, List<ValueWithIdx<RecordRef>>> attsByApp = RecordsUtils.groupByApp(records);
+        attsByApp.forEach((app, refs) -> {
+
+            if (StringUtils.isBlank(app)) {
+                app = defaultAppName;
+            }
+            DeleteBody deleteBody = new DeleteBody();
+            deleteBody.setRecords(refs.stream().map(ValueWithIdx::getValue).collect(Collectors.toList()));
+
+            DeleteResp delResp = postRecords(app, DELETE_URL, deleteBody, DeleteResp.class);
+
+            List<DelStatus> statues = toDelStatuses(refs.size(), delResp);
+
+            for (int i = 0; i < refs.size(); i++) {
+                ValueWithIdx<RecordRef> refAtts = refs.get(i);
+                DelStatus status = statues.get(i);
+                result.add(new ValueWithIdx<>(status, refAtts.getIdx()));
+            }
+        });
+
+        result.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        return result.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
     }
 
-    /*private <I, O, R extends RecordsResult<I>> R execRecordsAppRequest(
-                                                              List<O> records,
-                                                              String url,
-                                                              Function<O, String> getApp,
-                                                              Function<O, O> removeApp,
-                                                              BiFunction<I, String, I> setApp,
-                                                              Function<List<O>, Object> bodySupplier,
-                                                              Class<R> respType) {
+    private List<DelStatus> toDelStatuses(int expectedSize, DeleteResp resp) {
 
-        String appName = null;
-        List<O> requestRecords = new ArrayList<>();
-
-        R result;
-        try {
-            result = respType.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new IllegalStateException("Error!", e);
+        if (resp == null) {
+            return getStatuses(expectedSize, DelStatus.ERROR);
         }
 
-        for (O ref : records) {
-
-            String refAppName = getApp.apply(ref);
-            if (refAppName.isEmpty()) {
-                refAppName = defaultAppName;
-            }
-
-            if (appName == null) {
-
-                appName = refAppName;
-
-            } else if (!refAppName.equals(appName)) {
-
-                Object body = bodySupplier.apply(requestRecords);
-                result.merge(postRecords(appName, url, body, setApp, respType));
-
-                appName = null;
-                requestRecords.clear();
-            }
-
-            requestRecords.add(removeApp.apply(ref));
+        if (resp.getStatuses() != null && resp.getStatuses().size() == expectedSize) {
+            return resp.getStatuses();
         }
 
-        if (!requestRecords.isEmpty()) {
-            Object body = bodySupplier.apply(requestRecords);
-            result.merge(postRecords(appName, url, body, setApp, respType));
+        if (resp.getRecords() != null && resp.getRecords().size() == expectedSize) {
+            return getStatuses(expectedSize, DelStatus.OK);
         }
 
-        return result;
+        return getStatuses(expectedSize, DelStatus.ERROR);
     }
 
-    private <T> RecordsResult<T> postRecords(String appName,
-                                             String url,
-                                             Object body,
-                                             BiFunction<T, String, T> setApp,
-                                             Class<? extends RecordsResult<T>> respType) {
+    private List<DelStatus> getStatuses(int size, DelStatus status) {
+        return Stream.generate(() -> status)
+            .limit(size)
+            .collect(Collectors.toList());
+    }
 
+    @Nullable
+    private <T> T postRecords(String appName, String url, Object body, Class<T> respType) {
         String appUrl = "/" + appName + url;
-
-        RecordsResult<T> appResult = restApi.jsonPost(appUrl, body, respType);
-
-        appResult.setRecords(appResult.getRecords()
-                                      .stream()
-                                      .map(r -> setApp.apply(r, appName))
-                                      .collect(Collectors.toList()));
-
-        return appResult;
-    }*/
+        return restApi.jsonPost(appUrl, body, respType);
+    }
 
     public void setDefaultAppName(String defaultAppName) {
         this.defaultAppName = defaultAppName;

@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.rest;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.delete.DeletionBody;
+import ru.citeck.ecos.records3.record.operation.delete.DeleteBody;
 import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
 
 @Slf4j
@@ -112,7 +112,7 @@ public class RestHandler {
     }
 
 
-    public Object deleteRecords(DeletionBody body) {
+    public Object deleteRecords(DeleteBody body) {
         //return recordsService.delete(body);
         return null;
     }

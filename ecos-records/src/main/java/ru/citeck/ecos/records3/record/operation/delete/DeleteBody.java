@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DeletionBody {
+public class DeleteBody {
 
     private boolean debug = false;
     private List<RecordRef> records = new ArrayList<>();

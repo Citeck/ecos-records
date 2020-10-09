@@ -1,15 +1,12 @@
 package ru.citeck.ecos.records3.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.RecordAtts;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -17,19 +14,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class RecordsUtils {
-
-    /*public static RecordsResult<RecordAtts> metaWithDefaultApp(RecordsResult<RecordAtts> metaResult,
-                                                               String appName) {
-        if (StringUtils.isBlank(appName)) {
-            return metaResult;
-        }
-        metaResult.setRecords(metaResult.getRecords()
-            .stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList())
-        );
-        return metaResult;
-    }*/
 
     public static RecordsQueryRes<RecordAtts> metaWithDefaultApp(RecordsQueryRes<RecordAtts> queryResult,
                                                                  String appName) {
@@ -81,23 +65,6 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    public static String getMetaValueId(Object value) throws Exception {
-        return null;
-        /*if (value == null) {
-            return null;
-        }
-        if (value instanceof AttValue) {
-            return ((AttValue) value).getId();
-        }
-        try {
-            Object propValue = PropertyUtils.getProperty(value, "id");
-            return propValue != null ? propValue.toString() : null;
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            log.debug("Error", e);
-        }
-        return null;*/
-    }
-
     public static List<RecordAtts> toScopedRecordsMeta(String sourceId, List<RecordAtts> records) {
         if (StringUtils.isBlank(sourceId)) {
             return records;
@@ -124,16 +91,16 @@ public class RecordsUtils {
     }
 
     public static Map<String, List<ValueWithIdx<RecordRef>>> groupRefBySource(Collection<RecordRef> records) {
-        return groupBySource(records, r -> r, (r, d) -> r);
+        return groupBySource(records, r -> r, RecordsUtils::getSourceWithApp, (r, d) -> r);
     }
 
     public static Map<String, List<ValueWithIdx<RecordRef>>> groupRefBySourceWithIdx(
                                                                     Collection<ValueWithIdx<RecordRef>> records) {
-        return groupBySourceWithIdx(records, r -> r, (r, d) -> r);
+        return groupBySourceWithIdx(records, r -> r, RecordsUtils::getSourceWithApp, (r, d) -> r);
     }
 
     public static Map<String, List<ValueWithIdx<RecordAtts>>> groupMetaBySource(Collection<RecordAtts> records) {
-        return groupBySource(records, RecordAtts::getId, (r, d) -> d);
+        return groupBySource(records, RecordAtts::getId, RecordsUtils::getSourceWithApp, (r, d) -> d);
     }
 
     public static <V> Map<RecordRef, V> convertToRefs(Map<String, V> data) {
@@ -152,18 +119,31 @@ public class RecordsUtils {
         return toScopedRecordsMeta(sourceId, data);
     }
 
+    public static Map<String, List<ValueWithIdx<RecordRef>>> groupByApp(Collection<RecordRef> records) {
+        return groupBySource(records, r -> r, RecordRef::getAppName, (r, o) -> r);
+    }
+
+    public static Map<String, List<ValueWithIdx<RecordAtts>>> groupAttsByApp(Collection<RecordAtts> records) {
+        return groupBySource(records, RecordAtts::getId, RecordRef::getAppName, (r, o) -> o);
+    }
+
+    private static String getSourceWithApp(RecordRef recordRef) {
+        String appName = recordRef.getAppName();
+        String sourceId = recordRef.getSourceId();
+        return StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
+    }
+
     private static <I, O> Map<String, List<ValueWithIdx<O>>> groupBySource(Collection<I> records,
                                                                            Function<I, RecordRef> getRecordRef,
+                                                                           Function<RecordRef, String> getGroupKey,
                                                                            BiFunction<RecordRef, I, O> toOutput) {
 
         Map<String, List<ValueWithIdx<O>>> result = new HashMap<>();
         int idx = 0;
         for (I recordData : records) {
             RecordRef record = getRecordRef.apply(recordData);
-            String appName = record.getAppName();
-            String sourceId = record.getSourceId();
-            String sourceWithApp = StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
-            List<ValueWithIdx<O>> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
+            String groupKey = getGroupKey.apply(record);
+            List<ValueWithIdx<O>> outList = result.computeIfAbsent(groupKey, key -> new ArrayList<>());
             outList.add(new ValueWithIdx<>(toOutput.apply(record, recordData),  idx++));
         }
         return result;
@@ -172,15 +152,14 @@ public class RecordsUtils {
     private static <I, O> Map<String, List<ValueWithIdx<O>>> groupBySourceWithIdx(
                                                                            Collection<ValueWithIdx<I>> records,
                                                                            Function<I, RecordRef> getRecordRef,
+                                                                           Function<RecordRef, String> getGroupKey,
                                                                            BiFunction<RecordRef, I, O> toOutput) {
 
         Map<String, List<ValueWithIdx<O>>> result = new HashMap<>();
         for (ValueWithIdx<I> recordData : records) {
             RecordRef record = getRecordRef.apply(recordData.getValue());
-            String appName = record.getAppName();
-            String sourceId = record.getSourceId();
-            String sourceWithApp = StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
-            List<ValueWithIdx<O>> outList = result.computeIfAbsent(sourceWithApp, key -> new ArrayList<>());
+            String groupKey = getGroupKey.apply(record);
+            List<ValueWithIdx<O>> outList = result.computeIfAbsent(groupKey, key -> new ArrayList<>());
             outList.add(new ValueWithIdx<>(toOutput.apply(record, recordData.getValue()),  recordData.getIdx()));
         }
         return result;

@@ -12,8 +12,8 @@ import java.util.*;
 @AllArgsConstructor
 public class RequestCtxData<T> {
 
-    private final String queryId;
-    private final List<String> queryTrace;
+    private final String requestId;
+    private final List<String> requestTrace;
     private final Locale locale;
     private final Map<String, Object> ctxAtts;
     private final boolean computedAttsDisabled;
@@ -29,8 +29,8 @@ public class RequestCtxData<T> {
 
     public static class Builder<T> {
 
-        private String queryId;
-        private List<String> queryTrace;
+        private String requestId;
+        private List<String> requestTrace;
         private Locale locale = Locale.ENGLISH;
 
         private Map<String, Object> contextAttributes = Collections.emptyMap();
@@ -42,8 +42,8 @@ public class RequestCtxData<T> {
         }
 
         public Builder(RequestCtxData<T> base) {
-            this.queryId = base.getQueryId();
-            this.queryTrace = base.getQueryTrace();
+            this.requestId = base.getRequestId();
+            this.requestTrace = base.getRequestTrace();
             this.locale = base.getLocale();
             this.contextAttributes = base.ctxAtts;
             this.compAttsDisabled = base.computedAttsDisabled;
@@ -72,13 +72,13 @@ public class RequestCtxData<T> {
             return this;
         }
 
-        public Builder<T> setQueryId(String queryId) {
-            this.queryId = queryId;
+        public Builder<T> setRequestId(String requestId) {
+            this.requestId = requestId;
             return this;
         }
 
-        public Builder<T> setQueryTrace(List<String> queryTrace) {
-            this.queryTrace = queryTrace;
+        public Builder<T> setRequestTrace(List<String> requestTrace) {
+            this.requestTrace = requestTrace;
             return this;
         }
 
@@ -91,15 +91,15 @@ public class RequestCtxData<T> {
 
             MandatoryParam.check("locale", locale);
 
-            if (StringUtils.isBlank(queryId)) {
-                queryId = UUID.randomUUID().toString();
+            if (StringUtils.isBlank(requestId)) {
+                requestId = UUID.randomUUID().toString();
             }
-            if (queryTrace == null) {
-                queryTrace = Collections.emptyList();
+            if (requestTrace == null) {
+                requestTrace = Collections.emptyList();
             }
             return new RequestCtxData<>(
-                queryId,
-                Collections.unmodifiableList(queryTrace),
+                requestId,
+                Collections.unmodifiableList(requestTrace),
                 locale,
                 Collections.unmodifiableMap(contextAttributes),
                 compAttsDisabled,

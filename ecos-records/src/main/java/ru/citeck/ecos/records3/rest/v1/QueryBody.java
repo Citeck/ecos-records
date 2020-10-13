@@ -13,9 +13,7 @@ import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-public class QueryBody {
-
-    @Getter @Setter private String queryId;
+public class QueryBody extends RequestBody {
 
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;

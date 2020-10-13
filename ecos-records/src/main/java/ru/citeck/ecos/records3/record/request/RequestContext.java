@@ -286,7 +286,7 @@ public class RequestContext {
             Instant.now(),
             type,
             DataValue.create(msgValue),
-            ctxData.getQueryTrace()
+            ctxData.getRequestTrace()
         ));
     }
 

@@ -2,14 +2,14 @@ package ru.citeck.ecos.records3.record.operation.delete;
 
 import lombok.Data;
 import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.rest.v1.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DeleteBody {
+public class DeleteBody extends RequestBody {
 
-    private boolean debug = false;
     private List<RecordRef> records = new ArrayList<>();
 
     public void setRecords(List<RecordRef> records) {

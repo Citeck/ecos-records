@@ -20,6 +20,8 @@ import ru.citeck.ecos.records3.rest.QueryResp;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,7 +36,7 @@ public class RestHandlerV1 {
     }
 
     public QueryResp queryRecords(QueryBody body) {
-        return RequestContext.doWithCtx(factory, ctx -> queryRecordsImpl(body, ctx));
+        return doWithContext(body, ctx -> queryRecordsImpl(body, ctx));
     }
 
     private QueryResp queryRecordsImpl(QueryBody body, RequestContext context) {
@@ -58,7 +60,9 @@ public class RestHandlerV1 {
 
             RecordsQueryRes<RecordAtts> result;
             try {
-                result = recordsService.query(body.getQuery(), attributes, body.isRawAtts());
+                result = doInTransaction(true, () ->
+                        recordsService.query(body.getQuery(), attributes, body.isRawAtts())
+                );
             } catch (Exception e) {
                 log.error("Records search query exception. QueryBody: " + body, e);
                 result = new RecordsQueryRes<>();
@@ -84,7 +88,9 @@ public class RestHandlerV1 {
 
                     List<RecordAtts> atts;
                     try {
-                        atts = recordsService.getAtts(records, body.getAttributes(), body.isRawAtts());
+                        atts = doInTransaction(true, () ->
+                                recordsService.getAtts(records, body.getAttributes(), body.isRawAtts())
+                        );
                     } catch (Exception e) {
                         log.error("Records attributes query exception. QueryBody: " + body, e);
                         atts = records.stream()
@@ -103,7 +109,7 @@ public class RestHandlerV1 {
     }
 
     public MutateResp mutateRecords(MutateBody body) {
-        return RequestContext.doWithCtx(factory, context -> mutateRecordsImpl(body, context));
+        return doWithContext(body, ctx -> mutateRecordsImpl(body, ctx));
     }
 
     private MutateResp mutateRecordsImpl(MutateBody body, RequestContext context) {
@@ -114,11 +120,12 @@ public class RestHandlerV1 {
 
         MutateResp resp = new MutateResp();
         try {
-            resp.setRecords(recordsService.mutate(body.getRecords())
-                .stream()
-                .map(RecordAtts::new)
-                .collect(Collectors.toList()));
-
+            doInTransaction(false, () ->
+                resp.setRecords(recordsService.mutate(body.getRecords())
+                                              .stream()
+                                              .map(RecordAtts::new)
+                                              .collect(Collectors.toList()))
+            );
         } catch (Exception e) {
             log.error("Records mutation completed with error. MutateBody: " + body, e);
             resp.setRecords(body.getRecords()
@@ -132,7 +139,7 @@ public class RestHandlerV1 {
     }
 
     public DeleteResp deleteRecords(DeleteBody body) {
-        return RequestContext.doWithCtx(factory, context -> deleteRecordsImpl(body, context));
+        return doWithContext(body, ctx -> deleteRecordsImpl(body, ctx));
     }
 
     private DeleteResp deleteRecordsImpl(DeleteBody body, RequestContext context) {
@@ -143,7 +150,9 @@ public class RestHandlerV1 {
 
         DeleteResp resp = new DeleteResp();
         try {
-            resp.setStatuses(recordsService.delete(body.getRecords()));
+            doInTransaction(false, () ->
+                resp.setStatuses(recordsService.delete(body.getRecords()))
+            );
         } catch (Exception e) {
             log.error("Records deletion completed with error. DeleteBody: " + body, e);
             resp.setStatuses(body.getRecords()
@@ -154,6 +163,29 @@ public class RestHandlerV1 {
         }
         resp.setMessages(context.getMessages());
         return resp;
+    }
+
+    private <T> T doWithContext(RequestBody body, Function<RequestContext, T> action) {
+
+        return RequestContext.doWithCtx(factory, ctxData -> {
+
+            ctxData.setRequestId(body.getRequestId());
+            ctxData.setRequestTrace(body.getRequestTrace());
+            ctxData.setMsgLevel(body.getMsgLevel());
+
+        }, action);
+    }
+
+    private void doInTransaction(boolean readOnly, Runnable action) {
+        doInTransaction(readOnly, () -> {
+            action.run();
+            return null;
+        });
+    }
+
+    private <T> T doInTransaction(boolean readOnly, Supplier<T> action) {
+        // todo
+        return action.get();
     }
 
     public RecordsServiceFactory getFactory() {

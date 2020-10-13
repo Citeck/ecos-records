@@ -1,15 +1,17 @@
 package ru.citeck.ecos.records3.record.operation.mutate;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.rest.v1.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class MutateBody {
+@EqualsAndHashCode(callSuper = false)
+public class MutateBody extends RequestBody {
 
-    private boolean debug = false;
     private List<RecordAtts> records = new ArrayList<>();
 
     void setRecord(RecordAtts record) {

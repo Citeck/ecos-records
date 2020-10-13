@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.QueryBody;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

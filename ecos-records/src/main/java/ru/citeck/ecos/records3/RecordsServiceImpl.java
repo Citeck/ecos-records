@@ -44,7 +44,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordRef> query(RecordsQuery query) {
+    public RecordsQueryRes<RecordRef> query(@NotNull RecordsQuery query) {
         return handleRecordsQuery(() -> {
             RecordsQueryRes<RecordAtts> metaResult = recordsResolver.query(query,
                 Collections.emptyMap(), true);
@@ -57,7 +57,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public <T> RecordsQueryRes<T> query(RecordsQuery query, Class<T> metaClass) {
+    public <T> RecordsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass) {
 
         List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
@@ -70,8 +70,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordAtts> query(RecordsQuery query,
-                                             Map<String, String> attributes,
+    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                             @NotNull Map<String, String> attributes,
                                              boolean rawAtts) {
 
         RecordsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
@@ -87,23 +87,12 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<?> records,
-                                    Map<String, String> attributes,
+    public List<RecordAtts> getAtts(@NotNull Collection<?> records,
+                                    @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
 
         return handleRecordsListRead(() ->
             recordsResolver.getAtts(new ArrayList<>(records), attributes, rawAtts));
-    }
-
-    @NotNull
-    @Override
-    public <T> T getAtts(@NotNull Object recordRef, @NotNull Class<T> metaClass) {
-
-        List<T> meta = getAtts(Collections.singletonList(recordRef), metaClass);
-        if (meta.size() == 0) {
-            throw new IllegalStateException("Can't get record metadata. Ref: " + recordRef + " Result: " + meta);
-        }
-        return meta.get(0);
     }
 
     @NotNull
@@ -197,7 +186,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public List<DelStatus> delete(List<RecordRef> records) {
+    public List<DelStatus> delete(@NotNull List<RecordRef> records) {
         List<DelStatus> result = recordsResolver.delete(records);
         if (result == null) {
             result = new ArrayList<>(records.size());
@@ -241,6 +230,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Nullable
     @Override
     public RecsSourceInfo getSourceInfo(String sourceId) {
+        if (sourceId == null) {
+            return null;
+        }
         return recordsResolver.getSourceInfo(sourceId);
     }
 
@@ -251,7 +243,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     @Override
-    public void register(RecordsDao recordsSource) {
+    public void register(@NotNull RecordsDao recordsSource) {
 
         String id = recordsSource.getId();
         if (id == null) {
@@ -261,7 +253,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     @Override
-    public void register(String sourceId, RecordsDao recordsSource) {
+    public void register(@NotNull String sourceId, @NotNull RecordsDao recordsSource) {
         recordsResolver.register(sourceId, recordsSource);
     }
 }

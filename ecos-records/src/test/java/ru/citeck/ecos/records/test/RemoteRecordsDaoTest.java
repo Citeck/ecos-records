@@ -10,8 +10,8 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.rest.QueryBody;
-import ru.citeck.ecos.records3.rest.RestHandler;
+import ru.citeck.ecos.records3.rest.v1.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.RestHandlerV1;
 
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.source.dao.remote.RecordsRestConnection;
@@ -28,7 +28,7 @@ class RemoteRecordsDaoTest {
     private static final String REMOTE_SOURCE_ID = "remote";
 
     private RecordsService recordsService;
-    private RestHandler queryHandler;
+    private RestHandlerV1 queryHandler;
 
     @BeforeAll
     void init() {
@@ -43,7 +43,7 @@ class RemoteRecordsDaoTest {
         remoteRecordsDao.setRestConnection(new RecordsRestConnection() {
             @Override
             public <T> T jsonPost(String url, Object request, Class<T> resultType) {
-                return Json.getMapper().convert(queryHandler.queryRecords((QueryBody) request), resultType);
+                return Json.getMapper().convert(queryHandler.queryRecordsImpl((QueryBody) request), resultType);
             }
         });
 

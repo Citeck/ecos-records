@@ -23,7 +23,7 @@ import ru.citeck.ecos.records3.predicate.model.VoidPredicate;
 import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.QueryBody;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
@@ -58,7 +58,7 @@ public class RemoteSyncRecordsDaoTest {
                 @Override
                 public <T> T jsonPost(String url, Object request, Class<T> respType) {
                     @SuppressWarnings("unchecked")
-                    T res = (T) remoteFactory.getRestHandler().queryRecords(
+                    T res = (T) remoteFactory.getRestHandler().queryRecordsImpl(
                         Objects.requireNonNull(Json.getMapper().convert(request, QueryBody.class))
                     );
                     return Json.getMapper().convert(res, respType);

@@ -15,7 +15,7 @@ import ru.citeck.ecos.records3.record.operation.mutate.MutateResp;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.operation.query.dto.typed.RecordsMetaQueryRes;
-import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.QueryBody;
 import ru.citeck.ecos.records3.rest.QueryResp;
 import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.source.info.RecsSourceInfo;

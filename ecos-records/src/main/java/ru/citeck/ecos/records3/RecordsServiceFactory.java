@@ -28,7 +28,7 @@ import ru.citeck.ecos.records3.predicate.json.std.PredicateTypes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
 import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangServiceImpl;
-import ru.citeck.ecos.records3.rest.RestHandler;
+import ru.citeck.ecos.records3.rest.v1.RestHandlerV1;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
@@ -52,7 +52,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class RecordsServiceFactory {
 
-    private RestHandler restHandler;
+    private RestHandlerV1 restHandler;
     private RecordsService recordsService;
     private DtoSchemaReader dtoMetaResolver;
     private LocalRemoteResolver recordsResolver;
@@ -340,11 +340,11 @@ public class RecordsServiceFactory {
         return context;
     }
 
-    protected RestHandler createRestHandler() {
-        return new RestHandler(this);
+    protected RestHandlerV1 createRestHandler() {
+        return new RestHandlerV1(this);
     }
 
-    public final synchronized RestHandler getRestHandler() {
+    public final synchronized RestHandlerV1 getRestHandler() {
         if (restHandler == null) {
             restHandler = createRestHandler();
         }

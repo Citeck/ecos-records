@@ -3,20 +3,19 @@ package ru.citeck.ecos.records3.rest;
 import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 
 import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-public class QueryResp {
+public class QueryResp extends RecordsQueryRes<RecordAtts> {
 
-    @Getter @Setter private String queryId;
-    @Getter @Setter private List<RecordAtts> records;
-    @Getter @Setter private Map<String, String> attributes;
-    //todo
-    @Getter @Setter private List<RequestMsg> messages;
+    @Getter @Setter private List<RequestMsg> messages = new ArrayList<>();
+    @Getter @Setter private int version = 1;
 
     @Override
     public boolean equals(Object o) {
@@ -27,26 +26,16 @@ public class QueryResp {
             return false;
         }
         QueryResp queryBody = (QueryResp) o;
-        return Objects.equals(records, queryBody.records)
-            && Objects.equals(attributes, queryBody.attributes)
-            && Objects.equals(attributes, queryBody.attributes);
+        return getRecords().equals(queryBody.getRecords());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-            queryId,
-            records,
-            attributes
-        );
+        return getRecords().hashCode();
     }
 
     @Override
     public String toString() {
-        return "QueryResp{"
-            + "records=" + records
-            + ", queryId=" + queryId
-            + ", attributes=" + attributes
-            + '}';
+        return Json.getMapper().toString(this);
     }
 }

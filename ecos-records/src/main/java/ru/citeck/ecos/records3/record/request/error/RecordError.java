@@ -1,13 +1,19 @@
 package ru.citeck.ecos.records3.record.request.error;
 
 import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records3.record.request.msg.MsgType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+@MsgType("record-error")
 public class RecordError {
 
     private String type = "";
     private String msg = "";
+    private List<String> stackTrace = new ArrayList<>();
     private ObjectData data = ObjectData.create();
 
     public RecordError() {
@@ -21,6 +27,14 @@ public class RecordError {
         this.type = type;
         this.msg = msg;
         this.data = ObjectData.create(data);
+    }
+
+    public List<String> getStackTrace() {
+        return stackTrace;
+    }
+
+    public void setStackTrace(List<String> stackTrace) {
+        this.stackTrace = stackTrace;
     }
 
     public String getType() {
@@ -67,9 +81,6 @@ public class RecordError {
 
     @Override
     public String toString() {
-        return "RecordsError{"
-            + "type='" + type + '\''
-            + ", msg='" + msg + '\''
-            + '}';
+        return Json.getMapper().toString(this);
     }
 }

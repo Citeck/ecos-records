@@ -1,12 +1,11 @@
-package ru.citeck.ecos.records3.rest;
+package ru.citeck.ecos.records3.rest.v1;
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
 import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
-import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 
@@ -16,25 +15,18 @@ import java.util.*;
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class QueryBody {
 
-    public static final String SINGLE_ATT_KEY = "a";
-
     @Getter @Setter private String queryId;
 
     @Getter @Setter private List<RecordRef> records;
     @Getter @Setter private RecordsQuery query;
-    @Getter @Setter private List<DataValue> foreach;
     @Getter @Setter private boolean rawAtts;
 
     @Getter private Map<String, String> attributes;
-
-    private boolean isSingleRecord = false;
-    private boolean isSingleAttribute = false;
 
     public void setRecord(RecordRef record) {
         if (records == null) {
             records = new ArrayList<>();
         }
-        isSingleRecord = true;
         records.add(record);
     }
 
@@ -42,8 +34,7 @@ public class QueryBody {
         if (attributes == null) {
             attributes = new HashMap<>();
         }
-        this.attributes.put(SINGLE_ATT_KEY, attribute);
-        isSingleAttribute = true;
+        this.attributes.put(attribute, attribute);
     }
 
     @JsonSetter
@@ -77,18 +68,6 @@ public class QueryBody {
         this.attributes = attributes;
     }
 
-    @JsonIgnore
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    public boolean isSingleRecord() {
-        return isSingleRecord && records != null && records.size() == 1;
-    }
-
-    @JsonIgnore
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    public boolean isSingleAttribute() {
-        return isSingleAttribute && attributes != null && attributes.size() == 1;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -98,12 +77,9 @@ public class QueryBody {
             return false;
         }
         QueryBody queryBody = (QueryBody) o;
-        return isSingleRecord == queryBody.isSingleRecord
-            && isSingleAttribute == queryBody.isSingleAttribute
-            && Objects.equals(records, queryBody.records)
+        return Objects.equals(records, queryBody.records)
             && Objects.equals(query, queryBody.query)
             && Objects.equals(attributes, queryBody.attributes)
-            && Objects.equals(foreach, queryBody.foreach)
             && Objects.equals(rawAtts, queryBody.rawAtts);
     }
 
@@ -113,23 +89,12 @@ public class QueryBody {
             records,
             query,
             attributes,
-            isSingleRecord,
-            isSingleAttribute,
-            foreach,
             rawAtts
         );
     }
 
     @Override
     public String toString() {
-        return "QueryBody{"
-            + "records=" + records
-            + ", query=" + query
-            + ", attributes=" + attributes
-            + ", isSingleRecord=" + isSingleRecord
-            + ", isSingleAttribute=" + isSingleAttribute
-            + ", foreach=" + foreach
-            + ", rawAtts=" + rawAtts
-            + '}';
+        return Json.getMapper().toString(this);
     }
 }

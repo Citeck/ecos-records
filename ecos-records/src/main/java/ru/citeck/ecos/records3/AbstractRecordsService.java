@@ -1,33 +1,24 @@
 package ru.citeck.ecos.records3;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.query.QueryConstants;
-import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.util.*;
-import java.util.function.Function;
 
 @Slf4j
 public abstract class AbstractRecordsService implements RecordsService {
 
     protected RecordsServiceFactory serviceFactory;
-
-    private final JsonMapper mapper = Json.getMapper();
 
     AbstractRecordsService(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
@@ -37,238 +28,108 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public Optional<RecordRef> queryOne(RecordsQuery query) {
+    public Optional<RecordRef> queryOne(@NotNull RecordsQuery query) {
         return query(query).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public <T> Optional<T> queryOne(RecordsQuery query, Class<T> metaClass) {
+    public <T> Optional<T> queryOne(@NotNull RecordsQuery query,
+                                    @NotNull Class<T> metaClass) {
+
         return query(query, metaClass).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes) {
-        return query(query, attributes).getRecords().stream().findFirst();
-    }
+    public Optional<RecordAtts> queryOne(@NotNull RecordsQuery query,
+                                         @NotNull Map<String, String> attributes) {
 
-
-    @NotNull
-    @Override
-    public Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes, boolean rawAtts) {
-        return query(query, attributes, rawAtts).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes) {
         return query(query, attributes).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes, boolean rawAtts) {
-        return query(query, attributes, rawAtts).getRecords().stream().findFirst();
+    public Optional<RecordAtts> queryOne(@NotNull RecordsQuery query,
+                                         @NotNull Collection<String> attributes) {
+
+        return query(query, attributes).getRecords().stream().findFirst();
     }
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordAtts> query(RecordsQuery query, Collection<String> attributes) {
+    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                             @NotNull Collection<String> attributes) {
+
         return query(query, AttUtils.toMap(attributes));
     }
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordAtts> query(RecordsQuery query, Map<String, String> attributes) {
+    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                             @NotNull Map<String, String> attributes) {
+
         return query(query, attributes, false);
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<RecordAtts> query(RecordsQuery query,
-                                             Collection<String> attributes,
-                                             boolean rawAtts) {
-
-        return query(query, AttUtils.toMap(attributes), rawAtts);
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<List<RecordRef>> query(List<DataValue> foreach, RecordsQuery query) {
-        return queryForEach(foreach, query, this::query);
-    }
-
-    @NotNull
-    @Override
-    public <T> RecordsQueryRes<List<T>> query(List<DataValue> foreach,
-                                              RecordsQuery query,
-                                              Class<T> metaClass) {
-
-        return queryForEach(foreach, query, q -> query(q, metaClass));
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                                   RecordsQuery query,
-                                                   Collection<String> attributes) {
-
-        return queryForEach(foreach, query, q -> query(q, attributes));
-    }
-
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                                   RecordsQuery query,
-                                                   Collection<String> attributes,
-                                                   boolean rawAtts) {
-
-        return queryForEach(foreach, query, q -> query(q, attributes, rawAtts));
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                                   RecordsQuery query,
-                                                   Map<String, String> attributes) {
-
-        return queryForEach(foreach, query, q -> query(q, attributes));
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                                   RecordsQuery query,
-                                                   Map<String, String> attributes,
-                                                   boolean rawAtts) {
-
-        return queryForEach(foreach, query, q -> query(q, attributes, rawAtts));
-    }
-
-    private <T> RecordsQueryRes<List<T>> queryForEach(List<DataValue> foreach,
-                                                      RecordsQuery query,
-                                                      Function<RecordsQuery, RecordsQueryRes<T>> queryImpl) {
-
-        return RequestContext.doWithCtx(serviceFactory, context -> {
-
-            RecordsQueryRes<List<T>> result = new RecordsQueryRes<>();
-
-            for (DataValue eachIt : foreach) {
-
-                context.addMsg(MsgLevel.DEBUG, () -> "Start forEach: '" + eachIt + "'");
-
-                RecordsQuery eachRecordsQuery = new RecordsQuery(query);
-                eachRecordsQuery.setQuery(replaceIt(mapper.toJson(query.getQuery()), mapper.toJson(eachIt)));
-                RecordsQueryRes<T> eachRes = queryImpl.apply(eachRecordsQuery);
-
-                context.addMsg(MsgLevel.DEBUG, () -> "ForEach: '" + eachIt + "' res: " + eachRes);
-
-                result.setTotalCount(result.getTotalCount() + eachRes.getTotalCount());
-                result.addRecord(eachRes.getRecords());
-            }
-
-            return result;
-        });
-    }
-
-    private JsonNode replaceIt(JsonNode query, JsonNode value) {
-
-        if (query == null || query.isNull() || query.isMissingNode()) {
-            return query;
-        }
-
-        if (query.isTextual()) {
-
-            String text = query.asText();
-            if (text.equals(QueryConstants.IT_VAR)) {
-                return value;
-            } else if (text.contains(QueryConstants.IT_VAR)) {
-                return TextNode.valueOf(text.replace(QueryConstants.IT_VAR, value.asText()));
-            } else {
-                return query;
-            }
-        } else if (query.isArray()) {
-
-            ArrayNode newArray = JsonNodeFactory.instance.arrayNode();
-            for (JsonNode node : query) {
-                newArray.add(replaceIt(node, value));
-            }
-            return newArray;
-
-        } else if (query.isObject()) {
-
-            ObjectNode newObject = JsonNodeFactory.instance.objectNode();
-
-            Iterator<String> names = query.fieldNames();
-            while (names.hasNext()) {
-                String name = names.next();
-                newObject.set(name, replaceIt(query.get(name), value));
-            }
-            return newObject;
-        }
-
-        return query;
     }
 
     /* ATTRIBUTES */
 
     @NotNull
     @Override
-    public DataValue getAtt(Object record, String attribute) {
+    public DataValue getAtt(@Nullable Object record, @Nullable String attribute) {
 
-        if (record == null) {
+        if (record == null || StringUtils.isBlank(attribute)) {
             return DataValue.NULL;
         }
 
         List<RecordAtts> meta = getAtts(Collections.singletonList(record),
-            Collections.singletonList(attribute));
-        if (!meta.isEmpty()) {
-            return meta.get(0).getAttribute(attribute);
-        }
-        return DataValue.NULL;
+                                        Collections.singletonList(attribute));
+
+        return meta.get(0).getAttribute(attribute);
     }
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes) {
+    public <T> T getAtts(@Nullable Object record, @NotNull Class<T> metaClass) {
+        if (record == null) {
+            record = ObjectData.create();
+        }
+        return getAtts(Collections.singletonList(record), metaClass).get(0);
+    }
+
+    @NotNull
+    @Override
+    public List<RecordAtts> getAtts(@NotNull Collection<?> records,
+                                    @NotNull Collection<String> attributes) {
+
         return getAtts(records, AttUtils.toMap(attributes), false);
     }
 
     @NotNull
     @Override
-    public List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes, boolean rawAtts) {
-        return getAtts(records, AttUtils.toMap(attributes), rawAtts);
+    public RecordAtts getAtts(@Nullable Object record,
+                              @NotNull Collection<String> attributes) {
+        if (record == null) {
+            record = ObjectData.create();
+        }
+        return getAtts(Collections.singletonList(record), attributes).get(0);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(Object record, Collection<String> attributes) {
+    public RecordAtts getAtts(@Nullable Object record,
+                              @NotNull Map<String, String> attributes) {
+        if (record == null) {
+            record = ObjectData.create();
+        }
         return getAtts(Collections.singletonList(record), attributes, false).get(0);
     }
 
     @NotNull
     @Override
-    public RecordAtts getAtts(Object record, Collection<String> attributes, boolean rawAtts) {
-        return getAtts(Collections.singletonList(record), attributes, rawAtts).get(0);
-    }
+    public List<RecordAtts> getAtts(@NotNull Collection<?> records,
+                                    @NotNull Map<String, String> attributes) {
 
-    @NotNull
-    @Override
-    public RecordAtts getAtts(Object record, Map<String, String> attributes) {
-        return getAtts(Collections.singletonList(record), attributes, false).get(0);
-    }
-
-    @NotNull
-    @Override
-    public RecordAtts getAtts(Object record, Map<String, String> attributes, boolean rawAtts) {
-        return getAtts(Collections.singletonList(record), attributes, rawAtts).get(0);
-    }
-
-    @NotNull
-    @Override
-    public List<RecordAtts> getAtts(Collection<?> records, Map<String, String> attributes) {
         return getAtts(records, attributes, false);
     }
 
@@ -276,25 +137,34 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public RecordRef mutate(RecordRef record, String attribute, Object value) {
+    public RecordRef mutate(@Nullable Object record,
+                            @Nullable String attribute,
+                            @Nullable Object value) {
+
+        if (record == null || StringUtils.isBlank(attribute)) {
+            return record instanceof RecordRef ? (RecordRef) record : RecordRef.EMPTY;
+        }
         return mutate(record, Collections.singletonMap(attribute, value));
     }
 
     @NotNull
     @Override
-    public RecordRef mutate(RecordRef record, Map<String, Object> attributes) {
+    public RecordRef mutate(Object record, @NotNull Map<String, Object> attributes) {
         return mutate(record, ObjectData.create(attributes));
     }
 
     @NotNull
     @Override
-    public RecordRef mutate(RecordRef record, ObjectData attributes) {
-        return mutate(new RecordAtts(record, attributes));
+    public RecordRef mutate(Object record, @NotNull ObjectData attributes) {
+        if (record instanceof RecordRef) {
+            return mutate(new RecordAtts((RecordRef) record, attributes));
+        }
+        throw new RuntimeException("Mutation of custom objects is not supported yet");
     }
 
     @NotNull
     @Override
-    public RecordRef mutate(RecordAtts meta) {
+    public RecordRef mutate(@NotNull RecordAtts meta) {
 
         List<RecordAtts> records = Collections.singletonList(meta);
         List<RecordRef> recordRefs = this.mutate(records);

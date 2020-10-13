@@ -21,6 +21,6 @@ public class DeleteBody {
     }
 
     void setRecord(RecordRef record) {
-        getRecords().add(record);
+        this.records.add(record);
     }
 }

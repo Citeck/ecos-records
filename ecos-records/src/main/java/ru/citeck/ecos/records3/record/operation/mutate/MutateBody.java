@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.operation.mutate;
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnore;
 import lombok.Data;
 import ru.citeck.ecos.records3.RecordAtts;
 
@@ -11,12 +10,10 @@ import java.util.List;
 public class MutateBody {
 
     private boolean debug = false;
-    private boolean isSingleRecord = false;
     private List<RecordAtts> records = new ArrayList<>();
 
     void setRecord(RecordAtts record) {
-        isSingleRecord = true;
-        getRecords().add(record);
+        this.records.add(record);
     }
 
     public List<RecordAtts> getRecords() {
@@ -24,7 +21,6 @@ public class MutateBody {
     }
 
     public void setRecords(List<RecordAtts> records) {
-        isSingleRecord = true;
         if (records != null) {
             this.records = new ArrayList<>(records);
         } else {
@@ -34,11 +30,5 @@ public class MutateBody {
 
     public void addRecord(RecordAtts meta) {
         this.records.add(meta);
-    }
-
-    @JsonIgnore
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    public boolean isSingleRecord() {
-        return isSingleRecord;
     }
 }

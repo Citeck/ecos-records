@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.operation.mutate;
 
 import lombok.Data;
 import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.record.request.error.RecordError;
 import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 
 import java.util.ArrayList;
@@ -12,9 +11,7 @@ import java.util.List;
 public class MutateResp {
 
     private List<RecordAtts> records = new ArrayList<>();
-    //todo
     private List<RequestMsg> messages = new ArrayList<>();
-    private List<RecordError> errors = new ArrayList<>();
 
     public List<RecordAtts> getRecords() {
         return records;

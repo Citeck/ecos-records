@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records3.RecordRef;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.rest.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.QueryBody;
 
 import java.util.List;
 

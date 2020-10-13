@@ -41,7 +41,7 @@ import java.util.Optional;
  * Att == Attribute
  * Atts == Attributes
  * Rec == Record
- * Recs == Recordsxfc
+ * Recs == Records
  *
  * @see AttValue
  * @see RecordRef
@@ -60,7 +60,7 @@ public interface RecordsService {
      * @see RecordsService#query(RecordsQuery)
      */
     @NotNull
-    Optional<RecordRef> queryOne(RecordsQuery query);
+    Optional<RecordRef> queryOne(@NotNull RecordsQuery query);
 
     /**
      * Query single record.
@@ -68,7 +68,7 @@ public interface RecordsService {
      * @see RecordsService#query(RecordsQuery, Class)
      */
     @NotNull
-    <T> Optional<T> queryOne(RecordsQuery query, Class<T> metaClass);
+    <T> Optional<T> queryOne(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
 
     /**
      * Query single record.
@@ -76,15 +76,7 @@ public interface RecordsService {
      * @see RecordsService#query(RecordsQuery, Collection)
      */
     @NotNull
-    Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes);
-
-    /**
-     * Query single record.
-     *
-     * @see RecordsService#query(RecordsQuery, Collection)
-     */
-    @NotNull
-    Optional<RecordAtts> queryOne(RecordsQuery query, Collection<String> attributes, boolean rawAtts);
+    Optional<RecordAtts> queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
     /**
      * Query single record.
@@ -92,15 +84,7 @@ public interface RecordsService {
      * @see RecordsService#query(RecordsQuery, Map)
      */
     @NotNull
-    Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes);
-
-    /**
-     * Query single record.
-     *
-     * @see RecordsService#query(RecordsQuery, Map)
-     */
-    @NotNull
-    Optional<RecordAtts> queryOne(RecordsQuery query, Map<String, String> attributes, boolean rawAtts);
+    Optional<RecordAtts> queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
 
     /* QUERY RECORDS */
 
@@ -110,10 +94,7 @@ public interface RecordsService {
      * @return list of records, page info and debug info if query.isDebug() returns true
      */
     @NotNull
-    RecordsQueryRes<RecordRef> query(RecordsQuery query);
-
-    @NotNull
-    RecordsQueryRes<List<RecordRef>> query(List<DataValue> foreach, RecordsQuery query);
+    RecordsQueryRes<RecordRef> query(@NotNull RecordsQuery query);
 
     /**
      * Query records with data. Specified class will be used to determine
@@ -128,10 +109,7 @@ public interface RecordsService {
      * @see AttName
      */
     @NotNull
-    <T> RecordsQueryRes<T> query(RecordsQuery query, Class<T> metaClass);
-
-    @NotNull
-    <T> RecordsQueryRes<List<T>> query(List<DataValue> foreach, RecordsQuery query, Class<T> metaClass);
+    <T> RecordsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
 
     /**
      * Query records and its attributes.
@@ -141,29 +119,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(RecordsQuery query, Collection<String> attributes);
-
-    /**
-     * Query records and its attributes.
-     *
-     * @param attributes collection of attributes which value we want to request.
-     *
-     * @return flat records metadata (all objects in attributes with a single key will be simplified)
-     */
-    @NotNull
-    RecordsQueryRes<RecordAtts> query(RecordsQuery query,
-                                      Collection<String> attributes,
-                                      boolean rawAtts);
-
-    @NotNull
-    RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                            RecordsQuery query,
-                                            Collection<String> attributes);
-    @NotNull
-    RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                            RecordsQuery query,
-                                            Collection<String> attributes,
-                                            boolean rawAtts);
+    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
     /**
      * Query records and its attributes.
@@ -174,8 +130,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(RecordsQuery query,
-                                      Map<String, String> attributes);
+    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
 
     /**
      * Query records and its attributes.
@@ -186,20 +141,9 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(RecordsQuery query,
-                                      Map<String, String> attributes,
+    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                      @NotNull Map<String, String> attributes,
                                       boolean rawAtts);
-
-    @NotNull
-    RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                            RecordsQuery query,
-                                            Map<String, String> attributes);
-
-    @NotNull
-    RecordsQueryRes<List<RecordAtts>> query(List<DataValue> foreach,
-                                            RecordsQuery query,
-                                            Map<String, String> attributes,
-                                            boolean rawAtts);
 
     /* ATTRIBUTES */
 
@@ -209,7 +153,7 @@ public interface RecordsService {
      * @return flat record attribute value
      */
     @NotNull
-    DataValue getAtt(Object record, String attribute);
+    DataValue getAtt(@Nullable Object record, @Nullable String attribute);
 
     /**
      * Get record attributes.
@@ -219,17 +163,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordAtts getAtts(Object record, Collection<String> attributes);
-
-    /**
-     * Get record attributes.
-     *
-     * @param attributes collection of attributes which value we want to request.
-     *
-     * @return flat records metadata (all objects in attributes with a single key will be simplified)
-     */
-    @NotNull
-    RecordAtts getAtts(Object record, Collection<String> attributes, boolean rawAtts);
+    RecordAtts getAtts(@Nullable Object record, @NotNull Collection<String> attributes);
 
     /**
      * Get record attributes.
@@ -240,18 +174,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordAtts getAtts(Object record, Map<String, String> attributes);
-
-    /**
-     * Get record attributes.
-     *
-     * @param attributes map, where a key is a pseudonym for a result value
-     *                   and value is an attribute which value we want to request.
-     *
-     * @return flat records metadata (all objects in attributes with a single key will be simplified)
-     */
-    @NotNull
-    RecordAtts getAtts(Object record, Map<String, String> attributes, boolean rawAtts);
+    RecordAtts getAtts(@Nullable Object record, @NotNull Map<String, String> attributes);
 
     /**
      * Get records attributes.
@@ -261,17 +184,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes);
-
-    /**
-     * Get records attributes.
-     *
-     * @param attributes collection of attributes which value we want to request.
-     *
-     * @return flat records metadata (all objects in attributes with a single key will be simplified)
-     */
-    @NotNull
-    List<RecordAtts> getAtts(Collection<?> records, Collection<String> attributes, boolean rawAtts);
+    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Collection<String> attributes);
 
     /**
      * Get records attributes.
@@ -282,20 +195,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    List<RecordAtts> getAtts(Collection<?> records, Map<String, String> attributes);
-
-    /**
-     * Get records attributes.
-     *
-     * @param attributes map, where a key is a pseudonym for a result value
-     *                   and value is an attribute which value we want to request.
-     *
-     * @return flat records metadata (all objects in attributes with a single key will be simplified)
-     */
-    @NotNull
-    List<RecordAtts> getAtts(Collection<?> records, Map<String, String> attributes, boolean rawAtts);
-
-    /* META */
+    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, String> attributes);
 
     /**
      * Get record metadata. Specified class will be used to determine
@@ -309,7 +209,7 @@ public interface RecordsService {
      * @see AttName
      */
     @NotNull
-    <T> T getAtts(@NotNull Object record, @NotNull Class<T> attsClass);
+    <T> T getAtts(@Nullable Object record, @NotNull Class<T> attsClass);
 
     /**
      * Get records metadata. Specified class will be used to determine
@@ -325,63 +225,74 @@ public interface RecordsService {
     @NotNull
     <T> List<T> getAtts(@NotNull Collection<?> records, @NotNull Class<T> attsClass);
 
-    /* MUTATION */
+    /**
+     * Get records attributes.
+     *
+     * @param attributes map, where a key is a pseudonym for a result value
+     *                   and value is an attribute which value we want to request.
+     *
+     * @return flat records metadata (all objects in attributes with a single key will be simplified)
+     */
+    @NotNull
+    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, String> attributes, boolean rawAtts);
+
+    /* MUTATE */
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(RecordAtts meta);
+    RecordRef mutate(@NotNull RecordAtts meta);
 
     @NotNull
-    List<RecordRef> mutate(List<RecordAtts> records);
+    List<RecordRef> mutate(@NotNull List<RecordAtts> records);
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(RecordRef record, ObjectData attributes);
+    RecordRef mutate(@Nullable Object record, @NotNull ObjectData attributes);
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(RecordRef record, Map<String, Object> attributes);
+    RecordRef mutate(@Nullable Object record, @NotNull Map<String, Object> attributes);
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(RecordRef record, String attribute, Object value);
+    RecordRef mutate(@Nullable Object record, @Nullable String attribute, @Nullable Object value);
 
-    /* DELETION */
+    /* DELETE */
 
     /**
      * Delete records.
      */
     @NotNull
-    List<DelStatus> delete(List<RecordRef> records);
+    List<DelStatus> delete(@NotNull List<RecordRef> records);
 
     @NotNull
-    DelStatus delete(RecordRef recordRef);
+    DelStatus delete(@Nullable RecordRef recordRef);
 
     /* OTHER */
 
     /**
      * Register the RecordsDao. It must return valid id from method "getId()" to call this method.
      */
-    void register(RecordsDao recordsSource);
+    void register(@NotNull RecordsDao recordsSource);
 
     /**
      * Register the RecordsDao with specified sourceId.
      */
-    void register(String sourceId, RecordsDao recordsSource);
+    void register(@NotNull String sourceId, @NotNull RecordsDao recordsSource);
 
     /**
      * Add info about RecordsDao with specified Id.
      */
     @Nullable
-    RecsSourceInfo getSourceInfo(String sourceId);
+    RecsSourceInfo getSourceInfo(@Nullable String sourceId);
 
     /**
      * Get info about all registered RecordsDao.

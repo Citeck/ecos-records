@@ -8,9 +8,9 @@ import lombok.Setter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
 
 import java.util.List;
 import java.util.Map;
@@ -18,17 +18,17 @@ import java.util.Map;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsMetaQueryTest {
 
-    private RecordAttsService recordsMetaService;
+    private RecordAttsService recordsAttsService;
 
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsMetaService = factory.getRecordsMetaService();
+        recordsAttsService = factory.getRecordsAttsService();
     }
 
     @Test
     void testQueryBuild() {
-
+//todo
         /*Map<String, String> attributes = recordsMetaService.getAtts(SimplePojo.class);
 
         assertEquals(12, attributes.size());

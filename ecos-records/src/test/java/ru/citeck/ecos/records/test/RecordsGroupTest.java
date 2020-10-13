@@ -5,17 +5,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records2.predicate.model.*;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.predicate.model.*;
-import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 
 import java.io.IOException;
@@ -65,7 +65,7 @@ class RecordsGroupTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = (RecordsServiceImpl) factory.getRecordsService();
+        recordsService = (RecordsServiceImpl) factory.getRecordsServiceV1();
         predicateService = factory.getPredicateService();
         queryLangService = factory.getQueryLangService();
 

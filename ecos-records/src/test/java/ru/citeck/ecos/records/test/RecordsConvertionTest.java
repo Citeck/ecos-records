@@ -3,11 +3,11 @@ package ru.citeck.ecos.records.test;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +26,7 @@ public class RecordsConvertionTest extends AbstractRecordsDao implements Records
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
 
         factory.getQueryLangService().register(query -> query, SOURCE_LANG, CONVERTED_LANG);
 

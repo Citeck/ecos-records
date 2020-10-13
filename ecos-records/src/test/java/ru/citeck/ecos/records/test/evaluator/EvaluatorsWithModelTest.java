@@ -4,15 +4,15 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorDto;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +29,7 @@ public class EvaluatorsWithModelTest extends AbstractRecordsDao implements Recor
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
 

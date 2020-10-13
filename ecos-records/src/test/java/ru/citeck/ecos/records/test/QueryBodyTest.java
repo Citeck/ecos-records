@@ -3,9 +3,8 @@ package ru.citeck.ecos.records.test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.rest.v1.QueryBody;
+import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,10 +23,6 @@ class QueryBodyTest {
         QueryBody body2 = Json.getMapper().convert("{\"attribute\":\"test\"}", QueryBody.class);
         assertEquals(1, body2.getAttributes().size());
         assertEquals("test", body2.getAttributes().values().stream().findFirst().orElse(null));
-
-        QueryBody body3 = Json.getMapper().convert("{\"foreach\":[\"test0\", \"test1\"], \"query\":{\"query\": \"q\"}}", QueryBody.class);
-        assertEquals(2, body3.getForeach().size());
-        assertEquals(DataValue.create("test0"), body3.getForeach().get(0));
 
         ObjectMapper mapper = new ObjectMapper();
 

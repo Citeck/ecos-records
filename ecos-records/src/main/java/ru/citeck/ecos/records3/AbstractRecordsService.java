@@ -5,12 +5,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.util.*;

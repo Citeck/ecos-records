@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class QueryExceptionTest extends AbstractRecordsDao implements RecordsAtt
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
 
         setId("test");
         recordsService.register(this);
@@ -29,7 +29,7 @@ public class QueryExceptionTest extends AbstractRecordsDao implements RecordsAtt
 
     @Test
     void test() {
-
+//todo
       /*  List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
         RecordsResult<RecordAtts> res = recordsService.getAtts(refs, Collections.singletonList("str"));
 

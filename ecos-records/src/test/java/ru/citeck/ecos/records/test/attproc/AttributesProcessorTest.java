@@ -5,9 +5,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.time.Instant;
 import java.util.Date;
@@ -25,7 +27,7 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
     }

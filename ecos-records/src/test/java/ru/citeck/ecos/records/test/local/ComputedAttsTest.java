@@ -7,16 +7,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.type.ComputedAtt;
-import ru.citeck.ecos.records3.type.RecTypeService;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.type.ComputedAtt;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,7 +61,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory() {
             @Override
-            protected RecTypeService createRecordTypeService() {
+            protected RecordTypeService createRecordTypeService() {
                 return type -> {
                     if ("type0".equals(type.getId())) {
                         return computedAttributesType0;
@@ -71,7 +73,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
                 };
             }
         };
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
     }

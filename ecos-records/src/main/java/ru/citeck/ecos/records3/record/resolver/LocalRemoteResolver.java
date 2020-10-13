@@ -4,26 +4,29 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsProperties;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
-import ru.citeck.ecos.records3.utils.RecordsUtils;
-import ru.citeck.ecos.records3.utils.ValueWithIdx;
+import ru.citeck.ecos.records3.record.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records2.utils.ValWithIdx;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class LocalRemoteResolver implements RecordsDaoRegistry {
+public class LocalRemoteResolver {
 
     private final LocalRecordsResolver local;
     private final RemoteRecordsResolver remote;
@@ -91,30 +94,30 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
 
         RequestContext context = RequestContext.getCurrentNotNull();
 
-        List<ValueWithIdx<Object>> recordObjs = new ArrayList<>();
-        List<ValueWithIdx<RecordRef>> recordRefs = new ArrayList<>();
+        List<ValWithIdx<Object>> recordObjs = new ArrayList<>();
+        List<ValWithIdx<RecordRef>> recordRefs = new ArrayList<>();
 
         int idx = 0;
         for (Object rec : records) {
             if (rec instanceof RecordRef) {
-                recordRefs.add(new ValueWithIdx<>((RecordRef) rec, idx));
+                recordRefs.add(new ValWithIdx<>((RecordRef) rec, idx));
             } else {
-                recordObjs.add(new ValueWithIdx<>(rec, idx));
+                recordObjs.add(new ValWithIdx<>(rec, idx));
             }
             idx++;
         }
 
-        List<ValueWithIdx<RecordAtts>> results = new ArrayList<>();
+        List<ValWithIdx<RecordAtts>> results = new ArrayList<>();
 
         List<Object> recordsObjValue = recordObjs.stream()
-            .map(ValueWithIdx::getValue)
+            .map(ValWithIdx::getValue)
             .collect(Collectors.toList());
 
         List<RecordAtts> objAtts = doWithSchema(attributes, atts -> local.getAtts(recordsObjValue, atts, rawAtts));
 
         if (objAtts != null && objAtts.size() == recordsObjValue.size()) {
             for (int i = 0; i < objAtts.size(); i++) {
-                results.add(new ValueWithIdx<>(objAtts.get(i), recordObjs.get(i).getIdx()));
+                results.add(new ValWithIdx<>(objAtts.get(i), recordObjs.get(i).getIdx()));
             }
         } else {
             context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
@@ -125,7 +128,7 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
         RecordsUtils.groupRefBySourceWithIdx(recordRefs).forEach((sourceId, recs) -> {
 
             List<RecordRef> refs = recs.stream()
-                .map(ValueWithIdx::getValue)
+                .map(ValWithIdx::getValue)
                 .collect(Collectors.toList());
 
             List<RecordAtts> atts;
@@ -135,7 +138,7 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
                 atts = doWithSchema(attributes, schema -> local.getAtts(refs, schema, rawAtts));
 
             } else if (isRemoteRef(recs.stream()
-                            .map(ValueWithIdx::getValue)
+                            .map(ValWithIdx::getValue)
                             .findFirst()
                             .orElse(null))) {
 
@@ -151,18 +154,18 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
                 context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
                     "requested. Atts: " + atts + " refs: " + refs);
 
-                for (ValueWithIdx<RecordRef> record : recs) {
-                    results.add(new ValueWithIdx<>(new RecordAtts(record.getValue()), record.getIdx()));
+                for (ValWithIdx<RecordRef> record : recs) {
+                    results.add(new ValWithIdx<>(new RecordAtts(record.getValue()), record.getIdx()));
                 }
             } else {
                 for (int i = 0; i < refs.size(); i++) {
-                    results.add(new ValueWithIdx<>(atts.get(i), recs.get(i).getIdx()));
+                    results.add(new ValWithIdx<>(atts.get(i), recs.get(i).getIdx()));
                 }
             }
         });
 
-        results.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
-        return results.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
+        results.sort(Comparator.comparingInt(ValWithIdx::getIdx));
+        return results.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
     }
 
     @Nullable
@@ -188,7 +191,7 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
     }
 
     @Nullable
-    public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecordsDaoInfo getSourceInfo(@NotNull String sourceId) {
         if (isRemoteSourceId(sourceId)) {
             return remote.getSourceInfo(sourceId);
         }
@@ -196,8 +199,8 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
     }
 
     @NotNull
-    public List<RecsSourceInfo> getSourceInfo() {
-        List<RecsSourceInfo> result = new ArrayList<>(local.getSourceInfo());
+    public List<RecordsDaoInfo> getSourceInfo() {
+        List<RecordsDaoInfo> result = new ArrayList<>(local.getSourceInfo());
         result.addAll(remote.getSourceInfo());
         return result;
     }
@@ -220,7 +223,6 @@ public class LocalRemoteResolver implements RecordsDaoRegistry {
         return sourceId.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix);
     }
 
-    @Override
     public void register(String sourceId, RecordsDao recordsDao) {
         local.register(sourceId, recordsDao);
     }

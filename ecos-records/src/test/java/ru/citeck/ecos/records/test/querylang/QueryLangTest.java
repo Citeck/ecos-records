@@ -4,12 +4,12 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangConverter;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryWithLang;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records2.querylang.QueryLangConverter;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.querylang.QueryWithLang;
 
 import java.util.Collections;
 import java.util.Optional;

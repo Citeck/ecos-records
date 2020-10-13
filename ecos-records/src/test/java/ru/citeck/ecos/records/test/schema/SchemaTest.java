@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records.test.schema;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaGqlWriter;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaGqlWriter;
+import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 
 import java.util.List;
 

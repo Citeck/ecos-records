@@ -4,8 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.request.msg.MsgType;
 import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
@@ -30,7 +32,7 @@ public class RequestContext {
     private RequestCtxData<?> ctxData;
     private RecordsServiceFactory serviceFactory;
 
-    private final List<RequestMsg> messages = new ArrayList<>();
+    private List<RequestMsg> messages = new ArrayList<>();
 
     @Nullable
     @SuppressWarnings("unchecked")
@@ -59,7 +61,7 @@ public class RequestContext {
     }
 
     public static <T> T doWithCtx(@NotNull Function<RequestContext, T> action) {
-        return doWithCtx(null, action);
+        return doWithCtx(null, null, action);
     }
 
     public static <T> T doWithCtx(@Nullable RecordsServiceFactory factory,
@@ -67,6 +69,13 @@ public class RequestContext {
 
         return doWithCtx(factory, null, action);
     }
+
+    public static <T> T doWithCtx(@Nullable Consumer<RequestCtxData.Builder<T>> ctxData,
+                                  @NotNull Function<RequestContext, T> action) {
+
+        return doWithCtx(null, ctxData, action);
+    }
+
     public static <T> T doWithCtx(@Nullable RecordsServiceFactory factory,
                                   @Nullable Consumer<RequestCtxData.Builder<T>> ctxData,
                                   @NotNull Function<RequestContext, T> action) {
@@ -110,9 +119,18 @@ public class RequestContext {
             }
         }
 
+        List<RequestMsg> currentMessages = current.messages;
+        current.messages = new ArrayList<>();
+
         try {
+
             return action.apply(current);
+
         } finally {
+
+            currentMessages.addAll(current.messages);
+            current.messages = currentMessages;
+
             current.ctxData = prevCtxData;
             if (isContextOwner) {
                 current.getMessages().forEach(msg -> {
@@ -234,7 +252,7 @@ public class RequestContext {
     }
 
     public RecordsService getRecordsService() {
-        return serviceFactory.getRecordsService();
+        return serviceFactory.getRecordsServiceV1();
     }
 
     public Map<String, Object> getAttributes() {
@@ -255,6 +273,10 @@ public class RequestContext {
 
     public boolean isMsgEnabled(MsgLevel level) {
         return ctxData.getMsgLevel().isEnabled(level);
+    }
+
+    public void addMsg(RequestMsg msg) {
+        messages.add(msg);
     }
 
     public void addMsg(MsgLevel level, Supplier<Object> msg) {
@@ -300,6 +322,16 @@ public class RequestContext {
             MsgType annotation = c.getAnnotation(MsgType.class);
             return annotation != null ? annotation.value() : "any";
         });
+    }
+
+    public List<RecordsError> getRecordErrors() {
+        return messages.stream()
+            .filter(m -> MsgLevel.ERROR.isEnabled(m.getLevel()))
+            .filter(m -> RecordsError.MSG_TYPE.equals(m.getType()))
+            .map(m -> Optional.ofNullable(Json.getMapper().convert(m.getMsg(), RecordsError.class)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList());
     }
 
     public List<RequestMsg> getErrors() {

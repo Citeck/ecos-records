@@ -7,12 +7,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         setId(ID);
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
     }
 

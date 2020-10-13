@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +30,7 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
 
         setId(SOURCE_ID);
         recordsService.register(this);

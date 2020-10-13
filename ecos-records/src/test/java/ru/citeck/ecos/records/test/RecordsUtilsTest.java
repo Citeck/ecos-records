@@ -2,13 +2,12 @@ package ru.citeck.ecos.records.test;import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
 
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.utils.RecordsUtils;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
 
 import java.util.Arrays;
 import java.util.Collections;

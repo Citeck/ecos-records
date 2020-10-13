@@ -4,20 +4,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
-import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.delete.RecordDeleteDao;
-import ru.citeck.ecos.records3.record.operation.delete.RecordsDeleteDao;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
-import ru.citeck.ecos.records3.record.operation.mutate.RecordMutateDao;
-import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.delete.RecordDeleteDao;
+import ru.citeck.ecos.records3.record.op.delete.RecordsDeleteDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
+import ru.citeck.ecos.records3.record.op.mutate.RecordMutateDao;
+import ru.citeck.ecos.records3.record.op.mutate.RecordsMutateDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.request.error.ErrorUtils;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.source.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ public class OneRecDaoConverter {
                 return mapElements(
                     records,
                     dao::getRecordAtts,
-                    v -> EmptyValue.INSTANCE,
+                    v -> EmptyAttValue.INSTANCE,
                     (v, e) -> ObjectData.create()
                 );
             }

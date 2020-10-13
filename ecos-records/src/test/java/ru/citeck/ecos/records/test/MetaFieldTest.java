@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,7 +40,7 @@ public class MetaFieldTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
 
         setId(SOURCE_ID);
         recordsService.register(this);

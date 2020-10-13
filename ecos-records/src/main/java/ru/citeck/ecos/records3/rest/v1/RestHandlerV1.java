@@ -2,20 +2,21 @@ package ru.citeck.ecos.records3.rest.v1;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.delete.DeleteBody;
-import ru.citeck.ecos.records3.record.operation.delete.DeleteResp;
-import ru.citeck.ecos.records3.record.operation.mutate.MutateBody;
-import ru.citeck.ecos.records3.record.operation.mutate.MutateResp;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody;
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.request.error.ErrorUtils;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.rest.QueryResp;
+import ru.citeck.ecos.records3.rest.v1.query.QueryResp;
+import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,7 @@ public class RestHandlerV1 {
 
     public RestHandlerV1(RecordsServiceFactory factory) {
         this.factory = factory;
-        this.recordsService = factory.getRecordsService();
+        this.recordsService = factory.getRecordsServiceV1();
     }
 
     public QueryResp queryRecords(QueryBody body) {

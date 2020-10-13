@@ -4,18 +4,18 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorDto;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records3.evaluator.details.EvalDetails;
-import ru.citeck.ecos.records3.evaluator.evaluators.GroupEvaluator;
-import ru.citeck.ecos.records3.evaluator.evaluators.PredicateEvaluator;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
+import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
+import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +34,7 @@ public class EvaluatorsTest extends AbstractRecordsDao implements RecordsAttsDao
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
 

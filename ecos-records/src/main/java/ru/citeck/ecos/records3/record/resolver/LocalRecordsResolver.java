@@ -9,43 +9,44 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.RecordAtts;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.ServiceFactoryAware;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.delete.RecordsDeleteDao;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttSchemaResolver;
-import ru.citeck.ecos.records3.record.operation.mutate.RecordsMutateDao;
-import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.operation.query.lang.exception.LanguageNotSupportedException;
-import ru.citeck.ecos.records3.record.exception.RecsSourceNotFoundException;
-import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.predicate.model.AndPredicate;
-import ru.citeck.ecos.records3.predicate.model.OrPredicate;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.record.operation.query.lang.QueryWithLang;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.operation.query.lang.DistinctQuery;
+import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.querylang.QueryWithLang;
+import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
+import ru.citeck.ecos.records2.source.dao.local.job.Job;
+import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
+import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.ServiceFactoryAware;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.delete.RecordsDeleteDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.op.mutate.RecordsMutateDao;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records2.exception.RecsSourceNotFoundException;
+import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.AndPredicate;
+import ru.citeck.ecos.records2.predicate.model.OrPredicate;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.source.common.AttMixin;
-import ru.citeck.ecos.records3.source.info.ColumnsSourceId;
-import ru.citeck.ecos.records3.source.common.group.RecordsGroupDao;
-import ru.citeck.ecos.records3.source.dao.*;
-import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
-import ru.citeck.ecos.records3.source.dao.local.job.Job;
-import ru.citeck.ecos.records3.source.dao.local.job.JobExecutor;
-import ru.citeck.ecos.records3.source.dao.local.job.JobsProvider;
-import ru.citeck.ecos.records3.utils.RecordsUtils;
-import ru.citeck.ecos.records3.utils.ValueWithIdx;
+import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixin;
+import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
+import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
+import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records2.utils.ValWithIdx;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,7 +80,7 @@ public class LocalRecordsResolver {
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
-        this.recordsAttsService = serviceFactory.getRecordsMetaService();
+        this.recordsAttsService = serviceFactory.getRecordsAttsService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
 
@@ -332,8 +333,8 @@ public class LocalRecordsResolver {
             log.debug("getMeta start.\nRecords: " + records + " attributes: " + attributes);
         }
 
-        List<ValueWithIdx<Object>> recordObjs = new ArrayList<>();
-        List<ValueWithIdx<RecordRef>> recordRefs = new ArrayList<>();
+        List<ValWithIdx<Object>> recordObjs = new ArrayList<>();
+        List<ValWithIdx<RecordRef>> recordRefs = new ArrayList<>();
 
         int idx = 0;
         for (Object rec : records) {
@@ -342,21 +343,21 @@ public class LocalRecordsResolver {
                 if (ref.getAppName().equals(currentApp)) {
                     ref = ref.removeAppName();
                 }
-                recordRefs.add(new ValueWithIdx<>(ref, idx));
+                recordRefs.add(new ValWithIdx<>(ref, idx));
             } else {
-                recordObjs.add(new ValueWithIdx<>(rec, idx));
+                recordObjs.add(new ValWithIdx<>(rec, idx));
             }
             idx++;
         }
 
-        List<ValueWithIdx<RecordAtts>> result = new ArrayList<>();
+        List<ValWithIdx<RecordAtts>> result = new ArrayList<>();
         List<RecordAtts> refsAtts = getMetaImpl(recordRefs.stream()
-            .map(ValueWithIdx::getValue)
+            .map(ValWithIdx::getValue)
             .collect(Collectors.toList()), attributes, rawAtts);
 
         if (refsAtts != null && refsAtts.size() == recordRefs.size()) {
             for (int i = 0; i < refsAtts.size(); i++) {
-                result.add(new ValueWithIdx<>(refsAtts.get(i), recordRefs.get(i).getIdx()));
+                result.add(new ValWithIdx<>(refsAtts.get(i), recordRefs.get(i).getIdx()));
             }
         } else {
             context.addMsg(MsgLevel.ERROR, () -> "Results count doesn't match with " +
@@ -364,13 +365,13 @@ public class LocalRecordsResolver {
         }
 
         List<RecordAtts> atts = recordsAttsService.getAtts(recordObjs.stream()
-            .map(ValueWithIdx::getValue)
+            .map(ValWithIdx::getValue)
             .collect(Collectors.toList()), attributes, rawAtts, Collections.emptyList());
 
         if (atts != null && atts.size() == recordObjs.size()) {
 
             for (int i = 0; i < atts.size(); i++) {
-                result.add(new ValueWithIdx<>(atts.get(i), recordObjs.get(i).getIdx()));
+                result.add(new ValWithIdx<>(atts.get(i), recordObjs.get(i).getIdx()));
             }
 
         } else {
@@ -382,10 +383,10 @@ public class LocalRecordsResolver {
             log.debug("getMeta end.\nRecords: " + records + " attributes: " + attributes);
         }
 
-        result.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
+        result.sort(Comparator.comparingInt(ValWithIdx::getIdx));
 
         return result.stream()
-            .map(ValueWithIdx::getValue)
+            .map(ValWithIdx::getValue)
             .collect(Collectors.toList());
     }
 
@@ -405,7 +406,7 @@ public class LocalRecordsResolver {
                 .collect(Collectors.toList());
         }
 
-        List<ValueWithIdx<RecordAtts>> results = new ArrayList<>();
+        List<ValWithIdx<RecordAtts>> results = new ArrayList<>();
 
         RecordsUtils.groupRefBySource(records).forEach((sourceId, recs) -> {
 
@@ -416,7 +417,7 @@ public class LocalRecordsResolver {
                 context.addMsg(MsgLevel.ERROR, () ->
                     "RecordsAttsDao is not found with ID: '" + sourceId + "'");
 
-                for (ValueWithIdx<RecordRef> ref : recs) {
+                for (ValWithIdx<RecordRef> ref : recs) {
                     results.add(ref.map(RecordAtts::new));
                 }
 
@@ -428,7 +429,7 @@ public class LocalRecordsResolver {
 
                 if (recAtts == null) {
 
-                    for (ValueWithIdx<RecordRef> ref : recs) {
+                    for (ValWithIdx<RecordRef> ref : recs) {
                         results.add(ref.map(RecordAtts::new));
                     }
 
@@ -444,7 +445,7 @@ public class LocalRecordsResolver {
                                 "Actual length: " + recAtts.size() + " " +
                                 "Refs: " + recs + " Atts: " + recAtts);
 
-                        for (ValueWithIdx<RecordRef> ref : recs) {
+                        for (ValWithIdx<RecordRef> ref : recs) {
                             results.add(ref.map(RecordAtts::new));
                         }
 
@@ -455,19 +456,19 @@ public class LocalRecordsResolver {
                             mixins = ((AbstractRecordsDao) recordsDao).getMixins();
                         }
 
-                        List<RecordRef> refs = recs.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
+                        List<RecordRef> refs = recs.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
                         List<RecordAtts> atts = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs);
 
                         for (int i = 0; i < recs.size(); i++) {
-                            results.add(new ValueWithIdx<>(atts.get(i), i));
+                            results.add(new ValWithIdx<>(atts.get(i), i));
                         }
                     }
                 }
             }
         });
 
-        results.sort(Comparator.comparingInt(ValueWithIdx::getIdx));
-        return results.stream().map(ValueWithIdx::getValue).collect(Collectors.toList());
+        results.sort(Comparator.comparingInt(ValWithIdx::getIdx));
+        return results.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
     }
 
     @NotNull
@@ -601,14 +602,14 @@ public class LocalRecordsResolver {
     }
 
     @Nullable
-    public RecsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecordsDaoInfo getSourceInfo(@NotNull String sourceId) {
 
         RecordsDao recordsDao = allDao.get(sourceId);
         if (recordsDao == null) {
             return null;
         }
 
-        RecsSourceInfo recordsSourceInfo = new RecsSourceInfo();
+        RecordsDaoInfo recordsSourceInfo = new RecordsDaoInfo();
         recordsSourceInfo.setId(sourceId);
 
         if (recordsDao instanceof RecordsQueryDao) {
@@ -632,7 +633,7 @@ public class LocalRecordsResolver {
     }
 
     @NotNull
-    public List<RecsSourceInfo> getSourceInfo() {
+    public List<RecordsDaoInfo> getSourceInfo() {
         return allDao.keySet()
             .stream()
             .map(this::getSourceInfo)

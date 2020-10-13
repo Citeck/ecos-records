@@ -4,7 +4,7 @@ import kotlin.Unit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.citeck.ecos.records3.evaluator.details.*;
+import ru.citeck.ecos.records2.evaluator.details.*;
 
 import java.util.Arrays;
 import java.util.List;

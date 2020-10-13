@@ -2,13 +2,13 @@ package ru.citeck.ecos.records.test.schema;
 
 import lombok.Data;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.RecordConstants;
+import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 
 import java.util.List;
 import java.util.Map;
@@ -40,11 +40,11 @@ public class DtoSchemaTest {
         dto.setNumField(123);
         dto.setStrField("strField-123");
 
-        RecordsService recordsService = serviceFactory.getRecordsService();
+        RecordsService recordsService = serviceFactory.getRecordsServiceV1();
 
         assertEquals(dto, recordsService.getAtts(dto, TestDto.class));
-        assertEquals("InnerDisp", serviceFactory.getRecordsService().getAtt(dto, "inner?disp").asText());
-        assertEquals("TestDtoDisp", serviceFactory.getRecordsService().getAtt(dto, "?disp").asText());
+        assertEquals("InnerDisp", serviceFactory.getRecordsServiceV1().getAtt(dto, "inner?disp").asText());
+        assertEquals("TestDtoDisp", serviceFactory.getRecordsServiceV1().getAtt(dto, "?disp").asText());
 
         assertEquals(dto.attWithCustomName, recordsService.getAtts(dto, CustomNameFieldAtt.class).otherField);
     }

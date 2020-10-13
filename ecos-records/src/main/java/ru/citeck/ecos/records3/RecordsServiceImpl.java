@@ -6,19 +6,23 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttReadException;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.operation.meta.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records2.RecordConstants;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.AttReadException;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
-import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
+import ru.citeck.ecos.records3.record.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -229,7 +233,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Nullable
     @Override
-    public RecsSourceInfo getSourceInfo(String sourceId) {
+    public RecordsDaoInfo getSourceInfo(String sourceId) {
         if (sourceId == null) {
             return null;
         }
@@ -238,7 +242,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public List<RecsSourceInfo> getSourcesInfo() {
+    public List<RecordsDaoInfo> getSourcesInfo() {
         return recordsResolver.getSourceInfo();
     }
 

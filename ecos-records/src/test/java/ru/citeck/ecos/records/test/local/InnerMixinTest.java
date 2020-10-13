@@ -6,17 +6,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
-import ru.citeck.ecos.records3.source.common.AttMixin;
-import ru.citeck.ecos.records3.source.common.AttValueCtx;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.type.ComputedAtt;
-import ru.citeck.ecos.records3.type.RecTypeService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
+import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixin;
+import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttValueCtx;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.type.ComputedAtt;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class InnerMixinTest extends AbstractRecordsDao
 
         RecordsServiceFactory factory = new RecordsServiceFactory() {
             @Override
-            protected RecTypeService createRecordTypeService() {
+            protected RecordTypeService createRecordTypeService() {
                 return type -> {
                     if (type.equals(TEST_TYPE0)) {
                         ComputedAtt att = new ComputedAtt();
@@ -60,7 +60,7 @@ public class InnerMixinTest extends AbstractRecordsDao
                 };
             }
         };
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
 
@@ -112,7 +112,7 @@ public class InnerMixinTest extends AbstractRecordsDao
             if (ref.equals(DTO_REC_REF.getId())) {
                 return new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE1)));
             }
-            return EmptyValue.INSTANCE;
+            return EmptyAttValue.INSTANCE;
         }).collect(Collectors.toList());
     }
 

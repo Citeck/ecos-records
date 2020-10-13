@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 
 import java.util.*;
@@ -22,7 +22,7 @@ public class ForceLocalRecordsTest {
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        RecordsService recordsService = factory.getRecordsService();
+        RecordsService recordsService = factory.getRecordsServiceV1();
 
         recordsService.register(new TypesDao());
 

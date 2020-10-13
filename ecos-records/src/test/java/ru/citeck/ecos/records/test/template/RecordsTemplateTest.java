@@ -5,13 +5,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.impl.EmptyValue;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.template.RecordsTemplateService;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.meta.RecordsTemplateService;
 
 import java.util.List;
 import java.util.Locale;
@@ -31,7 +31,7 @@ public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAt
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsTemplateService = factory.getRecordsTemplateService();
         setId(ID);
-        factory.getRecordsService().register(this);
+        factory.getRecordsServiceV1().register(this);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAt
             if (r.equals("rec")) {
                 return new RecData();
             } else {
-                return EmptyValue.INSTANCE;
+                return EmptyAttValue.INSTANCE;
             }
         }).collect(Collectors.toList());
     }

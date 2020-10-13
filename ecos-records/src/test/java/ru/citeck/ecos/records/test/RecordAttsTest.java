@@ -3,7 +3,7 @@ package ru.citeck.ecos.records.test;
 import ecos.com.fasterxml.jackson210.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
 
 import java.math.BigDecimal;
 import java.util.Date;

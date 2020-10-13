@@ -5,12 +5,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +30,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
         setId(ID);
         recordsService.register(this);
     }
@@ -96,7 +99,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
             atts.put("innerField1Disp", "inner.field1?disp");
             atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
             atts.put("innerHasFalse", ".att(n:\"inner2\"){has(n:\"has_false\")}");
-            attributes = recordsService.getAtts(RecordRef.create(ID, "inner"), atts, false);
+            attributes = recordsService.getAtts(RecordRef.create(ID, "inner"), atts);
         }
 
         @Override

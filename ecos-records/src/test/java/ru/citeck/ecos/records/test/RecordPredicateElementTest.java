@@ -4,18 +4,18 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records3.RecordRef;
-import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.operation.meta.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.predicate.Element;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.predicate.RecordElement;
-import ru.citeck.ecos.records3.predicate.RecordElements;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records2.predicate.Element;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.RecordElement;
+import ru.citeck.ecos.records2.predicate.RecordElements;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
         predicates = factory.getPredicateService();
 
         setId("");
-        recordsService.register(this);
+        factory.getRecordsServiceV1().register(this);
     }
 
     @Test
@@ -171,7 +171,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             return new AttValue(attributes.get(ref.getId()).get(name));
         }
 
-        class AttValue implements ru.citeck.ecos.records3.record.operation.meta.value.AttValue {
+        class AttValue implements ru.citeck.ecos.records3.record.op.atts.value.AttValue {
 
             private String str;
 

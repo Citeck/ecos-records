@@ -10,24 +10,24 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.RecordConstants;
-import ru.citeck.ecos.records3.RecordRef;
+import ru.citeck.ecos.records2.RecordConstants;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.predicate.model.Predicate;
-import ru.citeck.ecos.records3.predicate.model.Predicates;
-import ru.citeck.ecos.records3.predicate.model.ValuePredicate;
-import ru.citeck.ecos.records3.predicate.model.VoidPredicate;
-import ru.citeck.ecos.records3.record.operation.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.rest.v1.QueryBody;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records2.predicate.model.ValuePredicate;
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records3.source.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.source.dao.local.RemoteSyncRecordsDao;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -58,7 +58,7 @@ public class RemoteSyncRecordsDaoTest {
                 @Override
                 public <T> T jsonPost(String url, Object request, Class<T> respType) {
                     @SuppressWarnings("unchecked")
-                    T res = (T) remoteFactory.getRestHandler().queryRecordsImpl(
+                    T res = (T) remoteFactory.getRestHandlerAdapter().queryRecords(
                         Objects.requireNonNull(Json.getMapper().convert(request, QueryBody.class))
                     );
                     return Json.getMapper().convert(res, respType);
@@ -67,10 +67,10 @@ public class RemoteSyncRecordsDaoTest {
             }
         };
 
-        this.recordsService = localFactory.getRecordsService();
+        this.recordsService = localFactory.getRecordsServiceV1();
 
         recordsWithMetaSource = new RecordsWithMetaSource();
-        remoteFactory.getRecordsService().register(recordsWithMetaSource);
+        remoteFactory.getRecordsServiceV1().register(recordsWithMetaSource);
 
         remoteSyncRecordsDao = new RemoteSyncRecordsDao<>(REMOTE_SOURCE_ID, ValueDto.class);
         //this.recordsService.register(remoteSyncRecordsDao);

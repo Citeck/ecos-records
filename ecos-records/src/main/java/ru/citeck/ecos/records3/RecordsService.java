@@ -4,14 +4,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records3.graphql.meta.annotation.AttName;
-import ru.citeck.ecos.records3.record.operation.meta.value.AttValue;
-import ru.citeck.ecos.records3.record.operation.delete.DelStatus;
-import ru.citeck.ecos.records3.record.operation.meta.RecordAttsService;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.operation.query.dto.RecordsQueryRes;
-import ru.citeck.ecos.records3.source.dao.RecordsDao;
-import ru.citeck.ecos.records3.source.info.RecsSourceInfo;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
+import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -292,11 +294,11 @@ public interface RecordsService {
      * Add info about RecordsDao with specified Id.
      */
     @Nullable
-    RecsSourceInfo getSourceInfo(@Nullable String sourceId);
+    RecordsDaoInfo getSourceInfo(@Nullable String sourceId);
 
     /**
      * Get info about all registered RecordsDao.
      */
     @NotNull
-    List<RecsSourceInfo> getSourcesInfo();
+    List<RecordsDaoInfo> getSourcesInfo();
 }

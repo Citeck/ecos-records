@@ -90,19 +90,13 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
 
         Record(String id) {
             this.id = RecordRef.valueOf(id);
+            RequestContext.getCurrentNotNull().getList("testList").add(this);
         }
 
         @Override
         public String getId() {
             return id.toString();
         }
-
-        //todo
-       /* @Override
-        public <T extends QueryContext> void init(T context) {
-            assertSame(QueryContext.getCurrent(), context);
-            context.getList("testList").add(this);
-        }*/
 
         @Override
         public String getString() {

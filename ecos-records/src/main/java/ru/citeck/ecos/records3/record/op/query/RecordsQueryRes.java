@@ -34,17 +34,9 @@ public class RecordsQueryRes<T> {
     }
 
     public void merge(RecordsQueryRes<T> other) {
-        hasMore = hasMore || other.getHasMore();
+        hasMore = hasMore || other.isHasMore();
         totalCount += other.getTotalCount();
         addRecords(other.getRecords());
-    }
-
-    public boolean getHasMore() {
-        return hasMore;
-    }
-
-    public void setHasMore(boolean hasMore) {
-        this.hasMore = hasMore;
     }
 
     /**

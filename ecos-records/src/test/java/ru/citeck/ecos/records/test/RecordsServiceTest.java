@@ -74,7 +74,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
-        assertFalse(records.getHasMore());
+        assertFalse(records.isHasMore());
     }
 
     @Test
@@ -94,7 +94,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
 
         assertEquals(ids.size(), recordsRefs.size());
         assertEquals(ids.size(), records.getTotalCount());
-        assertFalse(records.getHasMore());
+        assertFalse(records.isHasMore());
 
         for (int i = 0; i < recordsRefs.size(); i++) {
 

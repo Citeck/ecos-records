@@ -6,6 +6,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
@@ -17,7 +18,9 @@ public class QueryBody {
 
     public static final String SINGLE_ATT_KEY = "a";
 
+    @Nullable
     @Getter @Setter private List<RecordRef> records;
+    @Nullable
     @Getter @Setter private RecordsQuery query;
 
     @Getter @Setter private String schema;

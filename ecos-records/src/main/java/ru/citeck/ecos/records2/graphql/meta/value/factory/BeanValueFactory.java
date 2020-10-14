@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.graphql.meta.value.factory.bean;
+package ru.citeck.ecos.records2.graphql.meta.value.factory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -9,8 +9,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
+import ru.citeck.ecos.records3.record.op.atts.value.factory.bean.BeanTypeContext;
+import ru.citeck.ecos.records3.record.op.atts.value.factory.bean.BeanTypeUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;

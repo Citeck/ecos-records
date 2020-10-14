@@ -44,9 +44,12 @@ import java.util.stream.Collectors;
  * @see LocalRecordsMetaDao
  * @see LocalRecordsQueryWithMetaDao
  *
+ * @deprecated -> records3.*.AbstractRecordsDao
+ *
  * @author Pavel Simonov
  */
 @Slf4j
+@Deprecated
 @SuppressWarnings("unchecked")
 public abstract class LocalRecordsDao extends AbstractRecordsDao implements ServiceFactoryAware {
 

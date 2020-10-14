@@ -24,7 +24,7 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
-import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
@@ -42,6 +42,7 @@ public class RemoteSyncRecordsDaoTest {
     private static final String REMOTE_SOURCE_ID = "remote/remote-source";
     private static final int TOTAL_RECS = 200;
 
+    private RecordsServiceFactory recordsServiceFactory;
     private RecordsService recordsService;
     private RecordsWithMetaSource recordsWithMetaSource;
     private RemoteSyncRecordsDao<ValueDto> remoteSyncRecordsDao;
@@ -58,14 +59,13 @@ public class RemoteSyncRecordsDaoTest {
                 @Override
                 public <T> T jsonPost(String url, Object request, Class<T> respType) {
                     @SuppressWarnings("unchecked")
-                    T res = (T) remoteFactory.getRestHandlerAdapter().queryRecords(
-                        Objects.requireNonNull(Json.getMapper().convert(request, QueryBody.class))
-                    );
+                    T res = (T) remoteFactory.getRestHandlerAdapter().queryRecords(request);
                     return Json.getMapper().convert(res, respType);
                 }
             });
             }
         };
+        recordsServiceFactory = localFactory;
 
         this.recordsService = localFactory.getRecordsServiceV1();
 
@@ -73,7 +73,7 @@ public class RemoteSyncRecordsDaoTest {
         remoteFactory.getRecordsServiceV1().register(recordsWithMetaSource);
 
         remoteSyncRecordsDao = new RemoteSyncRecordsDao<>(REMOTE_SOURCE_ID, ValueDto.class);
-        //this.recordsService.register(remoteSyncRecordsDao);
+        this.recordsService.register(remoteSyncRecordsDao);
     }
 
     @Test
@@ -99,14 +99,23 @@ public class RemoteSyncRecordsDaoTest {
         query1.setLanguage(PredicateService.LANGUAGE_PREDICATE);
         query1.setSourceId(REMOTE_SOURCE_ID);
         query1.setQuery(predicate);
-
-        RecordsQueryRes<RecordRef> recs = recordsService.query(query1);
-        //assertEquals(0, recs.getErrors().size());
+        RecordsQueryRes<RecordRef> recs = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
+            try {
+                return recordsService.query(query1);
+            } finally {
+                assertEquals(0, ctx.getErrors().size());
+            }
+        });
         assertEquals(1, recs.getRecords().size());
         assertEquals(RecordRef.valueOf(REMOTE_SOURCE_ID + "@id-100"), recs.getRecords().get(0));
 
-        RecordsQueryRes<ValueDto> resultWithMeta = recordsService.query(query1, ValueDto.class);
-        //assertEquals(0, resultWithMeta.getErrors().size());
+        RecordsQueryRes<ValueDto> resultWithMeta = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
+            try {
+                return recordsService.query(query1, ValueDto.class);
+            } finally {
+                assertEquals(0, ctx.getErrors().size());
+            }
+        });
         assertEquals(1, resultWithMeta.getRecords().size());
         assertEquals(origDto, resultWithMeta.getRecords().get(0));
     }
@@ -189,6 +198,8 @@ public class RemoteSyncRecordsDaoTest {
 
             RecordsQueryRes<ValueDto> queryResult = new RecordsQueryRes<>(result);
             queryResult.setTotalCount(result.size() + sortedValues.size() - idx);
+
+            log.info("Result: " + queryResult);
             return queryResult;
         }
 

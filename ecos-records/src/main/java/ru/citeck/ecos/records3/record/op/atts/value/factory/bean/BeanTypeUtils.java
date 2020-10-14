@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.value.factory.bean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
 
 import java.beans.PropertyDescriptor;
@@ -37,19 +38,28 @@ public class BeanTypeUtils {
 
             getters.put(descriptor.getName(), getter);
 
-            AttName attNameAnn = getReadAnnotation(type, descriptor, AttName.class);
-            if (attNameAnn != null) {
-                String metaAttName = attNameAnn.value();
-                if (metaAttName.charAt(0) == '.' || metaAttName.charAt(0) == '?') {
-                    String name = metaAttName.substring(1);
+            String attAnnName = null;
+            AttName attName = getReadAnnotation(type, descriptor, AttName.class);
+            if (attName != null) {
+                attAnnName = attName.value();
+            } else {
+                MetaAtt metaAttAnn = getReadAnnotation(type, descriptor, MetaAtt.class);
+                if (metaAttAnn != null) {
+                    attAnnName = metaAttAnn.value();
+                }
+            }
+
+            if (attAnnName != null) {
+                if (attAnnName.charAt(0) == '.' || attAnnName.charAt(0) == '?') {
+                    String name = attAnnName.substring(1);
                     getters.put('.' + name, getter);
                     getters.put('?' + name, getter);
                 } else {
-                    if (metaAttName.contains("?")) {
-                        metaAttName = metaAttName.substring(0, metaAttName.indexOf('?'));
+                    if (attAnnName.contains("?")) {
+                        attAnnName = attAnnName.substring(0, attAnnName.indexOf('?'));
                     }
                 }
-                getters.put(metaAttName, getter);
+                getters.put(attAnnName, getter);
             }
         }
         return getters;

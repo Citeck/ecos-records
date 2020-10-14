@@ -16,7 +16,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @deprecated -> records3.*.RecordsQuery
+ */
 @Slf4j
+@Deprecated
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecordsQuery {
 

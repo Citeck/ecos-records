@@ -65,7 +65,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
             result.setRecords(queryRes.getRecords());
             result.setTotalCount(queryRes.getTotalCount());
-            result.setHasMore(queryRes.getHasMore());
+            result.setHasMore(queryRes.isHasMore());
             result.setErrors(context.getRecordErrors());
             setDebugToResult(result, context);
 
@@ -168,7 +168,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         recsResult.setRecords(RequestContext.doWithCtx(serviceFactory, ctx -> {
 
             List<RecordAtts> atts = recordsServiceV1.getAtts(records, attributes, !flatAttributes);
-            List<RecordMeta> attsMeta = mapper.convert(atts, mapper.getListType(RecordAtts.class));
+            List<RecordMeta> attsMeta = mapper.convert(atts, mapper.getListType(RecordMeta.class));
 
             setDebugToResult(recsResult, ctx);
             recsResult.setErrors(ctx.getRecordErrors());

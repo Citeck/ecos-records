@@ -275,6 +275,12 @@ public class RequestContext {
         return ctxData.getMsgLevel().isEnabled(level);
     }
 
+    public void addAllMsgs(Iterable<RequestMsg> messages) {
+        for (RequestMsg message : messages) {
+            addMsg(message);
+        }
+    }
+
     public void addMsg(RequestMsg msg) {
         messages.add(msg);
     }

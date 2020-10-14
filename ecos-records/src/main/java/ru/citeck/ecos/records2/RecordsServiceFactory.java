@@ -17,7 +17,6 @@ import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
-import ru.citeck.ecos.records2.meta.DtoMetaResolver;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
@@ -74,7 +73,6 @@ public class RecordsServiceFactory {
     private RecordsService recordsService;
     private ru.citeck.ecos.records3.RecordsService recordsServiceV1;
     private DtoSchemaReader dtoSchemaReader;
-    private DtoMetaResolver dtoMetaResolver;
     private LocalRemoteResolver recordsResolver;
     private PredicateService predicateService;
     private QueryLangService queryLangService;
@@ -432,7 +430,7 @@ public class RecordsServiceFactory {
         metaValueFactories.add(new DataValueMetaFactory());
         metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.MLTextValueFactory());
         metaValueFactories.add(new RecordMetaValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.bean.BeanValueFactory());
+        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.BeanValueFactory());
         metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.BooleanValueFactory());
         metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.DateValueFactory());
         metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.DoubleValueFactory());
@@ -458,18 +456,6 @@ public class RecordsServiceFactory {
 
     protected DtoSchemaReader createDtoSchemaReader() {
         return new DtoSchemaReader(this);
-    }
-
-
-    public final synchronized DtoMetaResolver getDtoMetaResolver() {
-        if (dtoMetaResolver == null) {
-            dtoMetaResolver = createDtoMetaResolver();
-        }
-        return dtoMetaResolver;
-    }
-
-    protected DtoMetaResolver createDtoMetaResolver() {
-        return new DtoMetaResolver(this);
     }
 
     public final synchronized Supplier<? extends RequestContext> getRequestContextSupplier() {

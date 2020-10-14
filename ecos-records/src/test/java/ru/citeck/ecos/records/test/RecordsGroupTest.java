@@ -17,7 +17,6 @@ import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
-
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;

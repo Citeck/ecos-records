@@ -75,7 +75,7 @@ public class LocalRecordsResolver {
 
     private final String currentApp;
 
-    private final JobExecutor jobExecutor = new JobExecutor();
+    private final JobExecutor jobExecutor;
 
     public LocalRecordsResolver(RecordsServiceFactory serviceFactory) {
 
@@ -83,6 +83,7 @@ public class LocalRecordsResolver {
         this.recordsAttsService = serviceFactory.getRecordsAttsService();
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
+        this.jobExecutor = new JobExecutor(serviceFactory);
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsAttsDao.class, attsDao);
@@ -144,7 +145,7 @@ public class LocalRecordsResolver {
                             Collections.emptyList()
                         );
                         recordsResult = new RecordsQueryRes<>(atts);
-                        recordsResult.setHasMore(queryRes.getHasMore());
+                        recordsResult.setHasMore(queryRes.isHasMore());
                         recordsResult.setTotalCount(queryRes.getTotalCount());
                     }
                 }
@@ -194,7 +195,7 @@ public class LocalRecordsResolver {
 
                         recordsResult.setRecords(recAtts);
                         recordsResult.setTotalCount(queryRes.getTotalCount());
-                        recordsResult.setHasMore(queryRes.getHasMore());
+                        recordsResult.setHasMore(queryRes.isHasMore());
                     }
                 }
             }

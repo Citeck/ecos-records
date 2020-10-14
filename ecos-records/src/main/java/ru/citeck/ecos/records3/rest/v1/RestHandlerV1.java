@@ -2,6 +2,8 @@ package ru.citeck.ecos.records3.rest.v1;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -18,9 +20,7 @@ import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,10 +30,23 @@ public class RestHandlerV1 {
 
     private final RecordsService recordsService;
     private final RecordsServiceFactory factory;
+    private final RecordsProperties properties;
+
+    private String currentAppId;
 
     public RestHandlerV1(RecordsServiceFactory factory) {
         this.factory = factory;
         this.recordsService = factory.getRecordsServiceV1();
+        this.properties = factory.getProperties();
+
+        if (StringUtils.isBlank(properties.getAppInstanceId())) {
+            currentAppId = properties.getAppName();
+        } else {
+            currentAppId = properties.getAppInstanceId();
+        }
+        if (StringUtils.isBlank(currentAppId)) {
+            currentAppId = "unknown:" + UUID.randomUUID();
+        }
     }
 
     public QueryResp queryRecords(QueryBody body) {
@@ -171,8 +184,10 @@ public class RestHandlerV1 {
         return RequestContext.doWithCtx(factory, ctxData -> {
 
             ctxData.setRequestId(body.getRequestId());
-            ctxData.setRequestTrace(body.getRequestTrace());
             ctxData.setMsgLevel(body.getMsgLevel());
+            List<String> trace = new ArrayList<>(body.getRequestTrace());
+            trace.add(currentAppId);
+            ctxData.setRequestTrace(trace);
 
         }, action);
     }

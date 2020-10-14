@@ -9,6 +9,7 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
 import ru.citeck.ecos.records3.record.op.delete.DelStatus;
 import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
@@ -20,6 +21,7 @@ import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.dao.RecordsDao;
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
@@ -205,16 +207,19 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private <T> RecordsQueryRes<T> handleRecordsQuery(Supplier<RecordsQueryRes<T>> supplier) {
 
-        RecordsQueryRes<T> result;
+        return RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-        try {
-            result = RequestContext.doWithCtx(serviceFactory, ctx -> supplier.get());
-        } catch (Throwable e) {
-            log.error("Records resolving error", e);
-            result = new RecordsQueryRes<>();
-        }
+            RecordsQueryRes<T> result;
 
-        return result;
+            try {
+                result = supplier.get();
+            } catch (Throwable e) {
+                ctx.addMsg(MsgLevel.ERROR, () -> ErrorUtils.convertException(e));
+                log.error("Records resolving error", e);
+                result = new RecordsQueryRes<>();
+            }
+            return result;
+        });
     }
 
     private <T> List<T> handleRecordsListRead(Supplier<List<T>> impl) {

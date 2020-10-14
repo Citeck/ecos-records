@@ -16,6 +16,9 @@ import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
 import ru.citeck.ecos.records2.meta.attproc.PrefixSuffixAttProcessor;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,15 +29,17 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private final RecordsMetaGql graphQLService;
     private final AttributesMetaResolver attributesMetaResolver;
-    private final DtoMetaResolver dtoMetaResolver;
+    private final DtoSchemaReader dtoSchemaReader;
+    private final AttSchemaWriter attSchemaWriter;
 
     private final Map<String, AttProcessor> attProcessors = new ConcurrentHashMap<>();
 
     public RecordsMetaServiceImpl(RecordsServiceFactory serviceFactory) {
 
         graphQLService = serviceFactory.getRecordsMetaGql();
-        dtoMetaResolver = serviceFactory.getDtoMetaResolver();
+        dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
+        attSchemaWriter = serviceFactory.getAttSchemaWriter();
 
         register(new FormatAttProcessor());
         register(new PrefixSuffixAttProcessor());
@@ -204,12 +209,13 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     @Override
     public Map<String, String> getAttributes(Class<?> metaClass) {
-        return dtoMetaResolver.getAttributes(metaClass);
+        List<SchemaRootAtt> atts = dtoSchemaReader.read(metaClass);
+        return attSchemaWriter.writeToMap(atts);
     }
 
     @Override
     public <T> T instantiateMeta(Class<T> metaClass, RecordMeta flatMeta) {
-        return dtoMetaResolver.instantiateMeta(metaClass, flatMeta.getAttributes());
+        return dtoSchemaReader.instantiate(metaClass, flatMeta.getAttributes());
     }
 
     @Override

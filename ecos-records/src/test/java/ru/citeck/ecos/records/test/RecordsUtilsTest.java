@@ -29,7 +29,7 @@ class RecordsUtilsTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = (RecordsServiceImpl) factory.getRecordsService();
+        recordsService = (RecordsServiceImpl) factory.getRecordsServiceV1();
 
         setId(SOURCE_ID);
         recordsService.register(this);

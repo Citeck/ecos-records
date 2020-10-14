@@ -2,6 +2,8 @@ package ru.citeck.ecos.records2.source.dao.local.job;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,6 +20,12 @@ import java.util.concurrent.TimeUnit;
 public class JobExecutor {
 
     private final List<Job> jobs = new CopyOnWriteArrayList<>();
+
+    private final RecordsServiceFactory serviceFactory;
+
+    public JobExecutor(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
 
     public void init(ScheduledExecutorService executor) {
 
@@ -51,7 +59,7 @@ public class JobExecutor {
         try {
             int count = 0;
             while (count++ < 20) {
-                if (!job.execute()) {
+                if (!RequestContext.doWithCtx(serviceFactory, ctx -> job.execute())) {
                     break;
                 }
             }

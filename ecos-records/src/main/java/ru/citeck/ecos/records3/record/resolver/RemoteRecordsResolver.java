@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
+import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
 import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.result.DebugResult;
@@ -30,7 +31,6 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.RecordsAttsQueryRes;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp;
@@ -70,6 +70,8 @@ public class RemoteRecordsResolver {
                                              @NotNull Map<String, String> attributes,
                                              boolean rawAtts) {
 
+        RequestContext context = RequestContext.getCurrentNotNull();
+
         String sourceId = query.getSourceId();
         if (sourceId.indexOf('/') == -1) {
             sourceId = defaultAppName + "/" + sourceId;
@@ -85,22 +87,93 @@ public class RemoteRecordsResolver {
         appName = sourceId.substring(0, appDelimIdx);
         appQuery.setSourceId(sourceId.substring(appDelimIdx + 1));
 
-        String url = "/" + appName + QUERY_URL;
-
         QueryBody queryBody = new QueryBody();
 
         queryBody.setQuery(appQuery);
         queryBody.setAttributes(attributes);
         queryBody.setRawAtts(rawAtts);
+        setContextProps(queryBody, context);
 
-        RecordsAttsQueryRes appResult = restApi.jsonPost(url, queryBody, RecordsAttsQueryRes.class);
+        QueryResp queryResp = execQuery(appName, queryBody, context);
+        RecordsQueryRes<RecordAtts> result = new RecordsQueryRes<>();
+        result.setRecords(queryResp.getRecords());
+        result.setTotalCount(queryResp.getTotalCount());
+        result.setHasMore(queryResp.isHasMore());
 
-        return RecordsUtils.metaWithDefaultApp(appResult, appName);
+        return RecordsUtils.metaWithDefaultApp(result, appName);
+    }
+
+    @NotNull
+    private QueryResp execQuery(String appName, QueryBody queryBody, RequestContext context) {
+
+        ru.citeck.ecos.records2.request.rest.QueryBody v0Body = toV0QueryBody(queryBody, context);
+
+        ObjectNode appResultObj = postRecords(appName, QUERY_URL, v0Body);
+        QueryResp result = toQueryAttsRes(appResultObj, context);
+        if (result == null) {
+            result = new QueryResp();
+        } else {
+            context.addAllMsgs(result.getMessages());
+        }
+
+        return result;
+    }
+
+    @Nullable
+    private QueryResp toQueryAttsRes(ObjectNode body, RequestContext context) {
+
+        if (body == null || body.isEmpty()) {
+            return null;
+        }
+
+        if (body.path("version").asInt(0) == 1) {
+            return mapper.convert(body, QueryResp.class);
+        }
+
+        RecordsMetaQueryResult v0Result = mapper.convert(body, RecordsMetaQueryResult.class);
+        if (v0Result == null) {
+            return null;
+        }
+
+        addErrorMessages(v0Result.getErrors(), context);
+        addDebugMessage(v0Result, context);
+
+        QueryResp resp = new QueryResp();
+        resp.setRecords(v0Result.getRecords()
+            .stream()
+            .map(RecordAtts::new)
+            .collect(Collectors.toList()));
+        resp.setHasMore(v0Result.getHasMore());
+        resp.setTotalCount(v0Result.getTotalCount());
+
+        return resp;
+    }
+
+    private ru.citeck.ecos.records2.request.rest.QueryBody toV0QueryBody(QueryBody body, RequestContext context) {
+
+        ru.citeck.ecos.records2.request.rest.QueryBody v0Body = new ru.citeck.ecos.records2.request.rest.QueryBody();
+        v0Body.setAttributes(body.getAttributes());
+        v0Body.setRecords(body.getRecords());
+        v0Body.setV1Body(body);
+
+        if (body.getQuery() != null) {
+            ru.citeck.ecos.records2.request.query.RecordsQuery v0Query =
+                new ru.citeck.ecos.records2.request.query.RecordsQuery();
+            mapper.applyData(v0Query, body.getQuery());
+            v0Body.setQuery(v0Query);
+            if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+                v0Query.setDebug(true);
+            }
+        }
+
+        return v0Body;
     }
 
     public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
                                     @NotNull Map<String, String> attributes,
                                     boolean rawAtts) {
+
+        RequestContext context = RequestContext.getCurrentNotNull();
 
         List<ValWithIdx<RecordAtts>> result = new ArrayList<>();
 
@@ -115,9 +188,9 @@ public class RemoteRecordsResolver {
             queryBody.setAttributes(attributes);
             queryBody.setRawAtts(rawAtts);
 
-            QueryResp queryResp = postRecords(app, QUERY_URL, queryBody, QueryResp.class);
+            QueryResp queryResp = execQuery(app, queryBody, context);
 
-            if (queryResp == null || queryResp.getRecords() == null || queryResp.getRecords().size() != refs.size()) {
+            if (queryResp.getRecords() == null || queryResp.getRecords().size() != refs.size()) {
                 log.error("Incorrect response: " + queryBody + "\n query: " + queryBody);
                 for (ValWithIdx<RecordRef> ref : refs) {
                     result.add(new ValWithIdx<>(new RecordAtts(ref.getValue()), ref.getIdx()));
@@ -163,7 +236,7 @@ public class RemoteRecordsResolver {
             v0Body.setRecords(mapper.convert(mutateBody.getRecords(), mapper.getListType(RecordMeta.class)));
             v0Body.setV1Body(mutateBody);
 
-            ObjectNode mutRespObj = postRecords(app, MUTATE_URL, v0Body, ObjectNode.class);
+            ObjectNode mutRespObj = postRecords(app, MUTATE_URL, v0Body);
             MutateResp mutateResp = toMutateResp(mutRespObj, context);
 
             if (mutateResp != null && mutateResp.getMessages() != null) {
@@ -255,7 +328,7 @@ public class RemoteRecordsResolver {
             }
             v0Body.setV1Body(deleteBody);
 
-            ObjectNode delRespObj = postRecords(app, DELETE_URL, v0Body, ObjectNode.class);
+            ObjectNode delRespObj = postRecords(app, DELETE_URL, v0Body);
             DeleteResp resp = toDeleteResp(delRespObj, context);
 
             if (resp != null && resp.getMessages() != null) {
@@ -350,9 +423,9 @@ public class RemoteRecordsResolver {
     }
 
     @Nullable
-    private <T> T postRecords(String appName, String url, Object body, Class<T> respType) {
+    private ObjectNode postRecords(String appName, String url, Object body) {
         String appUrl = "/" + appName + url;
-        return restApi.jsonPost(appUrl, body, respType);
+        return restApi.jsonPost(appUrl, body, ObjectNode.class);
     }
 
     @Nullable

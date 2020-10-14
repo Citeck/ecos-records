@@ -29,6 +29,7 @@ import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.atts.value.impl.AttEdgeValue;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixin;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -515,11 +516,17 @@ public class AttSchemaResolver {
     @RequiredArgsConstructor
     private static class ValueContext {
 
-        public static final ValueContext EMPTY = new ValueContext(EmptyAttValue.INSTANCE, RecordRef.EMPTY, null);
+        public static final ValueContext EMPTY = new ValueContext(
+            EmptyAttValue.INSTANCE,
+            RecordRef.EMPTY,
+            null,
+            null);
 
         private final AttValue value;
         private final RecordRef valueRef;
         private final String ctxSourceId;
+        @Nullable
+        private final RequestContext context;
         private RecordRef computedRef;
 
         public Object resolve(AttContext attContext) {
@@ -529,21 +536,25 @@ public class AttSchemaResolver {
             boolean isScalar = schemaAtt.isScalar();
 
             if (log.isTraceEnabled()) {
+                log.trace("Resolve " + schemaAtt);
             }
-            log.info("Resolve " + schemaAtt);
 
             Object res;
             attContext.setSchemaAttWasRequested(false);
             try {
                 res = resolveImpl(name, isScalar);
-            } catch (Exception e) {
-                log.error("Attribute resolving error. Attribute: " + name + " Value: " + value + " ", e);
+            } catch (Throwable e) {
+                String msg = "Attribute resolving error. Attribute: " + name + " Value: " + value;
+                if (context != null) {
+                    context.addMsg(MsgLevel.ERROR, () -> msg);
+                }
+                log.error(msg, e);
                 res = null;
             }
 
             if (log.isTraceEnabled()) {
+                log.trace("Result: " + res);
             }
-            log.info("Result: " + res);
 
             return res;
         }
@@ -666,7 +677,12 @@ public class AttSchemaResolver {
 
         @NotNull
         ValueContext toRootValueContext(@NotNull Object value, RecordRef valueRef) {
-            return new ValueContext(convertToMetaValue(value), valueRef, reqContext.getVar(CTX_SOURCE_ID_KEY));
+            return new ValueContext(
+                convertToMetaValue(value),
+                valueRef,
+                reqContext.getVar(CTX_SOURCE_ID_KEY),
+                reqContext
+            );
         }
 
         @NotNull
@@ -674,7 +690,12 @@ public class AttSchemaResolver {
             if (value == null) {
                 return ValueContext.EMPTY;
             }
-            return new ValueContext(convertToMetaValue(value), RecordRef.EMPTY, null);
+            return new ValueContext(
+                convertToMetaValue(value),
+                RecordRef.EMPTY,
+                null,
+                reqContext
+            );
         }
     }
 

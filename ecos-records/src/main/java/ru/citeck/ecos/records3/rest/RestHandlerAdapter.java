@@ -46,7 +46,7 @@ public class RestHandlerAdapter {
 
             case 1:
 
-                return restHandlerV1.queryRecords(mapper.convert(bodyWithVersion, QueryBody.class));
+                return restHandlerV1.queryRecords(mapper.convert(bodyWithVersion.getBody(), QueryBody.class));
 
             default:
                 throw new IllegalArgumentException("Unknown body version. Body: " + bodyWithVersion);
@@ -61,7 +61,6 @@ public class RestHandlerAdapter {
             case 0:
 
                 DeletionBody v0Body = mapper.convert(bodyWithVersion.getBody(), DeletionBody.class);
-
                 if (v0Body == null) {
                     v0Body = new DeletionBody();
                 }
@@ -69,7 +68,7 @@ public class RestHandlerAdapter {
 
             case 1:
 
-                return restHandlerV1.deleteRecords(mapper.convert(bodyWithVersion, DeleteBody.class));
+                return restHandlerV1.deleteRecords(mapper.convert(bodyWithVersion.getBody(), DeleteBody.class));
 
             default:
                 throw new IllegalArgumentException("Unknown body version. Body: " + bodyWithVersion);
@@ -84,7 +83,6 @@ public class RestHandlerAdapter {
             case 0:
 
                 MutationBody v0Body = mapper.convert(bodyWithVersion.getBody(), MutationBody.class);
-
                 if (v0Body == null) {
                     v0Body = new MutationBody();
                 }
@@ -92,7 +90,7 @@ public class RestHandlerAdapter {
 
             case 1:
 
-                return restHandlerV1.mutateRecords(mapper.convert(bodyWithVersion, MutateBody.class));
+                return restHandlerV1.mutateRecords(mapper.convert(bodyWithVersion.getBody(), MutateBody.class));
 
             default:
                 throw new IllegalArgumentException("Unknown body version. Body: " + bodyWithVersion);

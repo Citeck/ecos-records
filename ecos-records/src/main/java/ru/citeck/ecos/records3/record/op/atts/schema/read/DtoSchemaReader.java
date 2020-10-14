@@ -16,6 +16,7 @@ import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.proc.AttProcessorDef;
 import ru.citeck.ecos.records3.record.op.atts.schema.ScalarType;
@@ -179,20 +180,28 @@ public class DtoSchemaReader {
                 .build());
         }
 
+        String attNameValue = null;
         AttName attName = getAnnotation(writeMethod, scope, fieldName, AttName.class);
+        if (attName != null) {
+            attNameValue = attName.value();
+        } else {
+            MetaAtt metaAtt = getAnnotation(writeMethod, scope, fieldName, MetaAtt.class);
+            if (metaAtt != null) {
+                attNameValue = metaAtt.value();
+            }
+        }
 
         SchemaAtt.Builder att;
 
         List<AttProcessorDef> processors = Collections.emptyList();
 
-        String attNameAnn = attName != null ? attName.value() : "";
-        if (StringUtils.isNotBlank(attNameAnn)) {
+        if (StringUtils.isNotBlank(attNameValue)) {
 
-            AttWithProc attWithProc = attSchemaReader.readProcessors(attNameAnn);
+            AttWithProc attWithProc = attSchemaReader.readProcessors(attNameValue);
             processors = attWithProc.getProcessors();
-            attNameAnn = attWithProc.getAttribute().trim();
+            attNameValue = attWithProc.getAttribute().trim();
 
-            SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameAnn, innerAtts);
+            SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameValue, innerAtts);
             att = schemaAtt.modify();
 
             if (multiple && !schemaAtt.isMultiple()) {

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.source.dao.local;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
@@ -12,11 +13,15 @@ import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.dao.local.job.PeriodicJob;
 import ru.citeck.ecos.records2.RecordConstants;
+import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
@@ -24,6 +29,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 @Slf4j
 public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
@@ -32,12 +38,13 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
 
     private final Class<T> model;
-    private Map<String, String> attributes;
 
     private final CompletableFuture<Boolean> firstSyncFuture = new CompletableFuture<>();
     private RemoteRecordsResolver remoteRecordsResolver;
     private LocalRecordsResolver localRecordsResolver;
     private DtoSchemaReader dtoSchemaReader;
+
+    private Function<RecordsQuery, RecordsQueryRes<RecordAtts>> queryImpl;
 
     private Instant currentSyncDate = Instant.ofEpochMilli(0);
 
@@ -99,31 +106,23 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         query.setMaxItems(50);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        /*RecordsQueryRes<RecordAtts> result;
+        RecordsQueryRes<RecordAtts> result;
         try {
-            RequestContext.doWithCtx(ctx -> {
-                if (getId().contains("/")) {
-                    result = remoteRecordsResolver.query(query, attributes, false);
-                } else {
-                    result = localRecordsResolver.query(query, attributes, false);
-                }
-
-
-            })
-
-
+            result = queryImpl.apply(query);
         } catch (Exception e) {
             // target DAO is not ready yet
             return false;
         }
 
-        if (result == null || !result.getErrors().isEmpty()) {
-            log.warn("Update failed: there are errors in query result. Result: " + result);
+        List<RequestMsg> errors = RequestContext.getCurrentNotNull().getErrors();
+
+        if (result == null || !errors.isEmpty()) {
+            log.warn("Update failed: there are errors in query result. Result: " + result + " errors: " + errors);
             return false;
         }
 
         Instant lastModified = currentSyncDate;
-        List<RecordAtts> flatMeta = recordsMetaService.convertMetaResult(result.getRecords(), attributes, true);
+        List<RecordAtts> flatMeta = result.getRecords();
 
         for (RecordAtts meta : flatMeta) {
 
@@ -134,7 +133,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             Instant modified = Instant.parse(modifiedStr);
             T instance = dtoSchemaReader.instantiate(model, meta.getAttributes());
 
-            setRecord(meta.getId(), instance);
+            setRecord(meta.getId().getId(), instance);
 
             if (modified.isAfter(lastModified)) {
                 lastModified = modified;
@@ -148,7 +147,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
                 firstSyncFuture.complete(true);
             }
             return false;
-        }*/
+        }
         return true;
     }
 
@@ -189,9 +188,20 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         }
 
         AttSchemaWriter attSchemaWriter = serviceFactory.getAttSchemaWriter();
-        List<SchemaRootAtt> schemaAtts = dtoSchemaReader.read(model);
+        List<SchemaRootAtt> schemaAtts = new ArrayList<>(dtoSchemaReader.read(model));
 
-        this.attributes = new HashMap<>(attSchemaWriter.writeToMap(schemaAtts));
-        attributes.put(MODIFIED_ATT_KEY, RecordConstants.ATT_MODIFIED);
+        schemaAtts.add(new SchemaRootAtt(
+            SchemaAtt.create()
+                .setAlias(MODIFIED_ATT_KEY)
+                .setName(RecordConstants.ATT_MODIFIED)
+                .setInner(SchemaAtt.create().setName("?disp"))
+                .build(), Collections.emptyList()));
+
+        if (getId().contains("/")) {
+            Map<String, String> attributes = attSchemaWriter.writeToMap(schemaAtts);
+            queryImpl = query -> remoteRecordsResolver.query(query, attributes, false);
+        } else {
+            queryImpl = query -> localRecordsResolver.query(query, schemaAtts, false);
+        }
     }
 }

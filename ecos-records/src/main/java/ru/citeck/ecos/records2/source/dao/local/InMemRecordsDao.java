@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
@@ -72,7 +73,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
             )),
             predicate
             ).stream()
-                .map(ref -> RecordRef.valueOf(ref.getRecordRef().getId()))
+                .map(RecordElement::getRecordRef)
                 .collect(Collectors.toList())
         );
 

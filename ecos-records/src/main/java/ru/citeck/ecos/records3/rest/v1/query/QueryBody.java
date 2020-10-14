@@ -1,9 +1,11 @@
 package ru.citeck.ecos.records3.rest.v1.query;
 
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
 import ru.citeck.ecos.records3.rest.v1.RequestBody;
@@ -12,13 +14,18 @@ import java.util.*;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class QueryBody extends RequestBody {
 
+    @Nullable
     private List<RecordRef> records;
+    @Nullable
     private RecordsQuery query;
-    private boolean rawAtts;
-
+    @Nullable
     private Map<String, String> attributes;
+
+    private boolean rawAtts;
 
     public void setRecord(RecordRef record) {
         if (records == null) {

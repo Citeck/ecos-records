@@ -8,6 +8,7 @@ import java.util.Map;
 public class RecordsProperties {
 
     private String appName = "";
+    private String appInstanceId = "";
     private RestProps rest;
     private Map<String, App> apps;
     private Map<String, String> sourceIdMapping;

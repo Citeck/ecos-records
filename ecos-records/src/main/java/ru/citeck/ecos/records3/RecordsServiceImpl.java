@@ -10,17 +10,17 @@ import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.AttReadException;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttReadException;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.dao.RecordsDao;
@@ -50,41 +50,41 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordRef> query(@NotNull RecordsQuery query) {
+    public RecsQueryRes<RecordRef> query(@NotNull RecordsQuery query) {
         return handleRecordsQuery(() -> {
-            RecordsQueryRes<RecordAtts> metaResult = recordsResolver.query(query,
+            RecsQueryRes<RecordAtts> metaResult = recordsResolver.query(query,
                 Collections.emptyMap(), true);
             if (metaResult == null) {
-                metaResult = new RecordsQueryRes<>();
+                metaResult = new RecsQueryRes<>();
             }
-            return new RecordsQueryRes<>(metaResult, RecordAtts::getId);
+            return new RecsQueryRes<>(metaResult, RecordAtts::getId);
         });
     }
 
     @NotNull
     @Override
-    public <T> RecordsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass) {
+    public <T> RecsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass) {
 
         List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
-        RecordsQueryRes<RecordAtts> meta = query(query, attSchemaWriter.writeToMap(attributes));
+        RecsQueryRes<RecordAtts> meta = query(query, attSchemaWriter.writeToMap(attributes));
 
-        return new RecordsQueryRes<>(meta, m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()));
+        return new RecsQueryRes<>(meta, m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()));
     }
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Map<String, String> attributes,
-                                             boolean rawAtts) {
+    public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                          @NotNull Map<String, String> attributes,
+                                          boolean rawAtts) {
 
-        RecordsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
+        RecsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
             recordsResolver.query(query, attributes, rawAtts));
 
         if (result == null) {
-            result = new RecordsQueryRes<>();
+            result = new RecsQueryRes<>();
         }
         return result;
     }
@@ -121,7 +121,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @NotNull
     @Override
-    public List<RecordRef> mutate(List<RecordAtts> records) {
+    public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
 
         Map<String, RecordRef> aliasToRecordRef = new HashMap<>();
         List<RecordRef> result = new ArrayList<>();
@@ -205,18 +205,18 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* OTHER */
 
-    private <T> RecordsQueryRes<T> handleRecordsQuery(Supplier<RecordsQueryRes<T>> supplier) {
+    private <T> RecsQueryRes<T> handleRecordsQuery(Supplier<RecsQueryRes<T>> supplier) {
 
         return RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-            RecordsQueryRes<T> result;
+            RecsQueryRes<T> result;
 
             try {
                 result = supplier.get();
             } catch (Throwable e) {
                 ctx.addMsg(MsgLevel.ERROR, () -> ErrorUtils.convertException(e));
                 log.error("Records resolving error", e);
-                result = new RecordsQueryRes<>();
+                result = new RecsQueryRes<>();
             }
             return result;
         });

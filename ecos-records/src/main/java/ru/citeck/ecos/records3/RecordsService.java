@@ -5,20 +5,18 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
-import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.RecordsDao;
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Service to work with some abstract "records" from any source.
@@ -48,7 +46,6 @@ import java.util.Optional;
  * @see AttValue
  * @see RecordRef
  * @see RecordAtts
- * @see RecordAttsService
  *
  * @author Pavel Simonov
  */
@@ -61,32 +58,32 @@ public interface RecordsService {
      *
      * @see RecordsService#query(RecordsQuery)
      */
-    @NotNull
-    Optional<RecordRef> queryOne(@NotNull RecordsQuery query);
+    @Nullable
+    RecordRef queryOne(@NotNull RecordsQuery query);
 
     /**
      * Query single record.
      *
      * @see RecordsService#query(RecordsQuery, Class)
      */
-    @NotNull
-    <T> Optional<T> queryOne(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
+    @Nullable
+    <T> T queryOne(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
 
     /**
      * Query single record.
      *
      * @see RecordsService#query(RecordsQuery, Collection)
      */
-    @NotNull
-    Optional<RecordAtts> queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
+    @Nullable
+    RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
     /**
      * Query single record.
      *
      * @see RecordsService#query(RecordsQuery, Map)
      */
-    @NotNull
-    Optional<RecordAtts> queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
+    @Nullable
+    RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
 
     /* QUERY RECORDS */
 
@@ -96,7 +93,7 @@ public interface RecordsService {
      * @return list of records, page info and debug info if query.isDebug() returns true
      */
     @NotNull
-    RecordsQueryRes<RecordRef> query(@NotNull RecordsQuery query);
+    RecsQueryRes<RecordRef> query(@NotNull RecordsQuery query);
 
     /**
      * Query records with data. Specified class will be used to determine
@@ -111,7 +108,7 @@ public interface RecordsService {
      * @see AttName
      */
     @NotNull
-    <T> RecordsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
+    <T> RecsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass);
 
     /**
      * Query records and its attributes.
@@ -121,7 +118,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
+    RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
     /**
      * Query records and its attributes.
@@ -132,7 +129,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
+    RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
 
     /**
      * Query records and its attributes.
@@ -143,9 +140,9 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                      @NotNull Map<String, String> attributes,
-                                      boolean rawAtts);
+    RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                   @NotNull Map<String, String> attributes,
+                                   boolean rawAtts);
 
     /* ATTRIBUTES */
 

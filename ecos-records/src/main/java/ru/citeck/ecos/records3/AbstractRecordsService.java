@@ -8,10 +8,10 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.utils.AttUtils;
 
 import java.util.*;
@@ -27,48 +27,57 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     /* QUERY */
 
-    @NotNull
+    @Nullable
     @Override
-    public Optional<RecordRef> queryOne(@NotNull RecordsQuery query) {
-        return query(query).getRecords().stream().findFirst();
+    public RecordRef queryOne(@NotNull RecordsQuery query) {
+        return query(query)
+            .getRecords()
+            .stream()
+            .findFirst()
+            .orElse(null);
+    }
+
+    @Nullable
+    @Override
+    public <T> T queryOne(@NotNull RecordsQuery query, @NotNull Class<T> metaClass) {
+        return query(query, metaClass)
+            .getRecords()
+            .stream()
+            .findFirst()
+            .orElse(null);
+    }
+
+    @Nullable
+    @Override
+    public RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes) {
+        return query(query, attributes)
+            .getRecords()
+            .stream()
+            .findFirst()
+            .orElse(null);
+    }
+
+    @Nullable
+    @Override
+    public RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes) {
+        return query(query, attributes)
+            .getRecords()
+            .stream()
+            .findFirst()
+            .orElse(null);
     }
 
     @NotNull
     @Override
-    public <T> Optional<T> queryOne(@NotNull RecordsQuery query,
-                                    @NotNull Class<T> metaClass) {
-
-        return query(query, metaClass).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public Optional<RecordAtts> queryOne(@NotNull RecordsQuery query,
-                                         @NotNull Map<String, String> attributes) {
-
-        return query(query, attributes).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public Optional<RecordAtts> queryOne(@NotNull RecordsQuery query,
-                                         @NotNull Collection<String> attributes) {
-
-        return query(query, attributes).getRecords().stream().findFirst();
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Collection<String> attributes) {
-
+    public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                          @NotNull Collection<String> attributes) {
         return query(query, AttUtils.toMap(attributes));
     }
 
     @NotNull
     @Override
-    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Map<String, String> attributes) {
+    public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                          @NotNull Map<String, String> attributes) {
 
         return query(query, attributes, false);
     }

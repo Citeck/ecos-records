@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
 
 import java.util.Collection;
 import java.util.Map;
@@ -272,4 +273,8 @@ public interface RecordsService {
      */
     @NotNull
     RecordsDelResult delete(RecordsDeletion deletion);
+
+    void register(@NotNull RecordsDao recordsDao);
+
+    void register(@NotNull String sourceId, @NotNull RecordsDao recordsDao);
 }

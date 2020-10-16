@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public interface RecordsMetaService {
 
     Map<String, String> getAttributes(Class<?> metaClass);

@@ -7,14 +7,14 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsProperties;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.dao.RecordsDao;
@@ -49,9 +49,9 @@ public class LocalRemoteResolver {
     }
 
     @Nullable
-    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Map<String, String> attributes,
-                                             boolean rawAtts) {
+    public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                          @NotNull Map<String, String> attributes,
+                                          boolean rawAtts) {
 
         String sourceId = query.getSourceId();
 

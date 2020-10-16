@@ -4,39 +4,36 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
-import ru.citeck.ecos.records2.request.error.RecordsError;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
 import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
-import ru.citeck.ecos.records2.request.result.DebugResult;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.RequestCtxData;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 import ru.citeck.ecos.records3.rest.v1.RequestBody;
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody;
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp;
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.ValWithIdx;
+import ru.citeck.ecos.records3.utils.V1ConvUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,9 +63,9 @@ public class RemoteRecordsResolver {
         }
     }
 
-    public RecordsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                             @NotNull Map<String, String> attributes,
-                                             boolean rawAtts) {
+    public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
+                                          @NotNull Map<String, String> attributes,
+                                          boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
 
@@ -95,12 +92,12 @@ public class RemoteRecordsResolver {
         setContextProps(queryBody, context);
 
         QueryResp queryResp = execQuery(appName, queryBody, context);
-        RecordsQueryRes<RecordAtts> result = new RecordsQueryRes<>();
+        RecsQueryRes<RecordAtts> result = new RecsQueryRes<>();
         result.setRecords(queryResp.getRecords());
         result.setTotalCount(queryResp.getTotalCount());
         result.setHasMore(queryResp.isHasMore());
 
-        return RecordsUtils.metaWithDefaultApp(result, appName);
+        return RecordsUtils.attsWithDefaultApp(result, appName);
     }
 
     @NotNull
@@ -135,8 +132,8 @@ public class RemoteRecordsResolver {
             return null;
         }
 
-        addErrorMessages(v0Result.getErrors(), context);
-        addDebugMessage(v0Result, context);
+        V1ConvUtils.addErrorMessages(v0Result.getErrors(), context);
+        V1ConvUtils.addDebugMessage(v0Result, context);
 
         QueryResp resp = new QueryResp();
         resp.setRecords(v0Result.getRecords()
@@ -157,13 +154,7 @@ public class RemoteRecordsResolver {
         v0Body.setV1Body(body);
 
         if (body.getQuery() != null) {
-            ru.citeck.ecos.records2.request.query.RecordsQuery v0Query =
-                new ru.citeck.ecos.records2.request.query.RecordsQuery();
-            mapper.applyData(v0Query, body.getQuery());
-            v0Body.setQuery(v0Query);
-            if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                v0Query.setDebug(true);
-            }
+            v0Body.setQuery(V1ConvUtils.recsQueryV1ToV0(body.getQuery(), context));
         }
 
         return v0Body;
@@ -281,8 +272,8 @@ public class RemoteRecordsResolver {
             return null;
         }
 
-        addErrorMessages(v0Result.getErrors(), context);
-        addDebugMessage(v0Result, context);
+        V1ConvUtils.addErrorMessages(v0Result.getErrors(), context);
+        V1ConvUtils.addDebugMessage(v0Result, context);
 
         MutateResp resp = new MutateResp();
         resp.setRecords(v0Result.getRecords()
@@ -370,25 +361,10 @@ public class RemoteRecordsResolver {
             .map(r -> DelStatus.OK)
             .collect(Collectors.toList()));
 
-        addErrorMessages(v0Resp.getErrors(), context);
-        addDebugMessage(v0Resp, context);
+        V1ConvUtils.addErrorMessages(v0Resp.getErrors(), context);
+        V1ConvUtils.addDebugMessage(v0Resp, context);
 
         return resp;
-    }
-
-    private void addErrorMessages(List<RecordsError> errors, RequestContext context) {
-        if (errors != null && !errors.isEmpty()) {
-            errors.forEach(e -> context.addMsg(MsgLevel.ERROR, () -> e));
-        }
-    }
-
-    private void addDebugMessage(DebugResult result, RequestContext context) {
-        List<RequestMsg> messages = context.getMessages();
-        if (!messages.isEmpty()) {
-            ObjectData debug = ObjectData.create();
-            debug.set("messages", messages);
-            result.setDebug(debug);
-        }
     }
 
     private List<DelStatus> toDelStatuses(int expectedSize, DeleteResp resp, RequestContext context) {

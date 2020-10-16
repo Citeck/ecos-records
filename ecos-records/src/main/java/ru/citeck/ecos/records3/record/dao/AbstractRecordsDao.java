@@ -6,8 +6,8 @@ import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixin;
-import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixinsHolder;
+import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
+import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;

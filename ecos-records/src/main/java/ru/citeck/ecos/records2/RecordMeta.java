@@ -3,8 +3,7 @@ package ru.citeck.ecos.records2;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records2.graphql.meta.value.RecordMetaValue;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 
 import java.util.Objects;
 import java.util.function.Function;

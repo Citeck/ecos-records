@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local.meta;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

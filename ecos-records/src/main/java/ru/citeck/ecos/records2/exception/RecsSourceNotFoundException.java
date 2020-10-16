@@ -1,13 +1,11 @@
 package ru.citeck.ecos.records2.exception;
 
-import ru.citeck.ecos.records3.record.dao.RecordsDao;
-
 public class RecsSourceNotFoundException extends RecordsException {
 
-    private final Class<? extends RecordsDao> type;
+    private final Class<?> type;
     private final String sourceId;
 
-    public RecsSourceNotFoundException(String sourceId, Class<? extends RecordsDao> type) {
+    public RecsSourceNotFoundException(String sourceId, Class<?> type) {
         super("Source is not found with id '" + sourceId + "' and "
                 + "type '" + (type != null ? type.getName() : "null") + "'");
 
@@ -19,7 +17,7 @@ public class RecsSourceNotFoundException extends RecordsException {
         return sourceId;
     }
 
-    public Class<? extends RecordsDao> getType() {
+    public Class<?> getType() {
         return type;
     }
 }

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.record.op.atts.service;
 
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.op.atts.mixin.AttMixin;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 
 import java.util.Collection;
 import java.util.List;

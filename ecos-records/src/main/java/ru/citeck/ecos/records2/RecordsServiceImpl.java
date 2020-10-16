@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -17,24 +18,37 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
+import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
 import ru.citeck.ecos.records2.request.result.DebugResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
+import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
+import ru.citeck.ecos.records3.utils.V1ConvUtils;
 
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Deprecated
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private final RecordsService recordsServiceV1;
     private final RecordsMetaService recordsMetaService;
     private final RecordsMetaGql recordsMetaGql;
+    private final LocalRecordsResolverV0 localRecordsResolverV0;
+    private final AttSchemaReader attSchemaReader;
+    private final AttSchemaWriter attSchemaWriter;
 
     private final JsonMapper mapper = Json.getMapper();
 
@@ -43,6 +57,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         recordsServiceV1 = serviceFactory.getRecordsServiceV1();
         recordsMetaService = serviceFactory.getRecordsMetaService();
         recordsMetaGql = serviceFactory.getRecordsMetaGql();
+        localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
+        attSchemaWriter = serviceFactory.getAttSchemaWriter();
+        attSchemaReader = serviceFactory.getAttSchemaReader();
     }
 
     /* QUERY */
@@ -52,15 +69,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
 
-            ru.citeck.ecos.records3.record.op.query.RecordsQuery queryV1 =
-                mapper.convert(query, ru.citeck.ecos.records3.record.op.query.RecordsQuery.class);
+            ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery queryV1 =
+                mapper.convert(query, ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery.class);
             if (queryV1 == null) {
                 return new RecordsQueryResult<>();
             }
 
             RequestContext context = RequestContext.getCurrentNotNull();
 
-            RecordsQueryRes<RecordRef> queryRes = recordsServiceV1.query(queryV1);
+            RecsQueryRes<RecordRef> queryRes = recordsServiceV1.query(queryV1);
 
             RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
             result.setRecords(queryRes.getRecords());
@@ -99,22 +116,49 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, Map<String, String> attributes) {
+        return queryRecords(query, attributes, true);
+    }
 
-        AttributesSchema schema = recordsMetaService.createSchema(attributes);
-        RecordsQueryResult<RecordMeta> records = queryRecords(query, schema.getSchema());
-        records.setRecords(recordsMetaService.convertMetaResult(records.getRecords(), schema, true));
+    @NotNull
+    private RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query,
+                                                        Map<String, String> attributes,
+                                                        boolean flatAttributes) {
 
-        return records;
+        return RequestContext.doWithCtx(serviceFactory, ctx -> {
+
+            RecsQueryRes<RecordAtts> result = recordsServiceV1.query(
+                V1ConvUtils.recsQueryV0ToV1(query),
+                fixInnerAliases(attributes),
+                !flatAttributes
+            );
+            RecordsQueryResult<RecordMeta> metaResult = new RecordsQueryResult<>();
+
+            metaResult.setRecords(result.getRecords()
+                .stream()
+                .map(RecordMeta::new)
+                .collect(Collectors.toList()));
+            metaResult.setHasMore(result.isHasMore());
+            metaResult.setTotalCount(result.getTotalCount());
+
+            metaResult.setErrors(ctx.getRecordErrors());
+            List<RequestMsg> debugMsgs = ctx.getMessages()
+                .stream()
+                .filter(m -> MsgLevel.DEBUG.isEnabled(m.getLevel()))
+                .collect(Collectors.toList());
+            if (!debugMsgs.isEmpty()) {
+                ObjectData debugData = ObjectData.create();
+                debugData.set("messages", debugMsgs);
+                metaResult.setDebug(debugData);
+            }
+
+            return metaResult;
+        });
     }
 
     @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-
-        MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(schema);
-        Map<String, String> attributes = metaField.getInnerAttributesMap();
-
-        return queryRecords(query, attributes);
+        return queryRecords(query, schemaToAtts(schema), false);
     }
 
     /* ATTRIBUTES */
@@ -167,7 +211,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         recsResult.setRecords(RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-            List<RecordAtts> atts = recordsServiceV1.getAtts(records, attributes, !flatAttributes);
+            List<RecordAtts> atts = recordsServiceV1.getAtts(records, fixInnerAliases(attributes), !flatAttributes);
             List<RecordMeta> attsMeta = mapper.convert(atts, mapper.getListType(RecordMeta.class));
 
             setDebugToResult(recsResult, ctx);
@@ -209,11 +253,90 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
+        return getAttributesImpl(records, schemaToAtts(schema), false);
+    }
+
+    private Map<String, String> schemaToAtts(String schema) {
 
         MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(schema);
         Map<String, String> attributes = metaField.getInnerAttributesMap();
+        Map<String, String> fixedAtts = new HashMap<>();
 
-        return getAttributes(records, attributes);
+        attributes.forEach((k, v) -> fixedAtts.put(k.charAt(0) == '.' ? k.substring(1) : k, v));
+
+        return fixedAtts;
+    }
+
+    private Map<String, String> fixInnerAliases(Map<String, String> attributes) {
+
+        List<SchemaRootAtt> rootAtts = attSchemaReader.readRoot(attributes);
+        List<SchemaAtt> atts = fixInnerAliases(rootAtts.stream()
+            .map(SchemaRootAtt::getAttribute)
+            .collect(Collectors.toList()), true, null, null);
+
+        return attSchemaWriter.writeToMap(atts.stream()
+            .map(a -> new SchemaRootAtt(a, Collections.emptyList()))
+            .collect(Collectors.toList()));
+    }
+
+    private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts, boolean root,
+                                            @Nullable SchemaAtt parent,
+                                            @Nullable SchemaAtt parentParent) {
+        if (atts.isEmpty()) {
+            return atts;
+        }
+        return atts.stream()
+            .map(a -> {
+                String newAlias;
+                if (root) {
+                    newAlias = a.getAlias();
+                } else {
+                    newAlias = fixInnerAlias(a.getAliasForValue());
+                    if (a.getAlias().isEmpty()) {
+                        if (("?" + newAlias).equals(a.getName())) {
+                            newAlias = "";
+                        } else if (a.getName().charAt(0) != '?') {
+                            switch (a.getName()) {
+                                case RecordConstants.ATT_AS:
+                                    newAlias = "as";
+                                    break;
+                                case RecordConstants.ATT_EDGE:
+                                    newAlias = "edge";
+                                    break;
+                                case RecordConstants.ATT_HAS:
+                                    newAlias = "has";
+                                    break;
+                                default:
+                                    if (parentParent != null
+                                            && parentParent.getName().equals(RecordConstants.ATT_EDGE)) {
+                                        newAlias = a.getName();
+                                    } else {
+                                        newAlias = a.isMultiple() ? "atts" : "att";
+                                    }
+                            }
+                        }
+                    }
+                }
+                return a.modify()
+                    .setInner(fixInnerAliases(a.getInner(), false, a, parent))
+                    .setAlias(newAlias)
+                    .build();
+            }).collect(Collectors.toList());
+    }
+
+    private String fixInnerAlias(String alias) {
+        int roundBraceIdx = alias.indexOf('(');
+        int curveBraceIdx = alias.indexOf('{');
+        int minBraceIdx;
+        if (roundBraceIdx == -1) {
+            minBraceIdx = curveBraceIdx;
+        } else if (curveBraceIdx == -1) {
+            minBraceIdx = roundBraceIdx;
+        } else {
+            minBraceIdx = Math.min(roundBraceIdx, curveBraceIdx);
+        }
+        alias = minBraceIdx == -1 ? alias : alias.substring(0, minBraceIdx);
+        return alias.charAt(0) == '?' ? alias.substring(1) : alias;
     }
 
     /* MODIFICATION */
@@ -283,5 +406,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         }
 
         return result;
+    }
+
+    @Override
+    public void register(@NotNull RecordsDao recordsDao) {
+        register(recordsDao.getId(), recordsDao);
+    }
+
+    @Override
+    public void register(@NotNull String sourceId, @NotNull RecordsDao recordsDao) {
+        localRecordsResolverV0.register(recordsDao.getId(), recordsDao);
     }
 }

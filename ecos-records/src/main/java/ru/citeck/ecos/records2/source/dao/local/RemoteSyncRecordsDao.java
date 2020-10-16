@@ -13,13 +13,13 @@ import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.dao.local.job.PeriodicJob;
 import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
@@ -44,7 +44,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
     private LocalRecordsResolver localRecordsResolver;
     private DtoSchemaReader dtoSchemaReader;
 
-    private Function<RecordsQuery, RecordsQueryRes<RecordAtts>> queryImpl;
+    private Function<RecordsQuery, RecsQueryRes<RecordAtts>> queryImpl;
 
     private Instant currentSyncDate = Instant.ofEpochMilli(0);
 
@@ -55,7 +55,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
 
     @NotNull
     @Override
-    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
         waitUntilSyncCompleted();
         return super.queryRecords(query);
     }
@@ -106,7 +106,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         query.setMaxItems(50);
         query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        RecordsQueryRes<RecordAtts> result;
+        RecsQueryRes<RecordAtts> result;
         try {
             result = queryImpl.apply(query);
         } catch (Exception e) {

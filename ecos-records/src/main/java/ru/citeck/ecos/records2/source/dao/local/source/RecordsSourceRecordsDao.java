@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records2.source.dao.local.source;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 
@@ -35,7 +35,7 @@ public class RecordsSourceRecordsDao extends AbstractRecordsDao
     }
 
     @Override
-    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
-        return new RecordsQueryRes<>(recordsService.getSourcesInfo());
+    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+        return new RecsQueryRes<>(recordsService.getSourcesInfo());
     }
 }

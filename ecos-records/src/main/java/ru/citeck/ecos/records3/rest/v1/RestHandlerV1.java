@@ -4,16 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsProperties;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.delete.DelStatus;
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody;
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
@@ -72,14 +72,14 @@ public class RestHandlerV1 {
 
             // search query
 
-            RecordsQueryRes<RecordAtts> result;
+            RecsQueryRes<RecordAtts> result;
             try {
                 result = doInTransaction(true, () ->
                         recordsService.query(body.getQuery(), attributes, body.isRawAtts())
                 );
             } catch (Exception e) {
                 log.error("Records search query exception. QueryBody: " + body, e);
-                result = new RecordsQueryRes<>();
+                result = new RecsQueryRes<>();
                 context.addMsg(MsgLevel.ERROR, () -> ErrorUtils.convertException(e));
             }
             Json.getMapper().applyData(resp, result);

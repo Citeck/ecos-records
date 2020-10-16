@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.rest.v1.mutate;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.rest.v1.RequestBody;
 
 import java.util.ArrayList;

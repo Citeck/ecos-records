@@ -6,15 +6,15 @@ import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
-import ru.citeck.ecos.records3.record.op.atts.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.value.impl.EmptyAttValue;
+import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;
@@ -59,11 +59,11 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
 
         Predicate predicate = query.getQuery(Predicate.class);
 
-        RecordsQueryRes<RecordRef> result = new RecordsQueryRes<>();
+        RecsQueryRes<RecordRef> result = new RecsQueryRes<>();
 
         result.setRecords(predicateService.filter(
             new RecordElements(recordsServiceV0, new ArrayList<>(records.keySet()

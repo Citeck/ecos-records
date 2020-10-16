@@ -10,8 +10,8 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.SimpleMetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
-import ru.citeck.ecos.records3.record.op.atts.value.factory.bean.BeanTypeContext;
-import ru.citeck.ecos.records3.record.op.atts.value.factory.bean.BeanTypeUtils;
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanTypeContext;
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanTypeUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;

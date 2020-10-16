@@ -16,15 +16,16 @@ import ru.citeck.ecos.records2.meta.attproc.FormatAttProcessor;
 import ru.citeck.ecos.records2.meta.attproc.PrefixSuffixAttProcessor;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records3.record.op.atts.schema.SchemaRootAtt;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Deprecated
 public class RecordsMetaServiceImpl implements RecordsMetaService {
 
     private final RecordsMetaGql graphQLService;

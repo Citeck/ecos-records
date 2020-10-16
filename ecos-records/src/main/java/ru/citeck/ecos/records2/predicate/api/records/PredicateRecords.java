@@ -5,17 +5,17 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.meta.util.AttModelUtils;
 import ru.citeck.ecos.records2.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;
@@ -32,15 +32,15 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
     }
 
     @Override
-    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
+    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
 
         PredicateCheckQuery query = recordsQuery.getQuery(PredicateCheckQuery.class);
 
         if (query.getPredicates().isEmpty() || query.getRecords().isEmpty()) {
-            return new RecordsQueryRes<>();
+            return new RecsQueryRes<>();
         }
 
-        RecordsQueryRes<Object> queryResult = new RecordsQueryRes<>();
+        RecsQueryRes<Object> queryResult = new RecsQueryRes<>();
 
         Set<String> attributes = new HashSet<>();
         for (Predicate predicate : query.getPredicates()) {

@@ -1,19 +1,20 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import org.jetbrains.annotations.NotNull;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.AndPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
-import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.*;
 
-public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryDao {
+@Deprecated
+public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao {
 
     public static final String ID = "group";
 
@@ -24,11 +25,11 @@ public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryD
     }
 
     @Override
-    public RecordsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult queryLocalRecords(RecordsQuery query, MetaField field) {
 
         List<String> groupBy = query.getGroupBy();
         if (groupBy.isEmpty()) {
-            return new RecordsQueryRes<>();
+            return new RecordsQueryResult();
         }
 
         RecordsQuery groupsBaseQuery = new RecordsQuery(query);
@@ -53,13 +54,13 @@ public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryD
             List<DistinctValue> values = getDistinctValues(query.getSourceId(), basePredicate, groupAtt, max);
 
             if (values.isEmpty()) {
-                return new RecordsQueryRes<>();
+                return new RecordsQueryResult();
             }
 
             distinctValues.add(values);
         }
 
-        RecordsQueryRes<RecordsGroup> result = new RecordsQueryRes<>();
+        RecordsQueryResult<RecordsGroup> result = new RecordsQueryResult<>();
         result.setRecords(getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts));
 
         return result;
@@ -128,11 +129,10 @@ public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryD
         recordsQuery.setSourceId(sourceId);
         recordsQuery.setQuery(distinctQuery);
 
-        RecordsQueryRes<DistinctValue> values = recordsService.query(recordsQuery, DistinctValue.class);
+        RecordsQueryResult<DistinctValue> values = recordsService.queryRecords(recordsQuery, DistinctValue.class);
         return values.getRecords();
     }
 
-    @NotNull
     @Override
     public List<String> getSupportedLanguages() {
         return Collections.singletonList(PredicateService.LANGUAGE_PREDICATE);

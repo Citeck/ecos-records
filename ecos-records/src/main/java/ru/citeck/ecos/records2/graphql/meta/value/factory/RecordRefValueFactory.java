@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value.factory;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
@@ -97,7 +98,11 @@ public class RecordRefValueFactory implements MetaValueFactory<RecordRef> {
 
         @Override
         public Object getAs(@NotNull String type, @NotNull MetaField field) {
-            return new InnerMetaValue(meta.getAttribute(".as"));
+            String name = field.getAlias();
+            if (StringUtils.isBlank(name) || name.equals("as")) {
+                name = ".as";
+            }
+            return new InnerMetaValue(meta.getAttribute(name));
         }
 
         @Override

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.field;
 
 import graphql.language.*;
+import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.*;
@@ -131,6 +132,15 @@ public class MetaFieldImpl implements MetaField {
                      .filter(a -> a.getValue() instanceof StringValue)
                      .map(a -> ((StringValue) a.getValue()).getValue())
                      .ifPresent(name -> attributes.put(name, field));
+
+            } else if (field.getName().equals("as")) {
+
+                String key = StringUtils.isNotBlank(field.getAlias()) ? field.getAlias() : ".as";
+                if (key.equals("as")) {
+                    key = ".as";
+                }
+                attributes.put(key, field);
+
             } else {
                 attributes.put("." + field.getName(), field);
             }

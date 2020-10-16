@@ -24,7 +24,8 @@ public class QueryContext {
 
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
-        return RequestContext.getCurrentNotNull().getVar(CTX_KEY);
+        RequestContext current = RequestContext.getCurrent();
+        return current != null ? current.getVar(CTX_KEY) : null;
     }
 
     public boolean isComputedAttsDisabled() {
@@ -49,6 +50,18 @@ public class QueryContext {
             throw new IllegalStateException("Query context is not defined! Attributes: " + contextAttributes);
         }
         return RequestContext.doWithAtts(contextAttributes, callable);
+    }
+
+    public static void withContext(RecordsServiceFactory serviceFactory,
+                                    Runnable runnable,
+                                    Map<String, Object> atts) {
+
+        withContext(serviceFactory, ctx ->
+            RequestContext.doWithCtx(b -> b.setCtxAtts(atts), reqCtx -> {
+                runnable.run();
+                return null;
+            })
+        );
     }
 
     public static <T> T withContext(RecordsServiceFactory serviceFactory, Supplier<T> callable) {

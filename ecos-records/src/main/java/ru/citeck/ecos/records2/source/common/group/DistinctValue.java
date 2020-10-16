@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import ru.citeck.ecos.records3.record.op.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 
 public class DistinctValue {
 

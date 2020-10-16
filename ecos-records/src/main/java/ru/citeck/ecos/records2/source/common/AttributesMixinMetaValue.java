@@ -67,8 +67,6 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
         this.context = context;
 
-        RecordRef typeRef = getRecordType();
-
         initialized = true;
     }
 

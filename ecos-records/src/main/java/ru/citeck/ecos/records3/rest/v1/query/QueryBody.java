@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.rest.v1.RequestBody;
 
 import java.util.*;

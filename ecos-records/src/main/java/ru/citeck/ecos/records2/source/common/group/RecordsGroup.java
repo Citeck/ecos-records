@@ -1,23 +1,26 @@
 package ru.citeck.ecos.records2.source.common.group;
 
-import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.atts.value.impl.InnerAttValue;
-import ru.citeck.ecos.records3.record.op.atts.value.AttValue;
-import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.op.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RecordsGroup implements AttValue {
+/**
+ * @deprecated -> RecordsGroup
+ */
+@Deprecated
+public class RecordsGroup implements MetaValue {
 
     public static final String FIELD_PREDICATE = "predicate";
     public static final String FIELD_PREDICATES = "predicates";
@@ -25,17 +28,20 @@ public class RecordsGroup implements AttValue {
     public static final String FIELD_SUM = "sum";
     public static final String FIELD_COUNT = "count";
 
-    private final Predicate predicate;
-    private final RecordsQuery query;
-    private final Map<String, ValueWrapper> attributes;
+    private Predicate predicate;
+    private RecordsQuery query;
+    private Map<String, ValueWrapper> attributes;
 
-    private final RecordsService recordsService;
+    private RecordsService recordsService;
+
+    private String id;
 
     public RecordsGroup(RecordsQuery query,
                         Map<String, DistinctValue> attributes,
                         Predicate predicate,
                         RecordsService recordsService) {
 
+        this.id = UUID.randomUUID().toString();
         this.query = query;
         this.predicate = predicate;
         this.recordsService = recordsService;
@@ -45,12 +51,17 @@ public class RecordsGroup implements AttValue {
     }
 
     @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
     public String getString() {
         return String.valueOf(predicate);
     }
 
     @Override
-    public Object getAtt(@NotNull String name) {
+    public Object getAttribute(String name, MetaField field) {
 
         switch (name) {
             case FIELD_PREDICATE:
@@ -65,13 +76,13 @@ public class RecordsGroup implements AttValue {
 
             case FIELD_VALUES:
 
-                Map<String, String> innerAttributes = AttContext.getInnerAttsMap();
-                RecordsQueryRes<RecordAtts> records = recordsService.query(query, innerAttributes);
+                String schema = field.getInnerSchema();
+                RecordsQueryResult<RecordMeta> records = recordsService.queryRecords(query, schema);
 
                 return records.getRecords().stream().map(r -> {
                     ObjectData atts = r.getAttributes();
                     atts.set("id", r.getId().toString());
-                    return new InnerAttValue(Json.getMapper().toJson(atts));
+                    return new InnerMetaValue(Json.getMapper().toJson(atts));
                 }).collect(Collectors.toList());
             default:
                 //nothing
@@ -83,7 +94,7 @@ public class RecordsGroup implements AttValue {
             countQuery.setGroupBy(null);
             countQuery.setMaxItems(1);
             countQuery.setSkipCount(0);
-            RecordsQueryRes<RecordRef> records = recordsService.query(countQuery);
+            RecordsQueryResult<RecordRef> records = recordsService.queryRecords(countQuery);
 
             return records.getTotalCount();
         }
@@ -95,10 +106,10 @@ public class RecordsGroup implements AttValue {
 
             RecordsQuery sumQuery = new RecordsQuery(query);
             sumQuery.setGroupBy(null);
-            RecordsQueryRes<RecordAtts> result = recordsService.query(sumQuery, attributes);
+            RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(sumQuery, attributes);
 
-            double sum = 0.0;
-            for (RecordAtts record : result.getRecords()) {
+            Double sum = 0.0;
+            for (RecordMeta record : result.getRecords()) {
                 sum += record.get(attribute, 0.0);
             }
 
@@ -108,9 +119,9 @@ public class RecordsGroup implements AttValue {
         return attributes.get(name);
     }
 
-    private static class ValueWrapper implements AttValue {
+    private static class ValueWrapper implements MetaValue {
 
-        private final DistinctValue value;
+        private DistinctValue value;
 
         ValueWrapper(DistinctValue value) {
             this.value = value;

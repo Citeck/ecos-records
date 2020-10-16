@@ -22,20 +22,21 @@ import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
+import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
-import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaGqlWriter;
-import ru.citeck.ecos.records3.record.op.atts.schema.write.AttSchemaWriter;
-import ru.citeck.ecos.records3.record.op.atts.value.AttValuesConverter;
-import ru.citeck.ecos.records3.record.op.atts.value.factory.*;
-import ru.citeck.ecos.records3.record.op.atts.value.factory.bean.BeanValueFactory;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.*;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.*;
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanValueFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsServiceImpl;
-import ru.citeck.ecos.records3.record.op.atts.proc.*;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter;
 import ru.citeck.ecos.records2.meta.RecordsTemplateService;
-import ru.citeck.ecos.records3.record.op.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl;
 import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords;
@@ -46,7 +47,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records2.source.common.group.RecordsGroupDao;
+import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.record.dao.RecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider;
@@ -78,13 +79,11 @@ public class RecordsServiceFactory {
     private QueryLangService queryLangService;
     private RecordsMetaService recordsMetaService;
     private RecordAttsService recordsAttsService;
-    private LocalRecordsResolver localRecordsResolver;
     private RemoteRecordsResolver remoteRecordsResolver;
     private AttValuesConverter attValuesConverter;
     private RecordEvaluatorService recordEvaluatorService;
     private PredicateJsonDeserializer predicateJsonDeserializer;
     private PredicateTypes predicateTypes;
-    private List<RecordsDao> defaultRecordsDao;
     private RecordTypeService recordTypeService;
     private RecordsTemplateService recordsTemplateService;
     private AttProcService attProcService;
@@ -101,6 +100,10 @@ public class RecordsServiceFactory {
     private List<MetaValueFactory<?>> metaValueFactories;
     private List<AttValueFactory<?>> attValueFactories;
 
+    @Deprecated
+    private LocalRecordsResolverV0 localRecordsResolverV0;
+    private LocalRecordsResolver localRecordsResolver;
+
     private MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
     private RecordsProperties properties;
@@ -108,7 +111,13 @@ public class RecordsServiceFactory {
     private RecordEvaluatorService tmpEvaluatorsService;
 
     private ru.citeck.ecos.records3.RecordsService tmpRecordsService;
+    @Deprecated
+    private RecordsService tmpRecordsServiceV0;
+
+    @Deprecated
     private List<GqlTypeDefinition> gqlTypes;
+
+    private List<?> defaultRecordsDao;
 
     private boolean isJobsInitialized = false;
 
@@ -240,7 +249,22 @@ public class RecordsServiceFactory {
     }
 
     protected RecordsService createRecordsService() {
-        return new ru.citeck.ecos.records2.RecordsServiceImpl(this);
+
+        if (tmpRecordsServiceV0 != null) {
+            return tmpRecordsServiceV0;
+        }
+
+        tmpRecordsServiceV0 = new ru.citeck.ecos.records2.RecordsServiceImpl(this);
+
+        for (Object dao : getDefaultRecordsDao()) {
+            if (dao instanceof ru.citeck.ecos.records2.source.dao.RecordsDao) {
+                tmpRecordsServiceV0.register((ru.citeck.ecos.records2.source.dao.RecordsDao) dao);
+            }
+        }
+
+        RecordsService result = tmpRecordsServiceV0;
+        tmpRecordsServiceV0 = null;
+        return result;
     }
 
     public final synchronized ru.citeck.ecos.records3.RecordsService getRecordsServiceV1() {
@@ -268,7 +292,11 @@ public class RecordsServiceFactory {
 
         tmpRecordsService = recordsService;
 
-        getDefaultRecordsDao().forEach(recordsService::register);
+        for (Object dao : getDefaultRecordsDao()) {
+            if (dao instanceof RecordsDao) {
+                recordsService.register((RecordsDao) dao);
+            }
+        }
 
         tmpRecordsService = null;
         return recordsService;
@@ -278,12 +306,14 @@ public class RecordsServiceFactory {
         return RecordsServiceImpl.class;
     }
 
-    protected List<RecordsDao> getDefaultRecordsDao() {
+    protected List<?> getDefaultRecordsDao() {
         if (defaultRecordsDao == null) {
             defaultRecordsDao = Arrays.asList(
                 new MetaRecordsDao(this),
                 new RecordsSourceRecordsDao(),
-                new PredicateRecords()
+                new PredicateRecords(),
+                new RecordsGroupDao(),
+                new ru.citeck.ecos.records2.source.common.group.RecordsGroupDao()
             );
         }
         return defaultRecordsDao;
@@ -314,7 +344,6 @@ public class RecordsServiceFactory {
     public final synchronized LocalRecordsResolver getLocalRecordsResolver() {
         if (localRecordsResolver == null) {
             localRecordsResolver = createLocalRecordsResolver();
-            createDefaultRecordsDao().forEach(dao -> localRecordsResolver.register(dao.getId(), dao));
         }
         return localRecordsResolver;
     }
@@ -323,8 +352,15 @@ public class RecordsServiceFactory {
         return new LocalRecordsResolver(this);
     }
 
-    protected List<RecordsDao> createDefaultRecordsDao() {
-        return Collections.singletonList(new RecordsGroupDao());
+    public final synchronized LocalRecordsResolverV0 getLocalRecordsResolverV0() {
+        if (localRecordsResolverV0 == null) {
+            localRecordsResolverV0 = createLocalRecordsResolverV0();
+        }
+        return localRecordsResolverV0;
+    }
+
+    protected LocalRecordsResolverV0 createLocalRecordsResolverV0() {
+        return new LocalRecordsResolverV0(this);
     }
 
     public final synchronized QueryLangService getQueryLangService() {

@@ -6,9 +6,10 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records3.record.op.atts.RecordAtts;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.query.RecordsQueryRes;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -35,8 +36,21 @@ public class RecordsUtils {
         return null;
     }
 
-    public static RecordsQueryRes<RecordAtts> metaWithDefaultApp(RecordsQueryRes<RecordAtts> queryResult,
-                                                                 String appName) {
+    public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult,
+                                                              String appName) {
+        if (StringUtils.isBlank(appName)) {
+            return queryResult;
+        }
+        queryResult.setRecords(queryResult.getRecords()
+            .stream()
+            .map(meta -> meta.withDefaultAppName(appName))
+            .collect(Collectors.toList())
+        );
+        return queryResult;
+    }
+
+    public static RecordsQueryResult<RecordMeta> metaWithDefaultApp(RecordsQueryResult<RecordMeta> queryResult,
+                                                                    String appName) {
         if (StringUtils.isBlank(appName)) {
             return queryResult;
         }
@@ -104,8 +118,8 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    public static RecordsQueryRes<RecordRef> toScoped(String sourceId, RecordsQueryRes<RecordRef> result) {
-        return new RecordsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
+    public static RecsQueryRes<RecordRef> toScoped(String sourceId, RecsQueryRes<RecordRef> result) {
+        return new RecsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
     }
 
     public static List<RecordRef> toScopedRecords(String sourceId, List<RecordRef> records) {

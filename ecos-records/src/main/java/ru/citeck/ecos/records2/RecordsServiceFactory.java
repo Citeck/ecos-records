@@ -59,7 +59,6 @@ import ru.citeck.ecos.records2.type.RecordTypeService;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
@@ -283,7 +282,8 @@ public class RecordsServiceFactory {
         ru.citeck.ecos.records3.RecordsService recordsService;
         Class<? extends ru.citeck.ecos.records3.RecordsService> serviceType = getRecordsServiceType();
         try {
-            Constructor<? extends ru.citeck.ecos.records3.RecordsService> constructor = serviceType.getConstructor(RecordsServiceFactory.class);
+            Constructor<? extends ru.citeck.ecos.records3.RecordsService> constructor =
+                serviceType.getConstructor(RecordsServiceFactory.class);
             recordsService = constructor.newInstance(this);
         } catch (Exception e) {
             ExceptionUtils.throwException(e);

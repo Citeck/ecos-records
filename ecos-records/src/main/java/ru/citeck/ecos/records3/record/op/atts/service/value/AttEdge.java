@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.op.atts.service.value;
 
-import ru.citeck.ecos.records3.record.op.atts.service.value.impl.CreateVariant;
+import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 
 import java.util.List;
 

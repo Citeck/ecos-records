@@ -20,7 +20,7 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class OrElseAttTest  extends LocalRecordsDao {
+public class OrElseAttTest extends LocalRecordsDao {
 
     private RecordsService recordsService;
 
@@ -47,7 +47,7 @@ public class OrElseAttTest  extends LocalRecordsDao {
 
         assertEquals(DataValue.create(1000.0), recordsService.getAtt(TEST_REF, "numberField?num"));
         assertEquals(DataValue.NULL, recordsService.getAtt(TEST_REF, "numberNullField?num"));
-        assertEquals(DataValue.create(999.0), recordsService.getAtt(TEST_REF, "numberNullField?num!'999.0'"));
+        assertEquals(DataValue.create(999.0), recordsService.getAtt(TEST_REF, "numberNullField?num!999.0"));
         assertEquals(DataValue.create(1000.0), recordsService.getAtt(TEST_REF, "numberNullField?num!numberField?num"));
         assertEquals(DataValue.create(1000.0), recordsService.getAtt(TEST_REF, "numberField?num!numberNullField?num"));
 
@@ -60,17 +60,17 @@ public class OrElseAttTest  extends LocalRecordsDao {
         assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolField?bool"));
         assertEquals(DataValue.NULL, recordsService.getAtt(TEST_REF, "boolNullField?bool"));
         assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolNullField?bool!boolField?bool"));
-        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolNullField?bool!'true'"));
+        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolNullField?bool!true"));
         assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolField?bool!boolNullField?bool"));
     }
 
     @Test
     void longAttsTest() {
 
-        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolNullField?bool!numberNullField?num!strNullField!'true'"));
-        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, ".att('boolNullField'){bool}!.att('numberNullField'){num}!.att('strNullField'){disp}!'true'"));
-        assertEquals(DataValue.create(false), recordsService.getAtt(TEST_REF, "boolNullField?bool!numberNullField?num!strNullField!'false'"));
-        assertEquals(DataValue.create(false), recordsService.getAtt(TEST_REF, ".att('boolNullField'){bool}!.att('numberNullField'){num}!.att('strNullField'){disp}!'false'"));
+        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, "boolNullField?bool!numberNullField?num!strNullField!true"));
+        assertEquals(DataValue.create(true), recordsService.getAtt(TEST_REF, ".att('boolNullField'){bool}!.att('numberNullField'){num}!.att('strNullField'){disp}!true"));
+        assertEquals(DataValue.create(false), recordsService.getAtt(TEST_REF, "boolNullField?bool!numberNullField?num!strNullField!false"));
+        assertEquals(DataValue.create(false), recordsService.getAtt(TEST_REF, ".att('boolNullField'){bool}!.att('numberNullField'){num}!.att('strNullField'){disp}!false"));
 
         assertEquals(DataValue.createStr("strField"), recordsService.getAtt(TEST_REF, "boolNullField?bool!numberNullField?num!strField"));
     }

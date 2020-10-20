@@ -9,7 +9,6 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.meta.AttributesSchema;
 import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -18,7 +17,6 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
 import ru.citeck.ecos.records2.request.result.DebugResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
@@ -158,7 +156,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-        return queryRecords(query, schemaToAtts(schema), false);
+        return queryRecords(query, convertSchemaToAtts(schema), false);
     }
 
     /* ATTRIBUTES */
@@ -253,13 +251,13 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
-        return getAttributesImpl(records, schemaToAtts(schema), false);
+        return getAttributesImpl(records, convertSchemaToAtts(schema), false);
     }
 
-    private Map<String, String> schemaToAtts(String schema) {
+    private Map<String, String> convertSchemaToAtts(String schema) {
 
         MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(schema);
-        Map<String, String> attributes = metaField.getInnerAttributesMap();
+        Map<String, String> attributes = metaField.getInnerAttributesMap(true);
         Map<String, String> fixedAtts = new HashMap<>();
 
         attributes.forEach((k, v) -> fixedAtts.put(k.charAt(0) == '.' ? k.substring(1) : k, v));
@@ -274,9 +272,12 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             .map(SchemaRootAtt::getAttribute)
             .collect(Collectors.toList()), true, null, null);
 
-        return attSchemaWriter.writeToMap(atts.stream()
-            .map(a -> new SchemaRootAtt(a, Collections.emptyList()))
-            .collect(Collectors.toList()));
+        List<SchemaRootAtt> resultAtts = new ArrayList<>();
+        for (int i = 0; i < atts.size(); i++) {
+            resultAtts.add(new SchemaRootAtt(atts.get(i), rootAtts.get(i).getProcessors()));
+        }
+
+        return attSchemaWriter.writeToMap(resultAtts);
     }
 
     private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts, boolean root,

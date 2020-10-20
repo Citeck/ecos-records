@@ -16,4 +16,6 @@ public interface MetaField {
     List<String> getInnerAttributes();
 
     Map<String, String> getInnerAttributesMap();
+
+    Map<String, String> getInnerAttributesMap(boolean withAliases);
 }

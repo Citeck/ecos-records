@@ -139,7 +139,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                     SchemaAtt parsedAtt = attSchemaReader.readRoot(name).getAttribute();
                     String scalarName = parsedAtt.getScalarName();
 
-                    if (".assoc".equals(scalarName)) {
+                    if ("?assoc".equals(scalarName)) {
                         value = convertAssocValue(value, aliasToRecordRef);
                     }
                     attributes.set(parsedAtt.getName(), value);

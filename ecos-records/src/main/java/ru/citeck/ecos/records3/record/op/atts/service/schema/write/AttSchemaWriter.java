@@ -72,11 +72,12 @@ public interface AttSchemaWriter {
             sb.append("|").append(processor.getType()).append("(");
             int argsSize = processor.getArguments().size();
             for (int i = 0; i < argsSize; i++) {
-                sb.append(TextNode.valueOf(processor.getArguments().get(i).toString()).toString());
+                sb.append(processor.getArguments().get(i).toString());
                 if (i < argsSize - 1) {
                     sb.append(',');
                 }
             }
+            sb.append(")");
         }
 
         return sb.toString();

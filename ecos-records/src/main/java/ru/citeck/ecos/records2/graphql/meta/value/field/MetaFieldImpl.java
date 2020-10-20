@@ -104,6 +104,11 @@ public class MetaFieldImpl implements MetaField {
 
     @Override
     public Map<String, String> getInnerAttributesMap() {
+        return getInnerAttributesMap(false);
+    }
+
+    @Override
+    public Map<String, String> getInnerAttributesMap(boolean withAliases) {
 
         Map<String, String> result = new HashMap<>();
         Map<String, Field> fields = getInnerAttFields();
@@ -112,7 +117,11 @@ public class MetaFieldImpl implements MetaField {
         fields.forEach((k, field) -> {
             sb.setLength(0);
             fillFieldSchema(field, sb);
-            result.put(k, "." + sb.toString());
+            String key = k;
+            if (withAliases && StringUtils.isNotBlank(field.getAlias())) {
+                key = field.getAlias();
+            }
+            result.put(key, "." + sb.toString());
         });
 
         return result;

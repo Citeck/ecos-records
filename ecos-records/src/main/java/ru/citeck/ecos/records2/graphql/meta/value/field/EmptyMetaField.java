@@ -42,4 +42,9 @@ public class EmptyMetaField implements MetaField {
     public Map<String, String> getInnerAttributesMap() {
         return Collections.emptyMap();
     }
+
+    @Override
+    public Map<String, String> getInnerAttributesMap(boolean withAliases) {
+        return Collections.emptyMap();
+    }
 }

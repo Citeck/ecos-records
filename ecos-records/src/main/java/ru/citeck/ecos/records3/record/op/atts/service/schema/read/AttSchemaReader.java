@@ -24,8 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AttSchemaReader {
 
-    private static final String KEYS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
     private static final String GQL_ONE_ARG_ATT = "^%s\\((n:)?['\"](.+?)['\"]\\)";
     private static final String GQL_ONE_ARG_ATT_WITH_INNER = GQL_ONE_ARG_ATT + "\\s*\\{(.+)}";
 

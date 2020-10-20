@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.impl;
 
 import lombok.Getter;
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier;
+import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge;
 
 import java.util.List;

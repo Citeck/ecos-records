@@ -175,7 +175,10 @@ public class RemoteRecordsResolver {
                 app = defaultAppName;
             }
             QueryBody queryBody = new QueryBody();
-            queryBody.setRecords(refs.stream().map(ValWithIdx::getValue).collect(Collectors.toList()));
+            queryBody.setRecords(refs.stream()
+                .map(ValWithIdx::getValue)
+                .map(RecordRef::removeAppName)
+                .collect(Collectors.toList()));
             queryBody.setAttributes(attributes);
             queryBody.setRawAtts(rawAtts);
 

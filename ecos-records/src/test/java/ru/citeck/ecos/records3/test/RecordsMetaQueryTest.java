@@ -10,26 +10,33 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RecordsMetaQueryTest {
 
-    private RecordAttsService recordsAttsService;
+    private DtoSchemaReader dtoSchemaReader;
+    private AttSchemaWriter attSchemaWriter;
 
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsAttsService = factory.getRecordsAttsService();
+        attSchemaWriter = factory.getAttSchemaWriter();
+        dtoSchemaReader = factory.getDtoSchemaReader();
     }
 
     @Test
     void testQueryBuild() {
-//todo
-        /*Map<String, String> attributes = recordsMetaService.getAtts(SimplePojo.class);
+
+        Map<String, String> attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(SimplePojo.class));
 
         assertEquals(12, attributes.size());
 
@@ -45,44 +52,6 @@ public class RecordsMetaQueryTest {
         assertEquals(".atts(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("statuses"));
         assertEquals(".att(n:\"cm:caseStatus\"){atts(n:\"cm:statusName\"){str}}", attributes.get("statuses1"));
         assertEquals(".att(n:\"enumField\"){str}", attributes.get("enumField"));
-
-        Map<String, String> attributesMap = new TreeMap<>(Comparator.comparingInt(Integer::parseInt));
-        attributesMap.put("0", "name.title.field0.field1");
-        attributesMap.put("1", "name.title[].field0.field1");
-        attributesMap.put("2", "name.title.field0[].field1");
-        attributesMap.put("3", "name.title.field0.field1?str");
-        attributesMap.put("4", "name.title.field0.field1?num");
-        attributesMap.put("5", "name");
-        attributesMap.put("6", ".att(n:\"name\"){att(n:\"title\"){str}}");
-        attributesMap.put("7", "name?num");
-        attributesMap.put("8", "name\\.withdot.title?num");
-        attributesMap.put("9", "name.title{inner}");
-        attributesMap.put("10", "name.title{inner,inner2,inner3}");
-        attributesMap.put("11", "name.title{key:inner?str,inner2}");
-        attributesMap.put("12", "name.title{ key:inner?str  ,   key2:inner2?bool }");
-        attributesMap.put("13", "name.title.other.deep{aa:inner?json}");
-        attributesMap.put("15", "name{aa:inner.and.more?bool,bb:inner2}");
-        attributesMap.put("16", "name{aa:inner[]{array}}");*/
-
-        //AttSchema schema = recordsMetaService.createSchema(attributesMap);
-        /*assertEquals(""
-            + "a:att(n:\"name\"){att(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){disp}}}},"
-            + "b:att(n:\"name\"){atts(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){disp}}}},"
-            + "c:att(n:\"name\"){att(n:\"title\"){atts(n:\"field0\"){att(n:\"field1\"){disp}}}},"
-            + "d:att(n:\"name\"){att(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){str}}}},"
-            + "e:att(n:\"name\"){att(n:\"title\"){att(n:\"field0\"){att(n:\"field1\"){num}}}},"
-            + "f:att(n:\"name\"){disp},"
-            + "g:att(n:\"name\"){att(n:\"title\"){str}},"
-            + "h:att(n:\"name\"){num},"
-            + "i:att(n:\"name.withdot\"){att(n:\"title\"){num}},"
-            + "j:att(n:\"name\"){att(n:\"title\"){inner:att(n:\"inner\"){disp}}},"
-            + "k:att(n:\"name\"){att(n:\"title\"){inner:att(n:\"inner\"){disp},inner2:att(n:\"inner2\"){disp},inner3:att(n:\"inner3\"){disp}}},"
-            + "l:att(n:\"name\"){att(n:\"title\"){key:att(n:\"inner\"){str},inner2:att(n:\"inner2\"){disp}}},"
-            + "m:att(n:\"name\"){att(n:\"title\"){key:att(n:\"inner\"){str},key2:att(n:\"inner2\"){bool}}},"
-            + "n:att(n:\"name\"){att(n:\"title\"){att(n:\"other\"){att(n:\"deep\"){aa:att(n:\"inner\"){json}}}}},"
-            + "o:att(n:\"name\"){aa:att(n:\"inner\"){att(n:\"and\"){att(n:\"more\"){bool}}},bb:att(n:\"inner2\"){disp}},"
-            + "p:att(n:\"name\"){aa:atts(n:\"inner\"){array:att(n:\"array\"){disp}}}",
-            schema.getGqlSchema());*/
     }
 
     public static class SimplePojo {

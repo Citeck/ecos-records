@@ -1,19 +1,30 @@
 package ru.citeck.ecos.records3.test;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
+import ru.citeck.ecos.records2.request.rest.DeletionBody;
+import ru.citeck.ecos.records2.request.rest.MutationBody;
+import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-//todo
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteRecordsResolverTest {
 
     private static final String DEFAULT_APP = "alf";
@@ -34,21 +45,19 @@ class RemoteRecordsResolverTest {
         }
     }
 
-    private static final String TEST_SCHEMA = "!schema!";
-
     private RecordsService recordsService;
 
-    private List<RecordRef> refs = new ArrayList<>();
-    private Map<RecordRef, RecordAtts> metaByRef = new HashMap<>();
+    private final List<RecordRef> refs = new ArrayList<>();
+    private final Map<RecordRef, RecordAtts> metaByRef = new HashMap<>();
 
-    private List<String> urls = new ArrayList<>();
+    private final List<String> urls = new ArrayList<>();
 
-/*    @BeforeAll
+    @BeforeAll
     void init() {
 
-        Factory factory = new Factory(new RestApi(this::jsonPost, factory.getProperties()));
+        Factory factory = new Factory(RemoteRecordsResolverTest.this::jsonPost);
 
-        recordsService = factory.getRecordsService();
+        recordsService = factory.getRecordsServiceV1();
 
         refs.add(RecordRef.valueOf("src1@loc1"));
         refs.add(RecordRef.valueOf("src1@loc2"));
@@ -73,22 +82,21 @@ class RemoteRecordsResolverTest {
 
             if (body.getRecords() != null) {
 
-                assertEquals(TEST_SCHEMA, body.getSchema());
-
                 for (RecordRef ref : body.getRecords()) {
                     assertTrue(refs.stream().map(RecordRef::removeAppName).anyMatch(ref::equals));
                 }
 
-                RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
-                result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r)).collect(Collectors.toList()));
+                RecsQueryRes<RecordAtts> result = new RecsQueryRes<>();
+                result.setRecords(body.getRecords().stream().map(metaByRef::get).collect(Collectors.toList()));
                 return Json.getMapper().convert(result, resultType);
 
             } else if (body.getQuery() != null) {
 
                 assertFalse(body.getQuery().getSourceId().contains("/"));
-                RecordsResult<RecordMeta> result = new RecordsResult<>();
-                result.setRecords(new ArrayList<>(metaByRef.values()));
-                return Json.getMapper().convert(result, resultType);
+                List<RecordAtts> result = new ArrayList<>(metaByRef.values());
+                RecordsQueryResult<RecordAtts> queryResult = new RecordsQueryResult<>();
+                queryResult.setRecords(result);
+                return Json.getMapper().convert(queryResult, resultType);
 
             } else {
                 throw new IllegalStateException("Incorrect query: " + request);
@@ -98,7 +106,10 @@ class RemoteRecordsResolverTest {
             MutationBody body = (MutationBody) request;
 
             RecordsMutResult result = new RecordsMutResult();
-            result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r.getId())).collect(Collectors.toList()));
+            result.setRecords(body.getRecords()
+                .stream()
+                .map(r -> new RecordMeta(metaByRef.get(r.getId())))
+                .collect(Collectors.toList()));
             return Json.getMapper().convert(result, resultType);
 
         } else if (request instanceof DeletionBody) {
@@ -106,7 +117,10 @@ class RemoteRecordsResolverTest {
             DeletionBody body = (DeletionBody) request;
 
             RecordsMutResult result = new RecordsMutResult();
-            result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r)).collect(Collectors.toList()));
+            result.setRecords(body.getRecords()
+                .stream()
+                .map(r -> new RecordMeta(metaByRef.get(r)))
+                .collect(Collectors.toList()));
             return Json.getMapper().convert(result, resultType);
 
         } else {
@@ -125,7 +139,7 @@ class RemoteRecordsResolverTest {
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(appId + "/localSource");
 
-        RecordsQueryResult<RecordRef> result = recordsService.query(query);
+        RecsQueryRes<RecordRef> result = recordsService.query(query);
         assertEquals(refs.stream()
                         .map(r -> RecordRef.valueOf(appId + "/" + r.removeAppName().toString()))
                         .collect(Collectors.toList()),
@@ -137,25 +151,20 @@ class RemoteRecordsResolverTest {
         urls.clear();
 
         List<RecordRef> qrefs = new ArrayList<>(refs);
-        RecordsResult<RecordMeta> metaResult = recordsService.getAtts(qrefs, TEST_SCHEMA);
+        List<RecordAtts> metaResult = recordsService.getAtts(qrefs, Collections.singletonMap("aa", "bb"));
 
         assertEquals(3, urls.size());
-        checkRecordsMeta(refs, metaResult.getRecords());
+        assertEquals(qrefs, metaResult.stream().map(RecordAtts::getId).collect(Collectors.toList()));
 
-        RecordsMutation mutation = new RecordsMutation();
-        mutation.setRecords(refs.stream().map(RecordMeta::new).collect(Collectors.toList()));
+        //todo
+       /* List<RecordRef> mutResult = recordsService.mutate(refs.stream().map(RecordAtts::new).collect(Collectors.toList()));
+        checkRecordsMeta(Collections.singletonList(refs.get(0)), mutResult.stream().map(RecordAtts::new).collect(Collectors.toList()));
 
-        RecordsMutResult mutResult = recordsService.mutate(mutation);
-        checkRecordsMeta(Collections.singletonList(refs.get(0)), mutResult.getRecords());
-
-        RecordsDeletion deletion = new RecordsDeletion();
-        deletion.setRecords(refs);
-
-        RecordsDelResult delResult = recordsService.delete(deletion);
-        checkRecordsMeta(refs, delResult.getRecords());
+        List<DelStatus> delResult = recordsService.delete(refs);
+        assertEquals(refs.size(), delResult.size());*/
     }
 
-    private void checkRecordsMeta(List<RecordRef> expected, List<RecordMeta> records) {
+    private void checkRecordsMeta(List<RecordRef> expected, List<RecordAtts> records) {
         assertEquals(expected.size(), records.size());
         assertEquals(expected.stream().map(r -> {
                 if (r.getAppName().isEmpty()) {
@@ -163,6 +172,6 @@ class RemoteRecordsResolverTest {
                 }
                 return r;
             }).collect(Collectors.toList()),
-            records.stream().map(RecordMeta::getId).collect(Collectors.toList()));
-    }*/
+            records.stream().map(RecordAtts::getId).collect(Collectors.toList()));
+    }
 }

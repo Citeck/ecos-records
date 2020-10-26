@@ -121,6 +121,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
+        return RequestContext.doWithCtx(serviceFactory, ctx -> mutateImpl(records));
+    }
+
+    @NotNull
+    private List<RecordRef> mutateImpl(@NotNull List<RecordAtts> records) {
 
         Map<String, RecordRef> aliasToRecordRef = new HashMap<>();
         List<RecordRef> result = new ArrayList<>();
@@ -192,6 +197,11 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public List<DelStatus> delete(@NotNull List<RecordRef> records) {
+        return RequestContext.doWithCtx(serviceFactory, ctx -> deleteImpl(records));
+    }
+
+    @NotNull
+    private List<DelStatus> deleteImpl(@NotNull List<RecordRef> records) {
         List<DelStatus> result = recordsResolver.delete(records);
         if (result == null) {
             result = new ArrayList<>(records.size());

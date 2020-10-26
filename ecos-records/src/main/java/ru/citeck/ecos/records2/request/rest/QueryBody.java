@@ -50,20 +50,22 @@ public class QueryBody {
 
     @JsonSetter
     @com.fasterxml.jackson.annotation.JsonSetter
-    public void setAttributes(JsonNode attributes) {
+    public void setAttributes(@Nullable JsonNode attributes) {
 
         Map<String, String> result = new HashMap<>();
 
-        if (attributes.isArray()) {
-            for (int i = 0; i < attributes.size(); i++) {
-                String field = attributes.get(i).asText();
-                result.put(field, field);
-            }
-        } else {
-            Iterator<String> names = attributes.fieldNames();
-            while (names.hasNext()) {
-                String fieldKey = names.next();
-                result.put(fieldKey, attributes.get(fieldKey).asText());
+        if (attributes != null) {
+            if (attributes.isArray()) {
+                for (int i = 0; i < attributes.size(); i++) {
+                    String field = attributes.get(i).asText();
+                    result.put(field, field);
+                }
+            } else {
+                Iterator<String> names = attributes.fieldNames();
+                while (names.hasNext()) {
+                    String fieldKey = names.next();
+                    result.put(fieldKey, attributes.get(fieldKey).asText());
+                }
             }
         }
 

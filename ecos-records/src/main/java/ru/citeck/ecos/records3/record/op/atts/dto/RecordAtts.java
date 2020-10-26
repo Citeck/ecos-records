@@ -25,9 +25,11 @@ public class RecordAtts {
     public RecordAtts() {
     }
 
-    public RecordAtts(RecordAtts other) {
-        setId(other.getId());
-        setAttributes(other.getAttributes());
+    public RecordAtts(@Nullable RecordAtts other) {
+        if (other != null) {
+            setId(other.getId());
+            setAttributes(other.getAttributes());
+        }
     }
 
     public RecordAtts(RecordAtts other, RecordRef id) {

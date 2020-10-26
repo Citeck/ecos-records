@@ -99,7 +99,7 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             assertEquals(3, RequestContext.getCurrent().getList("testList").size());
             return "123";
         }

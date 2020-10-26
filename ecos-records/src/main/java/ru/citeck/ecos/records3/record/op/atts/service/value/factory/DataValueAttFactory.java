@@ -16,7 +16,7 @@ public class DataValueAttFactory implements AttValueFactory<DataValue> {
         return new AttValue() {
 
             @Override
-            public String getString() {
+            public String asText() {
                 if (value.isValueNode()) {
                     return value.asText();
                 }
@@ -29,7 +29,7 @@ public class DataValueAttFactory implements AttValueFactory<DataValue> {
             }
 
             @Override
-            public Boolean getBool() {
+            public Boolean asBool() {
                 return value.asBoolean();
             }
         };

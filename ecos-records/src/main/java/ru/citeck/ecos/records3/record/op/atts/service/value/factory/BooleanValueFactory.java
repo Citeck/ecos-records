@@ -11,12 +11,12 @@ public class BooleanValueFactory implements AttValueFactory<Boolean> {
     public AttValue getValue(Boolean value) {
         return new AttValue() {
             @Override
-            public String getString() {
+            public String asText() {
                 return value.toString();
             }
 
             @Override
-            public Boolean getBool() {
+            public Boolean asBool() {
                 return value;
             }
         };

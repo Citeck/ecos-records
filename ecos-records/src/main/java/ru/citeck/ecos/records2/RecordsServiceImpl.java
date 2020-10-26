@@ -24,7 +24,6 @@ import ru.citeck.ecos.records2.source.dao.RecordsDao;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
@@ -143,6 +142,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 .stream()
                 .filter(m -> MsgLevel.DEBUG.isEnabled(m.getLevel()))
                 .collect(Collectors.toList());
+
             if (!debugMsgs.isEmpty()) {
                 ObjectData debugData = ObjectData.create();
                 debugData.set("messages", debugMsgs);
@@ -267,17 +267,10 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     private Map<String, String> fixInnerAliases(Map<String, String> attributes) {
 
-        List<SchemaRootAtt> rootAtts = attSchemaReader.readRoot(attributes);
-        List<SchemaAtt> atts = fixInnerAliases(rootAtts.stream()
-            .map(SchemaRootAtt::getAttribute)
-            .collect(Collectors.toList()), true, null, null);
+        List<SchemaAtt> atts = attSchemaReader.read(attributes);
+        atts = fixInnerAliases(atts, true, null, null);
 
-        List<SchemaRootAtt> resultAtts = new ArrayList<>();
-        for (int i = 0; i < atts.size(); i++) {
-            resultAtts.add(new SchemaRootAtt(atts.get(i), rootAtts.get(i).getProcessors()));
-        }
-
-        return attSchemaWriter.writeToMap(resultAtts);
+        return attSchemaWriter.writeToMap(atts);
     }
 
     private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts, boolean root,
@@ -318,7 +311,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                         }
                     }
                 }
-                return a.modify()
+                return a.copy()
                     .setInner(fixInnerAliases(a.getInner(), false, a, parent))
                     .setAlias(newAlias)
                     .build();

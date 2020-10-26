@@ -25,6 +25,7 @@ import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.*;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
@@ -90,6 +91,7 @@ public class RecordsServiceFactory {
     private AttSchemaWriter attSchemaWriter;
     private AttSchemaResolver attSchemaResolver;
     private MetaValuesConverter metaValuesConverter;
+    private AttProcReader attProcReader;
 
     @Deprecated
     private Supplier<? extends QueryContext> queryContextSupplier;
@@ -595,7 +597,7 @@ public class RecordsServiceFactory {
     }
 
     protected AttSchemaReader createAttSchemaReader() {
-        return new AttSchemaReader();
+        return new AttSchemaReader(this);
     }
 
     public final synchronized AttSchemaReader getAttSchemaReader() {
@@ -638,7 +640,7 @@ public class RecordsServiceFactory {
     }
 
     protected AttProcService createAttProcService() {
-        AttProcService service = new AttProcService();
+        AttProcService service = new AttProcService(this);
         getAttProcessors().forEach(service::register);
         return service;
     }
@@ -648,5 +650,16 @@ public class RecordsServiceFactory {
             attProcService = createAttProcService();
         }
         return attProcService;
+    }
+
+    protected AttProcReader createAttProcReader() {
+        return new AttProcReader();
+    }
+
+    public final synchronized AttProcReader getAttProcReader() {
+        if (attProcReader == null) {
+            attProcReader = createAttProcReader();
+        }
+        return attProcReader;
     }
 }

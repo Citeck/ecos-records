@@ -1,6 +1,9 @@
 package ru.citeck.ecos.records3.rest.v1;
 
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordsProperties;
@@ -61,11 +64,20 @@ public class RestHandlerV1 {
                 + "but found both. 'records' field will be ignored");
         }
 
-        Map<String, String> bodyAtts = body.getAttributes();
+        JsonNode bodyAtts = body.getAttributes();
+        Map<String, Object> bodyAttsMap;
         if (bodyAtts == null) {
-            bodyAtts = Collections.emptyMap();
+            bodyAttsMap = Collections.emptyMap();
+        } else {
+            if (bodyAtts.isArray()) {
+                bodyAttsMap = new LinkedHashMap<>();
+                bodyAtts.forEach(att -> bodyAttsMap.put(att.asText(), att));
+            } else if (bodyAtts.isObject()) {
+                bodyAttsMap = DataValue.create(bodyAtts).asMap(String.class, Object.class);
+            } else {
+                throw new RuntimeException("Incorrect attributes: '" + bodyAtts + "'");
+            }
         }
-        Map<String, String> attributes = bodyAtts;
         QueryResp resp = new QueryResp();
 
         if (body.getQuery() != null) {
@@ -75,7 +87,7 @@ public class RestHandlerV1 {
             RecsQueryRes<RecordAtts> result;
             try {
                 result = doInTransaction(true, () ->
-                        recordsService.query(body.getQuery(), attributes, body.isRawAtts())
+                        recordsService.query(body.getQuery(), bodyAttsMap, body.isRawAtts())
                 );
             } catch (Exception e) {
                 log.error("Records search query exception. QueryBody: " + body, e);
@@ -103,7 +115,7 @@ public class RestHandlerV1 {
                     List<RecordAtts> atts;
                     try {
                         atts = doInTransaction(true, () ->
-                                recordsService.getAtts(records, body.getAttributes(), body.isRawAtts())
+                                recordsService.getAtts(records, bodyAttsMap, body.isRawAtts())
                         );
                     } catch (Exception e) {
                         log.error("Records attributes query exception. QueryBody: " + body, e);

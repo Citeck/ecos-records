@@ -11,17 +11,17 @@ public class DoubleValueFactory implements AttValueFactory<Double> {
     public AttValue getValue(Double value) {
         return new AttValue() {
             @Override
-            public String getString() {
+            public String asText() {
                 return value.toString();
             }
 
             @Override
-            public Double getDouble() {
+            public Double asDouble() {
                 return value;
             }
 
             @Override
-            public Boolean getBool() {
+            public Boolean asBool() {
                 return value != 0;
             }
         };

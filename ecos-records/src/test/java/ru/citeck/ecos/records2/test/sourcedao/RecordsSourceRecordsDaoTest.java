@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,9 +54,8 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
 
         SourceFlagsMetaInfo meta2 = recordsService.getMeta(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
         assertEquals("meta", meta2.id);
-        assertTrue(meta2.metaSupported);
+        assertTrue(meta2.attsSupported);
         assertFalse(meta2.mutationSupported);
-        assertFalse(meta2.queryWithMetaSupported);
         assertFalse(meta2.querySupported);
     }
 
@@ -67,9 +67,13 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
     @Data
     public static class SourceFlagsMetaInfo {
         private String id = "";
-        private Boolean queryWithMetaSupported;
+        @AttName("features.query")
         private Boolean querySupported;
-        private Boolean metaSupported;
+        @AttName("features.getAtts")
+        private Boolean attsSupported;
+        @AttName("features.mutate")
         private Boolean mutationSupported;
+        @AttName("features.delete")
+        private Boolean deletionSupported;
     }
 }

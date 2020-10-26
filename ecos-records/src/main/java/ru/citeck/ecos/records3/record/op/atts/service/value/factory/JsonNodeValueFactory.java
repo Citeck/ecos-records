@@ -18,7 +18,7 @@ public class JsonNodeValueFactory implements AttValueFactory<JsonNode> {
         return new AttValue() {
 
             @Override
-            public String getString() {
+            public String asText() {
                 if (value == null || value instanceof NullNode || value instanceof MissingNode) {
                     return null;
                 } else if (value.isTextual()) {
@@ -29,7 +29,7 @@ public class JsonNodeValueFactory implements AttValueFactory<JsonNode> {
             }
 
             @Override
-            public Object getJson() {
+            public Object asJson() {
                 return value;
             }
 

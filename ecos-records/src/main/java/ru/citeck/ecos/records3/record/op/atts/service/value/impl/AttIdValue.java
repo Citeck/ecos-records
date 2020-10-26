@@ -13,7 +13,7 @@ public class AttIdValue implements AttValue {
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return id;
     }
 

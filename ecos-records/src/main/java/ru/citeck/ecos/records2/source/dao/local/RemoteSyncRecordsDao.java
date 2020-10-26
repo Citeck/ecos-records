@@ -15,7 +15,6 @@ import ru.citeck.ecos.records2.source.dao.local.job.PeriodicJob;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
@@ -188,14 +187,13 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         }
 
         AttSchemaWriter attSchemaWriter = serviceFactory.getAttSchemaWriter();
-        List<SchemaRootAtt> schemaAtts = new ArrayList<>(dtoSchemaReader.read(model));
+        List<SchemaAtt> schemaAtts = new ArrayList<>(dtoSchemaReader.read(model));
 
-        schemaAtts.add(new SchemaRootAtt(
-            SchemaAtt.create()
+        schemaAtts.add(SchemaAtt.create()
                 .setAlias(MODIFIED_ATT_KEY)
                 .setName(RecordConstants.ATT_MODIFIED)
                 .setInner(SchemaAtt.create().setName("?disp"))
-                .build(), Collections.emptyList()));
+                .build());
 
         if (getId().contains("/")) {
             Map<String, String> attributes = attSchemaWriter.writeToMap(schemaAtts);

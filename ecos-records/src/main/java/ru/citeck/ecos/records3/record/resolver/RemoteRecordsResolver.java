@@ -64,7 +64,7 @@ public class RemoteRecordsResolver {
     }
 
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                          @NotNull Map<String, String> attributes,
+                                          @NotNull Map<String, ?> attributes,
                                           boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -161,7 +161,7 @@ public class RemoteRecordsResolver {
     }
 
     public List<RecordAtts> getAtts(@NotNull List<RecordRef> records,
-                                    @NotNull Map<String, String> attributes,
+                                    @NotNull Map<String, ?> attributes,
                                     boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();

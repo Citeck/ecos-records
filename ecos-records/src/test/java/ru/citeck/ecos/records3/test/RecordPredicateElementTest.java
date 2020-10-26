@@ -180,12 +180,12 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             }
 
             @Override
-            public String getString() {
+            public String asText() {
                 return str;
             }
 
             @Override
-            public String getDisplayName() {
+            public String getDispName() {
                 return str + "-disp";
             }
         }

@@ -80,7 +80,7 @@ public class MetaRecordsDao extends AbstractRecordsDao implements RecordsAttsDao
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return getFormattedUptime();
         }
 

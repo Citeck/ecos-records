@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema;
 import lombok.Data;
 import lombok.ToString;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException;
 
 import java.util.*;
@@ -11,12 +12,11 @@ import java.util.stream.Collectors;
 @Data
 public class SchemaAtt {
 
-
-
     private final String alias;
     private final String name;
     private final boolean multiple;
     private final List<SchemaAtt> inner;
+    private final List<AttProcDef> processors;
 
     public static Builder create() {
         return new Builder();
@@ -25,15 +25,17 @@ public class SchemaAtt {
     private SchemaAtt(String alias,
                       String name,
                       boolean multiple,
-                      List<SchemaAtt> inner) {
+                      List<SchemaAtt> inner,
+                      List<AttProcDef> processors) {
 
         this.alias = alias;
         this.name = name;
         this.multiple = multiple;
         this.inner = inner;
+        this.processors = processors;
     }
 
-    public Builder modify() {
+    public Builder copy() {
         return new Builder(this);
     }
 
@@ -61,14 +63,22 @@ public class SchemaAtt {
 
     @Override
     public String toString() {
-        String res = "{" +
-            "\"alias\":\"" + alias + '\"' +
-            ", \"name\":\"" + name + '\"' +
-            ", \"multiple\":" + multiple;
+
+        String res = "{";
+        if (!alias.isEmpty()) {
+            res += "\"alias\":\"" + alias + "\",";
+        }
+        res += "\"name\":\"" + name + '\"'
+            + ", \"multiple\":" + multiple;
 
         if (!inner.isEmpty()) {
             res += ", \"inner\":[" + inner.stream()
                 .map(SchemaAtt::toString)
+                .collect(Collectors.joining(", ")) + "]";
+        }
+        if (!processors.isEmpty()) {
+            res += ", \"processors\":[" + processors.stream()
+                .map(AttProcDef::toString)
                 .collect(Collectors.joining(", ")) + "]";
         }
         return res + '}';
@@ -81,6 +91,7 @@ public class SchemaAtt {
         private String name;
         private boolean multiple;
         private List<SchemaAtt> inner = Collections.emptyList();
+        private List<AttProcDef> processors = Collections.emptyList();
 
         public Builder() {
         }
@@ -90,6 +101,7 @@ public class SchemaAtt {
             this.name = base.getName();
             this.multiple = base.isMultiple();
             this.inner = base.getInner();
+            this.processors = base.getProcessors();
         }
 
         public Builder setAlias(String alias) {
@@ -128,11 +140,26 @@ public class SchemaAtt {
             return setInner(inner.build());
         }
 
+        public Builder setProcessors(List<AttProcDef> processors) {
+            if (processors == null) {
+                this.processors = Collections.emptyList();
+            } else {
+                this.processors = new ArrayList<>(processors);
+            }
+            return this;
+        }
+
         public SchemaAtt build() {
 
             MandatoryParam.check("name", name);
 
-            SchemaAtt att = new SchemaAtt(alias, name, multiple, Collections.unmodifiableList(inner));
+            SchemaAtt att = new SchemaAtt(
+                alias,
+                name,
+                multiple,
+                Collections.unmodifiableList(inner),
+                Collections.unmodifiableList(processors)
+            );
 
             if (att.isScalar() && !inner.isEmpty()) {
                 throw new AttSchemaException("Attribute can't be a scalar and has inner attributes. " + this);

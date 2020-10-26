@@ -11,17 +11,17 @@ public class IntegerValueFactory implements AttValueFactory<Integer> {
     public AttValue getValue(Integer value) {
         return new AttValue() {
             @Override
-            public String getString() {
+            public String asText() {
                 return value.toString();
             }
 
             @Override
-            public Double getDouble() {
+            public Double asDouble() {
                 return Double.valueOf(value);
             }
 
             @Override
-            public Boolean getBool() {
+            public Boolean asBool() {
                 return value != 0;
             }
         };

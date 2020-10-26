@@ -16,7 +16,7 @@ public class ObjectDataValueFactory implements AttValueFactory<ObjectData> {
         return new AttValue() {
 
             @Override
-            public String getString() {
+            public String asText() {
                 return Json.getMapper().toString(value);
             }
 
@@ -26,7 +26,7 @@ public class ObjectDataValueFactory implements AttValueFactory<ObjectData> {
             }
 
             @Override
-            public Object getJson() {
+            public Object asJson() {
                 return value;
             }
         };

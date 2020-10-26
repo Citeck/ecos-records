@@ -37,6 +37,7 @@ import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.source.info.RecordsSourceInfo;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -554,30 +555,27 @@ public class LocalRecordsResolverV0 {
     }
 
     @Nullable
-    public RecordsSourceInfo getSourceInfo(@NotNull String sourceId) {
+    public RecordsDaoInfo getSourceInfo(@NotNull String sourceId) {
 
         RecordsDao recordsDao = allDao.get(sourceId);
         if (recordsDao == null) {
             return null;
         }
 
-        RecordsSourceInfo recordsSourceInfo = new RecordsSourceInfo();
+        RecordsDaoInfo recordsSourceInfo = new RecordsDaoInfo();
         recordsSourceInfo.setId(sourceId);
 
         if (recordsDao instanceof RecordsQueryBaseDao) {
             RecordsQueryBaseDao queryDao = (RecordsQueryBaseDao) recordsDao;
             List<String> languages = queryDao.getSupportedLanguages();
             recordsSourceInfo.setSupportedLanguages(languages != null ? languages : Collections.emptyList());
-            recordsSourceInfo.setQuerySupported(true);
-            if (recordsDao instanceof RecordsQueryWithMetaDao) {
-                recordsSourceInfo.setQueryWithMetaSupported(true);
-            }
+            recordsSourceInfo.getFeatures().setQuery(true);
         }
         if (recordsDao instanceof MutableRecordsDao) {
-            recordsSourceInfo.setMutationSupported(true);
+            recordsSourceInfo.getFeatures().setMutate(true);
         }
         if (recordsDao instanceof RecordsMetaDao) {
-            recordsSourceInfo.setMetaSupported(true);
+            recordsSourceInfo.getFeatures().setGetAtts(true);
         }
 
         ColumnsSourceId columnsSourceId = recordsDao.getClass().getAnnotation(ColumnsSourceId.class);
@@ -589,7 +587,7 @@ public class LocalRecordsResolverV0 {
     }
 
     @NotNull
-    public List<RecordsSourceInfo> getSourceInfo() {
+    public List<RecordsDaoInfo> getSourceInfo() {
         return allDao.keySet()
             .stream()
             .map(this::getSourceInfo)

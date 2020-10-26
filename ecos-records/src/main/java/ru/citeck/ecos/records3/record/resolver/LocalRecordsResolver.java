@@ -33,13 +33,14 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcService;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao;
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
@@ -60,6 +61,7 @@ import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao;
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records2.utils.ValWithIdx;
+import ru.citeck.ecos.records3.utils.AttUtils;
 import ru.citeck.ecos.records3.utils.V1ConvUtils;
 
 import java.util.*;
@@ -88,6 +90,7 @@ public class LocalRecordsResolver {
     private final LocalRecordsResolverV0 localRecordsResolverV0;
     private final RecordsMetaService recordsMetaService;
     private final AttSchemaWriter attSchemaWriter;
+    private final AttProcService attProcService;
 
     private final OneRecDaoConverter converter = new OneRecDaoConverter();
 
@@ -108,14 +111,13 @@ public class LocalRecordsResolver {
         this.localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
         this.recordsMetaService = serviceFactory.getRecordsMetaService();
         this.attSchemaWriter = serviceFactory.getAttSchemaWriter();
+        this.attProcService = serviceFactory.getAttProcService();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsAttsDao.class, attsDao);
         daoMapByType.put(RecordsQueryDao.class, queryDao);
         daoMapByType.put(RecordsMutateDao.class, mutateDao);
         daoMapByType.put(RecordsDeleteDao.class, deleteDao);
-
-
     }
 
     public void initJobs(ScheduledExecutorService executor) {
@@ -129,7 +131,7 @@ public class LocalRecordsResolver {
 
     @Nullable
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                          @NotNull List<SchemaRootAtt> attributes,
+                                          @NotNull List<SchemaAtt> attributes,
                                           boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -266,7 +268,7 @@ public class LocalRecordsResolver {
     private List<RecordAtts> getDistinctValues(String sourceId,
                                                DistinctQuery distinctQuery,
                                                int max,
-                                               List<SchemaRootAtt> schema) {
+                                               List<SchemaAtt> schema) {
 
         if (max == -1) {
             max = 50;
@@ -297,17 +299,16 @@ public class LocalRecordsResolver {
         String distinctValueAlias = "_distinctValue";
         String distinctValueIdAlias = "_distinctValueId";
 
-        List<SchemaAtt> innerSchema = schema.stream()
-            .map(SchemaRootAtt::getAttribute).collect(Collectors.toList());
+        List<SchemaAtt> innerSchema = new ArrayList<>(schema);
 
         innerSchema.add(SchemaAtt.create().setAlias(distinctValueAlias).setName("?str").build());
         innerSchema.add(SchemaAtt.create().setAlias(distinctValueIdAlias).setName("?id").build());
 
-        List<SchemaRootAtt> distinctAttSchema = Collections.singletonList(new SchemaRootAtt(SchemaAtt.create()
+        List<SchemaAtt> distinctAttSchema = Collections.singletonList(SchemaAtt.create()
             .setAlias("att")
             .setName(distinctQuery.getAttribute())
             .setInner(innerSchema)
-            .build(), Collections.emptyList()));
+            .build());
 
         String distinctAtt = distinctQuery.getAttribute();
 
@@ -380,7 +381,7 @@ public class LocalRecordsResolver {
 
     @Nullable
     public List<RecordAtts> getAtts(@NotNull List<?> records,
-                                    @NotNull List<SchemaRootAtt> attributes,
+                                    @NotNull List<SchemaAtt> attributes,
                                     boolean rawAtts) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
@@ -447,7 +448,7 @@ public class LocalRecordsResolver {
     }
 
     private List<RecordAtts> getMetaImpl(Collection<RecordRef> records,
-                                         List<SchemaRootAtt> attributes,
+                                         List<SchemaAtt> attributes,
                                          boolean rawAtts) {
 
         if (records.isEmpty()) {
@@ -474,8 +475,14 @@ public class LocalRecordsResolver {
                     .map(ValWithIdx::getValue)
                     .collect(Collectors.toList());
 
-                Map<String, String> attributesMap = attSchemaWriter.writeToMap(attributes);
+                Map<String, List<AttProcDef>> processors = new HashMap<>();
+                List<SchemaAtt> attsWithoutProcessors = new ArrayList<>();
+                attributes.forEach(att -> {
+                    processors.put(att.getAliasForValue(), att.getProcessors());
+                    attsWithoutProcessors.add(AttUtils.removeProcessors(att));
+                });
 
+                Map<String, String> attributesMap = attSchemaWriter.writeToMap(attsWithoutProcessors);
                 AttributesSchema schema = recordsMetaService.createSchema(attributesMap);
 
                 List<RecordAtts> attsList = null;
@@ -490,6 +497,13 @@ public class LocalRecordsResolver {
                     V1ConvUtils.addDebugMessage(meta, context);
 
                     attsList = mapper.convert(meta.getRecords(), mapper.getListType(RecordAtts.class));
+
+                    if (attsList != null && !processors.isEmpty()) {
+                        attsList = attsList.stream()
+                            .map(r -> new RecordMeta(r.getId(),
+                                attProcService.applyProcessors(r.getAttributes(), processors))
+                            ).collect(Collectors.toList());
+                    }
 
                 } catch (Throwable e) {
                     log.error("Local records resolver v0 error. " +
@@ -723,7 +737,7 @@ public class LocalRecordsResolver {
 
         RecordsDao recordsDao = allDao.get(sourceId);
         if (recordsDao == null) {
-            return null;
+            return localRecordsResolverV0.getSourceInfo(sourceId);
         }
 
         RecordsDaoInfo recordsSourceInfo = new RecordsDaoInfo();
@@ -751,10 +765,17 @@ public class LocalRecordsResolver {
 
     @NotNull
     public List<RecordsDaoInfo> getSourceInfo() {
-        return allDao.keySet()
+
+        List<RecordsDaoInfo> result = new ArrayList<>();
+
+        allDao.keySet()
             .stream()
             .map(this::getSourceInfo)
-            .collect(Collectors.toList());
+            .forEach(result::add);
+
+        result.addAll(localRecordsResolverV0.getSourceInfo());
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")

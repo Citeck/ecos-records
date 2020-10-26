@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.write;
 
 import ru.citeck.ecos.commons.utils.NameUtils;
 import ru.citeck.ecos.records2.RecordConstants;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 
 import java.util.List;
@@ -18,6 +19,25 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
     }
 
     private void writeInner(SchemaAtt attribute, StringBuilder sb) {
+
+        writeInnerAtt(attribute, sb);
+
+        List<AttProcDef> processors = attribute.getProcessors();
+
+        for (AttProcDef processor : processors) {
+            sb.append("|").append(processor.getType()).append("(");
+            int argsSize = processor.getArguments().size();
+            for (int i = 0; i < argsSize; i++) {
+                sb.append(processor.getArguments().get(i).toString());
+                if (i < argsSize - 1) {
+                    sb.append(',');
+                }
+            }
+            sb.append(")");
+        }
+    }
+
+    private void writeInnerAtt(SchemaAtt attribute, StringBuilder sb) {
 
         String alias = attribute.getAlias();
         String name = attribute.getName();
@@ -127,6 +147,6 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
     private void writeHas(SchemaAtt attribute, StringBuilder sb) {
         sb.append("has(n:\"")
             .append(attribute.getInner().get(0).getName().replace("\"", "\\\""))
-            .append("\")");;
+            .append("\")");
     }
 }

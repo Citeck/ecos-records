@@ -3,9 +3,12 @@ package ru.citeck.ecos.records3.rest.v1.query;
 import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.rest.v1.RequestBody;
@@ -23,7 +26,7 @@ public class QueryBody extends RequestBody {
     @Nullable
     private RecordsQuery query;
     @Nullable
-    private Map<String, String> attributes;
+    private JsonNode attributes;
 
     private boolean rawAtts;
 
@@ -35,41 +38,22 @@ public class QueryBody extends RequestBody {
     }
 
     public void setAttribute(String attribute) {
-        if (attributes == null) {
-            attributes = new HashMap<>();
-        }
-        this.attributes.put(attribute, attribute);
+        ObjectNode objNode = Json.getMapper().newObjectNode();
+        objNode.set(attribute, TextNode.valueOf(attribute));
+        this.attributes = objNode;
     }
 
     @JsonSetter
     @com.fasterxml.jackson.annotation.JsonSetter
-    public void setAttributes(JsonNode attributes) {
-
-        Map<String, String> result = new HashMap<>();
-
-        if (attributes.isArray()) {
-            for (int i = 0; i < attributes.size(); i++) {
-                String field = attributes.get(i).asText();
-                result.put(field, field);
-            }
+    public void setAttributes(Object attributes) {
+        JsonNode node = Json.getMapper().toJson(attributes);
+        if (node.isArray()) {
+            ObjectNode objNode = Json.getMapper().newObjectNode();
+            node.forEach(n -> objNode.set(n.asText(), n));
+            this.attributes = objNode;
         } else {
-            Iterator<String> names = attributes.fieldNames();
-            while (names.hasNext()) {
-                String fieldKey = names.next();
-                result.put(fieldKey, attributes.get(fieldKey).asText());
-            }
+            this.attributes = node;
         }
-
-        this.attributes = result;
-    }
-
-    public void setAttributes(List<String> attributes) {
-        this.attributes = new HashMap<>();
-        attributes.forEach(a -> this.attributes.put(a, a));
-    }
-
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
     }
 
     @Override

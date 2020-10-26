@@ -10,7 +10,6 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
@@ -50,7 +49,7 @@ public class LocalRemoteResolver {
 
     @Nullable
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                          @NotNull Map<String, String> attributes,
+                                          @NotNull Map<String, ?> attributes,
                                           boolean rawAtts) {
 
         String sourceId = query.getSourceId();
@@ -61,17 +60,15 @@ public class LocalRemoteResolver {
         return remote.query(query, attributes, rawAtts);
     }
 
-    private <T> T doWithSchema(Map<String, String> attributes, Function<List<SchemaRootAtt>, T> action) {
+    private <T> T doWithSchema(Map<String, ?> attributes, Function<List<SchemaAtt>, T> action) {
 
-        List<SchemaRootAtt> atts = reader.readRoot(attributes);
+        List<SchemaAtt> atts = reader.read(attributes);
         return AttContext.doInContext(serviceFactory, attContext -> {
 
             if (!atts.isEmpty()) {
                 attContext.setSchemaAtt(SchemaAtt.create()
                     .setName("")
-                    .setInner(atts.stream()
-                        .map(SchemaRootAtt::getAttribute)
-                        .collect(Collectors.toList()))
+                    .setInner(atts)
                     .build());
             }
 
@@ -81,7 +78,7 @@ public class LocalRemoteResolver {
 
     @Nullable
     public List<RecordAtts> getAtts(@NotNull List<?> records,
-                                    @NotNull Map<String, String> attributes,
+                                    @NotNull Map<String, ?> attributes,
                                     boolean rawAtts) {
 
         if (records.isEmpty()) {

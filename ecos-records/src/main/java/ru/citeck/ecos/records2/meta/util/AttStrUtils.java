@@ -11,7 +11,13 @@ public class AttStrUtils {
 
     public static String removeQuotes(String str) {
         if (isInQuotes(str)) {
-            return str.substring(1, str.length() - 1);
+            String result = str.substring(1, str.length() - 1);
+            if (str.charAt(0) == '\'') {
+                result = result.replace("\\'", "'");
+            } else {
+                result = result.replace("\\\"", "\"");
+            }
+            return result;
         }
         return str;
     }
@@ -113,8 +119,8 @@ public class AttStrUtils {
                 }
                 if (isCloseContextChar(openContextChar, currentChar)) {
                     int slashes = 0;
-                    int backIdx = fromIdx;
-                    while (backIdx-- > 0 && str.charAt(backIdx) == '\\') {
+                    int backIdx = idx;
+                    while (--backIdx > 0 && str.charAt(backIdx) == '\\') {
                         slashes++;
                     }
                     if (slashes % 2 == 1) {

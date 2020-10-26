@@ -77,13 +77,16 @@ public interface RecordsService {
     @Nullable
     RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
+    @NotNull
+    DataValue queryOne(@NotNull RecordsQuery query, String attribute);
+
     /**
      * Query single record.
      *
      * @see RecordsService#query(RecordsQuery, Map)
      */
     @Nullable
-    RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
+    RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, ?> attributes);
 
     /* QUERY RECORDS */
 
@@ -129,7 +132,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes);
+    RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query, @NotNull Map<String, ?> attributes);
 
     /**
      * Query records and its attributes.
@@ -141,7 +144,7 @@ public interface RecordsService {
      */
     @NotNull
     RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                   @NotNull Map<String, String> attributes,
+                                   @NotNull Map<String, ?> attributes,
                                    boolean rawAtts);
 
     /* ATTRIBUTES */
@@ -173,7 +176,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordAtts getAtts(@Nullable Object record, @NotNull Map<String, String> attributes);
+    RecordAtts getAtts(@Nullable Object record, @NotNull Map<String, ?> attributes);
 
     /**
      * Get records attributes.
@@ -194,7 +197,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, String> attributes);
+    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, ?> attributes);
 
     /**
      * Get record metadata. Specified class will be used to determine
@@ -233,7 +236,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, String> attributes, boolean rawAtts);
+    List<RecordAtts> getAtts(@NotNull Collection<?> records, @NotNull Map<String, ?> attributes, boolean rawAtts);
 
     /* MUTATE */
 
@@ -256,7 +259,7 @@ public interface RecordsService {
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(@Nullable Object record, @NotNull Map<String, Object> attributes);
+    RecordRef mutate(@Nullable Object record, @NotNull Map<String, ?> attributes);
 
     /**
      * Create or change records.

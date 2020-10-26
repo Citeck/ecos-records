@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 
 import java.util.*;
@@ -23,7 +23,7 @@ public class ResolveArgs {
     @NotNull
     private final List<RecordRef> valueRefs;
     @NotNull
-    private final List<SchemaRootAtt> attributes;
+    private final List<SchemaAtt> attributes;
     @NotNull
     private final List<AttMixin> mixins;
 
@@ -38,7 +38,7 @@ public class ResolveArgs {
         private String sourceId = "";
         private List<Object> values = new ArrayList<>();
         private List<RecordRef> valueRefs = Collections.emptyList();
-        private List<SchemaRootAtt> attributes;
+        private List<SchemaAtt> attributes;
 
         @Getter
         private boolean rawAtts;
@@ -78,13 +78,13 @@ public class ResolveArgs {
         }
 
         @NotNull
-        public Builder setAtts(@Nullable List<SchemaRootAtt> attributes) {
+        public Builder setAtts(@Nullable List<SchemaAtt> attributes) {
             this.attributes = attributes != null ? new ArrayList<>(attributes) : Collections.emptyList();
             return this;
         }
 
         @NotNull
-        public Builder setAtt(@Nullable SchemaRootAtt attribute) {
+        public Builder setAtt(@Nullable SchemaAtt attribute) {
             return setAtts(attribute != null ? Collections.singletonList(attribute) : null);
         }
 

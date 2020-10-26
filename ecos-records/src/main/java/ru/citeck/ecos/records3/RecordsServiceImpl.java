@@ -13,7 +13,6 @@ import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttReadException;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
@@ -65,7 +64,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> RecsQueryRes<T> query(@NotNull RecordsQuery query, @NotNull Class<T> metaClass) {
 
-        List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
+        List<SchemaAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
@@ -77,7 +76,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                          @NotNull Map<String, String> attributes,
+                                          @NotNull Map<String, ?> attributes,
                                           boolean rawAtts) {
 
         RecsQueryRes<RecordAtts> result = handleRecordsQuery(() ->
@@ -94,7 +93,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public List<RecordAtts> getAtts(@NotNull Collection<?> records,
-                                    @NotNull Map<String, String> attributes,
+                                    @NotNull Map<String, ?> attributes,
                                     boolean rawAtts) {
 
         return handleRecordsListRead(() ->
@@ -105,7 +104,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> List<T> getAtts(@NotNull Collection<?> records, @NotNull Class<T> metaClass) {
 
-        List<SchemaRootAtt> attributes = dtoAttsSchemaReader.read(metaClass);
+        List<SchemaAtt> attributes = dtoAttsSchemaReader.read(metaClass);
         if (attributes.isEmpty()) {
             log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
@@ -136,7 +135,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
                 try {
 
-                    SchemaAtt parsedAtt = attSchemaReader.readRoot(name).getAttribute();
+                    SchemaAtt parsedAtt = attSchemaReader.read(name);
                     String scalarName = parsedAtt.getScalarName();
 
                     if ("?assoc".equals(scalarName)) {

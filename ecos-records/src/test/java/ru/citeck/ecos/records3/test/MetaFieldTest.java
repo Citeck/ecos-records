@@ -97,12 +97,12 @@ public class MetaFieldTest extends AbstractRecordsDao
     }
 
     @Override
-    public Double getDouble() {
+    public Double asDouble() {
         return 0.0;
     }
 
     @Override
-    public Object getJson() {
+    public Object asJson() {
         return "{}";
     }
 }

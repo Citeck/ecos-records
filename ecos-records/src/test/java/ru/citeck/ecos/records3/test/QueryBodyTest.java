@@ -17,12 +17,12 @@ class QueryBodyTest {
         QueryBody body1 = Json.getMapper().convert("{\"attributes\":[\"att0\",\"att1\"]}", QueryBody.class);
 
         assertEquals(body0, body1);
-        assertEquals("att0", body0.getAttributes().get("att0"));
-        assertEquals("att0", body1.getAttributes().get("att0"));
+        assertEquals("att0", body0.getAttributes().get("att0").asText());
+        assertEquals("att0", body1.getAttributes().get("att0").asText());
 
         QueryBody body2 = Json.getMapper().convert("{\"attribute\":\"test\"}", QueryBody.class);
         assertEquals(1, body2.getAttributes().size());
-        assertEquals("test", body2.getAttributes().values().stream().findFirst().orElse(null));
+        assertEquals("test", body2.getAttributes().get("test").asText());
 
         ObjectMapper mapper = new ObjectMapper();
 

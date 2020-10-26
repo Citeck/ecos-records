@@ -84,28 +84,28 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
         }
 
         @Override
-        public String getString() {
-            return innerAtts.getString();
+        public String asText() {
+            return innerAtts.asText();
         }
 
         @Override
-        public String getDisplayName() {
-            return innerAtts.getDisplayName();
+        public String getDispName() {
+            return innerAtts.getDispName();
         }
 
         @Override
-        public Double getDouble() {
-            return innerAtts.getDouble();
+        public Double asDouble() {
+            return innerAtts.asDouble();
         }
 
         @Override
-        public Boolean getBool() {
-            return innerAtts.getBool();
+        public Boolean asBool() {
+            return innerAtts.asBool();
         }
 
         @Override
-        public Object getJson() {
-            return innerAtts.getJson();
+        public Object asJson() {
+            return innerAtts.asJson();
         }
 
         @Override
@@ -114,8 +114,8 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
         }
 
         @Override
-        public Object getAs(@NotNull String type) {
-            return innerAtts.getAs(type);
+        public Object as(@NotNull String type) {
+            return innerAtts.as(type);
         }
 
         @Override

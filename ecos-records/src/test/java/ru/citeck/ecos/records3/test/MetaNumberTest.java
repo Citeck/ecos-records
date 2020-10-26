@@ -57,7 +57,7 @@ public class MetaNumberTest extends AbstractRecordsDao
         }
 
         @Override
-        public Double getDouble() {
+        public Double asDouble() {
             return 1_000_000_000.0;
         }
     }

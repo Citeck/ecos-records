@@ -72,18 +72,6 @@ public class InnerMixinTest extends LocalRecordsDao
 
         innerRes = recordsService.getAtt(DTO_REC_REF, "inner.inner.innerMeta");
         assertEquals(expected, innerRes);
-
-        DataValue computedExpected0 = DataValue.createStr("computedValue0");
-        DataValue computedExpected1 = DataValue.createStr("computedValue1");
-
-        innerRes = recordsService.getAtt(DTO_REC_REF, "computed");
-        assertEquals(computedExpected0, innerRes);
-
-        innerRes = recordsService.getAtt(DTO_REC_REF, "inner.computed");
-        assertEquals(computedExpected0, innerRes);
-
-        innerRes = recordsService.getAtt(DTO_REC_REF, "inner.inner.computed");
-        assertEquals(computedExpected1, innerRes);
     }
 
     @Override

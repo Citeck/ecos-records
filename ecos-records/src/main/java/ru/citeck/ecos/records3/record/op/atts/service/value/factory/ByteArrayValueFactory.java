@@ -18,12 +18,12 @@ public class ByteArrayValueFactory implements AttValueFactory<byte[]> {
         return new AttValue() {
 
             @Override
-            public String getString() {
+            public String asText() {
                 return Base64.getEncoder().encodeToString(value);
             }
 
             @Override
-            public Object getAs(@NotNull String type) {
+            public Object as(@NotNull String type) {
                 if ("string".equals(type)) {
                     return new String(value, StandardCharsets.UTF_8);
                 }
@@ -31,7 +31,7 @@ public class ByteArrayValueFactory implements AttValueFactory<byte[]> {
             }
 
             @Override
-            public Object getJson() {
+            public Object asJson() {
                 return Json.getMapper().read(value, JsonNode.class);
             }
         };

@@ -3,7 +3,6 @@ package ru.citeck.ecos.records2.meta;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.ObjectKeyGenerator;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.meta.attproc.AttProcessorDef;
 import ru.citeck.ecos.records2.meta.util.AttStrUtils;
 
 import java.util.*;
@@ -37,32 +36,10 @@ public class AttributesMetaResolver {
             AttSchemaInfo attSchemaInfo = new AttSchemaInfo();
             attSchemaInfo.setOriginalKey(name);
 
-            int pipeDelimIdx = AttStrUtils.indexOf(path, '|');
-            if (pipeDelimIdx > 0) {
-                attSchemaInfo.setProcessors(parseProcessors(path.substring(pipeDelimIdx + 1)));
-                path = path.substring(0, pipeDelimIdx);
-            }
-            List<String> orElseAtts = AttStrUtils.split(path, '!');
-            if (orElseAtts.size() > 1) {
-                List<String> orElseAttKeys = new ArrayList<>();
-                for (int i = 1; i < orElseAtts.size(); i++) {
-                    String orElseAtt = orElseAtts.get(i).trim();
-                    if (orElseAtt.charAt(0) != '\'' && orElseAtt.charAt(0) != '"') {
-                        String key = keys.incrementAndGet();
-                        orElseAttKeys.add(key);
-                        addAttToSchema(key, orElseAtt, schema);
-                    } else {
-                        orElseAttKeys.add(orElseAtt);
-                    }
-                }
-                attSchemaInfo.setOrElseAtts(orElseAttKeys);
-                path = orElseAtts.get(0);
-            }
-
             String key = generateKeys ? keys.incrementAndGet() : name;
             attsInfo.put(key, attSchemaInfo);
 
-            attSchemaInfo.setType(addAttToSchema(key, path, schema));
+            addAttToSchema(key, path, schema);
         });
         schema.setLength(schema.length() - 1);
 
@@ -94,40 +71,6 @@ public class AttributesMetaResolver {
             return String.class;
         }
         return null;
-    }
-
-    private List<AttProcessorDef> parseProcessors(String processorStr) {
-        if (StringUtils.isBlank(processorStr)) {
-            return Collections.emptyList();
-        }
-        List<AttProcessorDef> result = new ArrayList<>();
-
-        for (String proc : AttStrUtils.split(processorStr, '|')) {
-            Matcher matcher = PROCESSOR_PATTERN.matcher(proc);
-            if (matcher.matches()) {
-                String type = matcher.group(1).trim();
-                List<DataValue> args = parseArgs(matcher.group(2).trim());
-                result.add(new AttProcessorDef(type, args));
-            }
-        }
-        return result;
-    }
-
-    private List<DataValue> parseArgs(String argsStr) {
-
-        List<DataValue> result = new ArrayList<>();
-
-        if (StringUtils.isBlank(argsStr)) {
-            return result;
-        }
-
-        argsStr = argsStr.replace("'", "\"");
-        AttStrUtils.split(argsStr, ",").stream()
-            .map(String::trim)
-            .map(DataValue::create)
-            .forEach(result::add);
-
-        return result;
     }
 
     private String getValidSchemaParamName(String name) {

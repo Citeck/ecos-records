@@ -43,7 +43,7 @@ public class InnerAttValue implements AttValue, HasCollectionView<InnerAttValue>
     }
 
     @Override
-    public Object getAs(@NotNull String type) {
+    public Object as(@NotNull String type) {
 
         JsonNode node = value.path(RecordConstants.ATT_AS).path(type);
         if (node.isMissingNode() || node.isNull()) {
@@ -79,12 +79,12 @@ public class InnerAttValue implements AttValue, HasCollectionView<InnerAttValue>
     }
 
     @Override
-    public String getDisplayName() {
+    public String getDispName() {
         return getScalar(value, "?disp", JsonNode::asText);
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return getScalar(value, "?str", JsonNode::asText);
     }
 
@@ -94,17 +94,17 @@ public class InnerAttValue implements AttValue, HasCollectionView<InnerAttValue>
     }
 
     @Override
-    public Double getDouble() {
+    public Double asDouble() {
         return getScalar(value, "?num", JsonNode::asDouble);
     }
 
     @Override
-    public Boolean getBool() {
+    public Boolean asBool() {
         return getScalar(value, "?bool", JsonNode::asBoolean);
     }
 
     @Override
-    public Object getJson() {
+    public Object asJson() {
         return getScalar(value, "?json", n -> n);
     }
 

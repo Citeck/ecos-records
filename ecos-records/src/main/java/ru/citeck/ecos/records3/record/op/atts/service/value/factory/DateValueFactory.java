@@ -28,7 +28,7 @@ public class DateValueFactory implements AttValueFactory<Date> {
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return ISO8601Utils.format(date);
         }
     }

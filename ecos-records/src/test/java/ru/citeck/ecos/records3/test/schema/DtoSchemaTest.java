@@ -6,7 +6,7 @@ import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 
@@ -24,7 +24,7 @@ public class DtoSchemaTest {
 
         DtoSchemaReader dtoSchemaReader = serviceFactory.getDtoSchemaReader();
 
-        List<SchemaRootAtt> attributesSchema = dtoSchemaReader.read(TestDto.class);
+        List<SchemaAtt> attributesSchema = dtoSchemaReader.read(TestDto.class);
         AttSchemaWriter writer = serviceFactory.getAttSchemaWriter();
 
         Map<String, String> attributes = writer.writeToMap(attributesSchema);

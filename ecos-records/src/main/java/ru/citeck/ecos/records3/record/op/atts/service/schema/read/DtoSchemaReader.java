@@ -18,10 +18,11 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcessorDef;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.ScalarType;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttWithProc;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
@@ -32,19 +33,20 @@ import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class DtoSchemaReader {
 
     private final Map<Class<?>, ScalarField<?>> scalars = new ConcurrentHashMap<>();
-    private final Map<Class<?>, List<SchemaRootAtt>> attributesCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<SchemaAtt>> attributesCache = new ConcurrentHashMap<>();
 
     private final AttSchemaReader attSchemaReader;
+    private final AttProcReader attProcReader;
 
     public DtoSchemaReader(RecordsServiceFactory factory) {
 
         attSchemaReader = factory.getAttSchemaReader();
+        attProcReader = factory.getAttProcReader();
 
         Arrays.asList(
             new ScalarField<>(String.class, ScalarType.DISP),
@@ -84,7 +86,7 @@ public class DtoSchemaReader {
     }
 
     @NotNull
-    public List<SchemaRootAtt> read(Class<?> attsClass) {
+    public List<SchemaAtt> read(Class<?> attsClass) {
         return getAttributes(attsClass, null);
     }
 
@@ -92,9 +94,9 @@ public class DtoSchemaReader {
         return Json.getMapper().convert(attributes, metaClass);
     }
 
-    private List<SchemaRootAtt> getAttributes(Class<?> attsClass, Set<Class<?>> visited) {
+    private List<SchemaAtt> getAttributes(Class<?> attsClass, Set<Class<?>> visited) {
 
-        List<SchemaRootAtt> attributes = attributesCache.get(attsClass);
+        List<SchemaAtt> attributes = attributesCache.get(attsClass);
         if (attributes == null) {
             attributes = getAttributesImpl(attsClass, visited != null ? visited : new HashSet<>());
             attributesCache.putIfAbsent(attsClass, attributes);
@@ -102,7 +104,7 @@ public class DtoSchemaReader {
         return attributes;
     }
 
-    private List<SchemaRootAtt> getAttributesImpl(Class<?> attsClass, Set<Class<?>> visited) {
+    private List<SchemaAtt> getAttributesImpl(Class<?> attsClass, Set<Class<?>> visited) {
 
         if (!visited.add(attsClass)) {
             throw new IllegalArgumentException("Recursive meta fields is not supported! "
@@ -110,7 +112,7 @@ public class DtoSchemaReader {
         }
 
         PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(attsClass);
-        List<SchemaRootAtt> attributes = new ArrayList<>();
+        List<SchemaAtt> attributes = new ArrayList<>();
 
         for (PropertyDescriptor descriptor : descriptors) {
 
@@ -154,7 +156,7 @@ public class DtoSchemaReader {
         return attributes;
     }
 
-    private SchemaRootAtt getAttributeSchema(Class<?> scope,
+    private SchemaAtt getAttributeSchema(Class<?> scope,
                                              Method writeMethod,
                                              String fieldName,
                                              boolean multiple,
@@ -170,9 +172,7 @@ public class DtoSchemaReader {
                     .setName("?str")
                     .build());
             } else {
-                innerAtts = getAttributes(propType, visited).stream()
-                    .map(SchemaRootAtt::getAttribute)
-                    .collect(Collectors.toList());
+                innerAtts = getAttributes(propType, visited);
             }
         } else {
             innerAtts = Collections.singletonList(SchemaAtt.create()
@@ -193,16 +193,16 @@ public class DtoSchemaReader {
 
         SchemaAtt.Builder att;
 
-        List<AttProcessorDef> processors = Collections.emptyList();
+        List<AttProcDef> processors = Collections.emptyList();
 
         if (StringUtils.isNotBlank(attNameValue)) {
 
-            AttWithProc attWithProc = attSchemaReader.readProcessors(attNameValue);
+            AttWithProc attWithProc = attProcReader.read(attNameValue);
             processors = attWithProc.getProcessors();
             attNameValue = attWithProc.getAttribute().trim();
 
-            SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameValue, innerAtts);
-            att = schemaAtt.modify();
+            SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameValue, processors, innerAtts);
+            att = schemaAtt.copy();
 
             if (multiple && !schemaAtt.isMultiple()) {
                 SchemaAtt innerAtt = schemaAtt;
@@ -223,7 +223,7 @@ public class DtoSchemaReader {
             att.setInner(innerAtts);
         }
 
-        return new SchemaRootAtt(att.build(), processors);
+        return att.build();
     }
 
     private <T extends Annotation> T getAnnotation(Method writeMethod,

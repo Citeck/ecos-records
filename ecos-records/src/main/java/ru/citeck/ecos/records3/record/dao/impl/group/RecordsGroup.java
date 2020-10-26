@@ -46,7 +46,7 @@ public class RecordsGroup implements AttValue {
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return String.valueOf(predicate);
     }
 
@@ -118,12 +118,12 @@ public class RecordsGroup implements AttValue {
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return value.getValue();
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             return value.getDisplayName();
         }
 

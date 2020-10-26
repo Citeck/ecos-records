@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service;
 
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 
 import java.util.Collection;
@@ -33,10 +33,10 @@ public interface RecordAttsService {
 
     List<RecordAtts> getAtts(List<?> values, Map<String, String> attributes, boolean rawAtts, List<AttMixin> mixins);
 
-    List<RecordAtts> getAtts(List<?> values, List<SchemaRootAtt> attributes, boolean rawAtts, List<AttMixin> mixins);
+    List<RecordAtts> getAtts(List<?> values, List<SchemaAtt> attributes, boolean rawAtts, List<AttMixin> mixins);
 
     List<RecordAtts> getAtts(List<?> values,
-                             List<SchemaRootAtt> attributes,
+                             List<SchemaAtt> attributes,
                              boolean rawAtts,
                              List<AttMixin> mixins,
                              List<RecordRef> recordRefs);

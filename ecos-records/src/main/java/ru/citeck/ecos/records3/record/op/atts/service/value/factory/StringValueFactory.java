@@ -25,22 +25,22 @@ public class StringValueFactory implements AttValueFactory<String> {
 
         return new AttValue() {
             @Override
-            public String getString() {
+            public String asText() {
                 return value;
             }
 
             @Override
-            public Boolean getBool() {
+            public Boolean asBool() {
                 return Boolean.TRUE.toString().equals(value);
             }
 
             @Override
-            public Double getDouble() {
+            public Double asDouble() {
                 return Double.parseDouble(value);
             }
 
             @Override
-            public Object getAs(@NotNull String type) {
+            public Object as(@NotNull String type) {
                 Function<String, ?> converter = converters.get(type);
                 return converter != null ? converter.apply(value) : null;
             }

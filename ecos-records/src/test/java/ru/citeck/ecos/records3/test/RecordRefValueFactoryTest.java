@@ -84,7 +84,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         RecordAtts meta = result.getRecords().get(0);
         assertEquals(Val.val0.value, meta.get("att0", ""));
         assertEquals(Val.val2.value, meta.get("att2", ""));
-        assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
+        assertEquals(Val.val1.getDispName(), meta.get("disp", ""));
         assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
 
         assertEquals(DataValue.TRUE, meta.get("has_true"));
@@ -177,12 +177,12 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             return "DISP OF " + ref;
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return "STR OF " + ref;
         }
 
@@ -197,7 +197,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         }
 
         @Override
-        public Object getAs(@NotNull String name) {
+        public Object as(@NotNull String name) {
             return this;
         }
 

@@ -23,5 +23,5 @@ public interface AttValueCtx {
     <T> T getAtts(@NotNull Class<T> type) throws Exception;
 
     @NotNull
-    ObjectData getAtts(@NotNull Map<String, String> attributes) throws Exception;
+    ObjectData getAtts(@NotNull Map<String, ?> attributes) throws Exception;
 }

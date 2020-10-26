@@ -18,7 +18,7 @@ public class RecordAttValue implements AttValue {
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return atts.getId().toString();
     }
 

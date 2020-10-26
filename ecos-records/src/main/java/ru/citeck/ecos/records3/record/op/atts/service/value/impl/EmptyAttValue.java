@@ -20,7 +20,7 @@ public class EmptyAttValue implements AttValue {
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return null;
     }
 }

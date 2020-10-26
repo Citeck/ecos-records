@@ -107,7 +107,7 @@ public class OrElseAttTest  extends AbstractRecordsDao {
     public static class MetaData implements AttValue {
 
         @Override
-        public Object getAs(@NotNull String type) {
+        public Object as(@NotNull String type) {
             if (type.equals("recordData")) {
                 return new RecordData();
             }

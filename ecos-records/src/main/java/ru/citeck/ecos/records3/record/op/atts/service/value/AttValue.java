@@ -20,15 +20,50 @@ public interface AttValue {
         return null;
     }
 
+    default String getDispName() throws Exception {
+        return asText();
+    }
+
+    // ===== get as =====
+
+    default Object as(@NotNull String type) throws Exception {
+        return null;
+    }
+
     /**
      * String representation.
      */
-    default String getString() throws Exception {
+    default String asText() throws Exception {
         return toString();
     }
 
-    default String getDisplayName() throws Exception {
-        return getString();
+    default Double asDouble() throws Exception {
+        String str = asText();
+        return str != null ? Double.parseDouble(str) : null;
+    }
+
+    default Boolean asBool() throws Exception {
+        String txt = asText();
+        if (Boolean.TRUE.toString().equals(txt)) {
+            return true;
+        } else if (Boolean.FALSE.toString().equals(txt)) {
+            return false;
+        }
+        return null;
+    }
+
+    default Object asJson() throws Exception {
+        return asText();
+    }
+
+    // ===== /get as =====
+
+    default RecordRef getTypeRef() throws Exception {
+        return RecordRef.EMPTY;
+    }
+
+    default boolean has(@NotNull String name) throws Exception {
+        return false;
     }
 
     /**
@@ -40,30 +75,5 @@ public interface AttValue {
 
     default AttEdge getEdge(@NotNull String name) throws Exception {
         return new SimpleAttEdge(name, this);
-    }
-
-    default boolean has(@NotNull String name) throws Exception {
-        return false;
-    }
-
-    default Double getDouble() throws Exception {
-        String str = getString();
-        return str != null ? Double.parseDouble(str) : null;
-    }
-
-    default Boolean getBool() throws Exception {
-        return null;
-    }
-
-    default Object getJson() throws Exception {
-        return getString();
-    }
-
-    default Object getAs(@NotNull String type) throws Exception {
-        return null;
-    }
-
-    default RecordRef getTypeRef() throws Exception {
-        return RecordRef.EMPTY;
     }
 }

@@ -34,7 +34,7 @@ public class MLTextValueFactory implements AttValueFactory<MLText> {
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return value.getClosestValue(RequestContext.getCurrent().getLocale());
         }
 
@@ -51,7 +51,7 @@ public class MLTextValueFactory implements AttValueFactory<MLText> {
         }
 
         @Override
-        public Object getJson() {
+        public Object asJson() {
             return value.getAsMap();
         }
 

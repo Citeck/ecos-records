@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.ResolveArgs;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttValueCtx;
@@ -25,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ResolverTest {
 
     private final RecordsServiceFactory factory = new RecordsServiceFactory();
-    private final AttSchemaResolver resolver = new AttSchemaResolver(factory);
-    private final AttSchemaReader reader = new AttSchemaReader();
+    private final AttSchemaResolver resolver = factory.getAttSchemaResolver();
+    private final AttSchemaReader reader = factory.getAttSchemaReader();
 
     @Test
     void test() {
@@ -142,13 +143,25 @@ public class ResolverTest {
 
     private void testAtt(Object value, String att, Object expected, AttMixin... mixins) {
         RequestContext.doWithCtx(factory, ctx -> {
+
             DataValue expValue;
             if (!(expected instanceof DataValue)) {
                 expValue = DataValue.create(expected);
             } else {
                 expValue = (DataValue) expected;
             }
-            assertEquals(expValue, resolver.resolve(value, reader.readRoot(att), Arrays.asList(mixins)));
+
+            Object result = resolver.resolve(ResolveArgs.create()
+                .setValues(Collections.singletonList(value))
+                .setAtt(reader.read(att))
+                .setMixins(Arrays.asList(mixins))
+                .build()).get(0).get(att);
+
+            if (!(result instanceof DataValue)) {
+                result = DataValue.create(result);
+            }
+
+            assertEquals(expValue, result);
             return null;
         });
     }

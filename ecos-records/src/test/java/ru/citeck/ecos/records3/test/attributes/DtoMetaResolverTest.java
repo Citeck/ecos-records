@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.test.attributes;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 
@@ -22,7 +22,7 @@ public class DtoMetaResolverTest {
         DtoSchemaReader dtoMetaResolver = factory.getDtoSchemaReader();
         AttSchemaWriter writer = factory.getAttSchemaWriter();
 
-        List<SchemaRootAtt> attributes = dtoMetaResolver.read(TestDto.class);
+        List<SchemaAtt> attributes = dtoMetaResolver.read(TestDto.class);
         Map<String, String> atts = writer.writeToMap(attributes);
 
         Map<String, String> expected = new HashMap<>();

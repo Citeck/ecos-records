@@ -49,7 +49,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @Nullable
     @Override
-    public RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, String> attributes) {
+    public RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Map<String, ?> attributes) {
         return query(query, attributes)
             .getRecords()
             .stream()
@@ -69,6 +69,17 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
+    public DataValue queryOne(@NotNull RecordsQuery query, String attribute) {
+        return query(query, Collections.singleton(attribute))
+            .getRecords()
+            .stream()
+            .findFirst()
+            .map(r -> r.get(attribute))
+            .orElse(DataValue.NULL);
+    }
+
+    @NotNull
+    @Override
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
                                           @NotNull Collection<String> attributes) {
         return query(query, AttUtils.toMap(attributes));
@@ -77,7 +88,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     @NotNull
     @Override
     public RecsQueryRes<RecordAtts> query(@NotNull RecordsQuery query,
-                                          @NotNull Map<String, String> attributes) {
+                                          @NotNull Map<String, ?> attributes) {
 
         return query(query, attributes, false);
     }
@@ -128,7 +139,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     @NotNull
     @Override
     public RecordAtts getAtts(@Nullable Object record,
-                              @NotNull Map<String, String> attributes) {
+                              @NotNull Map<String, ?> attributes) {
         if (record == null) {
             record = ObjectData.create();
         }
@@ -138,7 +149,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     @NotNull
     @Override
     public List<RecordAtts> getAtts(@NotNull Collection<?> records,
-                                    @NotNull Map<String, String> attributes) {
+                                    @NotNull Map<String, ?> attributes) {
 
         return getAtts(records, attributes, false);
     }
@@ -159,7 +170,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public RecordRef mutate(Object record, @NotNull Map<String, Object> attributes) {
+    public RecordRef mutate(Object record, @NotNull Map<String, ?> attributes) {
         return mutate(record, ObjectData.create(attributes));
     }
 

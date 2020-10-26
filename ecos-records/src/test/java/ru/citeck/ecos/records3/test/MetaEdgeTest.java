@@ -117,7 +117,7 @@ public class MetaEdgeTest extends AbstractRecordsDao
     public static class MetaTestVal implements AttValue {
 
         @Override
-        public String getString() {
+        public String asText() {
             return null;
         }
 

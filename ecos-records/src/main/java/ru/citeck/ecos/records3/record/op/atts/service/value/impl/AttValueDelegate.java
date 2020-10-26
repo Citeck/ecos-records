@@ -21,13 +21,13 @@ public class AttValueDelegate implements AttValue {
     }
 
     @Override
-    public String getString() throws Exception {
-        return impl.getString();
+    public String asText() throws Exception {
+        return impl.asText();
     }
 
     @Override
-    public String getDisplayName() throws Exception {
-        return impl.getDisplayName();
+    public String getDispName() throws Exception {
+        return impl.getDispName();
     }
 
    @Override
@@ -46,23 +46,23 @@ public class AttValueDelegate implements AttValue {
     }
 
     @Override
-    public Double getDouble() throws Exception {
-        return impl.getDouble();
+    public Double asDouble() throws Exception {
+        return impl.asDouble();
     }
 
     @Override
-    public Boolean getBool() throws Exception {
-        return impl.getBool();
+    public Boolean asBool() throws Exception {
+        return impl.asBool();
     }
 
     @Override
-    public Object getJson() throws Exception {
-        return impl.getJson();
+    public Object asJson() throws Exception {
+        return impl.asJson();
     }
 
     @Override
-    public Object getAs(@NotNull String type) throws Exception {
-        return impl.getAs(type);
+    public Object as(@NotNull String type) throws Exception {
+        return impl.as(type);
     }
 
     @Override

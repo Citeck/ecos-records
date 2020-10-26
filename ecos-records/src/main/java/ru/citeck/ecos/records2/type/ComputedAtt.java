@@ -8,14 +8,14 @@ import ru.citeck.ecos.commons.data.ObjectData;
 @NoArgsConstructor
 public class ComputedAtt {
 
-    private String name;
+    private String id;
     private String type;
     private boolean persistent;
     private ObjectData config;
 
     public ComputedAtt(ComputedAtt other) {
+        this.id = other.id;
         this.type = other.type;
-        this.name = other.name;
         this.persistent = other.persistent;
         this.config = ObjectData.deepCopy(other.config);
     }

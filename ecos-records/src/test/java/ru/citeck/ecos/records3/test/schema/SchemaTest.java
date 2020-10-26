@@ -1,10 +1,9 @@
 package ru.citeck.ecos.records3.test.schema;
 
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 
 import java.util.List;
@@ -13,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SchemaTest {
 
-    private final AttSchemaReader reader = new AttSchemaReader();
-    private final AttSchemaWriter writer = new AttSchemaGqlWriter();
+    private final RecordsServiceFactory factory = new RecordsServiceFactory();
+    private final AttSchemaReader reader = factory.getAttSchemaReader();
+    private final AttSchemaWriter writer = factory.getAttSchemaWriter();
 
     @Test
     public void innerAliasTest() {
@@ -25,7 +25,7 @@ public class SchemaTest {
             "createVariants{json}" +
             "}";
 
-        SchemaAtt att = reader.readRoot(schema).getAttribute();
+        SchemaAtt att = reader.read(schema);
         List<SchemaAtt> inner = att.getInner().get(0).getInner();
 
         assertEquals(3, inner.size());
@@ -70,10 +70,10 @@ public class SchemaTest {
         String edgeName = "cm:name";
         String att = ".edge(n:\"" + edgeName + "\"){" + inner + "}";
 
-        SchemaRootAtt schemaAtt = reader.readRoot(att);
-        assertEquals(1, schemaAtt.getAttribute().getInner().size());
-        assertEquals(1, schemaAtt.getAttribute().getInner().get(0).getInner().size());
-        assertEquals(inner, schemaAtt.getAttribute().getInner().get(0).getInner().get(0).getName());
+        SchemaAtt schemaAtt = reader.read(att);
+        assertEquals(1, schemaAtt.getInner().size());
+        assertEquals(1, schemaAtt.getInner().get(0).getInner().size());
+        assertEquals(inner, schemaAtt.getInner().get(0).getInner().get(0).getName());
 
         assertAtt(att, att);
     }
@@ -135,17 +135,17 @@ public class SchemaTest {
             "cm:name{name,displayName}");
 
         assertAtt(".atts(n:\"cm:name\"){" +
-            "cm_u003A_name:att(n:\"cm:name\"){disp}," +
-            "cm_u003A_title:att(n:\"cm:title\"){disp}" +
+            "_u0027_cm_u003A_name_u0027_:att(n:\"cm:name\"){disp}," +
+            "_u0027_cm_u003A_title_u0027_:att(n:\"cm:title\"){disp}" +
         "}", "cm:name[]{'cm:name','cm:title'}");
 
         assertAtt(".att(n:\"cm:name\"){disp}", "cm:name");
         assertAtt(".att(n:\"cm:na\"){att(n:\"me\"){disp}}", "cm:na.me");
 
-        assertAtt(".att(n:\"cm:name[]\"){disp}", "\"cm:name[]\"");
-        assertAtt(".att(n:\"cm:name[]\"){disp}", "'cm:name[]'");
+        assertAtt(".atts(n:\"cm:name\"){disp}", "\"cm:name[]\"");
+        assertAtt(".atts(n:\"cm:name\"){disp}", "'cm:name[]'");
         assertAtt(".atts(n:\"cm:name\"){disp}", "cm:name[]");
-        assertAtt(".att(n:\"cm:name[]?str\"){disp}", "'cm:name[]?str'");
+        assertAtt(".atts(n:\"cm:name\"){str}", "'cm:name[]?str'");
         assertAtt(".atts(n:\"cm:name\"){str}", "cm:name[]?str");
 
         assertAtt(".att(n:\"cm:name\"){strange_u0020_alias_u0020_name:disp,_u002E_str:str}", "cm:name{'strange alias name':.disp,.str}");
@@ -159,13 +159,13 @@ public class SchemaTest {
 
     @Test
     public void testInnerAliases() {
-        assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{'.disp',\".str\"}");
+        assertAtt(".att(n:\"cm:name\"){_u0027__u002E_disp_u0027_:disp,_u0022__u002E_str_u0022_:str}", "cm:name{'.disp',\".str\"}");
         assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
     }
 
     private void assertAtt(String expected, String source) {
-        String gqlAtt = writer.write(reader.readRoot(source));
+        String gqlAtt = writer.write(reader.read(source));
         assertEquals(expected, gqlAtt);
-        assertEquals(gqlAtt, writer.write(reader.readRoot(gqlAtt)));
+        assertEquals(gqlAtt, writer.write(reader.read(gqlAtt)));
     }
 }

@@ -7,7 +7,6 @@ import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver;
@@ -77,7 +76,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
     @Override
     public <T> List<T> getAtts(List<?> values, Class<T> attsDto) {
 
-        List<SchemaRootAtt> attributes = dtoSchemaReader.read(attsDto);
+        List<SchemaAtt> attributes = dtoSchemaReader.read(attsDto);
 
         return getAtts(values, attributes, false, Collections.emptyList())
             .stream()
@@ -92,7 +91,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
     @Override
     public List<RecordAtts> getAtts(List<?> values,
-                                    List<SchemaRootAtt> rootAtts,
+                                    List<SchemaAtt> rootAtts,
                                     boolean rawAtts,
                                     List<AttMixin> mixins) {
 
@@ -101,7 +100,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
     @Override
     public List<RecordAtts> getAtts(List<?> values,
-                                    List<SchemaRootAtt> rootAtts,
+                                    List<SchemaAtt> rootAtts,
                                     boolean rawAtts,
                                     List<AttMixin> mixins,
                                     List<RecordRef> valuesRefs) {
@@ -110,16 +109,13 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
         rootAtts = new ArrayList<>(rootAtts);
         if (!valueRefsProvided) {
-            rootAtts.add(new SchemaRootAtt(
-                SchemaAtt.create()
+            rootAtts.add(SchemaAtt.create()
                     .setAlias(REF_ATT_ALIAS)
                     .setName("?id")
-                    .build(),
-                Collections.emptyList())
-            );
+                    .build());
         }
 
-        List<ObjectData> data = schemaResolver.resolve(ResolveArgs.create()
+        List<Map<String, Object>> data = schemaResolver.resolve(ResolveArgs.create()
             .setValues(values)
             .setAtts(rootAtts)
             .setRawAtts(rawAtts)
@@ -133,7 +129,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
                 recordAtts.add(toRecAtts(data.get(i), valuesRefs.get(i)));
             }
         } else {
-            for (ObjectData elem : data) {
+            for (Map<String, Object> elem : data) {
                 recordAtts.add(toRecAtts(elem, RecordRef.EMPTY));
             }
         }
@@ -146,19 +142,20 @@ public class RecordAttsServiceImpl implements RecordAttsService {
                                     boolean rawAtts,
                                     List<AttMixin> mixins) {
 
-        return getAtts(values, schemaReader.readRoot(attributes), rawAtts, mixins);
+        return getAtts(values, schemaReader.read(attributes), rawAtts, mixins);
     }
 
-    private RecordAtts toRecAtts(ObjectData data, RecordRef id) {
+    private RecordAtts toRecAtts(Map<String, Object> data, RecordRef id) {
         if (id == RecordRef.EMPTY) {
-            id = RecordRef.valueOf(data.get(REF_ATT_ALIAS).asText());
+            Object alias = data.get(REF_ATT_ALIAS);
+            id = alias == null ? RecordRef.EMPTY : RecordRef.valueOf(alias.toString());
             if (StringUtils.isBlank(id.getId())) {
                 id = RecordRef.create(id.getAppName(), id.getSourceId(), UUID.randomUUID().toString());
             }
-            data = data.deepCopy();
+            data = new LinkedHashMap<>(data);
             data.remove(REF_ATT_ALIAS);
         }
-        return new RecordAtts(id, data);
+        return new RecordAtts(id, ObjectData.create(data));
     }
 
     private <T> T getFirst(List<T> elements, Object atts, List<Object> srcValues) {

@@ -58,20 +58,20 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public Double getDouble() {
+        public Double asDouble() {
             if (typeCtx.hasProperty("?num")) {
                 return getAttWithType("?num", Double.class);
             }
-            String str = getString();
+            String str = asText();
             return str != null ? Double.parseDouble(str) : null;
         }
 
         @Override
-        public Boolean getBool() {
+        public Boolean asBool() {
             if (typeCtx.hasProperty("?bool")) {
                 return getAttWithType("?bool", Boolean.class);
             }
-            return Boolean.parseBoolean(getString());
+            return Boolean.parseBoolean(asText());
         }
 
         @Override
@@ -80,15 +80,15 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public String getDisplayName() {
+        public String getDispName() {
             if (typeCtx.hasProperty("?disp")) {
                 return getAttWithType("?disp", String.class);
             }
-            return getString();
+            return asText();
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             if (typeCtx.hasProperty("?str")) {
                 return getAttWithType("?str", String.class);
             }
@@ -111,7 +111,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public Object getJson() {
+        public Object asJson() {
             if (typeCtx.hasProperty("?json")) {
                 return getAttWithType("?json", DataValue.class);
             }

@@ -4,12 +4,9 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
-import ecos.com.fasterxml.jackson210.databind.node.TextNode;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.NameUtils;
-import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcessorDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,16 +15,16 @@ import java.util.Map;
 
 public interface AttSchemaWriter {
 
-    default Map<String, String> writeToMap(List<SchemaRootAtt> schema) {
+    default Map<String, String> writeToMap(List<SchemaAtt> schema) {
 
         Map<String, String> result = new HashMap<>();
         schema.forEach(att ->
-            result.put(att.getAttribute().getAlias(), write(att))
+            result.put(att.getAlias(), write(att))
         );
         return result;
     }
 
-    default void writeInnerAtts(List<SchemaRootAtt> schema, StringBuilder sb) {
+    default void writeInnerAtts(List<SchemaAtt> schema, StringBuilder sb) {
         writeInnerAtts(writeToMap(schema), sb);
     }
 
@@ -61,31 +58,9 @@ public interface AttSchemaWriter {
         return node;
     }
 
-    default String write(SchemaRootAtt att) {
-
-        List<AttProcessorDef> processors = att.getProcessors();
-
+    default String write(SchemaAtt att) {
         StringBuilder sb = new StringBuilder();
-        write(att.getAttribute(), sb);
-
-        for (AttProcessorDef processor : processors) {
-            sb.append("|").append(processor.getType()).append("(");
-            int argsSize = processor.getArguments().size();
-            for (int i = 0; i < argsSize; i++) {
-                sb.append(processor.getArguments().get(i).toString());
-                if (i < argsSize - 1) {
-                    sb.append(',');
-                }
-            }
-            sb.append(")");
-        }
-
-        return sb.toString();
-    }
-
-    default String write(SchemaAtt attribute) {
-        StringBuilder sb = new StringBuilder();
-        write(attribute, sb);
+        write(att, sb);
         return sb.toString();
     }
 

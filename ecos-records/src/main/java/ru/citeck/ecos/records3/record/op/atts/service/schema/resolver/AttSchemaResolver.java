@@ -15,16 +15,15 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcService;
-import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcessorDef;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttFuncValue;
 import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaRootAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttEdgeValue;
@@ -33,15 +32,12 @@ import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class AttSchemaResolver {
 
     public final static String CTX_SOURCE_ID_KEY = "ctx-source-id";
-
-    private final static String PROC_ATT_ALIAS_PREFIX = "__proc_att_";
 
     private final AttValuesConverter attValuesConverter;
     private final AttProcService attProcService;
@@ -62,51 +58,7 @@ public class AttSchemaResolver {
         dtoSchemaReader = factory.getDtoSchemaReader();
     }
 
-    public DataValue resolve(Object value, SchemaRootAtt attribute) {
-        return resolve(value, attribute, false);
-    }
-
-    public DataValue resolve(Object value, SchemaRootAtt attribute, List<AttMixin> mixins) {
-        return resolve(ResolveArgs.create()
-                .setValues(Collections.singletonList(value))
-                .setAtt(attribute)
-                .setMixins(mixins)
-                .build()
-        ).stream()
-            .map(v -> v.get(attribute.getAttribute().getAliasForValue()))
-            .findFirst()
-            .orElseThrow(() -> new ResolveException("Resolving failed. Att: " + attribute + " Value: " + value));
-    }
-
-    public DataValue resolve(Object value, SchemaRootAtt attribute, boolean rawAtts) {
-        ObjectData result = resolve(value, Collections.singletonList(attribute), rawAtts);
-        return result.get(attribute.getAttribute().getAliasForValue());
-    }
-
-    public ObjectData resolve(Object value, List<SchemaRootAtt> schema, boolean rawAtts) {
-        return resolve(b -> {
-            b.setValues(Collections.singletonList(value));
-            b.setAtts(schema);
-            b.setRawAtts(rawAtts);
-        }).stream()
-            .findFirst()
-            .orElseThrow(() -> new ResolveException("Resolving error"));
-    }
-
-    public List<ObjectData> resolve(List<Object> values, List<SchemaRootAtt> schema) {
-        return resolve(b -> {
-            b.setValues(values);
-            b.setAtts(schema);
-        });
-    }
-
-    public List<ObjectData> resolve(Consumer<ResolveArgs.Builder> args) {
-        ResolveArgs.Builder builder = ResolveArgs.create();
-        args.accept(builder);
-        return resolve(builder.build());
-    }
-
-    public List<ObjectData> resolve(ResolveArgs args) {
+    public List<Map<String, Object>> resolve(ResolveArgs args) {
         AttContext context = AttContext.getCurrent();
         if (context == null) {
             return AttContext.doInContext(serviceFactory, ctx -> resolveInAttCtx(args));
@@ -115,33 +67,20 @@ public class AttSchemaResolver {
         }
     }
 
-    private List<ObjectData> resolveInAttCtx(ResolveArgs args) {
+    private List<Map<String, Object>> resolveInAttCtx(ResolveArgs args) {
 
         List<Object> values = args.getValues();
-        List<SchemaRootAtt> schemaAttsToLoad = args.getAttributes();
+        List<SchemaAtt> schemaAttsToLoad = args.getAttributes();
 
         if (!args.isRawAtts()) {
-
-            Set<String> attributesToLoad = new HashSet<>();
-
-            for (SchemaRootAtt rootAtt : schemaAttsToLoad) {
-                attributesToLoad.addAll(attProcService.getAttsToLoad(rootAtt.getProcessors()));
-            }
-
-            if (!attributesToLoad.isEmpty()) {
-
-                Map<String, String> procAtts = new HashMap<>();
-
-                for (String att : attributesToLoad) {
-                    procAtts.put(PROC_ATT_ALIAS_PREFIX + att, att);
-                }
-
+            List<SchemaAtt> processorsAtts = attProcService.getProcessorsAtts(schemaAttsToLoad);
+            if (!processorsAtts.isEmpty()) {
                 schemaAttsToLoad = new ArrayList<>(schemaAttsToLoad);
-                schemaAttsToLoad.addAll(attSchemaReader.readRoot(procAtts));
+                schemaAttsToLoad.addAll(processorsAtts);
             }
         }
 
-        List<SchemaRootAtt> schemaAtts = schemaAttsToLoad;
+        List<SchemaAtt> schemaAtts = schemaAttsToLoad;
         ResolveContext context = new ResolveContext(attValuesConverter, args.getMixins());
 
         List<ValueContext> attValues = new ArrayList<>();
@@ -150,39 +89,54 @@ public class AttSchemaResolver {
             attValues.add(context.toRootValueContext(values.get(i), ref));
         }
 
-        List<SchemaAtt> attsToResolve = schemaAtts.stream()
-            .map(SchemaRootAtt::getAttribute)
-            .collect(Collectors.toList());
-
-        List<SchemaAtt> simpleAtts = simplifySchema(attsToResolve);
+        List<SchemaAtt> simpleAtts = simplifySchema(schemaAtts);
         List<Map<String, Object>> result = resolveRoot(attValues, simpleAtts, context);
-        result = resolveWithAliases(result, attsToResolve);
 
-        return result.stream()
-            .map(v -> postProcess(v, schemaAtts, args.isRawAtts()))
-            .collect(Collectors.toList());
+        return resolveResultsWithAliases(result, schemaAtts, args.isRawAtts());
     }
 
-    private List<Map<String, Object>> resolveWithAliases(List<Map<String, Object>> values, List<SchemaAtt> atts) {
+    private List<Map<String, Object>> resolveResultsWithAliases(List<Map<String, Object>> values,
+                                                                List<SchemaAtt> atts,
+                                                                boolean rawAtts) {
+
+        if (atts.isEmpty()) {
+            return values.stream().map(v -> Collections.<String, Object>emptyMap()).collect(Collectors.toList());
+        }
+
+        SchemaAtt currentAtt = SchemaAtt.create()
+            .setName("root")
+            .setInner(atts)
+            .build();
+
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map<String, Object> value : values) {
-            result.add(resolveMapWithAliases(value, atts));
+            result.add(resolveResultWithAliases(currentAtt, value, rawAtts));
         }
         return result;
     }
 
-    private Map<String, Object> resolveMapWithAliases(Map<String, Object> value, List<SchemaAtt> atts) {
+    private Map<String, Object> resolveResultWithAliases(SchemaAtt currentAtt,
+                                                         Map<String, Object> value,
+                                                         boolean rawAtts) {
 
-        Object resolved = resolveWithAliases(value, atts, false);
+        Object resolved = resolveWithAliases(currentAtt, value, false, rawAtts, true);
+
         if (resolved instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, Object> result = (Map<String, Object>) resolved;
             return result;
         }
-        throw new IllegalStateException("Expected Map, but found " + resolved + ". Value: " + value + " atts: " + atts);
+        throw new IllegalStateException("Expected Map, but found " + resolved
+            + ". Value: " + value + " atts: " + currentAtt);
     }
 
-    private Object resolveWithAliases(Object value, List<SchemaAtt> atts, boolean isMultiple) {
+    private Object resolveWithAliases(SchemaAtt currentAtt,
+                                      Object value,
+                                      boolean isMultiple,
+                                      boolean rawAtts,
+                                      boolean root) {
+
+        List<SchemaAtt> atts = currentAtt.getInner();
 
         if (value == null || atts.isEmpty()) {
             return value;
@@ -190,7 +144,7 @@ public class AttSchemaResolver {
         if (isMultiple) {
             return ((List<?>) value)
                 .stream()
-                .map(v -> resolveWithAliases(v, atts, false))
+                .map(v -> resolveWithAliases(currentAtt, v, false, rawAtts, root))
                 .collect(Collectors.toList());
         } else {
             if (value instanceof List) {
@@ -202,12 +156,21 @@ public class AttSchemaResolver {
             }
         }
         if (value instanceof Map) {
-            Map<String, Object> result = new HashMap<>();
+            if (!root && !rawAtts && atts.size() == 1 && atts.get(0).getProcessors().isEmpty()) {
+                SchemaAtt att = atts.get(0);
+                Object attValue = ((Map<?, ?>) value).get(att.getName());
+                return resolveWithAliases(att, attValue, att.isMultiple(), false, false);
+            }
+            Map<String, List<AttProcDef>> processors = new HashMap<>();
+            Map<String, Object> result = new LinkedHashMap<>();
             for (SchemaAtt att : atts) {
                 Object attValue = ((Map<?, ?>) value).get(att.getName());
-                result.put(att.getAliasForValue(), resolveWithAliases(attValue, att.getInner(), att.isMultiple()));
+                result.put(att.getAliasForValue(), resolveWithAliases(att, attValue, att.isMultiple(), rawAtts, false));
+                if (!att.getProcessors().isEmpty()) {
+                    processors.put(att.getAliasForValue(), att.getProcessors());
+                }
             }
-            return result;
+            return attProcService.applyProcessors(result, processors);
         } else {
             throw new IllegalStateException("Unknown value: " + value + ". Atts: " + atts);
         }
@@ -223,7 +186,9 @@ public class AttSchemaResolver {
         for (SchemaAtt att : schema) {
             SchemaAtt.Builder resAtt = result.get(att.getName());
             if (resAtt == null) {
-                resAtt = att.modify().setAlias(att.getName());
+                resAtt = att.copy()
+                    .setAlias(att.getName())
+                    .setProcessors(Collections.emptyList());
                 result.put(att.getName(), resAtt);
             } else {
                 resAtt.setMultiple(resAtt.isMultiple() || att.isMultiple());
@@ -241,94 +206,6 @@ public class AttSchemaResolver {
         }
 
         return resultAtts;
-    }
-
-    private ObjectData postProcess(Map<String, Object> data, List<SchemaRootAtt> schemaAtts, boolean isRawAtts) {
-
-        // processors will be ignored if attributes is not flat (raw)
-        if (isRawAtts) {
-            return ObjectData.create(data);
-        }
-
-        ObjectData flatData = ObjectData.create(toFlatMap(data, schemaAtts));
-        ObjectData procData = ObjectData.create();
-
-        flatData.forEach((k, v) -> {
-            if (k.startsWith(PROC_ATT_ALIAS_PREFIX)) {
-                procData.set(k.replaceFirst(PROC_ATT_ALIAS_PREFIX, ""), v);
-            }
-        });
-
-        for (SchemaRootAtt rootAtt : schemaAtts) {
-
-            SchemaAtt schemaAtt = rootAtt.getAttribute();
-
-            if (schemaAtt.getAlias().startsWith(PROC_ATT_ALIAS_PREFIX)) {
-                flatData.remove(schemaAtt.getAlias());
-                continue;
-            }
-
-            List<AttProcessorDef> processors = rootAtt.getProcessors();
-            if (processors.isEmpty()) {
-                continue;
-            }
-
-            String alias = rootAtt.getAttribute().getAliasForValue();
-            DataValue value = flatData.get(alias);
-
-            value = attProcService.process(procData, value, processors);
-
-            flatData.set(alias, value);
-        }
-
-        return flatData;
-    }
-
-    private Map<String, Object> toFlatMap(Map<String, Object> data, List<SchemaRootAtt> schema) {
-
-        Map<String, Object> flatRes = new LinkedHashMap<>();
-
-        for (SchemaRootAtt rootAtt : schema) {
-            SchemaAtt att = rootAtt.getAttribute();
-            String alias = att.getAliasForValue();
-            flatRes.put(alias, toFlatObj(data.get(alias), att));
-        }
-
-        return flatRes;
-    }
-
-    private Object toFlatObj(Object data, SchemaAtt schema) {
-        return toFlatObj(data, schema, schema.isMultiple());
-    }
-
-    private Object toFlatObj(Object data, SchemaAtt schema, boolean multiple) {
-
-        if (multiple && data instanceof Collection) {
-            List<Object> res = new ArrayList<>();
-            for (Object value : (Collection<?>) data) {
-                res.add(toFlatObj(value, schema, false));
-            }
-            return res;
-        }
-
-        List<SchemaAtt> innerAtts = schema.getInner();
-
-        if (!(data instanceof Map)) {
-            return data;
-        }
-        Map<?, ?> dataMap = (Map<?, ?>) data;
-        if (innerAtts.size() > 1) {
-            Map<String, Object> resMap = new LinkedHashMap<>();
-            for (SchemaAtt att : innerAtts) {
-                String alias = att.getAliasForValue();
-                resMap.put(alias, toFlatObj(dataMap.get(alias), att));
-            }
-            return resMap;
-        } else if (innerAtts.size() == 1) {
-            SchemaAtt innerAtt = innerAtts.get(0);
-            return toFlatObj(dataMap.get(innerAtt.getAliasForValue()), innerAtt);
-        }
-        return data;
     }
 
     private List<Map<String, Object>> resolveRoot(List<ValueContext> values,
@@ -576,7 +453,7 @@ public class AttSchemaResolver {
                 case RecordConstants.ATT_ECOS_TYPE:
                     return value.getTypeRef();
                 case RecordConstants.ATT_AS:
-                    return new AttFuncValue(value::getAs);
+                    return new AttFuncValue(value::as);
                 case RecordConstants.ATT_HAS:
                     return new AttFuncValue(value::has);
                 case RecordConstants.ATT_EDGE:
@@ -618,20 +495,20 @@ public class AttSchemaResolver {
 
             switch (scalar) {
                 case "?str":
-                    return value.getString();
+                    return value.asText();
                 case "?disp":
-                    return value.getDisplayName();
+                    return value.getDispName();
                 case "?id":
                 case "?assoc":
                     return getValueRef();
                 case "?localId":
                     return getLocalId();
                 case "?num":
-                    return value.getDouble();
+                    return value.asDouble();
                 case "?bool":
-                    return value.getBool();
+                    return value.asBool();
                 case "?json":
-                    Object json = value.getJson();
+                    Object json = value.asJson();
                     if (json instanceof String) {
                         json = Json.getMapper().read((String) json);
                     } else {
@@ -711,13 +588,13 @@ public class AttSchemaResolver {
 
         @NotNull
         @Override
-        public RecordRef getRef() throws Exception {
+        public RecordRef getRef() {
             return valueCtx.getValueRef();
         }
 
         @NotNull
         @Override
-        public String getLocalId() throws Exception {
+        public String getLocalId() {
             return valueCtx.getLocalId();
         }
 
@@ -730,33 +607,33 @@ public class AttSchemaResolver {
 
         @Override
         public <T> T getAtts(@NotNull Class<T> type) {
-            List<SchemaRootAtt> attributes = dtoSchemaReader.read(type);
+            List<SchemaAtt> attributes = dtoSchemaReader.read(type);
             return dtoSchemaReader.instantiate(type, getAtts(attributes));
         }
 
         @NotNull
         @Override
-        public ObjectData getAtts(@NotNull Map<String, String> attributes) {
-            return getAtts(attSchemaReader.readRoot(attributes));
+        public ObjectData getAtts(@NotNull Map<String, ?> attributes) {
+            return getAtts(attSchemaReader.read(attributes));
         }
 
         @NotNull
-        private ObjectData getAtts(@NotNull List<SchemaRootAtt> schemaAtts) {
+        private ObjectData getAtts(@NotNull List<SchemaAtt> schemaAtts) {
 
             String attPathBefore = resolveCtx.getPath();
             resolveCtx.setPath(basePath);
 
             try {
 
-                List<SchemaAtt> attsToResolve = schemaAtts.stream()
-                    .map(SchemaRootAtt::getAttribute)
-                    .collect(Collectors.toList());
+                SchemaAtt currentAtt = SchemaAtt.create()
+                    .setName("root")
+                    .setInner(schemaAtts)
+                    .build();
 
-                List<SchemaAtt> simpleAtts = simplifySchema(attsToResolve);
+                List<SchemaAtt> simpleAtts = simplifySchema(schemaAtts);
                 Map<String, Object> result = resolve(valueCtx, simpleAtts, resolveCtx);
-                result = resolveMapWithAliases(result, attsToResolve);
+                return ObjectData.create(resolveResultWithAliases(currentAtt, result, false));
 
-                return postProcess(result, schemaAtts, false);
             } finally {
                 resolveCtx.setPath(attPathBefore);
             }

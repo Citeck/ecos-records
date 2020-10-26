@@ -74,7 +74,7 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
     public static class ValueByRef implements AttValue {
 
         @Override
-        public String getString() {
+        public String asText() {
             return getClass().getName();
         }
     }

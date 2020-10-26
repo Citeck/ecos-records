@@ -22,12 +22,12 @@ public class AttMetaValue implements AttValue {
     }
 
     @Override
-    public String getString() {
+    public String asText() {
         return metaValue.getString();
     }
 
     @Override
-    public String getDisplayName() {
+    public String getDispName() {
         return metaValue.getDisplayName();
     }
 
@@ -47,22 +47,22 @@ public class AttMetaValue implements AttValue {
     }
 
     @Override
-    public Double getDouble() {
+    public Double asDouble() {
         return metaValue.getDouble();
     }
 
     @Override
-    public Boolean getBool() {
+    public Boolean asBool() {
         return metaValue.getBool();
     }
 
     @Override
-    public Object getJson() {
+    public Object asJson() {
         return metaValue.getJson();
     }
 
     @Override
-    public Object getAs(@NotNull String type) {
+    public Object as(@NotNull String type) {
         return metaValue.getAs(type, EmptyMetaField.INSTANCE);
     }
 

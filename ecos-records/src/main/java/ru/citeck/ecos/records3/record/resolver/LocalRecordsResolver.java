@@ -149,7 +149,6 @@ public class LocalRecordsResolver {
                 query.setSourceId(sourceId);
             }
         }
-        getRecordsDao(sourceId, RecordsQueryDao.class);
         if (!allDao.containsKey(query.getSourceId())) {
 
             ru.citeck.ecos.records2.request.query.RecordsQuery v0Query = V1ConvUtils.recsQueryV1ToV0(query, context);
@@ -239,15 +238,19 @@ public class LocalRecordsResolver {
                 } else {
 
                     recordsResult = new RecsQueryRes<>();
+                    query = updateQueryLanguage(query, dao);
 
                     RecsQueryRes<?> queryRes = dao.queryRecords(query);
 
                     if (queryRes != null) {
 
+                        List<AttMixin> objMixins = dao instanceof AttMixinsHolder ?
+                            ((AttMixinsHolder) dao).getMixins() : Collections.emptyList();
+
                         List<RecordAtts> recAtts = context.doWithVar(
                             AttSchemaResolver.CTX_SOURCE_ID_KEY,
                             query.getSourceId(),
-                            () -> getAtts(queryRes.getRecords(), attributes, rawAtts)
+                            () -> getAtts(queryRes.getRecords(), attributes, rawAtts, objMixins)
                         );
 
                         recordsResult.setRecords(recAtts);
@@ -383,6 +386,13 @@ public class LocalRecordsResolver {
     public List<RecordAtts> getAtts(@NotNull List<?> records,
                                     @NotNull List<SchemaAtt> attributes,
                                     boolean rawAtts) {
+        return getAtts(records, attributes, rawAtts, Collections.emptyList());
+    }
+
+    private List<RecordAtts> getAtts(@NotNull List<?> records,
+                                    @NotNull List<SchemaAtt> attributes,
+                                    boolean rawAtts,
+                                    List<AttMixin> mixinsForObjects) {
 
         RequestContext context = RequestContext.getCurrentNotNull();
 
@@ -423,7 +433,7 @@ public class LocalRecordsResolver {
 
         List<RecordAtts> atts = recordsAttsService.getAtts(recordObjs.stream()
             .map(ValWithIdx::getValue)
-            .collect(Collectors.toList()), attributes, rawAtts, Collections.emptyList());
+            .collect(Collectors.toList()), attributes, rawAtts, mixinsForObjects);
 
         if (atts != null && atts.size() == recordObjs.size()) {
 

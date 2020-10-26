@@ -66,7 +66,7 @@ public class AttValueDelegate implements AttValue {
     }
 
     @Override
-    public RecordRef getTypeRef() throws Exception {
-        return impl.getTypeRef();
+    public RecordRef getType() throws Exception {
+        return impl.getType();
     }
 }

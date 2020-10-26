@@ -58,7 +58,7 @@ public interface AttValue {
 
     // ===== /get as =====
 
-    default RecordRef getTypeRef() throws Exception {
+    default RecordRef getType() throws Exception {
         return RecordRef.EMPTY;
     }
 

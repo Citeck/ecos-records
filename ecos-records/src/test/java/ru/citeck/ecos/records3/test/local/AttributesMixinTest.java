@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -88,6 +90,19 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
         MixinWithDto mixinWithDto = new MixinWithDto();
         addAttributesMixin(mixinWithDto);
+        addAttributesMixin(new AttMixin() {
+            @Override
+            public Object getAtt(String path, AttValueCtx value) throws Exception {
+                if ("_edge.recId.title".equals(path)) {
+                    return recordRefAttTitle;
+                }
+                return null;
+            }
+            @Override
+            public Collection<String> getProvidedAtts() {
+                return Collections.singletonList("_edge.recId.title");
+            }
+        });
 
         checkValidComputedAttributes();
         removeAttributesMixin(mixinWithDto);
@@ -95,18 +110,18 @@ public class AttributesMixinTest extends AbstractRecordsDao
         addAttributesMixin(new MixinWithMap());
         checkValidComputedAttributes();
 
-        addAttributesMixin(new MixinWithRecRef());
+        MixinWithRecRef mixinWithRecRef = new MixinWithRecRef();
+        addAttributesMixin(mixinWithRecRef);
         checkValidComputedAttributes();
 
         DataValue attValue = recordsService.getAtt(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
-        assertEquals(DataValue.create(REC_META_VALUE_ID), attValue);
+        assertEquals(DataValue.create(RecordRef.create(ID, REC_META_VALUE_ID).toString()), attValue);
 
-        DataValue edgeTitle = recordsService.getAtt(RecordRef.create(ID, REC_META_VALUE_ID), "#" + recordRefAttName + "?title");
+        DataValue edgeTitle = recordsService.getAtt(
+            RecordRef.create(ID, REC_META_VALUE_ID),
+            "#" + recordRefAttName + "?title"
+        );
         assertEquals(DataValue.create(recordRefAttTitle), edgeTitle);
-
-        MetaWithEdgeForExistingAtt edgeExMeta = recordsService.getAtts(RecordRef.create(ID, REC_META_VALUE_ID), MetaWithEdgeForExistingAtt.class);
-        assertEquals(intField0Title, edgeExMeta.fieldTitle);
-        assertEquals(intField0Value, edgeExMeta.fieldValue);
     }
 
     private void checkValidComputedAttributes() {
@@ -169,7 +184,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
     public static class MetaValueRecord implements AttValue {
 
-        private String id;
+        private final String id;
 
         public MetaValueRecord(String id) {
             this.id = id;
@@ -184,6 +199,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
         public Object getAtt(@NotNull String name) throws Exception {
 
             switch (name) {
+                case "recId": return id;
                 case "strField": return strFieldValue;
                 case "intField0": return intField0Value;
                 case "intField1": return intField1Value;
@@ -198,7 +214,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
         @Override
         public Object getAtt(String path, AttValueCtx value) throws Exception {
-            return path;
+            return value.getAtt(path);
         }
 
         @Override
@@ -208,118 +224,58 @@ public class AttributesMixinTest extends AbstractRecordsDao
     }
 
     public static class MixinWithRecRef implements AttMixin {
-        @Override
-        public Object getAtt(String path, AttValueCtx value) throws Exception {
-            return null;
-        }
 
         @Override
         public Collection<String> getProvidedAtts() {
-            return null;
-        }
-        /*
-        @Override
-        public List<String> getAttributesList() {
             return Collections.singletonList(recordRefAttName);
         }
 
         @Override
-        public Object getAttribute(String attribute, RecordRef id) {
-            if (attribute.equals(recordRefAttName)) {
-                return id.toString();
+        public Object getAtt(String path, AttValueCtx value) throws Exception {
+            if (path.equals(recordRefAttName)) {
+                return value.getRef().toString();
             }
             return null;
         }
-
-        @Override
-        public AttEdge getEdge(String attribute, RecordRef meta, UncheckedSupplier<AttEdge> base) {
-            if (attribute.equals(recordRefAttName)) {
-                return new AttEdge() {
-                    @Override
-                    public String getName() {
-                        return attribute;
-                    }
-
-                    @Override
-                    public Object getValue() throws Exception {
-                        return getAttribute(attribute, meta);
-                    }
-
-                    @Override
-                    public String getTitle() {
-                        return recordRefAttTitle;
-                    }
-                };
-            }
-            return null;
-        }
-
-        @Override
-        public Object getMetaToRequest() {
-            return null;
-        }*/
     }
 
     public static class MixinWithMap implements AttMixin {
-        @Override
-        public Object getAtt(String path, AttValueCtx value) throws Exception {
-            return null;
-        }
 
         @Override
         public Collection<String> getProvidedAtts() {
-            return null;
-        }
-
-        /*@Override
-        public List<String> getAttributesList() {
             return MixinWithDto.atts;
         }
 
         @Override
-        public Object getAttribute(String attribute, RecordAtts meta) {
-            switch (attribute) {
+        public Object getAtt(String path, AttValueCtx value) throws Exception {
+
+            Map<String, String> metaAtts = new HashMap<>();
+            metaAtts.put("intField0", "intField0");
+            metaAtts.put("intField1", "intField1");
+            metaAtts.put("strField", "strField");
+
+            ObjectData meta = value.getAtts(metaAtts);
+
+            switch (path) {
                 case strFieldValueWithPrefixName:
-                    return strFieldPrefixValue + meta.getStringOrNull("strField");
+                    return strFieldPrefixValue + meta.get("strField").asText();
                 case intFieldsSumName:
                     return meta.get("intField0", 0.0) + meta.get("intField1", 0.0);
             }
             return null;
         }
-
-        @Override
-        public Map<String, String> getMetaToRequest() {
-
-            Map<String, String> res = new HashMap<>();
-            res.put("intField0", "intField0");
-            res.put("intField1", "intField1");
-            res.put("strField", "strField");
-
-            return res;
-        }*/
     }
 
     public static class MixinWithDto implements AttMixin {
+
+        private static final List<String> atts = Arrays.asList(strFieldValueWithPrefixName, intFieldsSumName);
+
         @Override
         public Object getAtt(String path, AttValueCtx value) throws Exception {
-            return null;
-        }
 
-        @Override
-        public Collection<String> getProvidedAtts() {
-            return null;
-        }
+            MixinMeta meta = value.getAtts(MixinMeta.class);
 
-        /*private static final List<String> atts = Arrays.asList(strFieldValueWithPrefixName, intFieldsSumName);
-
-        @Override
-        public List<String> getAttributesList() {
-            return atts;
-        }
-
-        @Override
-        public Object getAttribute(String attribute, MixinMeta meta) {
-            switch (attribute) {
+            switch (path) {
                 case strFieldValueWithPrefixName:
                     return strFieldPrefixValue + meta.str;
                 case intFieldsSumName:
@@ -329,8 +285,8 @@ public class AttributesMixinTest extends AbstractRecordsDao
         }
 
         @Override
-        public Class<MixinMeta> getMetaToRequest() {
-            return MixinMeta.class;
+        public Collection<String> getProvidedAtts() {
+            return atts;
         }
 
         @Data
@@ -341,7 +297,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
             private int intField0;
             private int intField1;
-        }*/
+        }
     }
 
     @Data

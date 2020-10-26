@@ -75,7 +75,7 @@ public class BeanValueFactory implements AttValueFactory<Object> {
         }
 
         @Override
-        public RecordRef getTypeRef() {
+        public RecordRef getType() {
             return getAttWithType("?type", RecordRef.class);
         }
 

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.local;
 
+import kotlin.Unit;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,16 +45,20 @@ public class InnerMixinTest extends AbstractRecordsDao
             protected RecordTypeService createRecordTypeService() {
                 return type -> {
                     if (type.equals(TEST_TYPE0)) {
-                        ComputedAtt att = new ComputedAtt();
-                        att.setName("computed");
-                        att.setType("attribute");
-                        att.setConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
+                        ComputedAtt att = ComputedAtt.create(b -> {
+                            b.withId("computed");
+                            b.withType("attribute");
+                            b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
+                            return Unit.INSTANCE;
+                        });
                         return Collections.singletonList(att);
                     } else if (type.equals(TEST_TYPE1)) {
-                        ComputedAtt att = new ComputedAtt();
-                        att.setName("computed");
-                        att.setType("attribute");
-                        att.setConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
+                        ComputedAtt att = ComputedAtt.create(b -> {
+                            b.withId("computed");
+                            b.withType("attribute");
+                            b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
+                            return Unit.INSTANCE;
+                        });
                         return Collections.singletonList(att);
                     }
                     return Collections.emptyList();

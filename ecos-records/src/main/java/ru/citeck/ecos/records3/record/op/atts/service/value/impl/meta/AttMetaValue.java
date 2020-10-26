@@ -67,7 +67,7 @@ public class AttMetaValue implements AttValue {
     }
 
     @Override
-    public RecordRef getTypeRef() {
+    public RecordRef getType() {
         return metaValue.getRecordType();
     }
 }

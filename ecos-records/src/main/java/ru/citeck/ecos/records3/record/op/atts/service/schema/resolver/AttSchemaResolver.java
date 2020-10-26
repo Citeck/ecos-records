@@ -15,10 +15,14 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.meta.util.AttStrUtils;
+import ru.citeck.ecos.records2.type.ComputedAtt;
+import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcService;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.computed.ComputedAttsService;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttFuncValue;
 import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
@@ -39,6 +43,7 @@ public class AttSchemaResolver {
 
     public final static String CTX_SOURCE_ID_KEY = "ctx-source-id";
 
+
     private final AttValuesConverter attValuesConverter;
     private final AttProcService attProcService;
 
@@ -46,9 +51,8 @@ public class AttSchemaResolver {
     private final DtoSchemaReader dtoSchemaReader;
 
     private final RecordsServiceFactory serviceFactory;
-
-    // todo: move types logic to this resolver
-    // private final RecordTypeService recordTypeService;
+    private final RecordTypeService recordTypeService;
+    private final ComputedAttsService computedAttsService;
 
     public AttSchemaResolver(RecordsServiceFactory factory) {
         serviceFactory = factory;
@@ -56,6 +60,8 @@ public class AttSchemaResolver {
         attProcService = factory.getAttProcService();
         attSchemaReader = factory.getAttSchemaReader();
         dtoSchemaReader = factory.getDtoSchemaReader();
+        recordTypeService = factory.getRecordTypeService();
+        computedAttsService = factory.getComputedAttsService();
     }
 
     public List<Map<String, Object>> resolve(ResolveArgs args) {
@@ -81,7 +87,7 @@ public class AttSchemaResolver {
         }
 
         List<SchemaAtt> schemaAtts = schemaAttsToLoad;
-        ResolveContext context = new ResolveContext(attValuesConverter, args.getMixins());
+        ResolveContext context = new ResolveContext(attValuesConverter, args.getMixins(), recordTypeService);
 
         List<ValueContext> attValues = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
@@ -244,7 +250,9 @@ public class AttSchemaResolver {
         Map<String, Object> result = new LinkedHashMap<>();
         AttContext attContext = context.getAttContext();
         String currentValuePath = context.getPath();
+
         Set<String> disabledMixinPaths = context.getDisabledMixinPaths();
+        Set<String> disabledComputedPaths = context.getDisabledComputedPaths();
 
         for (SchemaAtt att : attributes) {
 
@@ -258,33 +266,75 @@ public class AttSchemaResolver {
 
             attContext.setSchemaAtt(att);
 
-            AttMixin mixin = null;
-
-            for (AttMixin attMixin : context.getMixins()) {
-                if (attMixin.getProvidedAtts().contains(attPath)) {
-                    mixin = attMixin;
-                    break;
-                }
-            }
+            Map<String, ComputedAtt> computedAtts = value.getComputedAtts();
+            ComputedAtt computedAtt = computedAtts.get(att.getName());
 
             Object attValue;
-            if (mixin != null && !disabledMixinPaths.contains(attPath)) {
-                disabledMixinPaths.add(attPath);
+
+            if (computedAtt != null && disabledComputedPaths.add(attPath)) {
+
                 try {
-                    attValue = mixin.getAtt(attPath, new AttValueResolveCtx(
+                    ValueContext valueCtx = getContextForDynamicAtt(value, computedAtt.getId());
+                    attValue = computedAttsService.compute(new AttValueResolveCtx(
                         currentValuePath,
                         context,
-                        context.getRootValue()));
+                        valueCtx), computedAtt);
                 } catch (Exception e) {
-                    String msg = "Resolving error. Path: " + attPath;
+                    String msg = "Resolving error. Path: " + attPath + ". Att: " + computedAtt;
                     context.getReqContext().addMsg(MsgLevel.ERROR, () -> msg);
                     log.error(msg, e);
                     attValue = null;
                 } finally {
-                    disabledMixinPaths.remove(attPath);
+                    disabledComputedPaths.remove(attPath);
                 }
+
             } else {
-                attValue = value.resolve(attContext);
+
+                AttMixin mixin = null;
+                String mixinPath = null;
+
+                mixinLoop:
+                for (AttMixin attMixin : context.getMixins()) {
+                    for (String mixinAttPath : attMixin.getProvidedAtts()) {
+                        if (mixinAttPath.charAt(0) == '^') {
+                            if (attPath.equals(mixinAttPath.substring(1))) {
+                                mixin = attMixin;
+                                mixinPath = mixinAttPath;
+                            }
+                        } else if (attPath.endsWith(mixinAttPath)) {
+                            if (!currentValuePath.endsWith("_edge") || mixinAttPath.contains("_edge.")) {
+                                mixin = attMixin;
+                                mixinPath = mixinAttPath;
+                            }
+                        }
+                        if (mixin != null) {
+                            break mixinLoop;
+                        }
+                    }
+                }
+
+                if (mixin != null && disabledMixinPaths.add(attPath)) {
+                    try {
+                        ValueContext mixinValueCtx = getContextForDynamicAtt(value, mixinPath);
+                        if (mixinValueCtx == null) {
+                            attValue = null;
+                        } else {
+                            attValue = mixin.getAtt(mixinPath, new AttValueResolveCtx(
+                                currentValuePath,
+                                context,
+                                mixinValueCtx));
+                        }
+                    } catch (Exception e) {
+                        String msg = "Resolving error. Path: " + attPath;
+                        context.getReqContext().addMsg(MsgLevel.ERROR, () -> msg);
+                        log.error(msg, e);
+                        attValue = null;
+                    } finally {
+                        disabledMixinPaths.remove(attPath);
+                    }
+                } else {
+                    attValue = value.resolve(attContext);
+                }
             }
 
             List<Object> attValues = toList(attValue);
@@ -292,14 +342,10 @@ public class AttSchemaResolver {
 
             if (att.isMultiple()) {
 
-                if (att.isScalar()) {
-                    result.put(alias, attValue);
-                } else {
-                    List<ValueContext> values = attValues.stream()
-                        .map(context::toValueContext)
-                        .collect(Collectors.toList());
-                    result.put(alias, resolve(values, att.getInner(), context));
-                }
+                List<ValueContext> values = attValues.stream()
+                    .map(v -> context.toValueContext(value, v))
+                    .collect(Collectors.toList());
+                result.put(alias, resolve(values, att.getInner(), context));
 
             } else {
 
@@ -309,7 +355,7 @@ public class AttSchemaResolver {
                     if (att.isScalar()) {
                         result.put(alias, attValues.get(0));
                     } else {
-                        ValueContext valueContext = context.toValueContext(attValues.get(0));
+                        ValueContext valueContext = context.toValueContext(value, attValues.get(0));
                         result.put(alias, resolve(valueContext, att.getInner(), context));
                     }
                 }
@@ -319,6 +365,23 @@ public class AttSchemaResolver {
         context.setPath(currentValuePath);
 
         return result;
+    }
+
+    @Nullable
+    private ValueContext getContextForDynamicAtt(ValueContext value, String path) {
+
+        if (AttStrUtils.indexOf(path, ".") == -1) {
+            return value;
+        }
+        ValueContext valueCtx = value;
+        List<String> valuePathList = AttStrUtils.split(path, ".");
+        for (int i = 1; i < valuePathList.size(); i++) {
+            if (valueCtx == null) {
+                break;
+            }
+            valueCtx = valueCtx.getParent();
+        }
+        return valueCtx != null && path.contains("?") ? valueCtx.getParent() : valueCtx;
     }
 
     private List<Object> toList(Object rawValue) {
@@ -392,21 +455,46 @@ public class AttSchemaResolver {
         return false;
     }
 
-    @RequiredArgsConstructor
     private static class ValueContext {
 
-        public static final ValueContext EMPTY = new ValueContext(
+        private static final ValueContext EMPTY = new ValueContext(
+            null,
             EmptyAttValue.INSTANCE,
             RecordRef.EMPTY,
             null,
-            null);
+            null,
+            Collections.emptyMap());
 
         private final AttValue value;
         private final RecordRef valueRef;
         private final String ctxSourceId;
         @Nullable
         private final RequestContext context;
+        @Getter
+        @Nullable
+        private final ValueContext parent;
         private RecordRef computedRef;
+
+        private final Map<String, ComputedAtt> computedAtts;
+
+        public ValueContext(@Nullable ValueContext parent,
+                            AttValue value,
+                            RecordRef valueRef,
+                            String ctxSourceId,
+                            @Nullable RequestContext context,
+                            Map<String, ComputedAtt> computedAtts) {
+
+            this.value = value;
+            this.valueRef = valueRef;
+            this.ctxSourceId = ctxSourceId;
+            this.context = context;
+            this.computedAtts = computedAtts;
+            this.parent = parent;
+        }
+
+        public Map<String, ComputedAtt> getComputedAtts() {
+            return computedAtts;
+        }
 
         public Object resolve(AttContext attContext) {
 
@@ -451,7 +539,7 @@ public class AttSchemaResolver {
             switch (attribute) {
                 case RecordConstants.ATT_TYPE:
                 case RecordConstants.ATT_ECOS_TYPE:
-                    return value.getTypeRef();
+                    return value.getType();
                 case RecordConstants.ATT_AS:
                     return new AttFuncValue(value::as);
                 case RecordConstants.ATT_HAS:
@@ -536,8 +624,12 @@ public class AttSchemaResolver {
         @NotNull
         private final List<AttMixin> mixins;
 
+        private final RecordTypeService recordTypeService;
+
         @Getter
         private final Set<String> disabledMixinPaths = new HashSet<>();
+        @Getter
+        private final Set<String> disabledComputedPaths = new HashSet<>();
 
         @Getter
         @Setter
@@ -548,7 +640,7 @@ public class AttSchemaResolver {
         private ValueContext rootValue;
 
         @NotNull
-        private AttValue convertToMetaValue(@NotNull Object value) {
+        private AttValue convertToAttValue(@NotNull Object value) {
             if (value instanceof AttValue) {
                 return (AttValue) value;
             }
@@ -557,25 +649,55 @@ public class AttSchemaResolver {
 
         @NotNull
         ValueContext toRootValueContext(@NotNull Object value, RecordRef valueRef) {
+            AttValue attValue = convertToAttValue(value);
             return new ValueContext(
-                convertToMetaValue(value),
+                null,
+                attValue,
                 valueRef,
                 reqContext.getVar(CTX_SOURCE_ID_KEY),
-                reqContext
+                reqContext,
+                getComputedAtts(null, attValue)
             );
         }
 
         @NotNull
-        ValueContext toValueContext(@Nullable Object value) {
+        ValueContext toValueContext(ValueContext parent, @Nullable Object value) {
             if (value == null) {
                 return ValueContext.EMPTY;
             }
+            AttValue attValue = convertToAttValue(value);
             return new ValueContext(
-                convertToMetaValue(value),
+                parent,
+                attValue,
                 RecordRef.EMPTY,
                 null,
-                reqContext
+                reqContext,
+                getComputedAtts(parent, attValue)
             );
+        }
+
+        private Map<String, ComputedAtt> getComputedAtts(@Nullable ValueContext parent, AttValue value) {
+
+            Map<String, ComputedAtt> computedAtts = new HashMap<>();
+            if (parent != null) {
+                parent.getComputedAtts().forEach((k, v) -> {
+                    int dotIdx = AttStrUtils.indexOf(k, ".");
+                    if (dotIdx > 0 && dotIdx < k.length() + 1) {
+                        computedAtts.put(k.substring(dotIdx + 1), v);
+                    }
+                });
+            }
+            try {
+                RecordRef typeRef = value.getType();
+                if (RecordRef.isNotEmpty(typeRef)) {
+                    for (ComputedAtt att : recordTypeService.getComputedAtts(typeRef)) {
+                        computedAtts.put(att.getId(), att);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Computed atts resolving error", e);
+            }
+            return computedAtts;
         }
     }
 
@@ -605,6 +727,7 @@ public class AttSchemaResolver {
             return atts.get("k");
         }
 
+        @NotNull
         @Override
         public <T> T getAtts(@NotNull Class<T> type) {
             List<SchemaAtt> attributes = dtoSchemaReader.read(type);

@@ -19,7 +19,7 @@ public interface AttValueCtx {
     @NotNull
     DataValue getAtt(@NotNull String attribute) throws Exception;
 
-    @Nullable
+    @NotNull
     <T> T getAtts(@NotNull Class<T> type) throws Exception;
 
     @NotNull

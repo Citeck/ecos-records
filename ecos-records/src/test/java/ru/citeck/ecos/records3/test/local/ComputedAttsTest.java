@@ -209,7 +209,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
         }
 
         @Override
-        public RecordRef getTypeRef() {
+        public RecordRef getType() {
             return RecordRef.create("emodel", "type", id);
         }
     }

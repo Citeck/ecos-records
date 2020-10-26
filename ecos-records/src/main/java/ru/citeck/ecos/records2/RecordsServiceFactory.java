@@ -23,9 +23,11 @@ import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
+import ru.citeck.ecos.records2.type.ComputedAtt;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.*;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.computed.ComputedAttsService;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
@@ -92,6 +94,7 @@ public class RecordsServiceFactory {
     private AttSchemaResolver attSchemaResolver;
     private MetaValuesConverter metaValuesConverter;
     private AttProcReader attProcReader;
+    private ComputedAttsService computedAttsService;
 
     @Deprecated
     private Supplier<? extends QueryContext> queryContextSupplier;
@@ -661,5 +664,16 @@ public class RecordsServiceFactory {
             attProcReader = createAttProcReader();
         }
         return attProcReader;
+    }
+
+    protected ComputedAttsService createComputedAttsService() {
+        return new ComputedAttsService();
+    }
+
+    public final synchronized ComputedAttsService getComputedAttsService() {
+        if (computedAttsService == null) {
+            computedAttsService = createComputedAttsService();
+        }
+        return computedAttsService;
     }
 }

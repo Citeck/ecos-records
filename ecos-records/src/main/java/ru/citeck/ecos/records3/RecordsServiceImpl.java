@@ -163,8 +163,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                     .collect(Collectors.toList());
             }
 
-            for (int resIdx = recordMutResult.size() - 1; resIdx >= 0; resIdx--) {
-                result.add(0, recordMutResult.get(resIdx));
+            if (i == 0) {
+                result.add(recordMutResult.get(recordMutResult.size() - 1));
             }
 
             for (RecordRef resultMeta : recordMutResult) {

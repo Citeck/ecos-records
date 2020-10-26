@@ -34,6 +34,8 @@ public class LocalRemoteResolver {
 
     private final String currentAppSourceIdPrefix;
 
+    private boolean isGatewayMode;
+
     public LocalRemoteResolver(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
@@ -45,6 +47,8 @@ public class LocalRemoteResolver {
         this.currentAppSourceIdPrefix = props.getAppName() + "/";
 
         MandatoryParam.check("local", local);
+
+        isGatewayMode = serviceFactory.getProperties().isGatewayMode();
     }
 
     @Nullable
@@ -54,7 +58,7 @@ public class LocalRemoteResolver {
 
         String sourceId = query.getSourceId();
 
-        if (remote == null || !isRemoteSourceId(sourceId)) {
+        if (remote == null || (!isGatewayMode && !isRemoteSourceId(sourceId))) {
             return doWithSchema(attributes, schema -> local.query(query, schema, rawAtts));
         }
         return remote.query(query, attributes, rawAtts);
@@ -130,11 +134,11 @@ public class LocalRemoteResolver {
 
             List<RecordAtts> atts;
 
-            if (!isRemoteSourceId(sourceId)) {
+            if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
 
                 atts = doWithSchema(attributes, schema -> local.getAtts(refs, schema, rawAtts));
 
-            } else if (isRemoteRef(recs.stream()
+            } else if (isGatewayMode || isRemoteRef(recs.stream()
                             .map(ValWithIdx::getValue)
                             .findFirst()
                             .orElse(null))) {
@@ -170,7 +174,7 @@ public class LocalRemoteResolver {
         if (remote == null || records.isEmpty()) {
             return local.mutate(records);
         }
-        if (isRemoteRef(records.get(0))) {
+        if (isGatewayMode || isRemoteRef(records.get(0))) {
             return remote.mutate(records);
         }
         return local.mutate(records);
@@ -181,7 +185,7 @@ public class LocalRemoteResolver {
         if (remote == null || records.isEmpty()) {
             return local.delete(records);
         }
-        if (isRemoteRef(records.get(0))) {
+        if (isGatewayMode || isRemoteRef(records.get(0))) {
             return remote.delete(records);
         }
         return local.delete(records);
@@ -189,7 +193,7 @@ public class LocalRemoteResolver {
 
     @Nullable
     public RecordsDaoInfo getSourceInfo(@NotNull String sourceId) {
-        if (isRemoteSourceId(sourceId)) {
+        if (isGatewayMode || isRemoteSourceId(sourceId)) {
             return remote.getSourceInfo(sourceId);
         }
         return local.getSourceInfo(sourceId);

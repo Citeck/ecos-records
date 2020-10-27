@@ -1,49 +1,43 @@
-package ru.citeck.ecos.records3.spring.web;
+package ru.citeck.ecos.records3.spring.web
 
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import ru.citeck.ecos.commons.utils.ExceptionUtils;
-
-import javax.net.ssl.*;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory
+import ru.citeck.ecos.commons.utils.ExceptionUtils.throwException
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.*
 
 // Basically copied from
 // org.springframework.boot.actuate.autoconfigure.cloudfoundry.servlet.SkipSslVerificationHttpRequestFactory
-public class SkipSslVerificationHttpRequestFactory extends SimpleClientHttpRequestFactory {
+class SkipSslVerificationHttpRequestFactory : SimpleClientHttpRequestFactory() {
 
-    @Override
-    protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
-        if (connection instanceof HttpsURLConnection) {
+    @Throws(IOException::class)
+    override fun prepareConnection(connection: HttpURLConnection, httpMethod: String) {
+        if (connection is HttpsURLConnection) {
             try {
-                ((HttpsURLConnection) connection).setHostnameVerifier(
-                    (String s, SSLSession sslSession) -> true);
-                ((HttpsURLConnection) connection).setSSLSocketFactory(
-                    this.createSslSocketFactory());
-            } catch (Exception e) {
-                ExceptionUtils.throwException(e);
-                throw new RuntimeException(e);
+                connection.hostnameVerifier = HostnameVerifier { _, _ -> true }
+                connection.sslSocketFactory = createSslSocketFactory()
+            } catch (e: Exception) {
+                throwException(e)
+                throw RuntimeException(e)
             }
         }
-        super.prepareConnection(connection, httpMethod);
+        super.prepareConnection(connection, httpMethod)
     }
 
-    private SSLSocketFactory createSslSocketFactory() throws Exception {
-        final SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, new TrustManager[]{new SkipX509TrustManager()}, new SecureRandom());
-        return context.getSocketFactory();
+    @Throws(Exception::class)
+    private fun createSslSocketFactory(): SSLSocketFactory {
+        val context = SSLContext.getInstance("TLS")
+        context.init(null, arrayOf<TrustManager>(SkipX509TrustManager()), SecureRandom())
+        return context.socketFactory
     }
 
-    private static class SkipX509TrustManager implements X509TrustManager {
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
+    private class SkipX509TrustManager : X509TrustManager {
+        override fun getAcceptedIssuers(): Array<X509Certificate> {
+            return emptyArray()
         }
-
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-        }
-
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-        }
+        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
     }
 }

@@ -1,7 +1,7 @@
-package ru.citeck.ecos.records3.spring.config;
+package ru.citeck.ecos.records3.spring.config
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.Configuration
 
 /**
  * Auto configuration to initialize records beans.
@@ -9,6 +9,5 @@ import org.springframework.context.annotation.Configuration;
  * @author Roman Makarskiy
  */
 @Configuration
-@ComponentScan(basePackages = {"ru.citeck.ecos.records3.spring"})
-public class RecordsAutoConfiguration {
-}
+@ComponentScan(basePackages = ["ru.citeck.ecos.records3.spring"])
+open class RecordsAutoConfiguration

@@ -1,15 +1,13 @@
-package ru.citeck.ecos.records3.spring.web.interceptor;
+package ru.citeck.ecos.records3.spring.web.interceptor
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpRequest
+import org.springframework.http.client.ClientHttpRequestExecution
+import org.springframework.http.client.ClientHttpRequestInterceptor
+import org.springframework.http.client.ClientHttpResponse
+import org.springframework.stereotype.Component
+import java.io.IOException
+import javax.servlet.http.HttpServletRequest
 
 //Relays ALL received cookies.
 //We could only relay JSESSIONID cookie - but, given how record-searching endpoint is served by Alfresco
@@ -22,28 +20,26 @@ import java.io.IOException;
 //  with admin user or maybe microservice auth (if records-search service becomes a microservice),
 //  and either post-filter returned records or specify username to test access against.
 @Component
-public class CookiesAndLangInterceptor implements ClientHttpRequestInterceptor {
+class CookiesAndLangInterceptor : ClientHttpRequestInterceptor {
 
-    private HttpServletRequest thisRequest;
+    private var thisRequest: HttpServletRequest? = null
 
-    @Override
-    public ClientHttpResponse intercept(HttpRequest newRequest,
-                                        byte[] bytes,
-                                        ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
-
-        HttpHeaders newHeaders = newRequest.getHeaders();
-
+    @Throws(IOException::class)
+    override fun intercept(newRequest: HttpRequest,
+                           bytes: ByteArray,
+                           clientHttpRequestExecution: ClientHttpRequestExecution): ClientHttpResponse {
+        val newHeaders = newRequest.headers
         if (thisRequest != null) {
-            newHeaders.set("Cookie", thisRequest.getHeader("Cookie"));
-            newHeaders.set("Accept-Language", thisRequest.getHeader("Accept-Language"));
-            newHeaders.set("X-Alfresco-Remote-User", thisRequest.getHeader("X-Alfresco-Remote-User"));
-            newHeaders.set("X-uisrv-user", thisRequest.getHeader("X-uisrv-user"));
+            newHeaders["Cookie"] = thisRequest!!.getHeader("Cookie")
+            newHeaders["Accept-Language"] = thisRequest!!.getHeader("Accept-Language")
+            newHeaders["X-Alfresco-Remote-User"] = thisRequest!!.getHeader("X-Alfresco-Remote-User")
+            newHeaders["X-uisrv-user"] = thisRequest!!.getHeader("X-uisrv-user")
         }
-        return clientHttpRequestExecution.execute(newRequest, bytes);
+        return clientHttpRequestExecution.execute(newRequest, bytes)
     }
 
     @Autowired(required = false)
-    public void setThisRequest(HttpServletRequest thisRequest) {
-        this.thisRequest = thisRequest;
+    fun setThisRequest(thisRequest: HttpServletRequest?) {
+        this.thisRequest = thisRequest
     }
 }

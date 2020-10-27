@@ -1,53 +1,45 @@
-package ru.citeck.ecos.records3.spring.web;
+package ru.citeck.ecos.records3.spring.web
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpServerErrorException;
-import ru.citeck.ecos.records2.rest.RestQueryException;
-import ru.citeck.ecos.records2.rest.RestQueryExceptionConverter;
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.commons.lang.StringUtils
+import org.springframework.stereotype.Component
+import org.springframework.web.client.HttpServerErrorException
+import ru.citeck.ecos.records2.rest.RestQueryException
+import ru.citeck.ecos.records2.rest.RestQueryExceptionConverter
 
 @Component
-public class RestQueryExceptionConverterImpl implements RestQueryExceptionConverter {
+class RestQueryExceptionConverterImpl : RestQueryExceptionConverter {
 
-    @Override
-    public RestQueryException convert(String msg, Exception e) {
+    override fun convert(msg: String, e: Exception?): RestQueryException {
         if (e == null) {
-            return new RestQueryException(msg);
+            return RestQueryException(msg)
         }
-
-        if (e instanceof HttpServerErrorException) {
-            String restInfo = getRestInfoFromBody((HttpServerErrorException) e);
+        if (e is HttpServerErrorException) {
+            val restInfo = getRestInfoFromBody(e)
             if (StringUtils.isNotBlank(restInfo)) {
-                return new RestQueryException(msg, e, restInfo);
+                return RestQueryException(msg, e, restInfo)
             }
         }
-
-        return new RestQueryException(msg, e);
+        return RestQueryException(msg, e)
     }
 
-    private String getRestInfoFromBody(HttpServerErrorException ex) {
-        String body = ex.getResponseBodyAsString();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
+    private fun getRestInfoFromBody(ex: HttpServerErrorException): String? {
+        val body = ex.responseBodyAsString
+        val mapper = ObjectMapper()
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         try {
-            HttpErrorBody bodyMessage = mapper.readValue(body, HttpErrorBody.class);
-            if (StringUtils.isNotBlank(bodyMessage.getMessage())) {
-                return bodyMessage.getMessage();
+            val bodyMessage = mapper.readValue(body, HttpErrorBody::class.java)
+            if (StringUtils.isNotBlank(bodyMessage.message)) {
+                return bodyMessage.message
             }
-        } catch (Exception ignored) {
+        } catch (ignored: Exception) {
             //do nothing
         }
-
-        return null;
+        return null
     }
 
-    @Data
-    public static class HttpErrorBody {
-        private String message;
-    }
+    data class HttpErrorBody(
+        val message: String? = null
+    )
 }

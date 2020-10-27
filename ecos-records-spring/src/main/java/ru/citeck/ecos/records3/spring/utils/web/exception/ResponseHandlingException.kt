@@ -1,12 +1,7 @@
-package ru.citeck.ecos.records3.spring.utils.web.exception;
+package ru.citeck.ecos.records3.spring.utils.web.exception
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 
 @ResponseStatus(code = HttpStatus.BAD_REQUEST)
-public class ResponseHandlingException extends RuntimeException {
-
-    public ResponseHandlingException(Throwable t) {
-        super("Cannot write response value. " + t.getLocalizedMessage(), t);
-    }
-}
+class ResponseHandlingException(t: Throwable) : RuntimeException("Cannot write response value. " + t.localizedMessage, t)

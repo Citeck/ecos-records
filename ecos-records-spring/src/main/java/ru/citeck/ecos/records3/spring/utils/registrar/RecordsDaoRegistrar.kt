@@ -1,59 +1,54 @@
-package ru.citeck.ecos.records3.spring.utils.registrar;
+package ru.citeck.ecos.records3.spring.utils.registrar
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.dao.RecordsDao;
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.dao.RecordsDao
+import javax.annotation.PostConstruct
 
-import javax.annotation.PostConstruct;
-import java.util.List;
-
-@Slf4j
 @Component
-public class RecordsDaoRegistrar {
+class RecordsDaoRegistrar @Autowired constructor(
+    private val recordsService: RecordsService,
+    private val recordsServiceV0: ru.citeck.ecos.records2.RecordsService
+) {
 
-    private final RecordsService recordsService;
-    private final ru.citeck.ecos.records2.RecordsService recordsServiceV0;
-
-    private List<RecordsDao> sources;
-    private List<ru.citeck.ecos.records2.source.dao.RecordsDao> sourcesV0;
-
-    @Autowired
-    public RecordsDaoRegistrar(RecordsService recordsService, ru.citeck.ecos.records2.RecordsService recordsServiceV0) {
-        this.recordsService = recordsService;
-        this.recordsServiceV0 = recordsServiceV0;
+    companion object {
+        val log = KotlinLogging.logger {}
     }
+
+    private var sources: List<RecordsDao>? = null
+    private var sourcesV0: List<ru.citeck.ecos.records2.source.dao.RecordsDao>? = null
 
     @PostConstruct
-    public void register() {
-        log.info("========================== RecordsDaoRegistrar ==========================");
+    fun register() {
+        log.info("========================== RecordsDaoRegistrar ==========================")
         if (sources != null) {
-            sources.forEach(this::register);
+            sources!!.forEach { this.register(it) }
         }
         if (sourcesV0 != null) {
-            sourcesV0.forEach(this::register);
+            sourcesV0!!.forEach { this.register(it) }
         }
-        log.info("========================= /RecordsDaoRegistrar ==========================");
+        log.info("========================= /RecordsDaoRegistrar ==========================")
     }
 
-    private void register(RecordsDao dao) {
-        log.info("Register: \"" + dao.getId() + "\" with class " + dao.getClass().getName());
-        recordsService.register(dao);
+    private fun register(dao: RecordsDao) {
+        log.info("Register: \"" + dao.getId() + "\" with class " + dao.javaClass.name)
+        recordsService.register(dao)
     }
 
-    private void register(ru.citeck.ecos.records2.source.dao.RecordsDao dao) {
-        log.info("Register: \"" + dao.getId() + "\" with class " + dao.getClass().getName());
-        recordsServiceV0.register(dao);
-    }
-
-    @Autowired(required = false)
-    public void setSources(List<RecordsDao> sources) {
-        this.sources = sources;
+    private fun register(dao: ru.citeck.ecos.records2.source.dao.RecordsDao) {
+        log.info("Register: \"" + dao.id + "\" with class " + dao.javaClass.name)
+        recordsServiceV0.register(dao)
     }
 
     @Autowired(required = false)
-    public void setSourcesV0(List<ru.citeck.ecos.records2.source.dao.RecordsDao> sourcesV0) {
-        this.sourcesV0 = sourcesV0;
+    fun setSources(sources: List<RecordsDao>?) {
+        this.sources = sources
+    }
+
+    @Autowired(required = false)
+    fun setSourcesV0(sourcesV0: List<ru.citeck.ecos.records2.source.dao.RecordsDao>?) {
+        this.sourcesV0 = sourcesV0
     }
 }

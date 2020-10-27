@@ -19,7 +19,7 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class OrElseAttTest  extends AbstractRecordsDao {
+public class OrElseAttTest {
 
     private RecordsService recordsService;
 

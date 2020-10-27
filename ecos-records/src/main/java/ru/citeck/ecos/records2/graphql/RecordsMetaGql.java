@@ -131,7 +131,7 @@ public class RecordsMetaGql {
                 RecordMeta recMeta = new RecordMeta(RecordsUtils.getMetaValueId(metaValues.get(i)));
                 JsonNode attributes = meta.get(i);
                 if (attributes instanceof ObjectNode) {
-                    recMeta.setAttributes(Json.getMapper().convert(attributes, ObjectData.class));
+                    recMeta.setAtts(ObjectData.create(attributes));
                 }
                 result.add(recMeta);
             }

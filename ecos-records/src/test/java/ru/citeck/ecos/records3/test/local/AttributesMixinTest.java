@@ -57,11 +57,16 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
     }
 
@@ -80,13 +85,13 @@ public class AttributesMixinTest extends AbstractRecordsDao
         RecsQueryRes<RecordAtts> result = recordsService.query(query, mixinAtts);
         RecordAtts meta = result.getRecords().get(0);
 
-        assertTrue(meta.get(strAtt).isNull());
-        assertTrue(meta.get(intAtt).isNull());
+        assertTrue(meta.getAtt(strAtt).isNull());
+        assertTrue(meta.getAtt(intAtt).isNull());
 
         meta = recordsService.getAtts(RecordRef.create(ID, REC_ID), mixinAtts);
 
-        assertTrue(meta.get(strAtt).isNull());
-        assertTrue(meta.get(intAtt).isNull());
+        assertTrue(meta.getAtt(strAtt).isNull());
+        assertTrue(meta.getAtt(intAtt).isNull());
 
         MixinWithDto mixinWithDto = new MixinWithDto();
         addAttributesMixin(mixinWithDto);
@@ -138,20 +143,20 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
         result.getRecords().forEach(meta -> {
 
-            assertEquals(DataValue.create(finalFieldValue), meta.get(finalFieldName));
+            assertEquals(DataValue.create(finalFieldValue), meta.getAtt(finalFieldName));
 
-            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.getAtt(strAtt));
+            assertEquals(DataValue.create((double) intFieldsSum), meta.getAtt(intAtt));
 
             meta = recordsService.getAtts(RecordRef.create(ID, REC_ID), mixinAtts);
 
-            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
-            assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
+            assertEquals(DataValue.create(strFieldValueWithPrefix), meta.getAtt(strAtt));
+            assertEquals(DataValue.create((double) intFieldsSum), meta.getAtt(intAtt));
         });
     }
 
     @Override
-    public RecsQueryRes<Object> queryRecords(RecordsQuery query) {
+    public RecsQueryRes<Object> queryRecords(@NotNull RecordsQuery query) {
         return RecsQueryRes.of(new Record(), new MetaValueRecord(REC_META_VALUE_ID));
     }
 

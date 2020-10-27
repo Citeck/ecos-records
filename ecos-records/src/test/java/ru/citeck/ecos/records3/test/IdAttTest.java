@@ -29,11 +29,16 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private final Map<RecordRef, Object> metaValues = new HashMap<>();
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
 
         RecordRef refTest = RecordRef.create(ID, "test");

@@ -20,7 +20,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWrit
 import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
@@ -113,7 +113,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             return false;
         }
 
-        List<RequestMsg> errors = RequestContext.getCurrentNotNull().getErrors();
+        List<ReqMsg> errors = RequestContext.getCurrentNotNull().getErrors();
 
         if (result == null || !errors.isEmpty()) {
             log.warn("Update failed: there are errors in query result. Result: " + result + " errors: " + errors);
@@ -125,12 +125,12 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
 
         for (RecordAtts meta : flatMeta) {
 
-            String modifiedStr = meta.get(MODIFIED_ATT_KEY).asText();
+            String modifiedStr = meta.getAtt(MODIFIED_ATT_KEY).asText();
             if (StringUtils.isBlank(modifiedStr)) {
                 return false;
             }
             Instant modified = Instant.parse(modifiedStr);
-            T instance = dtoSchemaReader.instantiate(model, meta.getAttributes());
+            T instance = dtoSchemaReader.instantiate(model, meta.getAtts());
 
             setRecord(meta.getId().getId(), instance);
 
@@ -190,9 +190,9 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         List<SchemaAtt> schemaAtts = new ArrayList<>(dtoSchemaReader.read(model));
 
         schemaAtts.add(SchemaAtt.create()
-                .setAlias(MODIFIED_ATT_KEY)
-                .setName(RecordConstants.ATT_MODIFIED)
-                .setInner(SchemaAtt.create().setName("?disp"))
+                .withAlias(MODIFIED_ATT_KEY)
+                .withName(RecordConstants.ATT_MODIFIED)
+                .withInner(SchemaAtt.create().withName("?disp"))
                 .build());
 
         if (getId().contains("/")) {

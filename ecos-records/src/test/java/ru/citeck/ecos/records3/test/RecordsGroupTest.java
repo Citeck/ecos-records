@@ -30,6 +30,12 @@ class RecordsGroupTest extends AbstractRecordsDao
 
     private static final String SOURCE_ID = "test-source";
 
+    @NotNull
+    @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
     private static final List<PojoMeta> VALUES;
 
     static {
@@ -71,7 +77,6 @@ class RecordsGroupTest extends AbstractRecordsDao
         queryLangService.register(q -> q, "fts", PredicateService.LANGUAGE_PREDICATE);
         queryLangService.register(q -> q, PredicateService.LANGUAGE_PREDICATE, "fts");
 
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 

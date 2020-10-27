@@ -33,6 +33,11 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
 
     private Map<String, Map<String, String>> attributes = new HashMap<>();
 
+    @NotNull
+    @Override
+    public String getId() {
+        return "";
+    }
 
     @BeforeAll
     void init() {
@@ -41,7 +46,6 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
 
         predicates = factory.getPredicateService();
 
-        setId("");
         factory.getRecordsServiceV1().register(this);
     }
 

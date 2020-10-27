@@ -36,6 +36,12 @@ public class MetaEdgeTest extends AbstractRecordsDao
 
     @NotNull
     @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
+    @NotNull
+    @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(new MetaTestVal());
     }
@@ -46,7 +52,6 @@ public class MetaEdgeTest extends AbstractRecordsDao
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
 
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 
@@ -59,7 +64,7 @@ public class MetaEdgeTest extends AbstractRecordsDao
 
         RecordAtts meta = result.get(0);
 
-        DataValue edgeNode = meta.get("edge");
+        DataValue edgeNode = meta.getAtt("edge");
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());

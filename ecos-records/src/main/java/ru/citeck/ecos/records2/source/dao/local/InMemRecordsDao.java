@@ -37,8 +37,16 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
     protected RecordAttsService recordsMetaService;
     protected ru.citeck.ecos.records2.RecordsService recordsServiceV0;
 
+    private final String sourceId;
+
+    @NotNull
+    @Override
+    public String getId() {
+        return sourceId;
+    }
+
     public InMemRecordsDao(String sourceId) {
-        setId(sourceId);
+        this.sourceId = sourceId;
     }
 
     public Map<String, T> getRecords() {

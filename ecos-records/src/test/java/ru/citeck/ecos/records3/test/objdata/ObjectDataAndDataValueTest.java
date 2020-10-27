@@ -26,9 +26,14 @@ public class ObjectDataAndDataValueTest extends AbstractRecordsDao implements Re
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return "";
+    }
+
     @BeforeAll
     void init() {
-        setId("");
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);

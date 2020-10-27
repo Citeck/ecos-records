@@ -27,10 +27,6 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
 
     public static final String ID = "predicate";
 
-    public PredicateRecords() {
-        setId(ID);
-    }
-
     @Override
     public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery recordsQuery) {
 
@@ -58,7 +54,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
                 RequestContext.getCurrentNotNull().getAttributes(),
                 recordModelAtts.getModelAtts()
             );
-            resolvedAtts.forEach(rec -> modelAtts.forEach(rec::set));
+            resolvedAtts.forEach(rec -> modelAtts.forEach(rec::setAtt));
         }
 
         int idx = 0;
@@ -68,7 +64,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
             RecordElement element = new RecordElement(new RecordMeta(record));
 
             for (Predicate predicate : query.getPredicates()) {
-                Predicate resolved = PredicateUtils.resolvePredicateWithAttributes(predicate, record.getAttributes());
+                Predicate resolved = PredicateUtils.resolvePredicateWithAttributes(predicate, record.getAtts());
                 checkResult.add(predicateService.isMatch(element, resolved));
             }
 
@@ -101,5 +97,11 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
         public void setPredicate(Predicate predicate) {
             predicates = Collections.singletonList(predicate);
         }
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
     }
 }

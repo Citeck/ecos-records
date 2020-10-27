@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.evaluator;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -30,12 +31,17 @@ public class EvaluatorsTest extends AbstractRecordsDao implements RecordsAttsDao
 
     private static final String ID = "test";
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @Test
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
 
         RecordEvaluatorService evaluatorsService = factory.getRecordEvaluatorService();

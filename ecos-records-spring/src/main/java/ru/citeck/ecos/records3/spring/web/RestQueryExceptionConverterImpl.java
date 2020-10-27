@@ -6,8 +6,8 @@ import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
-import ru.citeck.ecos.records3.rest.RestQueryException;
-import ru.citeck.ecos.records3.rest.RestQueryExceptionConverter;
+import ru.citeck.ecos.records2.rest.RestQueryException;
+import ru.citeck.ecos.records2.rest.RestQueryExceptionConverter;
 
 @Component
 public class RestQueryExceptionConverterImpl implements RestQueryExceptionConverter {

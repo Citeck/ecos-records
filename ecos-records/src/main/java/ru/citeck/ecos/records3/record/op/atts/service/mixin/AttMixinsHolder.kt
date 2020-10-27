@@ -1,8 +1,6 @@
-package ru.citeck.ecos.records3.record.op.atts.service.mixin;
+package ru.citeck.ecos.records3.record.op.atts.service.mixin
 
-import java.util.List;
+interface AttMixinsHolder {
 
-public interface AttMixinsHolder {
-
-    List<AttMixin> getMixins();
+    fun getMixins(): List<AttMixin>
 }

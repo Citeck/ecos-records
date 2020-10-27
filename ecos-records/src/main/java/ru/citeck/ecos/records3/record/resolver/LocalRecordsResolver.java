@@ -304,13 +304,13 @@ public class LocalRecordsResolver {
 
         List<SchemaAtt> innerSchema = new ArrayList<>(schema);
 
-        innerSchema.add(SchemaAtt.create().setAlias(distinctValueAlias).setName("?str").build());
-        innerSchema.add(SchemaAtt.create().setAlias(distinctValueIdAlias).setName("?id").build());
+        innerSchema.add(SchemaAtt.create().withAlias(distinctValueAlias).withName("?str").build());
+        innerSchema.add(SchemaAtt.create().withAlias(distinctValueIdAlias).withName("?id").build());
 
         List<SchemaAtt> distinctAttSchema = Collections.singletonList(SchemaAtt.create()
-            .setAlias("att")
-            .setName(distinctQuery.getAttribute())
-            .setInner(innerSchema)
+            .withAlias("att")
+            .withName(distinctQuery.getAttribute())
+            .withInner(innerSchema)
             .build());
 
         String distinctAtt = distinctQuery.getAttribute();
@@ -328,7 +328,7 @@ public class LocalRecordsResolver {
 
             for (RecordAtts value : queryResult.getRecords()) {
 
-                DataValue att = value.get("att");
+                DataValue att = value.getAtt("att");
                 String attStr = att.get(distinctValueAlias).asText();
 
                 if (att.isNull() || attStr.isEmpty()) {
@@ -511,7 +511,7 @@ public class LocalRecordsResolver {
                     if (attsList != null && !processors.isEmpty()) {
                         attsList = attsList.stream()
                             .map(r -> new RecordMeta(r.getId(),
-                                attProcService.applyProcessors(r.getAttributes(), processors))
+                                attProcService.applyProcessors(r.getAtts(), processors))
                             ).collect(Collectors.toList());
                     }
 
@@ -592,7 +592,7 @@ public class LocalRecordsResolver {
 
     private List<RecordMeta> unescapeKeys(List<RecordMeta> meta) {
         return meta.stream().map(r -> {
-            JsonNode jsonNode = r.getAttributes().getData().asJson();
+            JsonNode jsonNode = r.getAtts().getData().asJson();
             jsonNode = attSchemaWriter.unescapeKeys(jsonNode);
             return new RecordMeta(r.getId(), ObjectData.create(jsonNode));
         }).collect(Collectors.toList());

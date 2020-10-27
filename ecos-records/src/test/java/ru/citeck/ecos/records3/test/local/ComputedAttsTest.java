@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
@@ -23,12 +24,20 @@ import ru.citeck.ecos.records2.type.RecordTypeService;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ComputedAttsTest extends AbstractRecordsDao
     implements RecordsQueryDao,
     RecordsAttsDao {
 
     private static final String ID = "mixinSourceId";
+
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
 
     private static final String strFieldValue = "value";
     private static final String strFieldValueWithPrefixName = "valueWithPrefix";
@@ -74,32 +83,33 @@ public class ComputedAttsTest extends AbstractRecordsDao
             }
         };
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
     }
 
     @Test
     void test() {
 
-        /*RecordsQuery query = new RecordsQuery();
+        RecordsQuery query = new RecordsQuery();
         query.setSourceId(ID);
 
         String intAtt = intFieldsSumName + "?num";
         String strAtt = strFieldValueWithPrefixName;
 
         List<String> mixinAtts = Arrays.asList(strAtt, intAtt);
-        RecordsQueryRes<RecordAtts> result = recordsService.query(query, mixinAtts);
+        RecsQueryRes<RecordAtts> result = recordsService.query(query, mixinAtts);
         RecordAtts meta = result.getRecords().get(0);
 
-        assertTrue(meta.get(strAtt).isNull());
-        assertTrue(meta.get(intAtt).isNull());
+        assertTrue(meta.getAtt(strAtt).isNull());
+        assertTrue(meta.getAtt(intAtt).isNull());
 
         // for int
-
+/*
         ComputedAtt intCcmputedAtt = new ComputedAtt();
         Map<String, String> model = new HashMap<>();
-        model.put("intField0", "intField0?num");
-        model.put("intField1", "intField1?num");
+        //model.put("intField0", "intField0?num");
+        //model.put("intField1", "intField1?num");
+
+        todo
         intCcmputedAtt.setModel(model);
         intCcmputedAtt.setType("script");
         intCcmputedAtt.setConfig(ObjectData.create(

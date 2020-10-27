@@ -1,4 +1,5 @@
 package ru.citeck.ecos.records3.test;import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,17 +26,21 @@ class RecordsUtilsTest extends AbstractRecordsDao
 
     private RecordsServiceImpl recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
     @BeforeAll
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = (RecordsServiceImpl) factory.getRecordsServiceV1();
-
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 
-    @NotNull
+    @Nullable
     @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         if (records.size() == 1 && records.get(0).isEmpty()) {

@@ -71,8 +71,8 @@ public class LocalRemoteResolver {
 
             if (!atts.isEmpty()) {
                 attContext.setSchemaAtt(SchemaAtt.create()
-                    .setName("")
-                    .setInner(atts)
+                    .withName("")
+                    .withInner(atts)
                     .build());
             }
 

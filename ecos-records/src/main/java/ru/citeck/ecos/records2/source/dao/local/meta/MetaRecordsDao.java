@@ -23,7 +23,6 @@ public class MetaRecordsDao extends AbstractRecordsDao implements RecordsAttsDao
     private final MetaRecordsDaoAttsProvider metaRecordsDaoAttsProvider;
 
     public MetaRecordsDao(RecordsServiceFactory serviceFactory) {
-        setId(ID);
         metaRecordsDaoAttsProvider = serviceFactory.getMetaRecordsDaoAttsProvider();
     }
 
@@ -125,5 +124,11 @@ public class MetaRecordsDao extends AbstractRecordsDao implements RecordsAttsDao
         public Object getAtt(@NotNull String name) {
             return RecordRef.valueOf(name);
         }
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
     }
 }

@@ -8,7 +8,6 @@ import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader
 import ru.citeck.ecos.records3.utils.AttUtils
 import java.util.*
 import java.util.regex.Pattern
@@ -193,9 +192,9 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                 return parseAsAtt(alias, attribute, processors, lastInnerAtts)
             }
             return SchemaAtt.create()
-                .setAlias(alias)
-                .setProcessors(processors)
-                .setName("?$attribute")
+                .withAlias(alias)
+                .withProcessors(processors)
+                .withName("?$attribute")
                 .build()
         }
 
@@ -231,7 +230,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                 lastInnerAtts
             } else {
                 listOf(SchemaAtt.create()
-                    .setName("?disp")
+                    .withName("?disp")
                     .build())
             }
         } else {
@@ -241,11 +240,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             }
         }
         return SchemaAtt.create()
-            .setAlias(alias)
-            .setName(AttStrUtils.removeQuotes(attName))
-            .setMultiple(isMultiple)
-            .setProcessors(processors)
-            .setInner(resInnerAtts)
+            .withAlias(alias)
+            .withName(AttStrUtils.removeQuotes(attName))
+            .withMultiple(isMultiple)
+            .withProcessors(processors)
+            .withInner(resInnerAtts)
             .build()
     }
 
@@ -282,11 +281,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                 pathElem = pathElem.substring(0, arrIdx) + pathElem.substring(arrIdx + 2)
             }
             schemaAtt = SchemaAtt.create()
-                .setAlias(if (i == 0) alias else "")
-                .setProcessors(if (i == 0) processors else emptyList())
-                .setName(AttStrUtils.removeQuotes(pathElem))
-                .setMultiple(isMultiple)
-                .setInner(schemaAtt)
+                .withAlias(if (i == 0) alias else "")
+                .withProcessors(if (i == 0) processors else emptyList())
+                .withName(AttStrUtils.removeQuotes(pathElem))
+                .withMultiple(isMultiple)
+                .withInner(schemaAtt)
                 .build()
         }
 
@@ -310,9 +309,9 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         val braceIdx = AttStrUtils.indexOf(attribute, '(')
         if (braceIdx == -1) {
             return SchemaAtt.create()
-                .setAlias(alias)
-                .setProcessors(processors)
-                .setName("?$attribute")
+                .withAlias(alias)
+                .withProcessors(processors)
+                .withName("?$attribute")
                 .build()
         }
         if (attribute.startsWith("as")) {
@@ -336,31 +335,31 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         val attName = matcher.group(2)
         val attInner = matcher.group(3)
         return SchemaAtt.create()
-            .setAlias(alias)
-            .setName(RecordConstants.ATT_AS)
-            .setProcessors(processors)
-            .setInner(SchemaAtt.create()
-                .setName(attName)
-                .setInner(readInnerRawAtts(attInner, true) {
+            .withAlias(alias)
+            .withName(RecordConstants.ATT_AS)
+            .withProcessors(processors)
+            .withInner(SchemaAtt.create()
+                .withName(attName)
+                .withInner(readInnerRawAtts(attInner, true) {
                     al, att, proc ->
                     readInner(al, att, proc, lastInnerAtts)
                 })
             ).build()
     }
 
-    private fun parseHasAtt(alias: String?, attribute: String, processors: List<AttProcDef>): SchemaAtt {
+    private fun parseHasAtt(alias: String, attribute: String, processors: List<AttProcDef>): SchemaAtt {
         val matcher = GQL_HAS_PATTERN.matcher(attribute)
         if (!matcher.matches()) {
             throw AttReadException(alias, attribute, "Incorrect 'has' attribute")
         }
         val attName = matcher.group(2)
         return SchemaAtt.create()
-            .setAlias(alias)
-            .setName(RecordConstants.ATT_HAS)
-            .setProcessors(processors)
-            .setInner(SchemaAtt.create()
-                .setName(attName)
-                .setInner(SchemaAtt.create().setName("?bool"))
+            .withAlias(alias)
+            .withName(RecordConstants.ATT_HAS)
+            .withProcessors(processors)
+            .withInner(SchemaAtt.create()
+                .withName(attName)
+                .withInner(SchemaAtt.create().withName("?bool"))
             ).build()
     }
 
@@ -388,10 +387,10 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             ) { al, att, proc -> parseEdgeInnerAtt(al, att, proc, innerAtts) })
         }
         return SchemaAtt.create()
-            .setAlias(alias)
-            .setProcessors(processors)
-            .setName(RecordConstants.ATT_EDGE)
-            .setInner(SchemaAtt.create().setName(AttStrUtils.removeEscaping(attName)).setInner(schemaInnerAtts))
+            .withAlias(alias)
+            .withProcessors(processors)
+            .withName(RecordConstants.ATT_EDGE)
+            .withInner(SchemaAtt.create().withName(AttStrUtils.removeEscaping(attName)).withInner(schemaInnerAtts))
             .build()
     }
 
@@ -401,8 +400,8 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                                   innerAtts: List<SchemaAtt>): SchemaAtt {
 
         val attBuilder = SchemaAtt.create()
-            .setAlias(alias)
-            .setName(attribute)
+            .withAlias(alias)
+            .withName(attribute)
 
         when (attribute) {
             "name",
@@ -410,18 +409,16 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             "description",
             "javaClass",
             "editorKey",
-            "type" -> return attBuilder.setInner(
-                    SchemaAtt.create().setName("?str")
-                ).setProcessors(processors)
+            "type" -> return attBuilder.withInner(
+                    SchemaAtt.create().withName("?str")
+                ).withProcessors(processors)
                 .build()
             "protected",
             "canBeRead",
             "multiple",
             "isAssoc" -> return attBuilder
-                .setProcessors(processors)
-                .setInner(SchemaAtt.create()
-                    .setName("?bool")
-                ).build()
+                .withProcessors(processors)
+                .withInner(SchemaAtt.create().withName("?bool")).build()
         }
 
         val openBraceIdx = attribute.indexOf('{')
@@ -440,12 +437,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             "vals",
             "options",
             "distinct",
-            "createVariants" -> return attBuilder.setName(attWithoutInner)
-                .setMultiple(multiple)
-                .setInner(readInnerRawAtts(attInnerAtts, true) {
+            "createVariants" -> return attBuilder.withName(attWithoutInner)
+                .withMultiple(multiple)
+                .withInner(readInnerRawAtts(attInnerAtts, true) {
                     al, att, proc -> this.readInner(al, att, proc, innerAtts)
                 })
-                .setProcessors(processors)
+                .withProcessors(processors)
                 .build()
         }
 
@@ -481,11 +478,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             throw AttReadException(alias, attribute, "Incorrect att attribute")
         }
         return SchemaAtt.create()
-            .setAlias(alias)
-            .setName(AttStrUtils.removeEscaping(attName))
-            .setMultiple(multiple)
-            .setProcessors(processors)
-            .setInner(gqlInnerAtts)
+            .withAlias(alias)
+            .withName(AttStrUtils.removeEscaping(attName))
+            .withMultiple(multiple)
+            .withProcessors(processors)
+            .withInner(gqlInnerAtts)
             .build()
     }
 }

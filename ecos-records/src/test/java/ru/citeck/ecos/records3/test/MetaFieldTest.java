@@ -32,6 +32,12 @@ public class MetaFieldTest extends AbstractRecordsDao
 
     @NotNull
     @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
+    @NotNull
+    @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(this);
     }
@@ -41,8 +47,6 @@ public class MetaFieldTest extends AbstractRecordsDao
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 

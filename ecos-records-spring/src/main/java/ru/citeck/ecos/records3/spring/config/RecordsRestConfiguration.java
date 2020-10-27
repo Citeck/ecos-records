@@ -13,8 +13,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import ru.citeck.ecos.records3.RecordsProperties;
-import ru.citeck.ecos.records3.rest.*;
+import ru.citeck.ecos.records2.RecordsProperties;
+import ru.citeck.ecos.records2.rest.*;
 import ru.citeck.ecos.records3.spring.web.SkipSslVerificationHttpRequestFactory;
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor;
 

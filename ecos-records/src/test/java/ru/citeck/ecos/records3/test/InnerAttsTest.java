@@ -27,11 +27,16 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
     private static final String ID = "";
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
     }
 
@@ -104,7 +109,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
 
         @Override
         public Object getAtt(@NotNull String name) {
-            return attributes.get(name);
+            return attributes.getAtt(name);
         }
     }
 

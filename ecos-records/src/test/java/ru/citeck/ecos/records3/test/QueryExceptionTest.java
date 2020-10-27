@@ -18,12 +18,16 @@ public class QueryExceptionTest extends AbstractRecordsDao implements RecordsAtt
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return "test";
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        setId("test");
         recordsService.register(this);
     }
 

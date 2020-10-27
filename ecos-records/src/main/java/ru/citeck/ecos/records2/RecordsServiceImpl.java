@@ -29,7 +29,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWrit
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 import ru.citeck.ecos.records3.utils.V1ConvUtils;
 
 import java.util.*;
@@ -88,7 +88,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     private void setDebugToResult(DebugResult result, RequestContext context) {
-        List<RequestMsg> messages = context.getMessages();
+        List<ReqMsg> messages = context.getMessages();
         if (!messages.isEmpty()) {
             ObjectData debug = ObjectData.create();
             debug.set("messages", messages);
@@ -138,7 +138,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             metaResult.setTotalCount(result.getTotalCount());
 
             metaResult.setErrors(ctx.getRecordErrors());
-            List<RequestMsg> debugMsgs = ctx.getMessages()
+            List<ReqMsg> debugMsgs = ctx.getMessages()
                 .stream()
                 .filter(m -> MsgLevel.DEBUG.isEnabled(m.getLevel()))
                 .collect(Collectors.toList());
@@ -305,15 +305,15 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                                             && parentParent.getName().equals(RecordConstants.ATT_EDGE)) {
                                         newAlias = a.getName();
                                     } else {
-                                        newAlias = a.isMultiple() ? "atts" : "att";
+                                        newAlias = a.getMultiple() ? "atts" : "att";
                                     }
                             }
                         }
                     }
                 }
                 return a.copy()
-                    .setInner(fixInnerAliases(a.getInner(), false, a, parent))
-                    .setAlias(newAlias)
+                    .withInner(fixInnerAliases(a.getInner(), false, a, parent))
+                    .withAlias(newAlias)
                     .build();
             }).collect(Collectors.toList());
     }

@@ -22,6 +22,12 @@ public class RecordsConvertionTest extends AbstractRecordsDao implements Records
     private static final String SOURCE_LANG = "source";
     private static final String CONVERTED_LANG = "converted";
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @Test
     void test() {
 
@@ -30,7 +36,6 @@ public class RecordsConvertionTest extends AbstractRecordsDao implements Records
 
         factory.getQueryLangService().register(query -> query, SOURCE_LANG, CONVERTED_LANG);
 
-        setId(ID);
         recordsService.register(this);
 
         RecordsQuery query = new RecordsQuery();

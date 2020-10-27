@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.attproc;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -24,11 +25,16 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
     private static final String ID = "test";
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
     }
 

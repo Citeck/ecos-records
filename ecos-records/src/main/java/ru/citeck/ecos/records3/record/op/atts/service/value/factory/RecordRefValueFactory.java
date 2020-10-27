@@ -67,14 +67,14 @@ public class RecordRefValueFactory implements AttValueFactory<RecordRef> {
             } else {
                 atts = new RecordAtts(ref);
             }
-            JsonNode dataNode = atts.getAttributes().getData().asJson();
+            JsonNode dataNode = atts.getAtts().getData().asJson();
             dataNode = schemaWriter.unescapeKeys(dataNode);
 
             innerAtts = new InnerAttValue(dataNode);
 
             //todo
             if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
-                atts.set("?str", atts.getStringOrNull("?assoc"));
+                atts.setAtt("?str", atts.getStringOrNull("?assoc"));
             }
         }
 

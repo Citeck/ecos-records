@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.result.DebugResult;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
-import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class V1ConvUtils {
     }
 
     public static void addDebugMessage(DebugResult result, RequestContext context) {
-        List<RequestMsg> messages = context.getMessages();
+        List<ReqMsg> messages = context.getMessages();
         if (!messages.isEmpty()) {
             ObjectData debug = ObjectData.create();
             debug.set("messages", messages);

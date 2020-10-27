@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test.local;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -51,15 +52,19 @@ public class ForceLocalRecordsTest {
 
         private Map<String, Record> records = new HashMap<>();
 
-        public TypesDao() {
-            setId(ID);
+        @NotNull
+        @Override
+        public String getId() {
+            return ID;
+        }
 
+        public TypesDao() {
             records.put(type2Id, new Record(type2Id, Arrays.asList(
-                RecordRef.valueOf(getId() + "@" + type1Id),
-                RecordRef.valueOf(getId() + "@" + type0Id)
+                RecordRef.valueOf(ID + "@" + type1Id),
+                RecordRef.valueOf(ID + "@" + type0Id)
             )));
             records.put(type1Id, new Record(type1Id, Collections.singletonList(
-                RecordRef.valueOf(getId() + "@" + type0Id)))
+                RecordRef.valueOf(ID + "@" + type0Id)))
             );
             records.put(type0Id, new Record(type0Id, Collections.emptyList()));
         }

@@ -8,8 +8,8 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.BasicAuthorizationInterceptor;
 import org.springframework.stereotype.Component;
-import ru.citeck.ecos.records3.RecordsProperties;
-import ru.citeck.ecos.records3.rest.RemoteRecordsUtils;
+import ru.citeck.ecos.records2.RecordsProperties;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -19,8 +19,8 @@ import java.util.Map;
 @Component
 public class RecordsAuthInterceptor implements ClientHttpRequestInterceptor {
 
-    private ClientHttpRequestInterceptor userRequestInterceptor;
-    private Map<String, ClientHttpRequestInterceptor> sysReqInterceptors = new HashMap<>();
+    private final ClientHttpRequestInterceptor userRequestInterceptor;
+    private final Map<String, ClientHttpRequestInterceptor> sysReqInterceptors = new HashMap<>();
 
     @Autowired
     public RecordsAuthInterceptor(RecordsProperties properties,

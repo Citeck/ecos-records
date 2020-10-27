@@ -1,60 +1,41 @@
-package ru.citeck.ecos.records3.record.dao;
+package ru.citeck.ecos.records3.record.dao
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.ServiceFactoryAware;
-import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder;
+import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
+import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder
+import java.util.concurrent.CopyOnWriteArrayList
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryAware {
 
-@Slf4j
-public abstract class AbstractRecordsDao implements RecordsDao,
-    AttMixinsHolder,
-    ServiceFactoryAware {
+    private val mixinsList: MutableList<AttMixin> = CopyOnWriteArrayList()
 
-    private String id;
+    protected lateinit var serviceFactory: RecordsServiceFactory
+    protected lateinit var predicateService: PredicateService
+    protected lateinit var recordsService: RecordsService
 
-    @Getter
-    private final List<AttMixin> mixins = new CopyOnWriteArrayList<>();
-
-    protected RecordsServiceFactory serviceFactory;
-    protected PredicateService predicateService;
-    protected RecordsService recordsService;
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void addAttributesMixin(AttMixin mixin) {
-        mixins.add(mixin);
+    fun addAttributesMixin(mixin: AttMixin) {
+        mixinsList.add(mixin)
     }
 
     /**
      * Remove attributes mixin by reference equality.
      */
-    public void removeAttributesMixin(AttMixin mixin) {
-        mixins.removeIf(m -> m == mixin);
+    fun removeAttributesMixin(mixin: AttMixin) {
+        mixinsList.removeIf { m: AttMixin -> m === mixin }
     }
 
-    @Override
-    public String toString() {
-        return "[" + getId() + "](" + getClass().getName() + "@" + Integer.toHexString(hashCode()) + ")";
+    override fun toString(): String {
+        return "[" + getId() + "](" + javaClass.name + "@" + Integer.toHexString(hashCode()) + ")"
     }
 
-    @Override
-    public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
-        this.serviceFactory = serviceFactory;
-        this.recordsService = serviceFactory.getRecordsServiceV1();
-        this.predicateService = serviceFactory.getPredicateService();
+    override fun getMixins() = mixinsList
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.serviceFactory = serviceFactory
+        recordsService = serviceFactory.recordsServiceV1
+        predicateService = serviceFactory.predicateService
     }
 }

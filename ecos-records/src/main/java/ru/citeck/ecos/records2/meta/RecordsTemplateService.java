@@ -29,6 +29,6 @@ public class RecordsTemplateService {
 
         RecordAtts meta = recordsService.getAtts(recordRef, atts);
 
-        return TmplUtils.applyAtts(template, meta.getAttributes());
+        return TmplUtils.applyAtts(template, meta.getAtts());
     }
 }

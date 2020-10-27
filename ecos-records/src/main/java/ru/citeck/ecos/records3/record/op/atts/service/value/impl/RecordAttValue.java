@@ -24,6 +24,6 @@ public class RecordAttValue implements AttValue {
 
     @Override
     public Object getAtt(@NotNull String name) {
-        return atts.get(name);
+        return atts.getAtt(name);
     }
 }

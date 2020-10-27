@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.type;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,9 +26,14 @@ public class RecordTypeTest extends AbstractRecordsDao implements RecordsAttsDao
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
-        setId(ID);
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);

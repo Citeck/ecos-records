@@ -70,7 +70,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         }
         RecsQueryRes<RecordAtts> meta = query(query, attSchemaWriter.writeToMap(attributes));
 
-        return new RecsQueryRes<>(meta, m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()));
+        return new RecsQueryRes<>(meta, m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAtts()));
     }
 
     @NotNull
@@ -112,7 +112,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         List<RecordAtts> meta = getAtts(records, attSchemaWriter.writeToMap(attributes));
 
         return meta.stream()
-            .map(m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAttributes()))
+            .map(m -> dtoAttsSchemaReader.instantiate(metaClass, m.getAtts()))
             .collect(Collectors.toList());
     }
 
@@ -153,7 +153,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 }
             });
 
-            record.setAttributes(attributes);
+            record.setAtts(attributes);
 
             List<RecordAtts> sourceMut = Collections.singletonList(record);
             List<RecordRef> recordMutResult = recordsResolver.mutate(sourceMut);
@@ -168,7 +168,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             }
 
             for (RecordRef resultMeta : recordMutResult) {
-                String alias = record.get(RecordConstants.ATT_ALIAS, "");
+                String alias = record.getAtt(RecordConstants.ATT_ALIAS, "");
                 if (StringUtils.isNotBlank(alias)) {
                     aliasToRecordRef.put(alias, resultMeta);
                 }
@@ -262,12 +262,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     @Override
     public void register(@NotNull RecordsDao recordsSource) {
-
-        String id = recordsSource.getId();
-        if (id == null) {
-            throw new IllegalArgumentException("id is a mandatory parameter for RecordsDao");
-        }
-        register(id, recordsSource);
+        register(recordsSource.getId(), recordsSource);
     }
 
     @Override

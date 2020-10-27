@@ -33,13 +33,16 @@ public class RecordsServiceTest extends AbstractRecordsDao
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
     @BeforeAll
     void init() {
-
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 

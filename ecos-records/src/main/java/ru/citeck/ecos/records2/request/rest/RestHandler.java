@@ -85,7 +85,7 @@ public class RestHandler {
             if (body.isSingleAttribute() && record instanceof RecordMeta) {
 
                 RecordMeta meta = (RecordMeta) record;
-                return meta.get(QueryBody.SINGLE_ATT_KEY);
+                return meta.getAtt(QueryBody.SINGLE_ATT_KEY);
 
             } else {
 

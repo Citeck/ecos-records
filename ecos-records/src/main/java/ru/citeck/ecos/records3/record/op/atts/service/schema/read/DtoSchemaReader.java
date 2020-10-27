@@ -169,14 +169,14 @@ public class DtoSchemaReader {
         if (scalarField == null) {
             if (propType.isEnum()) {
                 innerAtts = Collections.singletonList(SchemaAtt.create()
-                    .setName("?str")
+                    .withName("?str")
                     .build());
             } else {
                 innerAtts = getAttributes(propType, visited);
             }
         } else {
             innerAtts = Collections.singletonList(SchemaAtt.create()
-                .setName(scalarField.getScalarType().getSchema())
+                .withName(scalarField.getScalarType().getSchema())
                 .build());
         }
 
@@ -193,7 +193,7 @@ public class DtoSchemaReader {
 
         SchemaAtt.Builder att;
 
-        List<AttProcDef> processors = Collections.emptyList();
+        List<AttProcDef> processors;
 
         if (StringUtils.isNotBlank(attNameValue)) {
 
@@ -204,23 +204,23 @@ public class DtoSchemaReader {
             SchemaAtt schemaAtt = attSchemaReader.readInner(fieldName, attNameValue, processors, innerAtts);
             att = schemaAtt.copy();
 
-            if (multiple && !schemaAtt.isMultiple()) {
+            if (multiple && !schemaAtt.getMultiple()) {
                 SchemaAtt innerAtt = schemaAtt;
-                while (!innerAtt.isMultiple() && innerAtt.getInner().size() == 1) {
+                while (!innerAtt.getMultiple() && innerAtt.getInner().size() == 1) {
                     innerAtt = innerAtt.getInner().get(0);
                 }
-                if (!innerAtt.isMultiple()) {
-                    att.setMultiple(true);
+                if (!innerAtt.getMultiple()) {
+                    att.withMultiple(true);
                 }
             }
 
         } else {
 
             att = SchemaAtt.create();
-            att.setMultiple(multiple);
-            att.setAlias(fieldName);
+            att.withMultiple(multiple);
+            att.withAlias(fieldName);
             att.setName(fieldName);
-            att.setInner(innerAtts);
+            att.withInner(innerAtts);
         }
 
         return att.build();

@@ -30,6 +30,12 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private final Map<String, Object> metaAtts = Collections.singletonMap("key", "value");
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
@@ -43,7 +49,6 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
                 return metaAtts.get(attribute);
             }
         });
-        setId(ID);
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
     }
@@ -73,7 +78,7 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     public static class Value implements AttValue {
 
-        private RecordRef ref;
+        private final RecordRef ref;
 
         Value(RecordRef ref) {
             this.ref = ref;

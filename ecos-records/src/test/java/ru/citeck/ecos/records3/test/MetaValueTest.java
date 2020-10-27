@@ -33,17 +33,20 @@ public class MetaValueTest extends AbstractRecordsDao
 
     @NotNull
     @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
+    @NotNull
+    @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         return Collections.singletonList(new MetaVal(s -> innerSchema = s));
     }
 
     @BeforeAll
     void init() {
-
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        setId(SOURCE_ID);
         recordsService.register(this);
     }
 
@@ -71,15 +74,15 @@ public class MetaValueTest extends AbstractRecordsDao
 
         RecordAtts meta = result.get(0);
 
-        assertEquals(MetaVal.DISP_VALUE, meta.getAttribute("disp", ""));
-        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("str", ""));
-        assertEquals(MetaVal.DOUBLE_VALUE, meta.getAttribute("num", 0.0));
-        assertEquals(MetaVal.BOOL_VALUE, meta.getAttribute("bool", false));
-        assertEquals(true, meta.getAttribute("has", false));
-        assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAttribute(".json"));
-        assertEquals(records.get(0).toString(), meta.getAttribute("id", ""));
-        assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").asInt(0));
-        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").asText());
+        assertEquals(MetaVal.DISP_VALUE, meta.getAtt("disp", ""));
+        assertEquals(MetaVal.STRING_VALUE, meta.getAtt("str", ""));
+        assertEquals(MetaVal.DOUBLE_VALUE, meta.getAtt("num", 0.0));
+        assertEquals(MetaVal.BOOL_VALUE, meta.getAtt("bool", false));
+        assertEquals(true, meta.getAtt("has", false));
+        assertEquals(DataValue.create(MetaVal.JSON_VALUE), meta.getAtt(".json"));
+        assertEquals(records.get(0).toString(), meta.getAtt("id", ""));
+        assertEquals(MetaVal.INT_VALUE, meta.getAtt("asNum").asInt(0));
+        assertEquals(MetaVal.STRING_VALUE, meta.getAtt("asStr").asText());
 
         String format = "yyyyy.MMMMM.dd GGG hh:mm aaa";
         String targetDate = (new SimpleDateFormat(format)).format(MetaVal.DATE_VALUE);

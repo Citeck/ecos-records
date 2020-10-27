@@ -69,12 +69,12 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public DataValue queryOne(@NotNull RecordsQuery query, String attribute) {
+    public DataValue queryOne(@NotNull RecordsQuery query, @NotNull String attribute) {
         return query(query, Collections.singleton(attribute))
             .getRecords()
             .stream()
             .findFirst()
-            .map(r -> r.get(attribute))
+            .map(r -> r.getAtt(attribute))
             .orElse(DataValue.NULL);
     }
 
@@ -97,7 +97,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     @NotNull
     @Override
-    public DataValue getAtt(@Nullable Object record, @Nullable String attribute) {
+    public DataValue getAtt(@Nullable Object record, @NotNull String attribute) {
 
         if (record == null || StringUtils.isBlank(attribute)) {
             return DataValue.NULL;
@@ -106,7 +106,7 @@ public abstract class AbstractRecordsService implements RecordsService {
         List<RecordAtts> meta = getAtts(Collections.singletonList(record),
                                         Collections.singletonList(attribute));
 
-        return meta.get(0).getAttribute(attribute);
+        return meta.get(0).getAtt(attribute);
     }
 
     @NotNull

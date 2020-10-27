@@ -80,7 +80,7 @@ public class RecordsUtils {
 
         for (String attribute : attributes) {
 
-            String javaClassStr = javaClasses.get(attribute, defaultClassStr);
+            String javaClassStr = javaClasses.getAtt(attribute, defaultClassStr);
             if (!javaClassStr.isEmpty()) {
                 try {
                     result.put(attribute, Class.forName(javaClassStr));
@@ -104,7 +104,7 @@ public class RecordsUtils {
             return records;
         }
         return records.stream()
-                      .map(n -> new RecordAtts(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAttributes()))
+                      .map(n -> new RecordAtts(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAtts()))
                       .collect(Collectors.toList());
     }
 

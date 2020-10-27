@@ -68,8 +68,10 @@ class LocalRecordsTest {
 
         static String ID = "RecordsQueryDaoImpl";
 
-        RecordsQueryDaoImpl() {
-            setId(ID);
+        @NotNull
+        @Override
+        public String getId() {
+            return ID;
         }
 
         @Nullable
@@ -83,8 +85,10 @@ class LocalRecordsTest {
 
         static String ID = "recs-source";
 
-        RecordsSource() {
-            setId(ID);
+        @NotNull
+        @Override
+        public String getId() {
+            return ID;
         }
 
         @NotNull
@@ -129,10 +133,6 @@ class LocalRecordsTest {
 
         static final String ID = "with-meta";
 
-        RecordsWithMetaSource() {
-            setId(ID);
-        }
-
         @NotNull
         @Override
         public RecsQueryRes<Meta> queryRecords(@NotNull RecordsQuery query) {
@@ -141,6 +141,7 @@ class LocalRecordsTest {
             return result;
         }
 
+        @NotNull
         @Override
         public String getId() {
             return ID;

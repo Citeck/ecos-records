@@ -374,7 +374,7 @@
 
     <modules>
         <module>ecos-records</module>
-        <!--<module>ecos-records-spring</module>-->
+        <module>ecos-records-spring</module>
     </modules>
 
     <repositories>

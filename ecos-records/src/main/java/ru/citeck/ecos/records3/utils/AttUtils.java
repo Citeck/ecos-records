@@ -24,8 +24,8 @@ public class AttUtils {
             return att;
         }
         return att.copy()
-            .setProcessors(Collections.emptyList())
-            .setInner(att.getInner()
+            .withProcessors(Collections.emptyList())
+            .withInner(att.getInner()
                 .stream()
                 .map(AttUtils::removeProcessors)
                 .collect(Collectors.toList()))

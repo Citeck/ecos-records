@@ -1,142 +1,111 @@
-package ru.citeck.ecos.records3.record.dao.impl.group;
+package ru.citeck.ecos.records3.record.dao.impl.group
 
-import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.model.AndPredicate;
-import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
-import ru.citeck.ecos.records2.source.common.group.DistinctValue;
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
-import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
+import ru.citeck.ecos.records2.source.common.group.DistinctValue
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
+import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
+import java.util.*
 
-import java.util.*;
+class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
 
-public class RecordsGroupDao extends AbstractRecordsDao implements RecordsQueryDao {
+    override fun getId() = ID
 
-    public static final String ID = "group";
+    override fun queryRecords(query: RecordsQuery): RecsQueryRes<*> {
 
-    private static final int MAX_ITEMS_DEFAULT = 20;
-
-    public RecordsGroupDao() {
-        setId(ID);
-    }
-
-    @Override
-    public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
-
-        List<String> groupBy = query.getGroupBy();
+        val groupBy = query.groupBy
         if (groupBy.isEmpty()) {
-            return new RecsQueryRes<>();
+            return RecsQueryRes<Any>()
         }
-
-        RecordsQuery groupsBaseQuery = new RecordsQuery(query);
-        if (groupBy.size() == 1) {
-            groupsBaseQuery.setGroupBy(null);
+        val groupsBaseQuery = RecordsQuery(query)
+        if (groupBy.size == 1) {
+            groupsBaseQuery.groupBy = null
         } else {
-            List<String> newGroupBy = new ArrayList<>();
-            for (int i = 1; i < groupBy.size(); i++) {
-                newGroupBy.add(groupBy.get(i));
+            val newGroupBy: MutableList<String> = ArrayList()
+            for (i in 1 until groupBy.size) {
+                newGroupBy.add(groupBy[i])
             }
-            groupsBaseQuery.setGroupBy(newGroupBy);
+            groupsBaseQuery.groupBy = newGroupBy
         }
-
-        String[] groupAtts = groupBy.get(0).split("&");
-        int max = query.getMaxItems() > 0 ? query.getMaxItems() : MAX_ITEMS_DEFAULT;
-
-        Predicate basePredicate = query.getQuery(Predicate.class);
-        List<List<DistinctValue>> distinctValues = new ArrayList<>();
-
-        for (String groupAtt : groupAtts) {
-
-            List<DistinctValue> values = getDistinctValues(query.getSourceId(), basePredicate, groupAtt, max);
-
+        val groupAtts = groupBy[0].split("&".toRegex()).toTypedArray()
+        val max = if (query.maxItems > 0) query.maxItems else MAX_ITEMS_DEFAULT
+        val basePredicate = query.getQuery(Predicate::class.java)
+        val distinctValues: MutableList<List<DistinctValue>> = ArrayList()
+        for (groupAtt in groupAtts) {
+            val values = getDistinctValues(query.sourceId, basePredicate, groupAtt, max)
             if (values.isEmpty()) {
-                return new RecsQueryRes<>();
+                return RecsQueryRes<Any>()
             }
-
-            distinctValues.add(values);
+            distinctValues.add(values)
         }
-
-        RecsQueryRes<RecordsGroup> result = new RecsQueryRes<>();
-        result.setRecords(getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts));
-
-        return result;
+        val result = RecsQueryRes<RecordsGroup>()
+        result.records = getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts)
+        return result
     }
 
-    private List<RecordsGroup> getGroups(RecordsQuery groupsBaseQuery,
-                                         List<List<DistinctValue>> distinctValues,
-                                         Predicate basePredicate,
-                                         String[] attributes) {
-
-        List<RecordsGroup> groups = new ArrayList<>();
-
-        if (distinctValues.size() == 1) {
-
-            for (DistinctValue value : distinctValues.get(0)) {
-
-                Map<String, DistinctValue> attributesMap = Collections.singletonMap(attributes[0], value);
-                groups.add(createGroup(groupsBaseQuery, attributesMap, basePredicate));
+    private fun getGroups(groupsBaseQuery: RecordsQuery,
+                          distinctValues: List<List<DistinctValue>>,
+                          basePredicate: Predicate,
+                          attributes: Array<String>): List<RecordsGroup> {
+        val groups: MutableList<RecordsGroup> = ArrayList()
+        if (distinctValues.size == 1) {
+            for (value in distinctValues[0]) {
+                val attributesMap = Collections.singletonMap(attributes[0], value)
+                groups.add(createGroup(groupsBaseQuery, attributesMap, basePredicate))
             }
         } else {
-
-            for (DistinctValue value0 : distinctValues.get(0)) {
-
-                for (DistinctValue value1 : distinctValues.get(1)) {
-
-                    Map<String, DistinctValue> attributesMap = new HashMap<>();
-                    attributesMap.put(attributes[0], value0);
-                    attributesMap.put(attributes[1], value1);
-
-                    groups.add(createGroup(groupsBaseQuery, attributesMap, basePredicate));
+            for (value0 in distinctValues[0]) {
+                for (value1 in distinctValues[1]) {
+                    val attributesMap: MutableMap<String, DistinctValue> = HashMap()
+                    attributesMap[attributes[0]] = value0
+                    attributesMap[attributes[1]] = value1
+                    groups.add(createGroup(groupsBaseQuery, attributesMap, basePredicate))
                 }
             }
         }
-
-        return groups;
+        return groups
     }
 
-    private RecordsGroup createGroup(RecordsQuery groupsBaseQuery,
-                                     Map<String, DistinctValue> attributes,
-                                     Predicate basePredicate) {
-
-        RecordsQuery groupQuery = new RecordsQuery(groupsBaseQuery);
-
-        AndPredicate groupPredicate = Predicates.and();
-        groupPredicate.addPredicate(basePredicate);
-        attributes.forEach((att, val) -> groupPredicate.addPredicate(Predicates.equal(att, val.getValue())));
-
-        groupQuery.setQuery(groupPredicate);
-        groupQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
-
-        return new RecordsGroup(groupQuery, attributes, groupPredicate, recordsService);
+    private fun createGroup(groupsBaseQuery: RecordsQuery,
+                            attributes: Map<String, DistinctValue>,
+                            basePredicate: Predicate): RecordsGroup {
+        val groupQuery = RecordsQuery(groupsBaseQuery)
+        val groupPredicate = Predicates.and()
+        groupPredicate.addPredicate(basePredicate)
+        attributes.forEach { (att: String?, `val`: DistinctValue) -> groupPredicate.addPredicate(Predicates.equal(att, `val`.value)) }
+        groupQuery.query = groupPredicate
+        groupQuery.language = PredicateService.LANGUAGE_PREDICATE
+        return RecordsGroup(groupQuery, attributes, groupPredicate, recordsService!!)
     }
 
-    private List<DistinctValue> getDistinctValues(String sourceId, Predicate predicate, String attribute, int max) {
+    private fun getDistinctValues(sourceId: String,
+                                  predicate: Predicate,
+                                  attribute: String,
+                                  max: Int): List<DistinctValue> {
 
-        RecordsQuery recordsQuery = new RecordsQuery();
-        recordsQuery.setLanguage(DistinctQuery.LANGUAGE);
-
-        DistinctQuery distinctQuery = new DistinctQuery();
-
-        distinctQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
-        distinctQuery.setQuery(predicate);
-        distinctQuery.setAttribute(attribute);
-
-        recordsQuery.setMaxItems(max);
-        recordsQuery.setSourceId(sourceId);
-        recordsQuery.setQuery(distinctQuery);
-
-        RecsQueryRes<DistinctValue> values = recordsService.query(recordsQuery, DistinctValue.class);
-        return values.getRecords();
+        val recordsQuery = RecordsQuery()
+        recordsQuery.language = DistinctQuery.LANGUAGE
+        val distinctQuery = DistinctQuery()
+        distinctQuery.language = PredicateService.LANGUAGE_PREDICATE
+        distinctQuery.query = predicate
+        distinctQuery.attribute = attribute
+        recordsQuery.maxItems = max
+        recordsQuery.sourceId = sourceId
+        recordsQuery.query = distinctQuery
+        val values = recordsService!!.query(recordsQuery, DistinctValue::class.java)
+        return values.records
     }
 
-    @NotNull
-    @Override
-    public List<String> getSupportedLanguages() {
-        return Collections.singletonList(PredicateService.LANGUAGE_PREDICATE);
+    override fun getSupportedLanguages(): List<String> {
+        return listOf(PredicateService.LANGUAGE_PREDICATE)
+    }
+
+    companion object {
+        const val ID = "group"
+        private const val MAX_ITEMS_DEFAULT = 20
     }
 }
-

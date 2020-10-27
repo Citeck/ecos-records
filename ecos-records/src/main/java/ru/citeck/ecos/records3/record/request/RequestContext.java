@@ -10,7 +10,7 @@ import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.request.msg.MsgType;
-import ru.citeck.ecos.records3.record.request.msg.RequestMsg;
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 
 import java.time.Instant;
 import java.util.*;
@@ -32,7 +32,7 @@ public class RequestContext {
     private RequestCtxData<?> ctxData;
     private RecordsServiceFactory serviceFactory;
 
-    private List<RequestMsg> messages = new ArrayList<>();
+    private List<ReqMsg> messages = new ArrayList<>();
 
     @Nullable
     @SuppressWarnings("unchecked")
@@ -119,7 +119,7 @@ public class RequestContext {
             }
         }
 
-        List<RequestMsg> currentMessages = current.messages;
+        List<ReqMsg> currentMessages = current.messages;
         current.messages = new ArrayList<>();
 
         try {
@@ -263,7 +263,7 @@ public class RequestContext {
         this.messages.clear();
     }
 
-    public List<RequestMsg> getMessages() {
+    public List<ReqMsg> getMessages() {
         return messages;
     }
 
@@ -275,19 +275,19 @@ public class RequestContext {
         return ctxData.getMsgLevel().isEnabled(level);
     }
 
-    public void addAllMsgs(Iterable<RequestMsg> messages) {
-        for (RequestMsg message : messages) {
+    public void addAllMsgs(Iterable<ReqMsg> messages) {
+        for (ReqMsg message : messages) {
             addMsg(message);
         }
     }
 
-    public void addMsg(RequestMsg msg) {
+    public void addMsg(ReqMsg msg) {
         messages.add(msg);
     }
 
     public void addMsg(MsgLevel level, Supplier<Object> msg) {
 
-        if (!level.isAllowedForMsg()) {
+        if (!level.getAllowedForMsg()) {
             log.error("You can't add message with level " + level + ". Msg: " + msg.get());
             return;
         }
@@ -309,7 +309,7 @@ public class RequestContext {
             type = getMessageTypeByClass(msgValue.getClass());
         }
 
-        messages.add(new RequestMsg(
+        messages.add(new ReqMsg(
             level,
             Instant.now(),
             type,
@@ -340,7 +340,7 @@ public class RequestContext {
             .collect(Collectors.toList());
     }
 
-    public List<RequestMsg> getErrors() {
+    public List<ReqMsg> getErrors() {
         return messages.stream()
             .filter(m -> MsgLevel.ERROR.isEnabled(m.getLevel()))
             .collect(Collectors.toList());

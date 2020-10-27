@@ -17,10 +17,10 @@ class RecordAttsTest {
 
         RecordAtts meta = new RecordAtts();
         meta.setId("someId");
-        meta.setAttribute("stringValue", "TestAtt2");
-        meta.setAttribute("intValue", IntNode.valueOf(5));
-        meta.setAttribute("TestAtt2", true);
-        meta.setAttribute("TestAtt3", new Date());
+        meta.setAtt("stringValue", "TestAtt2");
+        meta.setAtt("intValue", IntNode.valueOf(5));
+        meta.setAtt("TestAtt2", true);
+        meta.setAtt("TestAtt3", new Date());
 
         String json;
         RecordAtts meta2;
@@ -33,8 +33,8 @@ class RecordAttsTest {
 
         assertEquals(meta, meta2);
 
-        assertEquals(new BigDecimal(5), meta.get("intValue", new BigDecimal(10)));
-        assertEquals(new BigDecimal(10), meta.get("stringValue", new BigDecimal(10)));
-        assertEquals(new BigDecimal(10), meta.get("MISSING", new BigDecimal(10)));
+        assertEquals(new BigDecimal(5), meta.getAtt("intValue", new BigDecimal(10)));
+        assertEquals(new BigDecimal(10), meta.getAtt("stringValue", new BigDecimal(10)));
+        assertEquals(new BigDecimal(10), meta.getAtt("MISSING", new BigDecimal(10)));
     }
 }

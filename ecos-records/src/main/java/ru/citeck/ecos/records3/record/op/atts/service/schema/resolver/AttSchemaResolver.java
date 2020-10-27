@@ -110,8 +110,8 @@ public class AttSchemaResolver {
         }
 
         SchemaAtt currentAtt = SchemaAtt.create()
-            .setName("root")
-            .setInner(atts)
+            .withName("root")
+            .withInner(atts)
             .build();
 
         List<Map<String, Object>> result = new ArrayList<>();
@@ -165,13 +165,21 @@ public class AttSchemaResolver {
             if (!root && !rawAtts && atts.size() == 1 && atts.get(0).getProcessors().isEmpty()) {
                 SchemaAtt att = atts.get(0);
                 Object attValue = ((Map<?, ?>) value).get(att.getName());
-                return resolveWithAliases(att, attValue, att.isMultiple(), false, false);
+                return resolveWithAliases(att, attValue, att.getMultiple(), false, false);
             }
             Map<String, List<AttProcDef>> processors = new HashMap<>();
             Map<String, Object> result = new LinkedHashMap<>();
             for (SchemaAtt att : atts) {
                 Object attValue = ((Map<?, ?>) value).get(att.getName());
-                result.put(att.getAliasForValue(), resolveWithAliases(att, attValue, att.isMultiple(), rawAtts, false));
+                result.put(att.getAliasForValue(),
+                    resolveWithAliases(
+                        att,
+                        attValue,
+                        att.getMultiple(),
+                        rawAtts,
+                        false
+                    )
+                );
                 if (!att.getProcessors().isEmpty()) {
                     processors.put(att.getAliasForValue(), att.getProcessors());
                 }
@@ -193,21 +201,21 @@ public class AttSchemaResolver {
             SchemaAtt.Builder resAtt = result.get(att.getName());
             if (resAtt == null) {
                 resAtt = att.copy()
-                    .setAlias(att.getName())
-                    .setProcessors(Collections.emptyList());
+                    .withAlias(att.getName())
+                    .withProcessors(Collections.emptyList());
                 result.put(att.getName(), resAtt);
             } else {
-                resAtt.setMultiple(resAtt.isMultiple() || att.isMultiple());
+                resAtt.withMultiple(resAtt.getMultiple() || att.getMultiple());
                 List<SchemaAtt> innerAtts = new ArrayList<>();
                 innerAtts.addAll(resAtt.getInner());
                 innerAtts.addAll(att.getInner());
-                resAtt.setInner(innerAtts);
+                resAtt.withInner(innerAtts);
             }
         }
 
         List<SchemaAtt> resultAtts = new ArrayList<>();
         for (SchemaAtt.Builder att : result.values()) {
-            att.setInner(simplifySchema(att.getInner()));
+            att.withInner(simplifySchema(att.getInner()));
             resultAtts.add(att.build());
         }
 
@@ -340,7 +348,7 @@ public class AttSchemaResolver {
             List<Object> attValues = toList(attValue);
             String alias = att.getAliasForValue();
 
-            if (att.isMultiple()) {
+            if (att.getMultiple()) {
 
                 List<ValueContext> values = attValues.stream()
                     .map(v -> context.toValueContext(value, v))
@@ -749,8 +757,8 @@ public class AttSchemaResolver {
             try {
 
                 SchemaAtt currentAtt = SchemaAtt.create()
-                    .setName("root")
-                    .setInner(schemaAtts)
+                    .withName("root")
+                    .withInner(schemaAtts)
                     .build();
 
                 List<SchemaAtt> simpleAtts = simplifySchema(schemaAtts);

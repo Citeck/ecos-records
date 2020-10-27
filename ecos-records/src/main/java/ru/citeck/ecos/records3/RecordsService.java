@@ -78,7 +78,7 @@ public interface RecordsService {
     RecordAtts queryOne(@NotNull RecordsQuery query, @NotNull Collection<String> attributes);
 
     @NotNull
-    DataValue queryOne(@NotNull RecordsQuery query, String attribute);
+    DataValue queryOne(@NotNull RecordsQuery query, @NotNull String attribute);
 
     /**
      * Query single record.
@@ -155,7 +155,7 @@ public interface RecordsService {
      * @return flat record attribute value
      */
     @NotNull
-    DataValue getAtt(@Nullable Object record, @Nullable String attribute);
+    DataValue getAtt(@Nullable Object record, @NotNull String attribute);
 
     /**
      * Get record attributes.
@@ -253,19 +253,19 @@ public interface RecordsService {
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(@Nullable Object record, @NotNull ObjectData attributes);
+    RecordRef mutate(@NotNull Object record, @NotNull ObjectData attributes);
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(@Nullable Object record, @NotNull Map<String, ?> attributes);
+    RecordRef mutate(@NotNull Object record, @NotNull Map<String, ?> attributes);
 
     /**
      * Create or change records.
      */
     @NotNull
-    RecordRef mutate(@Nullable Object record, @Nullable String attribute, @Nullable Object value);
+    RecordRef mutate(@NotNull Object record, @NotNull String attribute, @Nullable Object value);
 
     /* DELETE */
 
@@ -276,7 +276,7 @@ public interface RecordsService {
     List<DelStatus> delete(@NotNull List<RecordRef> records);
 
     @NotNull
-    DelStatus delete(@Nullable RecordRef recordRef);
+    DelStatus delete(@NotNull RecordRef recordRef);
 
     /* OTHER */
 
@@ -294,7 +294,7 @@ public interface RecordsService {
      * Add info about RecordsDao with specified Id.
      */
     @Nullable
-    RecordsDaoInfo getSourceInfo(@Nullable String sourceId);
+    RecordsDaoInfo getSourceInfo(@NotNull String sourceId);
 
     /**
      * Get info about all registered RecordsDao.

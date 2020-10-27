@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.local;
 
 import kotlin.Unit;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -37,6 +38,12 @@ public class InnerMixinTest extends AbstractRecordsDao
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
 
@@ -66,7 +73,6 @@ public class InnerMixinTest extends AbstractRecordsDao
             }
         };
         recordsService = factory.getRecordsServiceV1();
-        setId(ID);
         recordsService.register(this);
 
         addAttributesMixin(new AttMixin() {

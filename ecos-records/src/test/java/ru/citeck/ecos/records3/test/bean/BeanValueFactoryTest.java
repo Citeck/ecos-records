@@ -25,10 +25,15 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
     private static final String ID = "test";
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        setId(ID);
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
     }

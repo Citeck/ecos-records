@@ -129,7 +129,6 @@ public class RemoteSyncRecordsDaoTest {
         private final List<ValueDto> values = new ArrayList<>();
 
         RecordsWithMetaSource() {
-            setId(ID);
 
             Random random = new Random();
 

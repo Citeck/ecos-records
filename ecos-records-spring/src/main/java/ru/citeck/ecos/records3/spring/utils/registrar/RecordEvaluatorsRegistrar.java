@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluator;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
 
 import javax.annotation.PostConstruct;
 import java.util.List;

@@ -27,12 +27,16 @@ public class QueryWithMetaFieldTest extends AbstractRecordsDao implements Record
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        setId(ID);
         recordsService.register(this);
     }
 

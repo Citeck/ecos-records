@@ -1,12 +1,11 @@
-package ru.citeck.ecos.records3.record.op.atts.service.mixin;
+package ru.citeck.ecos.records3.record.op.atts.service.mixin
 
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttValueCtx;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttValueCtx
 
-import java.util.Collection;
+interface AttMixin {
 
-public interface AttMixin {
+    @Throws(Exception::class)
+    fun getAtt(path: String, value: AttValueCtx): Any?
 
-    Object getAtt(String path, AttValueCtx value) throws Exception;
-
-    Collection<String> getProvidedAtts();
+    fun getProvidedAtts() : Collection<String>
 }

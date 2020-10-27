@@ -199,7 +199,7 @@ public class LocalRecordsResolverV0 {
 
             for (RecordMeta value : queryResult.getRecords()) {
 
-                DataValue att = value.get("att");
+                DataValue att = value.getAtt("att");
                 String strVal = att.get(distinctValueAlias).asText();
 
                 if (att.isNull()) {

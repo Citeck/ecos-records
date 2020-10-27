@@ -21,12 +21,17 @@ public class MetaNumberTest extends AbstractRecordsDao
 
     RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return "test";
+    }
+
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
 
-        setId("test");
         recordsService.register(this);
     }
 

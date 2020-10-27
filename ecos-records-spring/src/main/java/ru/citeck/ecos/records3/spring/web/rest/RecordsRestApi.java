@@ -14,17 +14,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.op.query.QueryContext;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.delete.request.DeletionBody;
-import ru.citeck.ecos.records3.record.op.mutate.MutateBody;
-import ru.citeck.ecos.records3.rest.QueryBody;
-import ru.citeck.ecos.records3.rest.RestHandler;
-import ru.citeck.ecos.records3.request.result.RecordsResult;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records2.utils.SecurityUtils;
+import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.records3.rest.RestHandlerAdapter;
+import ru.citeck.ecos.records3.rest.v1.RequestResp;
 import ru.citeck.ecos.records3.spring.utils.web.exception.RequestHandlingException;
 import ru.citeck.ecos.records3.spring.utils.web.exception.ResponseHandlingException;
-import ru.citeck.ecos.records3.utils.SecurityUtils;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -38,16 +37,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequestMapping("/api/records")
 public class RecordsRestApi {
 
-    private final RestHandler restHandler;
+    private final RestHandlerAdapter restHandlerAdapter;
 
     private boolean isProdProfile = true;
     private Environment environment;
 
-    private List<ContextAttributesSupplier> ctxAttsSuppliers = new CopyOnWriteArrayList<>();
+    private final List<ContextAttributesSupplier> ctxAttsSuppliers = new CopyOnWriteArrayList<>();
+    private final RecordsServiceFactory services;
 
     @Autowired
-    public RecordsRestApi(RestHandler restHandler) {
-        this.restHandler = restHandler;
+    public RecordsRestApi(RecordsServiceFactory servicesFactory) {
+        this.services = servicesFactory;
+        this.restHandlerAdapter = servicesFactory.getRestHandlerAdapter();
     }
 
     @EventListener
@@ -165,25 +166,22 @@ public class RecordsRestApi {
     @PostMapping(value = "/query", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsQuery(@ApiParam(value = "query") @RequestBody byte[] body) {
 
-        QueryBody queryBody = convertRequest(body, QueryBody.class);
+        ObjectData bodyData = convertRequest(body, ObjectData.class);
 
-        RecordsServiceFactory recordsServiceFactory = restHandler.getFactory();
-        if (recordsServiceFactory == null) {
-            return encodeResponse(restHandler.queryRecords(queryBody));
-        } else {
-            Map<String, Object> ctxAtts = new HashMap<>();
-            ctxAttsSuppliers.forEach(s -> {
-                Map<String, Object> atts = s.getAttributes();
-                if (atts != null && !atts.isEmpty()) {
-                    ctxAtts.putAll(atts);
-                }
-            });
-            return QueryContext.withContext(recordsServiceFactory, () -> {
-                Locale currentLocale = LocaleContextHolder.getLocale();
-                QueryContext.getCurrent().setLocale(currentLocale);
-                return encodeResponse(restHandler.queryRecords(queryBody));
-            }, ctxAtts);
-        }
+        Map<String, Object> ctxAtts = new HashMap<>();
+        ctxAttsSuppliers.forEach(s -> {
+            Map<String, Object> atts = s.getAttributes();
+            if (atts != null && !atts.isEmpty()) {
+                ctxAtts.putAll(atts);
+            }
+        });
+        return RequestContext.doWithCtx(services,
+            data -> {
+                data.setLocale(LocaleContextHolder.getLocale());
+                data.setCtxAtts(ctxAtts);
+            },
+            ctx -> encodeResponse(restHandlerAdapter.queryRecords(bodyData))
+        );
     }
 
     @ApiOperation(
@@ -231,8 +229,8 @@ public class RecordsRestApi {
     @PostMapping(value = "/mutate", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsMutate(@ApiParam(value = "change query text") @RequestBody byte[] body) {
 
-        MutateBody mutationBody = convertRequest(body, MutateBody.class);
-        Object mutatedRecords = restHandler.mutateRecords(mutationBody);
+        ObjectData mutationBody = convertRequest(body, ObjectData.class);
+        Object mutatedRecords = restHandlerAdapter.mutateRecords(mutationBody);
         return encodeResponse(mutatedRecords);
     }
 
@@ -264,8 +262,8 @@ public class RecordsRestApi {
     @PostMapping(value = "/delete", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public byte[] recordsDelete(@ApiParam(value = "query text") @RequestBody byte[] body) {
 
-        DeletionBody deletionBody = convertRequest(body, DeletionBody.class);
-        Object deletedRecords = restHandler.deleteRecords(deletionBody);
+        ObjectData deletionBody = convertRequest(body, ObjectData.class);
+        Object deletedRecords = restHandlerAdapter.deleteRecords(deletionBody);
         return encodeResponse(deletedRecords);
     }
 
@@ -280,8 +278,12 @@ public class RecordsRestApi {
 
     private byte[] encodeResponse(Object response) {
         try {
-            if (isProdProfile && response instanceof RecordsResult) {
-                SecurityUtils.encodeResult((RecordsResult<?>) response);
+            if (isProdProfile) {
+                if (response instanceof RecordsResult) {
+                    SecurityUtils.encodeResult((RecordsResult<?>) response);
+                } else if (response instanceof RequestResp) {
+                    SecurityUtils.encodeResult((RequestResp) response);
+                }
             }
             return Json.getMapper().toBytes(response);
         } catch (Exception jpe) {

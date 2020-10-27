@@ -68,7 +68,7 @@ public class AttSchemaGqlWriter implements AttSchemaWriter {
         }
 
         sb.append("att");
-        if (attribute.isMultiple()) {
+        if (attribute.getMultiple()) {
             sb.append("s");
         }
         sb.append("(n:\"")

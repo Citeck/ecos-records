@@ -32,10 +32,14 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
 
     private RecordsService recordsService;
 
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
     @BeforeAll
     void init() {
-        setId(ID);
-
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
@@ -53,7 +57,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         RecsQueryRes<RecordAtts> result = recordsService.query(query, attsToRequest);
 
         RecordAtts meta = result.getRecords().get(0);
-        assertEquals(DataValue.TRUE, meta.get("as_with_alias_has_true"));
+        assertEquals(DataValue.TRUE, meta.getAtt("as_with_alias_has_true"));
     }
 
     @Test
@@ -82,24 +86,24 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
 
         assertEquals(1, result.getRecords().size());
         RecordAtts meta = result.getRecords().get(0);
-        assertEquals(Val.val0.value, meta.get("att0", ""));
-        assertEquals(Val.val2.value, meta.get("att2", ""));
-        assertEquals(Val.val1.getDispName(), meta.get("disp", ""));
-        assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
+        assertEquals(Val.val0.value, meta.getAtt("att0", ""));
+        assertEquals(Val.val2.value, meta.getAtt("att2", ""));
+        assertEquals(Val.val1.getDispName(), meta.getAtt("disp", ""));
+        assertEquals(Val.val0.ref.toString(), meta.getAtt("assoc", ""));
 
-        assertEquals(DataValue.TRUE, meta.get("has_true"));
-        assertEquals(DataValue.FALSE, meta.get("has_false"));
+        assertEquals(DataValue.TRUE, meta.getAtt("has_true"));
+        assertEquals(DataValue.FALSE, meta.getAtt("has_false"));
 
-        assertEquals(DataValue.TRUE, meta.get("as_has_true"));
-        assertEquals(DataValue.FALSE, meta.get("as_has_false"));
+        assertEquals(DataValue.TRUE, meta.getAtt("as_has_true"));
+        assertEquals(DataValue.FALSE, meta.getAtt("as_has_false"));
 
-        assertEquals(DataValue.TRUE, meta.get("as_with_alias_has_true"));
+        assertEquals(DataValue.TRUE, meta.getAtt("as_with_alias_has_true"));
 
         ArrayNode expected = JsonNodeFactory.instance.arrayNode();
         expected.add(Val.val2.value);
         expected.add(Val.val2.value);
 
-        assertEquals(DataValue.create(expected), meta.get("att3"));
+        assertEquals(DataValue.create(expected), meta.getAtt("att3"));
     }
 
     @Test
@@ -123,7 +127,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         assertEquals(1, result.getRecords().size());
         RecordAtts meta = result.getRecords().get(0);
 
-        assertEquals(DataValue.NULL, meta.get("null_0"));
+        assertEquals(DataValue.NULL, meta.getAtt("null_0"));
     }
 
     @NotNull

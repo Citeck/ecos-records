@@ -5,19 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.citeck.ecos.records3.RecordsProperties;
-import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records3.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records3.record.op.atts.RecordsMetaService;
-import ru.citeck.ecos.records3.predicate.PredicateService;
-import ru.citeck.ecos.records3.record.op.query.lang.QueryLangService;
-import ru.citeck.ecos.records3.rest.RestHandler;
-import ru.citeck.ecos.records3.record.resolver.RecordsResolver;
+import ru.citeck.ecos.records2.RecordsProperties;
+import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
+import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records2.querylang.QueryLangService;
+import ru.citeck.ecos.records2.request.rest.RestHandler;
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
+import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
-import ru.citeck.ecos.records3.rest.RemoteRecordsRestApi;
-import ru.citeck.ecos.records3.source.dao.local.meta.MetaRecordsDaoAttsProvider;
 
 @Slf4j
 @Configuration
@@ -31,30 +30,28 @@ public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
 
     @Override
     protected RemoteRecordsResolver createRemoteRecordsResolver() {
+
         if (restApi != null) {
-            return new RemoteRecordsResolver(this, restApi);
+
+            if (properties.isGatewayMode()) {
+                log.info("Initialize remote records resolver in Gateway mode");
+            } else {
+                log.info("Initialize remote records resolver in normal mode");
+            }
+
+            RemoteRecordsResolver resolver = new RemoteRecordsResolver(this, restApi);
+            if (properties.isGatewayMode()) {
+                resolver.setDefaultAppName(properties.getDefaultApp());
+            }
+            return resolver;
+
         } else {
+            if (properties.isGatewayMode()) {
+                throw new IllegalStateException("restApi should "
+                    + "be not null in gateway mode! Props: " + properties);
+            }
             log.warn("RecordsRestConnection is not exists. Remote records requests wont be allowed");
             return null;
-        }
-    }
-
-    @Override
-    protected RecordsResolver createRecordsResolver() {
-
-        if (properties.isGatewayMode()) {
-
-            log.info("Initialize records resolver in Gateway mode");
-
-            RemoteRecordsResolver resolver = createRemoteRecordsResolver();
-            if (resolver == null) {
-                throw new IllegalStateException("RemoteRecordsResolver should "
-                                                + "be not null in gateway mode! Props: " + properties);
-            }
-            resolver.setDefaultAppName(properties.getDefaultApp());
-            return resolver;
-        } else {
-            return super.createRecordsResolver();
         }
     }
 
@@ -92,12 +89,6 @@ public class RecordsServiceFactoryConfiguration extends RecordsServiceFactory {
     @Override
     protected PredicateService createPredicateService() {
         return super.createPredicateService();
-    }
-
-    @Bean
-    @Override
-    protected MetaValuesConverter createMetaValuesConverter() {
-        return super.createMetaValuesConverter();
     }
 
     @Bean

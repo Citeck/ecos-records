@@ -18,10 +18,6 @@ public class RecordsSourceRecordsDao extends AbstractRecordsDao
 
     public static final String ID = "source";
 
-    public RecordsSourceRecordsDao() {
-        setId(ID);
-    }
-
     @Override
     public List<?> getRecordsAtts(List<String> records) {
 
@@ -37,5 +33,11 @@ public class RecordsSourceRecordsDao extends AbstractRecordsDao
     @Override
     public RecsQueryRes<?> queryRecords(@NotNull RecordsQuery query) {
         return new RecsQueryRes<>(recordsService.getSourcesInfo());
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
     }
 }

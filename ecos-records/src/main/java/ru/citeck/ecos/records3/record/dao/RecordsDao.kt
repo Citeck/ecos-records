@@ -1,6 +1,6 @@
-package ru.citeck.ecos.records3.record.dao;
+package ru.citeck.ecos.records3.record.dao
 
-public interface RecordsDao {
+interface RecordsDao {
 
-    String getId();
+    fun getId(): String
 }

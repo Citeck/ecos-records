@@ -80,7 +80,7 @@ public class RecordAttsServiceImpl implements RecordAttsService {
 
         return getAtts(values, attributes, false, Collections.emptyList())
             .stream()
-            .map(v -> dtoSchemaReader.instantiate(attsDto, v.getAttributes()))
+            .map(v -> dtoSchemaReader.instantiate(attsDto, v.getAtts()))
             .collect(Collectors.toList());
     }
 
@@ -110,8 +110,8 @@ public class RecordAttsServiceImpl implements RecordAttsService {
         rootAtts = new ArrayList<>(rootAtts);
         if (!valueRefsProvided) {
             rootAtts.add(SchemaAtt.create()
-                    .setAlias(REF_ATT_ALIAS)
-                    .setName("?id")
+                    .withAlias(REF_ATT_ALIAS)
+                    .withName("?id")
                     .build());
         }
 

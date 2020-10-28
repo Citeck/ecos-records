@@ -40,15 +40,10 @@ data class ReqMsg(
     class Builder() {
 
         var level: MsgLevel = MsgLevel.INFO
-            private set
         var time: Instant = Instant.now()
-            private set
         lateinit var type: String
-            private set
         lateinit var msg: DataValue
-            private set
         var queryTrace: List<String> = emptyList()
-            private set
 
         constructor(base: ReqMsg) : this() {
             this.level = base.level

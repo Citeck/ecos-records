@@ -7,11 +7,16 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery
+import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import java.util.*
 
 class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
+
+    companion object {
+        const val ID = "group"
+        private const val MAX_ITEMS_DEFAULT = 20
+    }
 
     override fun getId() = ID
 
@@ -21,9 +26,9 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
         if (groupBy.isEmpty()) {
             return RecsQueryRes<Any>()
         }
-        val groupsBaseQuery = RecordsQuery(query)
+        val groupsBaseQuery = query.copy()
         if (groupBy.size == 1) {
-            groupsBaseQuery.groupBy = null
+            groupsBaseQuery.withGroupBy(emptyList())
         } else {
             val newGroupBy: MutableList<String> = ArrayList()
             for (i in 1 until groupBy.size) {
@@ -32,7 +37,7 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
             groupsBaseQuery.groupBy = newGroupBy
         }
         val groupAtts = groupBy[0].split("&".toRegex()).toTypedArray()
-        val max = if (query.maxItems > 0) query.maxItems else MAX_ITEMS_DEFAULT
+        val max = if (query.page.maxItems > 0) query.page.maxItems else MAX_ITEMS_DEFAULT
         val basePredicate = query.getQuery(Predicate::class.java)
         val distinctValues: MutableList<List<DistinctValue>> = ArrayList()
         for (groupAtt in groupAtts) {
@@ -43,7 +48,7 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
             distinctValues.add(values)
         }
         val result = RecsQueryRes<RecordsGroup>()
-        result.records = getGroups(groupsBaseQuery, distinctValues, basePredicate, groupAtts)
+        result.setRecords(getGroups(groupsBaseQuery.build(), distinctValues, basePredicate, groupAtts))
         return result
     }
 
@@ -51,6 +56,7 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
                           distinctValues: List<List<DistinctValue>>,
                           basePredicate: Predicate,
                           attributes: Array<String>): List<RecordsGroup> {
+
         val groups: MutableList<RecordsGroup> = ArrayList()
         if (distinctValues.size == 1) {
             for (value in distinctValues[0]) {
@@ -73,13 +79,16 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
     private fun createGroup(groupsBaseQuery: RecordsQuery,
                             attributes: Map<String, DistinctValue>,
                             basePredicate: Predicate): RecordsGroup {
-        val groupQuery = RecordsQuery(groupsBaseQuery)
+
+        val groupQuery = groupsBaseQuery.copy()
         val groupPredicate = Predicates.and()
         groupPredicate.addPredicate(basePredicate)
-        attributes.forEach { (att: String?, `val`: DistinctValue) -> groupPredicate.addPredicate(Predicates.equal(att, `val`.value)) }
-        groupQuery.query = groupPredicate
+        attributes.forEach { (att, `val`) ->
+            groupPredicate.addPredicate(Predicates.equal(att, `val`.value))
+        }
+        groupQuery.withQuery(groupPredicate)
         groupQuery.language = PredicateService.LANGUAGE_PREDICATE
-        return RecordsGroup(groupQuery, attributes, groupPredicate, recordsService!!)
+        return RecordsGroup(groupQuery.build(), attributes, groupPredicate, recordsService)
     }
 
     private fun getDistinctValues(sourceId: String,
@@ -87,25 +96,20 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
                                   attribute: String,
                                   max: Int): List<DistinctValue> {
 
-        val recordsQuery = RecordsQuery()
+        val recordsQuery = RecordsQuery.create()
         recordsQuery.language = DistinctQuery.LANGUAGE
         val distinctQuery = DistinctQuery()
         distinctQuery.language = PredicateService.LANGUAGE_PREDICATE
         distinctQuery.query = predicate
         distinctQuery.attribute = attribute
-        recordsQuery.maxItems = max
+        recordsQuery.page.maxItems = max
         recordsQuery.sourceId = sourceId
-        recordsQuery.query = distinctQuery
-        val values = recordsService!!.query(recordsQuery, DistinctValue::class.java)
-        return values.records
+        recordsQuery.withQuery(distinctQuery)
+        val values = recordsService.query(recordsQuery.build(), DistinctValue::class.java)
+        return values.getRecords()
     }
 
     override fun getSupportedLanguages(): List<String> {
         return listOf(PredicateService.LANGUAGE_PREDICATE)
-    }
-
-    companion object {
-        const val ID = "group"
-        private const val MAX_ITEMS_DEFAULT = 20
     }
 }

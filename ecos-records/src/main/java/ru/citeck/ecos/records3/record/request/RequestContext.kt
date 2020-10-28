@@ -1,0 +1,279 @@
+package ru.citeck.ecos.records3.record.request
+
+import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records2.request.error.RecordsError
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.request.msg.MsgType
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg
+import java.time.Instant
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Supplier
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
+
+open class RequestContext {
+
+    companion object {
+
+        private val log = KotlinLogging.logger {}
+
+        private val current: ThreadLocal<RequestContext> = ThreadLocal()
+
+        fun getCurrent(): RequestContext? {
+            return current.get()
+        }
+
+        fun getCurrentNotNull(): RequestContext {
+            return getCurrent() ?: error("Request context is mandatory. " +
+                    "Add RequestContex.withCtx(ctx -> {...}) before call")
+        }
+
+        fun getLocale() : Locale {
+            return getCurrentNotNull().getLocale()
+        }
+
+        fun <T> doWithAtts(atts: Map<String, Any?>, action: (RequestContext) -> T): T {
+            return doWithCtx(null, { it.withCtxAtts(atts) }, action)
+        }
+
+        fun <T> doWithAtts(atts: Map<String, Any?>, action: () -> T): T {
+            return doWithCtx(null, { it.withCtxAtts(atts) }) { action.invoke() }
+        }
+
+        fun <T> doWithCtx(action: (RequestContext) -> T): T {
+            return doWithCtx(null, null, action)
+        }
+
+        fun <T> doWithCtx(factory: RecordsServiceFactory?, action: (RequestContext) -> T): T {
+            return doWithCtx(factory, null, action)
+        }
+
+        fun <T> doWithCtx(ctxData: ((RequestCtxData.Builder) -> Unit)?, action: (RequestContext) -> T): T {
+            return doWithCtx(null, ctxData, action)
+        }
+
+        fun <T> doWithCtx(factory: RecordsServiceFactory?,
+                          ctxData: ((RequestCtxData.Builder) -> Unit)?,
+                          action: (RequestContext) -> T): T {
+
+            var current = getCurrent()
+            val notNullServices = factory ?: current?.serviceFactory ?:
+                error("RecordsServiceFactory is not found in context!")
+
+            var isContextOwner = false
+
+            if (current == null) {
+
+                val builder: RequestCtxData.Builder = RequestCtxData.create()
+                ctxData?.invoke(builder)
+                current = RequestContext()
+                current.ctxData = builder.build()
+                current.serviceFactory = notNullServices
+                RequestContext.current.set(current)
+                isContextOwner = true
+
+            }
+
+            val prevCtxData = current.ctxData
+            if (ctxData != null) {
+                val builder = prevCtxData.copy()
+                ctxData.invoke(builder)
+                current.ctxData = builder.build()
+            }
+
+            val currentMessages: MutableList<ReqMsg> = current.messages
+            current.messages = ArrayList()
+
+            return try {
+                action.invoke(current)
+            } finally {
+                currentMessages.addAll(current.messages)
+                current.messages = currentMessages
+                current.ctxData = prevCtxData
+                if (isContextOwner) {
+                    current.messages.forEach { msg ->
+                        when (msg.level) {
+                            MsgLevel.ERROR -> log.error(msg.toString())
+                            MsgLevel.WARN -> log.warn(msg.toString())
+                            MsgLevel.INFO -> log.info(msg.toString())
+                            MsgLevel.DEBUG -> log.debug(msg.toString())
+                            MsgLevel.TRACE -> log.trace(msg.toString())
+                            else -> log.warn("Unknown msg type: $msg")
+                        }
+                    }
+                    RequestContext.current.remove()
+                }
+            }
+        }
+    }
+
+    private val msgTypeByClass: MutableMap<Class<*>, String> = ConcurrentHashMap<Class<*>, String>()
+    private val ctxVars: MutableMap<String, Any> = ConcurrentHashMap<String, Any>()
+
+    lateinit var ctxData: RequestCtxData
+
+    private lateinit var serviceFactory: RecordsServiceFactory
+
+    private var messages: MutableList<ReqMsg> = ArrayList()
+
+    fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T): T {
+        val prevValue = getVar<Any>(key)
+        putVar(key, data)
+        return try {
+            action.invoke()
+        } finally {
+            putVar(key, prevValue)
+        }
+    }
+
+    fun getLocale() : Locale {
+        return ctxData.locale
+    }
+
+    fun hasVar(key: String): Boolean {
+        return ctxVars.containsKey(key)
+    }
+
+    fun putVar(key: String, data: Any?) {
+        if (data != null) {
+            ctxVars[key] = data
+        } else {
+            removeVar(key)
+        }
+    }
+
+    fun <T : Any> getVar(key: String): T? {
+        return ctxVars[key] as? T
+    }
+
+    fun <T : Any> removeVar(key: String): T? {
+        return ctxVars.remove(key) as? T
+    }
+
+    fun <T : Any> getOrPutVar(key: String, type: Class<*>, newValue: () -> T): T {
+
+        var value = ctxVars.computeIfAbsent(key) { newValue.invoke() }
+        if (!type.isInstance(value)) {
+            log.warn("Context data with the key '" + key + "' is not an instance of a " + type + ". "
+                + "Data will be overridden. Current data: " + value)
+            value = newValue.invoke()
+            ctxVars[key] = value
+        }
+        @Suppress("UNCHECKED_CAST")
+        return value as T
+    }
+
+    fun <K, V> getMap(key: String): MutableMap<K, V> {
+        return getOrPutVar(key, MutableMap::class.java) { LinkedHashMap() }
+    }
+
+    fun <T> getList(key: String): MutableList<T> {
+        return getOrPutVar(key, MutableList::class.java) { ArrayList() }
+    }
+
+    fun <T> getSet(key: String): MutableSet<T>? {
+        return getOrPutVar(key, MutableSet::class.java) { HashSet() }
+    }
+
+    fun getCount(key: String): Int {
+        return getOrPutVar(key, AtomicInteger::class.java) { AtomicInteger() }.get()
+    }
+
+    fun incrementCount(key: String): Int {
+        return getOrPutVar(key, AtomicInteger::class.java) { AtomicInteger() }.incrementAndGet()
+    }
+
+    @JvmOverloads
+    fun decrementCount(key: String, allowNegative: Boolean = true): Int {
+        val counter: AtomicInteger = getOrPutVar(key, AtomicInteger::class.java) { AtomicInteger() }
+        return if (allowNegative || counter.get() > 0) {
+            counter.decrementAndGet()
+        } else {
+            counter.get()
+        }
+    }
+
+    fun getServices(): RecordsServiceFactory {
+        return serviceFactory
+    }
+
+    fun getCtxAtts() : Map<String, Any?> {
+        return ctxData.ctxAtts
+    }
+
+    fun clearMessages() {
+        messages.clear()
+    }
+
+    fun getMessages(): List<ReqMsg> {
+        return messages
+    }
+
+    fun isMsgEnabled(level: MsgLevel): Boolean {
+        return ctxData.msgLevel.isEnabled(level)
+    }
+
+    fun addAllMsgs(messages: Iterable<ReqMsg>) {
+        messages.forEach(this::addMsg)
+    }
+
+    fun addMsg(msg: ReqMsg) {
+        messages.add(msg)
+    }
+
+    fun addMsg(level: MsgLevel, msg: String) {
+        addMsg(level) { msg }
+    }
+
+    fun addMsg(level: MsgLevel, msg: () -> Any?) {
+        if (!level.allowedForMsg) {
+            log.error("You can't add message with level " + level + ". Msg: " + msg.invoke())
+            return
+        }
+        if (!isMsgEnabled(level)) {
+            return
+        }
+        var msgValue = msg.invoke()
+        if (msgValue == null) {
+            msgValue = "null"
+        }
+        val type = if (msgValue is String) {
+            "text"
+        } else {
+            getMessageTypeByClass(msgValue.javaClass)
+        }
+        messages.add(ReqMsg(
+            level,
+            Instant.now(),
+            type,
+            DataValue.create(msgValue),
+            ctxData.requestTrace
+        ))
+    }
+
+    private fun getMessageTypeByClass(clazz: Class<*>): String {
+        return if (clazz == String::class.java) {
+            "text"
+        } else {
+            msgTypeByClass.computeIfAbsent(clazz) { c ->
+                c.getAnnotation(MsgType::class.java)?.value ?: "any"
+            }
+        }
+    }
+
+    fun getRecordErrors() : List<RecordsError> {
+        return messages
+            .filter { MsgLevel.ERROR.isEnabled(it.level) }
+            .filter { RecordsError.MSG_TYPE == it.type }
+            .mapNotNull { Json.mapper.convert(it.msg, RecordsError::class.java) }
+    }
+
+    fun getErrors() : List<ReqMsg> {
+        return messages.filter { MsgLevel.ERROR.isEnabled(it.level) }
+    }
+}

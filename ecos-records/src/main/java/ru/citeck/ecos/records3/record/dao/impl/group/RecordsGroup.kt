@@ -1,17 +1,15 @@
 package ru.citeck.ecos.records3.record.dao.impl.group
 
-import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.InnerAttValue
-import ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery
+import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import java.util.*
-import java.util.stream.Collectors
 
 class RecordsGroup(private val query: RecordsQuery,
                    attributes: Map<String, DistinctValue>,
@@ -50,31 +48,31 @@ class RecordsGroup(private val query: RecordsQuery,
             FIELD_VALUES -> {
                 val innerAttributes = AttContext.getInnerAttsMap()
                 val records = recordsService.query(query, innerAttributes)
-                return records.records.stream().map { r: RecordAtts ->
-                    val atts = r.getAtts()
-                    atts.set("id", r.getId().toString())
-                    InnerAttValue(mapper.toJson(atts))
-                }.collect(Collectors.toList())
+                return records.getRecords().map { recordAtts ->
+                    val atts = recordAtts.getAtts()
+                    atts.set("id", recordAtts.getId().toString())
+                    InnerAttValue(Json.mapper.toJson(atts))
+                }
             }
             else -> {
             }
         }
         if (name == FIELD_COUNT) {
-            val countQuery = RecordsQuery(query)
-            countQuery.groupBy = null
-            countQuery.maxItems = 1
-            countQuery.skipCount = 0
+            val countQuery = query.copy()
+                .withGroupBy(emptyList())
+                .withMaxItems(1)
+                .withSkipCount(0)
+                .build()
             val records = recordsService.query(countQuery)
             return records.totalCount
         }
         if (name.startsWith(FIELD_SUM)) {
             val attribute = name.substring(FIELD_SUM.length + 1, name.length - 1) + "?num"
             val attributes = listOf(attribute)
-            val sumQuery = RecordsQuery(query)
-            sumQuery.groupBy = null
+            val sumQuery = query.copy().withGroupBy(emptyList()).build()
             val result = recordsService.query(sumQuery, attributes)
             var sum = 0.0
-            for (record in result.records) {
+            for (record in result.getRecords()) {
                 sum += record.getAtt(attribute, 0.0)
             }
             return sum
@@ -83,11 +81,12 @@ class RecordsGroup(private val query: RecordsQuery,
     }
 
     private class ValueWrapper internal constructor(private val value: DistinctValue) : AttValue {
+
         override fun asText(): String {
             return value.value
         }
 
-        override fun getDispName(): String {
+        override fun getDisplayName(): String {
             return value.displayName
         }
 

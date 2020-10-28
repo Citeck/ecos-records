@@ -4,7 +4,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import lombok.extern.slf4j.Slf4j
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import java.text.SimpleDateFormat
 import java.util.*
@@ -154,7 +154,7 @@ open class RecordAtts() {
     }
 
     override fun toString(): String {
-        return mapper.toString(this)!!
+        return Json.mapper.toString(this) ?: "RecordAtts"
     }
 
     override fun equals(other: Any?): Boolean {

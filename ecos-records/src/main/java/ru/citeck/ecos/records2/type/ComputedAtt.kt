@@ -39,13 +39,9 @@ data class ComputedAtt(
     class Builder() {
 
         lateinit var id: String
-            private set
         lateinit var type: String
-            private set
         var config: ObjectData = ObjectData.create()
-            private set
         var persistent: Boolean = false
-            private set
 
         constructor(base: ComputedAtt) : this() {
             this.id = base.id

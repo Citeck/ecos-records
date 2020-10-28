@@ -14,12 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.result.RecordsResult
 import ru.citeck.ecos.records2.utils.SecurityUtils
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.request.RequestCtxData
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.rest.v1.RequestResp
 import ru.citeck.ecos.records3.spring.utils.web.exception.RequestHandlingException
@@ -53,7 +52,7 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     @PostMapping(value = ["/query"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun recordsQuery(@ApiParam(value = "query") @RequestBody body: ByteArray): ByteArray? {
         val bodyData = convertRequest(body, ObjectData::class.java)
-        val ctxAtts: MutableMap<String?, Any?> = HashMap()
+        val ctxAtts: MutableMap<String, Any?> = HashMap()
         ctxAttsSuppliers.forEach { s->
             val atts = s.attributes
             if (atts.isNotEmpty()) {
@@ -61,9 +60,9 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
             }
         }
         return RequestContext.doWithCtx(services,
-            { data: RequestCtxData.Builder<ByteArray?> ->
-                data.setLocale(LocaleContextHolder.getLocale())
-                data.setCtxAtts(ctxAtts)
+            {
+                it.locale = LocaleContextHolder.getLocale()
+                it.ctxAtts = ctxAtts
             }
         ) {
             encodeResponse(restHandlerAdapter.queryRecords(bodyData))
@@ -86,7 +85,7 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
 
     private fun <T : Any> convertRequest(body: ByteArray, valueType: Class<T>): T {
         return try {
-            mapper.read(body, valueType)!!
+            Json.mapper.read(body, valueType)!!
         } catch (ioe: Exception) {
             log.error("Jackson cannot parse request body", ioe)
             throw RequestHandlingException(ioe)
@@ -102,7 +101,7 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
                     SecurityUtils.encodeResult(response)
                 }
             }
-            mapper.toBytes(response)
+            Json.mapper.toBytes(response)
         } catch (jpe: Exception) {
             log.error("Jackson cannot write response body as bytes", jpe)
             throw ResponseHandlingException(jpe)
@@ -117,5 +116,4 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     fun setEnvironment(environment: Environment?) {
         this.environment = environment
     }
-
 }

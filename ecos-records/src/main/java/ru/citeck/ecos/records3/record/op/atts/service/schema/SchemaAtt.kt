@@ -1,10 +1,12 @@
 package ru.citeck.ecos.records3.record.op.atts.service.schema
 
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
+import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.utils.MandatoryParam
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
 
+@JsonDeserialize(builder = SchemaAtt.Builder::class)
 data class SchemaAtt(
     val alias: String,
     val name: String,
@@ -42,7 +44,7 @@ data class SchemaAtt(
         return name.isNotEmpty() && name[0] == '?'
     }
 
-    fun getAliasForValue(): String? {
+    fun getAliasForValue(): String {
         return if (alias.isEmpty()) {
             name
         } else {

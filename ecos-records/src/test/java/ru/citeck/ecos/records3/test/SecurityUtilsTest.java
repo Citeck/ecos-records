@@ -7,6 +7,9 @@ import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,6 +60,12 @@ public class SecurityUtilsTest implements RecordsQueryDao {
     @Override
     public RecsQueryRes<RecordAtts> queryRecords(@NotNull RecordsQuery query) {
         throw new RuntimeException("Exception while query");
+    }
+
+    @NotNull
+    @Override
+    public List<String> getSupportedLanguages() {
+        return Collections.emptyList();
     }
 
     @Override

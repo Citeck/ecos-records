@@ -72,6 +72,10 @@ data class ResolveArgs(
             return this
         }
 
+        fun withAttribute(attribute: SchemaAtt) : Builder {
+            return withAttributes(listOf(attribute))
+        }
+
         fun withAttributes(attributes: List<SchemaAtt>) : Builder {
             this.attributes = attributes
             return this

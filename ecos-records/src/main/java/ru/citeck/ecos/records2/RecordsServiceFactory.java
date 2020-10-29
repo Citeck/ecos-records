@@ -499,23 +499,6 @@ public class RecordsServiceFactory {
         return new DtoSchemaReader(this);
     }
 
-    public final synchronized Supplier<? extends RequestContext> getRequestContextSupplier() {
-        if (requestContextSupplier == null) {
-            requestContextSupplier = createRequestContextSupplier();
-        }
-        return requestContextSupplier;
-    }
-
-    protected Supplier<? extends RequestContext> createRequestContextSupplier() {
-        return RequestContext::new;
-    }
-
-    public final synchronized RequestContext createRequestContext() {
-        RequestContext context = getRequestContextSupplier().get();
-        context.setServiceFactory(this);
-        return context;
-    }
-
     public final synchronized Supplier<? extends QueryContext> getQueryContextSupplier() {
         if (queryContextSupplier == null) {
             queryContextSupplier = createQueryContextSupplier();

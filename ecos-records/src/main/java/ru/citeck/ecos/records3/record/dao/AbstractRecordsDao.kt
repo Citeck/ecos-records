@@ -33,6 +33,8 @@ abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryA
 
     override fun getMixins() = mixinsList
 
+    open fun getSupportedLanguages(): List<String> = emptyList()
+
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         this.serviceFactory = serviceFactory
         recordsService = serviceFactory.recordsServiceV1

@@ -85,7 +85,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                                           atts: List<SchemaAtt>,
                                           rawAtts: Boolean): List<Map<String, Any?>> {
         if (atts.isEmpty()) {
-            return values.map { emptyMap() }
+            return values.map { emptyMap<String, Any?>() }
         }
         val currentAtt: SchemaAtt = SchemaAtt.create()
             .withName("root")
@@ -113,11 +113,11 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     }
 
     private fun resolveWithAliases(currentAtt: SchemaAtt,
-                                   value: Any?,
+                                   valueArg: Any?,
                                    isMultiple: Boolean,
                                    rawAtts: Boolean,
                                    root: Boolean): Any? {
-        var value = value
+        var value = valueArg
         val atts: List<SchemaAtt> = currentAtt.inner
         if (value == null || atts.isEmpty()) {
             return value
@@ -491,7 +491,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         private fun getScalar(scalar: String?): Any? {
             return when (scalar) {
                 "?str" -> value.asText()
-                "?disp" -> value.getDisplayName()
+                "?disp" -> value.displayName
                 "?id",
                 "?assoc" -> getRef().toString()
                 "?localId" -> getLocalId()

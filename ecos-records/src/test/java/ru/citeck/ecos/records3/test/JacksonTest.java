@@ -11,8 +11,8 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.request.query.QueryConsistency;
 import ru.citeck.ecos.records2.request.query.SortBy;
+import ru.citeck.ecos.records3.record.op.query.dto.query.Consistency;
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 
 import java.io.IOException;
@@ -29,19 +29,19 @@ public class JacksonTest {
 
         new RecordsServiceFactory();
 
-        RecordsQuery query = new RecordsQuery();
-        query.setMaxItems(10);
-        query.setSourceId("sourceId");
-        query.setLanguage("language");
-        query.setGroupBy(Arrays.asList("one", "two"));
-        query.setAfterId(RecordRef.valueOf("aaa/bbb@123"));
-        query.setSkipCount(55);
-        query.setQuery(new SomeQuery());
-        query.setConsistency(QueryConsistency.TRANSACTIONAL);
-        query.setSortBy(Arrays.asList(
-            new SortBy("att", true),
-            new SortBy("att2", true))
-        );
+        RecordsQuery query = RecordsQuery.create()
+            .withMaxItems(10)
+            .withSourceId("sourceId")
+            .withLanguage("language")
+            .withGroupBy(Arrays.asList("one", "two"))
+            .withAfterId(RecordRef.valueOf("aaa/bbb@123"))
+            .withSkipCount(55)
+            .withQuery(new SomeQuery())
+            .withConsistency(Consistency.TRANSACTIONAL)
+            .withSortBy(Arrays.asList(
+                new SortBy("att", true),
+                new SortBy("att2", true))
+            ).build();
 
         ObjectMapper mapper = new ObjectMapper();
 

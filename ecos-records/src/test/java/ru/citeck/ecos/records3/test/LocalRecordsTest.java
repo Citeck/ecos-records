@@ -39,8 +39,10 @@ class LocalRecordsTest {
     @Test
     void testSourceWithoutMetaInterface() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(RecordsQueryDaoImpl.ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(RecordsQueryDaoImpl.ID)
+            .build();
+
         recordsService.query(query);
     }
 
@@ -56,8 +58,9 @@ class LocalRecordsTest {
     @Test
     void testWithMeta() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(RecordsWithMetaSource.ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(RecordsWithMetaSource.ID)
+            .build();
 
         RecsQueryRes<RecordRef> result = recordsService.query(query);
 

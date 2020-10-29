@@ -98,12 +98,13 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
 
         Predicate predicate = Predicates.gt(RecordConstants.ATT_MODIFIED, currentSyncDate);
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(getId());
-        query.setQuery(predicate);
-        query.addSort(new SortBy(RecordConstants.ATT_MODIFIED, true));
-        query.setMaxItems(50);
-        query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(getId())
+            .withQuery(predicate)
+            .withSortBy(new SortBy(RecordConstants.ATT_MODIFIED, true))
+            .withMaxItems(50)
+            .withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            .build();
 
         RecsQueryRes<RecordAtts> result;
         try {

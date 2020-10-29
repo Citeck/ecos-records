@@ -25,7 +25,7 @@ public interface MetaEdge {
     /**
      * Can client read value of this attribute or not.
      */
-    default boolean canBeRead() {
+    default boolean isReadable() {
         return true;
     }
 

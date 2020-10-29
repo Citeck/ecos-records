@@ -70,14 +70,15 @@ public class RecordsServiceTest extends AbstractRecordsDao
     @Test
     void testUnknownSourceQuery() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId("unknown-id");
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId("unknown-id")
+            .build();
 
         RecsQueryRes<RecordRef> records = recordsService.query(query);
 
         assertEquals(0, records.getRecords().size());
         assertEquals(0, records.getTotalCount());
-        assertFalse(records.isHasMore());
+        assertFalse(records.getHasMore());
     }
 
     @Test
@@ -88,16 +89,17 @@ public class RecordsServiceTest extends AbstractRecordsDao
         ExactIdsQuery daoQuery = new ExactIdsQuery();
         daoQuery.setIds(ids);
 
-        RecordsQuery query = new RecordsQuery();
-        query.setQuery(daoQuery);
-        query.setSourceId(SOURCE_ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(daoQuery)
+            .withSourceId(SOURCE_ID)
+            .build();
 
         RecsQueryRes<RecordRef> records = recordsService.query(query);
         List<RecordRef> recordsRefs = records.getRecords();
 
         assertEquals(ids.size(), recordsRefs.size());
         assertEquals(ids.size(), records.getTotalCount());
-        assertFalse(records.isHasMore());
+        assertFalse(records.getHasMore());
 
         for (int i = 0; i < recordsRefs.size(); i++) {
 
@@ -173,12 +175,13 @@ public class RecordsServiceTest extends AbstractRecordsDao
     @Test
     void testInnerPojo() {
 
-        RecordsQuery query = new RecordsQuery();
-
         ExactIdsQuery exactIdsQuery = new ExactIdsQuery();
         exactIdsQuery.setIds(Collections.singletonList("list"));
-        query.setQuery(exactIdsQuery);
-        query.setSourceId(SOURCE_ID);
+
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(exactIdsQuery)
+            .withSourceId(SOURCE_ID)
+            .build();
 
         RecsQueryRes<JournalListInfo> records = recordsService.query(query, JournalListInfo.class);
         assertEquals(1, records.getTotalCount());

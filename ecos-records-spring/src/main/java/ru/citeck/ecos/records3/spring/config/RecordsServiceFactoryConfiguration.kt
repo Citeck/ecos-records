@@ -33,19 +33,20 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     private lateinit var springAppName: String
 
     override fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
+        val restApi = this.restApi
         return if (restApi != null) {
-            if (props.isGatewayMode) {
+            if (props.gatewayMode) {
                 log.info("Initialize remote records resolver in Gateway mode")
             } else {
                 log.info("Initialize remote records resolver in normal mode")
             }
             val resolver = RemoteRecordsResolver(this, restApi)
-            if (props.isGatewayMode) {
+            if (props.gatewayMode) {
                 resolver.setDefaultAppName(props.defaultApp)
             }
             resolver
         } else {
-            check(!props.isGatewayMode) {
+            check(!props.gatewayMode) {
                 ("restApi should be not null in gateway mode! Props: $props")
             }
             log.warn("RecordsRestConnection is not exists. Remote records requests wont be allowed")

@@ -15,7 +15,10 @@ class BeanTypeContext(private val getters: Map<String, (Any) -> Any?>) {
     @Throws(Exception::class)
     fun getProperty(bean: Any?, name: String): Any? {
         bean ?: return null
-        return getters[name]?.invoke(bean) ?: {
+        val getter = getters[name]
+        return if (getter != null) {
+            getter.invoke(bean)
+        } else {
             log.debug("Property not found: " + name + " in type " + bean.javaClass)
             null
         }

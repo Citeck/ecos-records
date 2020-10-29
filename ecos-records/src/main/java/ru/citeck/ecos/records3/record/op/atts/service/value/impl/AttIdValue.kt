@@ -2,19 +2,13 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.impl
 
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 
+class AttIdValue(private val id: Any?) : AttValue {
 
-class AttIdValue(id: Any?) : AttValue {
-    private val id: String?
     override fun asText(): String? {
-        return id
+        return id?.toString() ?: ""
     }
 
-    override fun getId(): String? {
-        return id
-    }
-
-    init {
-        check("id", id)
-        this.id = id.toString()
+    override fun getId(): Any {
+        return id ?: ""
     }
 }

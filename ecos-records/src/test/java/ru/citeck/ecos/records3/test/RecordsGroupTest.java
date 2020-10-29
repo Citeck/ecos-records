@@ -178,7 +178,7 @@ class RecordsGroupTest extends AbstractRecordsDao
         Predicate predicate = recordsQuery.getQuery(Predicate.class);
         java.util.function.Predicate<PojoMeta> pojoPredicate = buildPred(predicate);
 
-        int max = recordsQuery.getMaxItems() >= 0 ? recordsQuery.getMaxItems() : Integer.MAX_VALUE;
+        int max = recordsQuery.getPage().getMaxItems() >= 0 ? recordsQuery.getPage().getMaxItems() : Integer.MAX_VALUE;
 
         List<PojoMeta> filteredValues = VALUES.stream()
             .filter(pojoPredicate)
@@ -200,19 +200,19 @@ class RecordsGroupTest extends AbstractRecordsDao
 
         Predicate predicate = Predicates.gt("numKey", 4);
 
-        RecordsQuery recordsQuery = new RecordsQuery();
-        recordsQuery.setQuery(predicate);
-        recordsQuery.setSourceId(SOURCE_ID);
-        recordsQuery.setLanguage("fts");
-        recordsQuery.setGroupBy(Collections.singletonList("strVal"));
+        RecordsQuery recordsQuery = RecordsQuery.create()
+            .withQuery(predicate)
+            .withSourceId(SOURCE_ID)
+            .withLanguage("fts")
+            .withGroupBy(Collections.singletonList("strVal"))
+            .build();
 
         RecordsQuery baseQuery = Json.getMapper().copy(recordsQuery);
 
         assertResults(recordsService.query(recordsQuery, Result.class), predicate);
         assertEquals(baseQuery, recordsQuery);
 
-        recordsQuery = new RecordsQuery(baseQuery);
-        recordsQuery.setLanguage("fts");
+        recordsQuery = baseQuery.copy().withLanguage("fts").build();
 
         assertResults(recordsService.query(recordsQuery, Result.class), predicate);
     }
@@ -277,15 +277,16 @@ class RecordsGroupTest extends AbstractRecordsDao
 
     private void testDistinct(Predicate predicate, Function<PojoMeta, Boolean> predicateFunc, String distinctAtt) {
 
-        RecordsQuery recordsQuery = new RecordsQuery();
-        recordsQuery.setSourceId(SOURCE_ID);
-
-        recordsQuery.setLanguage(DistinctQuery.LANGUAGE);
         DistinctQuery distinctQuery = new DistinctQuery();
         distinctQuery.setAttribute(distinctAtt);
         distinctQuery.setLanguage("predicate");
         distinctQuery.setQuery(predicate);
-        recordsQuery.setQuery(distinctQuery);
+
+        RecordsQuery recordsQuery = RecordsQuery.create()
+            .withSourceId(SOURCE_ID)
+            .withLanguage(DistinctQuery.LANGUAGE)
+            .withQuery(distinctQuery)
+            .build();
 
         RecsQueryRes<DistinctValue> result = recordsService.query(recordsQuery, DistinctValue.class);
 

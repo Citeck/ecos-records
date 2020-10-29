@@ -10,6 +10,7 @@ object BeanTypeUtils {
 
     private val typeCtxCache = ConcurrentHashMap<Class<*>, BeanTypeContext>()
 
+    @JvmStatic
     fun getTypeContext(type: Class<*>): BeanTypeContext {
         return typeCtxCache.computeIfAbsent(type) {
             BeanTypeContext(getGetters(it))

@@ -101,6 +101,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
             })
             .collect(Collectors.toList());
     }
+
     @NotNull
     @Override
     public List<String> getSupportedLanguages() {

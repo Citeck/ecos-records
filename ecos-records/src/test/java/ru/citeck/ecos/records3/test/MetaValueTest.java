@@ -117,7 +117,7 @@ public class MetaValueTest extends AbstractRecordsDao
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return DISP_VALUE;
         }
 
@@ -137,7 +137,7 @@ public class MetaValueTest extends AbstractRecordsDao
         }
 
         @Override
-        public Boolean asBool() {
+        public Boolean asBoolean() {
             return BOOL_VALUE;
         }
 
@@ -147,7 +147,7 @@ public class MetaValueTest extends AbstractRecordsDao
         }
 
         @Override
-        public Object as(@NotNull String type) {
+        public Object getAs(@NotNull String type) {
             switch (type) {
                 case "num":
                     return asDouble();

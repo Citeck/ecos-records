@@ -64,7 +64,7 @@ class RecordsGroup(private val query: RecordsQuery,
                 .withSkipCount(0)
                 .build()
             val records = recordsService.query(countQuery)
-            return records.totalCount
+            return records.getTotalCount()
         }
         if (name.startsWith(FIELD_SUM)) {
             val attribute = name.substring(FIELD_SUM.length + 1, name.length - 1) + "?num"

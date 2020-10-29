@@ -3,9 +3,9 @@ package ru.citeck.ecos.records3.rest.v1.query
 import ecos.com.fasterxml.jackson210.annotation.JsonInclude
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import ecos.com.fasterxml.jackson210.databind.node.TextNode
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
@@ -16,9 +16,9 @@ import java.util.*
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 class QueryBody : RequestBody() {
 
-    var records: MutableList<RecordRef>? = null
+    private var records: MutableList<RecordRef>? = null
     var query: RecordsQuery? = null
-    var attributes: JsonNode = NullNode.getInstance()
+    var attributes: DataValue = DataValue.NULL
     var rawAtts = false
 
     fun setRecord(record: RecordRef) {
@@ -28,10 +28,22 @@ class QueryBody : RequestBody() {
         records!!.add(record)
     }
 
+    fun getRecords() : List<RecordRef>? {
+        return records
+    }
+
+    fun setRecords(records: List<RecordRef>?) {
+        this.records = if (records == null) {
+            null
+        } else {
+            ArrayList(records)
+        }
+    }
+
     fun setAttribute(attribute: String) {
         val objNode: ObjectNode = Json.mapper.newObjectNode()
         objNode.set<JsonNode?>(attribute, TextNode.valueOf(attribute))
-        attributes = objNode
+        attributes = DataValue.create(objNode)
     }
 
     @JsonSetter
@@ -40,10 +52,10 @@ class QueryBody : RequestBody() {
         val node: JsonNode = Json.mapper.toJson(attributes)
         if (node.isArray) {
             val objNode: ObjectNode = Json.mapper.newObjectNode()
-            node.forEach { n -> objNode.set(n.asText(), n) }
-            this.attributes = objNode
+            node.forEach { n -> objNode.set<ObjectNode>(n.asText(), n) }
+            this.attributes = DataValue.create(objNode)
         } else {
-            this.attributes = node
+            this.attributes = DataValue.create(node)
         }
     }
 

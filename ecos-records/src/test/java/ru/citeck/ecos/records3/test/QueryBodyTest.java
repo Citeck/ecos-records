@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 
@@ -30,6 +31,6 @@ class QueryBodyTest {
         String strBodyFromUtils = Json.getMapper().toString(body);
         String strBodyFromMapper = mapper.writeValueAsString(body);
 
-        assertEquals(strBodyFromMapper, strBodyFromUtils);
+        assertEquals(DataValue.create(strBodyFromMapper), DataValue.create(strBodyFromUtils));
     }
 }

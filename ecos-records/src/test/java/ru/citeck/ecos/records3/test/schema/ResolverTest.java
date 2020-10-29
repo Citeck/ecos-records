@@ -152,9 +152,9 @@ public class ResolverTest {
             }
 
             Object result = resolver.resolve(ResolveArgs.create()
-                .setValues(Collections.singletonList(value))
-                .setAtt(reader.read(att))
-                .setMixins(Arrays.asList(mixins))
+                .withValues(Collections.singletonList(value))
+                .withAttribute(reader.read(att))
+                .withMixins(Arrays.asList(mixins))
                 .build()).get(0).get(att);
 
             if (!(result instanceof DataValue)) {

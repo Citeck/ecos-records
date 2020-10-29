@@ -7,9 +7,13 @@ import java.util.*
 abstract class RequestBody {
 
     var requestId = ""
-    var requestTrace: MutableList<String> = ArrayList()
-        private set
     var msgLevel: MsgLevel = MsgLevel.INFO
+
+    private var requestTrace: List<String> = emptyList()
+
+    fun getRequestTrace() : List<String> {
+        return requestTrace
+    }
 
     fun setRequestTrace(requestTrace: List<String>?) {
         if (requestTrace != null) {
@@ -19,10 +23,7 @@ abstract class RequestBody {
         }
     }
 
-    val version: Int
-        get() = 1
+    fun getVersion() = 1
 
-    override fun toString(): String {
-        return Json.mapper.toString(this) ?: "RequestBody"
-    }
+    override fun toString() = Json.mapper.toString(this) ?: "RequestBody"
 }

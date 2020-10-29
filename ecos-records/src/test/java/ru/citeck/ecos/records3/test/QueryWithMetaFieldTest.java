@@ -77,8 +77,9 @@ public class QueryWithMetaFieldTest extends AbstractRecordsDao implements Record
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         RecsQueryRes<TestDto> result = recordsService.query(query, TestDto.class);
 

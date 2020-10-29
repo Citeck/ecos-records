@@ -29,11 +29,11 @@ public class QueryContext {
     }
 
     public boolean isComputedAttsDisabled() {
-        return RequestContext.getCurrentNotNull().getCtxData().isComputedAttsDisabled();
+        return RequestContext.getCurrentNotNull().getCtxData().getComputedAttsDisabled();
     }
 
     public static <T> T withoutComputedAtts(Supplier<T> callable) {
-        return RequestContext.doWithCtx(b -> b.setCompAttsDisabled(true), ctx -> callable.get());
+        return RequestContext.doWithCtxJ(b -> b.setComputedAttsDisabled(true), ctx -> callable.get());
     }
 
     public static void withAttributes(Map<String, Object> contextAttributes, Runnable runnable) {
@@ -57,7 +57,7 @@ public class QueryContext {
                                     Map<String, Object> atts) {
 
         withContext(serviceFactory, ctx ->
-            RequestContext.doWithCtx(b -> b.setCtxAtts(atts), reqCtx -> {
+            RequestContext.doWithCtxJ(b -> b.setCtxAtts(atts), reqCtx -> {
                 runnable.run();
                 return null;
             })
@@ -97,6 +97,6 @@ public class QueryContext {
     }
 
     public Map<String, Object> getAttributes() {
-        return RequestContext.getCurrentNotNull().getAttributes();
+        return RequestContext.getCurrentNotNull().getCtxAtts();
     }
 }

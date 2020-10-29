@@ -1,26 +1,67 @@
 package ru.citeck.ecos.records3.record.op.atts.service.value.factory
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
-import ru.citeck.ecos.records3.record.op.atts.service.value.factory.RecordRefValueFactory
+import ru.citeck.ecos.records3.record.op.atts.service.value.impl.InnerAttValue
 import java.util.*
 
+class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
-class RecordRefValueFactory(serviceFactory: RecordsServiceFactory?) : AttValueFactory<RecordRef> {
-    private val recordsService: RecordsService?
-    private val schemaWriter: AttSchemaWriter? = AttSchemaGqlWriter()
-    override fun getValue(value: RecordRef): AttValue? {
-        return RecordRefValueFactory.RecordRefValue(value)
+    companion object {
+        private val ATT_ID: String? = "?id"
+        private val ATT_LOCAL_ID: String? = "?localId"
     }
 
-    override val valueTypes: MutableList<Class<out T?>?>?
-        get() = listOf(RecordRef::class.java)
+    private val recordsService = services.recordsServiceV1
+    private val schemaWriter = services.attSchemaWriter
 
-    inner class RecordRefValue internal constructor(recordRef: RecordRef?) : AttValue {
-        private val ref: RecordRef?
-        private val innerAtts: InnerAttValue?
-        override fun getId(): RecordRef? {
+    override fun getValue(value: RecordRef): AttValue? {
+        return RecordRefValue(value)
+    }
+
+    override fun getValueTypes() = listOf(RecordRef::class.java)
+
+    inner class RecordRefValue(private val ref: RecordRef) : AttValue {
+
+        private val innerAtts: InnerAttValue
+
+        init {
+            val schemaAtt: SchemaAtt = AttContext.getCurrentSchemaAtt()
+            val innerSchema = schemaAtt.inner
+
+            val attsMap: MutableMap<String, String> = HashMap()
+            val sb = StringBuilder()
+            for (inner in innerSchema) {
+                val innerName: String = inner.name
+                if (innerName != ATT_ID && innerName != ATT_LOCAL_ID) {
+                    schemaWriter.write(inner, sb)
+                    attsMap[inner.name] = sb.toString()
+                    sb.setLength(0)
+                }
+            }
+            val atts: RecordAtts
+            if (attsMap.isNotEmpty()) {
+                atts = recordsService.getAtts(setOf(ref), attsMap, true)[0]
+            } else {
+                atts = RecordAtts(ref)
+            }
+
+            var dataNode: JsonNode = atts.getAtts().getData().asJson()
+            dataNode = schemaWriter.unescapeKeys(dataNode)
+            innerAtts = InnerAttValue(dataNode)
+
+            //todo
+            if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
+                atts.setAtt("?str", atts.getStringOrNull("?assoc"))
+            }
+        }
+
+        override fun getId(): RecordRef {
             return ref
         }
 
@@ -29,7 +70,7 @@ class RecordRefValueFactory(serviceFactory: RecordsServiceFactory?) : AttValueFa
         }
 
         override fun getDisplayName(): String? {
-            return innerAtts.getDispName()
+            return innerAtts.getDisplayName()
         }
 
         override fun asDouble(): Double? {
@@ -37,7 +78,7 @@ class RecordRefValueFactory(serviceFactory: RecordsServiceFactory?) : AttValueFa
         }
 
         override fun asBoolean(): Boolean? {
-            return innerAtts.asBool()
+            return innerAtts.asBoolean()
         }
 
         override fun asJson(): Any? {
@@ -49,54 +90,11 @@ class RecordRefValueFactory(serviceFactory: RecordsServiceFactory?) : AttValueFa
         }
 
         override fun getAs(type: String): Any? {
-            return innerAtts.`as`(type)
+            return innerAtts.getAs(type)
         }
 
         override fun getAtt(name: String): Any? {
             return innerAtts.getAtt(name)
         }
-
-        fun getRef(): RecordRef? {
-            return ref
-        }
-
-        init {
-            val schemaAtt: SchemaAtt = AttContext.Companion.getCurrentSchemaAtt()
-            val innerSchema: MutableList<SchemaAtt?> = schemaAtt.inner
-            ref = recordRef
-            val attsMap: MutableMap<String?, String?> = HashMap()
-            val sb = StringBuilder()
-            for (inner in innerSchema) {
-                val innerName: String = inner.name
-                if (innerName != RecordRefValueFactory.Companion.ATT_ID && innerName != RecordRefValueFactory.Companion.ATT_LOCAL_ID) {
-                    schemaWriter.write(inner, sb)
-                    attsMap[inner.name] = sb.toString()
-                    sb.setLength(0)
-                }
-            }
-            val atts: RecordAtts?
-            if (attsMap.size > 0) {
-                atts = recordsService.getAtts(setOf(ref), attsMap, true).get(0)
-            } else {
-                atts = RecordAtts(ref)
-            }
-            var dataNode: JsonNode = atts.getAtts().getData().asJson()
-            dataNode = schemaWriter.unescapeKeys(dataNode)
-            innerAtts = InnerAttValue(dataNode)
-
-            //todo
-            if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
-                atts.setAtt("?str", atts.getStringOrNull("?assoc"))
-            }
-        }
-    }
-
-    companion object {
-        private val ATT_ID: String? = "?id"
-        private val ATT_LOCAL_ID: String? = "?localId"
-    }
-
-    init {
-        recordsService = serviceFactory.getRecordsServiceV1()
     }
 }

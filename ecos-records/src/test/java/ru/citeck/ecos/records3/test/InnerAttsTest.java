@@ -137,7 +137,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return "INNER_DISP";
         }
 

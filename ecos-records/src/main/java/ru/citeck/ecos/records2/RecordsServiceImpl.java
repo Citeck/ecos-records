@@ -66,8 +66,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
 
-            ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery queryV1 =
-                mapper.convert(query, ru.citeck.ecos.records3.record.op.query.dto.RecordsQuery.class);
+            ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery queryV1 =
+                mapper.convert(query, ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery.class);
             if (queryV1 == null) {
                 return new RecordsQueryResult<>();
             }
@@ -79,7 +79,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
             result.setRecords(queryRes.getRecords());
             result.setTotalCount(queryRes.getTotalCount());
-            result.setHasMore(queryRes.isHasMore());
+            result.setHasMore(queryRes.getHasMore());
             result.setErrors(context.getRecordErrors());
             setDebugToResult(result, context);
 
@@ -134,7 +134,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 .stream()
                 .map(RecordMeta::new)
                 .collect(Collectors.toList()));
-            metaResult.setHasMore(result.isHasMore());
+            metaResult.setHasMore(result.getHasMore());
             metaResult.setTotalCount(result.getTotalCount());
 
             metaResult.setErrors(ctx.getRecordErrors());

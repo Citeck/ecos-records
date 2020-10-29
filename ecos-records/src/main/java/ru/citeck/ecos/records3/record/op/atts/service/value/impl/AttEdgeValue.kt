@@ -8,28 +8,28 @@ class AttEdgeValue(val edge: AttEdge?) : AttValue {
 
     override fun getAtt(name: String): Any? {
         return when (name) {
-            "name" -> edge?.getName()
-            "val" -> edge?.getValue()
+            "name" -> edge?.name
+            "val" -> edge?.value
             "vals" -> {
-                val value: Any = edge?.getValue() ?: emptyList<Any?>()
+                val value: Any = edge?.value ?: emptyList<Any?>()
                 if (value is Collection<*>) {
                     ArrayList(value)
                 } else {
                     listOf(value)
                 }
             }
-            "title" -> edge?.getTitle()
-            "description" -> edge?.getDescription()
-            "protected" -> edge?.isProtected()
-            "canBeRead" -> edge?.canBeRead()
-            "multiple" -> edge?.isMultiple()
-            "options" -> edge?.getOptions()
-            "javaClass" -> edge?.getJavaClass()?.name
-            "editorKey" -> edge?.getEditorKey()
-            "type" -> edge?.getType()
-            "distinct" -> edge?.getDistinct()
-            "createVariants" -> edge?.getCreateVariants()
-            "isAssoc" -> edge?.isAssociation()
+            "title" -> edge?.title
+            "description" -> edge?.description
+            "protected" -> edge?.isProtected
+            "isReadable" -> edge?.isReadable
+            "multiple" -> edge?.isMultiple
+            "options" -> edge?.options
+            "javaClass" -> edge?.javaClass?.name
+            "editorKey" -> edge?.editorKey
+            "type" -> edge?.type
+            "distinct" -> edge?.distinct
+            "createVariants" -> edge?.createVariants
+            "isAssoc" -> edge?.isAssociation
             else -> null
         }
     }

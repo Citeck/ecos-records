@@ -161,7 +161,7 @@ public class MetaEdgeTypeDef implements GqlTypeDefinition {
 
     private boolean canBeRead(DataFetchingEnvironment env) {
         MetaEdge edge = env.getSource();
-        return edge.canBeRead();
+        return edge.isReadable();
     }
 
     private String getTitle(DataFetchingEnvironment env) {

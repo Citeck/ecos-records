@@ -12,6 +12,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -24,19 +25,23 @@ open class RequestContext {
 
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
 
+        @JvmStatic
         fun getCurrent(): RequestContext? {
             return current.get()
         }
 
+        @JvmStatic
         fun getCurrentNotNull(): RequestContext {
             return getCurrent() ?: error("Request context is mandatory. " +
                     "Add RequestContex.withCtx(ctx -> {...}) before call")
         }
 
+        @JvmStatic
         fun getLocale() : Locale {
-            return getCurrentNotNull().getLocale()
+            return getCurrentNotNull().getCtxLocale()
         }
 
+        @JvmStatic
         fun <T> doWithAtts(atts: Map<String, Any?>, action: (RequestContext) -> T): T {
             return doWithCtx(null, { it.withCtxAtts(atts) }, action)
         }
@@ -45,16 +50,36 @@ open class RequestContext {
             return doWithCtx(null, { it.withCtxAtts(atts) }) { action.invoke() }
         }
 
+        @JvmStatic
+        fun <T> doWithAtts(atts: Map<String, Any?>, action: Supplier<T>): T {
+            return doWithCtx(null, { it.withCtxAtts(atts) }) { action.get() }
+        }
+
+        @JvmStatic
         fun <T> doWithCtx(action: (RequestContext) -> T): T {
             return doWithCtx(null, null, action)
         }
 
+        @JvmStatic
         fun <T> doWithCtx(factory: RecordsServiceFactory?, action: (RequestContext) -> T): T {
             return doWithCtx(factory, null, action)
         }
 
         fun <T> doWithCtx(ctxData: ((RequestCtxData.Builder) -> Unit)?, action: (RequestContext) -> T): T {
             return doWithCtx(null, ctxData, action)
+        }
+
+        @JvmStatic
+        fun <T> doWithCtxJ(ctxData: Consumer<RequestCtxData.Builder>, action: (RequestContext) -> T): T {
+            return doWithCtx(null, { ctxData.accept(it) }, action)
+        }
+
+        @JvmStatic
+        fun <T> doWithCtxJ(factory: RecordsServiceFactory?,
+                           ctxData: Consumer<RequestCtxData.Builder>,
+                           action: (RequestContext) -> T): T {
+
+            return doWithCtx(factory, { b: RequestCtxData.Builder -> ctxData.accept(b) }, action)
         }
 
         fun <T> doWithCtx(factory: RecordsServiceFactory?,
@@ -131,7 +156,7 @@ open class RequestContext {
         }
     }
 
-    fun getLocale() : Locale {
+    fun getCtxLocale() : Locale {
         return ctxData.locale
     }
 
@@ -143,7 +168,7 @@ open class RequestContext {
         if (data != null) {
             ctxVars[key] = data
         } else {
-            removeVar(key)
+            removeVar<Any>(key)
         }
     }
 

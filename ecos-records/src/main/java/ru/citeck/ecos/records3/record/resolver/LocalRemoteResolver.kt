@@ -1,30 +1,30 @@
 package ru.citeck.ecos.records3.record.resolver
 
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.record.dao.RecordsDao
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
-import java.util.function.Function
 
 class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     private val local = services.localRecordsResolver
     private val remote = services.remoteRecordsResolver
     private val reader = services.attSchemaReader
-    private val currentAppSourceIdPrefix: String
-    private val isGatewayMode: Boolean
 
-    init {
-        currentAppSourceIdPrefix = services.properties.appName + "/"
-        isGatewayMode = services.properties.isGatewayMode
-    }
+    private val currentAppSourceIdPrefix = services.properties.appName + "/"
+    private val isGatewayMode = services.properties.gatewayMode
 
     fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
         val sourceId = query.sourceId
@@ -39,10 +39,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val atts: List<SchemaAtt> = reader.read(attributes)
         return AttContext.doWithCtx(services) { attContext ->
             if (atts.isNotEmpty()) {
-                attContext.schemaAtt = SchemaAtt.create()
+                attContext.setSchemaAtt(SchemaAtt.create()
                     .withName("")
                     .withInner(atts)
-                    .build()
+                    .build())
             }
             action.invoke(atts)
         }
@@ -56,99 +56,100 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         if (remote == null) {
             return doWithSchema(attributes) { atts -> local.getAtts(records, atts, rawAtts) }
         }
-        val context: RequestContext = RequestContext.Companion.getCurrentNotNull()
-        val recordObjs: List<ValWithIdx<Any>> = ArrayList<ValWithIdx<Any>>()
-        val recordRefs: List<ValWithIdx<RecordRef>> = ArrayList<ValWithIdx<RecordRef>>()
-        var idx = 0
-        for (rec in records) {
+        val context: RequestContext = RequestContext.getCurrentNotNull()
+        val recordObjs = ArrayList<ValWithIdx<Any?>>()
+        val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
+
+        for ((idx, rec) in records.withIndex()) {
             if (rec is RecordRef) {
-                recordRefs.add(ValWithIdx<RecordRef?>(rec as RecordRef?, idx))
+                recordRefs.add(ValWithIdx(rec, idx))
             } else {
-                recordObjs.add(ValWithIdx<Any?>(rec, idx))
+                recordObjs.add(ValWithIdx(rec, idx))
             }
-            idx++
         }
-        val results: List<ValWithIdx<RecordAtts>> = ArrayList<ValWithIdx<RecordAtts>>()
+
+        val results = ArrayList<ValWithIdx<RecordAtts>>()
         val recordsObjValue = recordObjs.map { it.value }
-        val objAtts: List<RecordAtts> = doWithSchema(attributes) { atts ->
+        val objAtts = doWithSchema(attributes) { atts ->
             local.getAtts(recordsObjValue, atts, rawAtts)
         }
-        if (objAtts != null && objAtts.size == recordsObjValue!!.size) {
+        if (objAtts.size == recordsObjValue.size) {
             for (i in objAtts.indices) {
-                results.add(ValWithIdx<RecordAtts?>(objAtts[i], recordObjs[i].getIdx()))
+                results.add(ValWithIdx(objAtts[i], recordObjs[i].idx))
             }
         } else {
             context.addMsg(MsgLevel.ERROR) {
                 "Results count doesn't match with " +
                     "requested. objAtts: " + objAtts + " recordsObjValue: " + recordsObjValue
             }
-            return null
+            return recordsObjValue.map { RecordAtts() }
         }
-        RecordsUtils.groupRefBySourceWithIdx(recordRefs).forEach(BiConsumer<String, List<ValWithIdx<RecordRef?>?>?> { sourceId: String?, recs: List<ValWithIdx<RecordRef?>?>? ->
-            val refs: List<RecordRef?> = recs!!.stream()
-                .map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() })
-                .collect(Collectors.toList())
-            val atts: List<RecordAtts?>?
+
+        val refsBySource = RecordsUtils.groupRefBySourceWithIdx(recordRefs)
+
+        refsBySource.forEach { (sourceId, recs) ->
+
+            val refs: List<RecordRef> = recs.map { it.value }
+            val atts: List<RecordAtts>
+
             atts = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
-                doWithSchema<List<RecordAtts?>?>(attributes, Function<List<SchemaAtt>, List<RecordAtts?>?> { schema: List<SchemaAtt> -> local!!.getAtts(refs, schema!!, rawAtts) })
-            } else if (isGatewayMode || isRemoteRef(recs.stream()
-                    .map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() })
-                    .findFirst()
-                    .orElse(null))) {
+                doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
+            } else if (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull())) {
                 remote.getAtts(refs, attributes, rawAtts)
             } else {
-                doWithSchema<List<RecordAtts?>?>(attributes, Function<List<SchemaAtt>, List<RecordAtts?>?> { schema: List<SchemaAtt> -> local!!.getAtts(refs, schema!!, rawAtts) })
+                doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
             }
-            if (atts == null || atts.size != refs.size) {
+            if (atts.size != refs.size) {
                 context.addMsg(MsgLevel.ERROR) {
                     "Results count doesn't match with " +
                         "requested. Atts: " + atts + " refs: " + refs
                 }
                 for (record in recs) {
-                    results.add(ValWithIdx<RecordAtts?>(RecordAtts(record.getValue()), record.getIdx()))
+                    results.add(ValWithIdx(RecordAtts(record.value), record.idx))
                 }
             } else {
                 for (i in refs.indices) {
-                    results.add(ValWithIdx<RecordAtts?>(atts[i], recs[i].getIdx()))
+                    results.add(ValWithIdx(atts[i], recs[i].idx))
                 }
             }
-        })
-        results.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<RecordAtts?>?> { obj: ValWithIdx<RecordAtts?>? -> obj.getIdx() }))
-        return results.stream().map(Function<ValWithIdx<RecordAtts?>?, RecordAtts?> { obj: ValWithIdx<RecordAtts?>? -> obj.getValue() }).collect(Collectors.toList())
+        }
+        results.sortBy { it.idx }
+        return results.map { it.value }
     }
 
-    fun mutate(records: List<RecordAtts?>): List<RecordRef?>? {
+    fun mutate(records: List<RecordAtts>): List<RecordRef> {
         if (remote == null || records.isEmpty()) {
-            return local!!.mutate(records)
+            return local.mutate(records)
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
             remote.mutate(records)
-        } else local!!.mutate(records)
+        } else local.mutate(records)
     }
 
-    fun delete(records: List<RecordRef?>): List<DelStatus?>? {
+    fun delete(records: List<RecordRef>): List<DelStatus> {
         if (remote == null || records.isEmpty()) {
-            return local!!.delete(records)
+            return local.delete(records)
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
             remote.delete(records)
-        } else local!!.delete(records)
+        } else local.delete(records)
     }
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
         return if (isGatewayMode || isRemoteSourceId(sourceId)) {
-            remote!!.getSourceInfo(sourceId)
-        } else local!!.getSourceInfo(sourceId)
+            remote.getSourceInfo(sourceId)
+        } else {
+            local.getSourceInfo(sourceId)
+        }
     }
 
-    val sourceInfo: List<Any?>
-        get() {
-            val result: List<RecordsDaoInfo?> = ArrayList<RecordsDaoInfo?>(local!!.getSourceInfo())
-            result.addAll(remote!!.getSourceInfo())
-            return result
-        }
+    fun getSourceInfo() : List<RecordsDaoInfo> {
+        val result = ArrayList(local.getSourceInfo())
+        result.addAll(remote.getSourceInfo())
+        return result
+    }
 
-    private fun isRemoteRef(meta: RecordAtts?): Boolean {
+    private fun isRemoteRef(meta: RecordAtts): Boolean {
         return isRemoteRef(meta.getId())
     }
 
@@ -157,15 +158,17 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     }
 
     private fun isRemoteSourceId(sourceId: String?): Boolean {
-        if (isBlank(sourceId)) {
+        if (sourceId == null || StringUtils.isBlank(sourceId)) {
             return false
         }
-        return if (local!!.containsDao(sourceId)) {
+        return if (local.containsDao(sourceId)) {
             false
-        } else sourceId!!.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix!!)
+        } else {
+            sourceId.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix)
+        }
     }
 
-    fun register(sourceId: String?, recordsDao: RecordsDao?) {
-        local!!.register(sourceId, recordsDao)
+    fun register(sourceId: String, recordsDao: RecordsDao) {
+        local.register(sourceId, recordsDao)
     }
 }

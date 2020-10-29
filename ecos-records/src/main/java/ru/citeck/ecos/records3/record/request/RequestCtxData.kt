@@ -1,11 +1,15 @@
 package ru.citeck.ecos.records3.record.request
 
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
 
 @JsonDeserialize(builder = RequestCtxData.Builder::class)
-class RequestCtxData(
+@JackJsonDeserialize(builder = RequestCtxData.Builder::class)
+data class RequestCtxData(
     val requestId: String,
     val requestTrace: List<String>,
     val locale: Locale,

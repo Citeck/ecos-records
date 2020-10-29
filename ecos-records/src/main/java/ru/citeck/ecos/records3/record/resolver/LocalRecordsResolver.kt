@@ -1,49 +1,57 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
-import lombok.Data
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records2.exception.LanguageNotSupportedException
 import ru.citeck.ecos.records2.meta.AttributesSchema
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.querylang.QueryWithLang
 import ru.citeck.ecos.records2.request.error.ErrorUtils
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
+import ru.citeck.ecos.records2.request.mutation.RecordsMutation
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.dao.local.job.Job
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
+import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider
+import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
-import ru.citeck.ecos.records2.request.query.RecordsQuery as RecordsQueryV0
 import ru.citeck.ecos.records3.record.dao.RecordsDao
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder
+import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver
+import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.BiConsumer
-import java.util.function.Consumer
-import java.util.function.Function
-import java.util.stream.Collectors
 
 class LocalRecordsResolver(private val services: RecordsServiceFactory) {
 
@@ -81,18 +89,18 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
     private val jobExecutor = JobExecutor(services)
     private val jobsInitialized = AtomicBoolean()
 
-    fun initJobs(executor: ScheduledExecutorService) {
+    fun initJobs(executor: ScheduledExecutorService?) {
         if (jobsInitialized.compareAndSet(false, true)) {
-            for (job in localRecordsResolverV0.getJobs()) {
+            for (job in localRecordsResolverV0.jobs) {
                 jobExecutor.addJob(job)
             }
             jobExecutor.init(executor)
         }
     }
 
-    fun query(query: RecordsQuery, attributes: List<SchemaAtt>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
+    fun query(queryArg: RecordsQuery, attributes: List<SchemaAtt>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
 
-        var query = query
+        var query = queryArg
         val context: RequestContext = RequestContext.getCurrentNotNull()
         var sourceId = query.sourceId
         val appDelimIdx = sourceId.indexOf('/')
@@ -110,20 +118,20 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
             val v0Query = V1ConvUtils.recsQueryV1ToV0(query, context)
             val attributesMap: Map<String, String> = attSchemaWriter.writeToMap(attributes)
             val schema: AttributesSchema = recordsMetaService.createSchema(attributesMap)
-            val records = localRecordsResolverV0.queryRecords(v0Query, schema.getSchema())
+            val records = localRecordsResolverV0.queryRecords(v0Query, schema.schema)
 
-            records.setRecords(recordsMetaService.convertMetaResult(records.getRecords(), schema, !rawAtts))
-            records.setRecords(unescapeKeys(records.getRecords()))
+            records.records = recordsMetaService.convertMetaResult(records.records, schema, !rawAtts)
+            records.records = unescapeKeys(records.records)
 
-            V1ConvUtils.addErrorMessages(records.getErrors(), context)
+            V1ConvUtils.addErrorMessages(records.errors, context)
             V1ConvUtils.addDebugMessage(records, context)
 
             val queryRes = RecsQueryRes<RecordAtts>()
             queryRes.setRecords(
-                Json.mapper.convert(records.getRecords(), Json.mapper.getListType(RecordAtts::class.java))
+                Json.mapper.convert(records.records, Json.mapper.getListType(RecordAtts::class.java))
             )
-            queryRes.hasMore = records.getHasMore()
-            queryRes.totalCount = records.getTotalCount()
+            queryRes.setHasMore(records.hasMore)
+            queryRes.setTotalCount(records.totalCount)
 
             return queryRes
         }
@@ -135,14 +143,14 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
 
             val dao = getRecordsDao(sourceId, RecordsQueryDao::class.java)
 
-            if (dao == null || !dao.isGroupingSupported()) {
+            if (dao == null || dao !is RecsGroupQueryDao) {
 
                 val groupsSource = needRecordsDao(RecordsGroupDao.ID, RecordsQueryDao::class.java)
                 val convertedQuery = updateQueryLanguage(query, groupsSource)
 
                 if (convertedQuery == null) {
 
-                    val errorMsg = ("GroupBy is not supported by language: "
+                    val errorMsg = ("GroupBy is not supported by language: $query"
                         + query.language + ". Query: " + query)
                     context.addMsg(MsgLevel.ERROR) { errorMsg }
 
@@ -157,8 +165,8 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                             rawAtts, emptyList())
 
                         recordsResult = RecsQueryRes(atts)
-                        recordsResult.hasMore = queryRes.hasMore
-                        recordsResult.totalCount = queryRes.totalCount
+                        recordsResult.setHasMore(queryRes.getHasMore())
+                        recordsResult.setTotalCount(queryRes.getTotalCount())
                     }
                 }
             }
@@ -183,8 +191,10 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     val msg = "RecordsQueryDao is not found for id = '$sourceId'"
                     context.addMsg(MsgLevel.ERROR) { msg }
                 } else {
+
                     recordsResult = RecsQueryRes()
-                    query = updateQueryLanguage(query, dao)!!
+                    query = updateQueryLanguage(query, dao) ?: error("Query language is not supported. $query")
+
                     val queryRes: RecsQueryRes<*>? = dao.queryRecords(query)
                     if (queryRes != null) {
                         val objMixins = if (dao is AttMixinsHolder) {
@@ -199,8 +209,8 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                             getAtts(queryRes.getRecords(), attributes, rawAtts, objMixins)
                         }
                         recordsResult.setRecords(recAtts)
-                        recordsResult.totalCount = queryRes.totalCount
-                        recordsResult.hasMore = queryRes.hasMore
+                        recordsResult.setTotalCount(queryRes.getTotalCount())
+                        recordsResult.setHasMore(queryRes.getHasMore())
                     }
                 }
             }
@@ -275,7 +285,7 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                 } else {
                     val replaced: DataValue? = values.put(attStr, att)
                     if (replaced == null) {
-                        distinctPredicate!!.addPredicate(Predicates.eq(distinctAtt, attStr))
+                        distinctPredicate.addPredicate(Predicates.eq(distinctAtt, attStr))
                     }
                 }
             }
@@ -295,7 +305,7 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
     }
 
     private fun updateQueryLanguage(recordsQuery: RecordsQuery, dao: RecordsQueryDao?): RecordsQuery? {
-        var recordsQuery = recordsQuery
+
         if (dao == null) {
             return null
         }
@@ -303,9 +313,11 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
         if (supportedLanguages.isEmpty()) {
             return recordsQuery
         }
-        val queryWithLangOpt: Optional<QueryWithLang?> = queryLangService.convertLang(recordsQuery.query,
+        val queryWithLangOpt: Optional<QueryWithLang?> = queryLangService.convertLang(
+            recordsQuery.query,
             recordsQuery.language,
-            supportedLanguages)
+            supportedLanguages
+        )
         if (queryWithLangOpt.isPresent) {
             val queryWithLang: QueryWithLang = queryWithLangOpt.get()
             return recordsQuery.copy {
@@ -333,7 +345,7 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
         if (log.isDebugEnabled) {
             log.debug("getMeta start.\nRecords: $records attributes: $attributes")
         }
-        val recordObjs = ArrayList<ValWithIdx<Any>>()
+        val recordObjs = ArrayList<ValWithIdx<Any?>>()
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
         var idx = 0
         for (rec in records) {
@@ -342,18 +354,18 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                 if (ref.appName == currentApp) {
                     ref = ref.removeAppName()
                 }
-                recordRefs.add(ValWithIdx<RecordRef>(ref, idx))
+                recordRefs.add(ValWithIdx(ref, idx))
             } else {
-                recordObjs.add(ValWithIdx<Any>(rec, idx))
+                recordObjs.add(ValWithIdx(rec, idx))
             }
             idx++
         }
-        val result: List<ValWithIdx<RecordAtts>> = ArrayList<ValWithIdx<RecordAtts>>()
+        val result = ArrayList<ValWithIdx<RecordAtts>>()
         val refsAtts: List<RecordAtts>? = getMetaImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
 
         if (refsAtts != null && refsAtts.size == recordRefs.size) {
             for (i in refsAtts.indices) {
-                result.add(ValWithIdx(refsAtts[i], recordRefs[i].getIdx()))
+                result.add(ValWithIdx(refsAtts[i], recordRefs[i].idx))
             }
         } else {
             context.addMsg(MsgLevel.ERROR) {
@@ -361,12 +373,15 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     "requested. refsAtts: " + refsAtts + " recordRefs: " + recordRefs
             }
         }
-        val atts: List<RecordAtts> = recordsAttsService.getAtts(recordObjs.stream()
-            .map(Function<ValWithIdx<Any?>?, Any?> { obj: ValWithIdx<Any?>? -> obj.getValue() })
-            .collect(Collectors.toList()), attributes, rawAtts, mixinsForObjects)
-        if (atts != null && atts.size == recordObjs.size) {
+        val atts: List<RecordAtts> = recordsAttsService.getAtts(
+            recordObjs.map { it.value },
+            attributes,
+            rawAtts,
+            mixinsForObjects
+        )
+        if (atts.size == recordObjs.size) {
             for (i in atts.indices) {
-                result.add(ValWithIdx<RecordAtts>(atts[i], recordObjs[i].getIdx()))
+                result.add(ValWithIdx(atts[i], recordObjs[i].idx))
             }
         } else {
             context.addMsg(MsgLevel.ERROR) {
@@ -374,13 +389,11 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     "requested. atts: " + atts + " recordObjs: " + recordObjs
             }
         }
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled) {
             log.debug("getMeta end.\nRecords: $records attributes: $attributes")
         }
-        result.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<RecordAtts>?> { obj: ValWithIdx<RecordAtts>? -> obj.getIdx() }))
-        return result.stream()
-            .map(Function<ValWithIdx<RecordAtts>?, RecordAtts> { obj: ValWithIdx<RecordAtts>? -> obj.getValue() })
-            .collect(Collectors.toList())
+        result.sortBy { it.idx }
+        return result.map { it.value }
     }
 
     private fun getMetaImpl(records: Collection<RecordRef>,
@@ -396,194 +409,205 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
         }
         val results = ArrayList<ValWithIdx<RecordAtts>>()
 
-        RecordsUtils.groupRefBySource(records).forEach( { sourceId: String, recs: List<ValWithIdx<RecordRef>> ->
-            val recordsDao: RecordsAttsDao = getRecordsDao<RecordsAttsDao?>(sourceId, RecordsAttsDao::class.java).orElse(null)
-            if (recordsDao == null) {
-                val sourceIdRefs: List<RecordRef?> = recs!!.stream()
-                    .map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() })
-                    .collect(Collectors.toList())
-                val processors: Map<String, List<AttProcDef?>?> = HashMap<String, List<AttProcDef?>?>()
-                val attsWithoutProcessors: List<SchemaAtt?> = ArrayList<SchemaAtt?>()
-                attributes.forEach(Consumer<SchemaAtt?> { att: SchemaAtt? ->
-                    processors[att.getAliasForValue()] = att.processors
-                    attsWithoutProcessors.add(AttUtils.removeProcessors(att))
-                })
-                val attributesMap: Map<String, String> = attSchemaWriter.writeToMap(attsWithoutProcessors)
-                val schema: AttributesSchema = recordsMetaService.createSchema(attributesMap)
-                var attsList: List<RecordAtts>? = null
-                try {
-                    val meta: RecordsResult<RecordMeta> = localRecordsResolverV0.getMeta(sourceIdRefs, schema.getSchema())
-                    meta.setRecords(recordsMetaService.convertMetaResult(meta.getRecords(), schema, !rawAtts))
-                    meta.setRecords(unescapeKeys(meta.getRecords()))
-                    V1ConvUtils.addErrorMessages(meta.getErrors(), context)
-                    V1ConvUtils.addDebugMessage(meta, context)
-                    attsList = Json.mapper.convert(meta.getRecords(), Json.mapper!!.getListType(RecordAtts::class.java))
-                    if (attsList != null && !processors.isEmpty()) {
-                        attsList = attsList.stream()
-                            .map(Function<RecordAtts, RecordMeta> { r: RecordAtts ->
-                                RecordMeta(r.getId(),
-                                    attProcService.applyProcessors(r.getAtts(), processors))
-                            }
-                            ).collect(Collectors.toList())
-                    }
-                } catch (e: Throwable) {
-                    log.error("Local records resolver v0 error. " +
-                        "SourceId: '" + sourceId + "' recs: " + recs, e)
-                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+        RecordsUtils.groupRefBySource(records).forEach { (sourceId, recs) ->
+            results.addAll(getMetaFromSource(sourceId, recs, attributes, rawAtts, context))
+        }
+        results.sortBy { it.idx }
+        return results.map { it.value }
+    }
+
+    private fun getMetaFromSource(sourceId: String,
+                                  recs: List<ValWithIdx<RecordRef>>,
+                                  attributes: List<SchemaAtt>,
+                                  rawAtts: Boolean,
+                                  context: RequestContext) : List<ValWithIdx<RecordAtts>> {
+
+        val results = ArrayList<ValWithIdx<RecordAtts>>()
+
+        val recordsDao = getRecordsDao(sourceId, RecordsAttsDao::class.java)
+
+        if (recordsDao == null) {
+
+            val sourceIdRefs: List<RecordRef?> = recs.map { it.value }
+            val processors = HashMap<String, List<AttProcDef>>()
+            val attsWithoutProcessors = ArrayList<SchemaAtt>()
+
+            attributes.forEach { att ->
+                processors[att.getAliasForValue()] = att.processors
+                attsWithoutProcessors.add(AttUtils.removeProcessors(att))
+            }
+
+            val attributesMap: Map<String, String> = attSchemaWriter.writeToMap(attsWithoutProcessors)
+            val schema: AttributesSchema = recordsMetaService.createSchema(attributesMap)
+            var attsList: List<RecordAtts>? = null
+
+            try {
+                val meta = localRecordsResolverV0.getMeta(sourceIdRefs, schema.schema).also {
+                    it.setRecords(recordsMetaService.convertMetaResult(it.records, schema, !rawAtts))
+                    it.setRecords(unescapeKeys(it.records))
                 }
-                if (attsList == null) {
-                    attsList = emptyList()
+                V1ConvUtils.addErrorMessages(meta.errors, context)
+                V1ConvUtils.addDebugMessage(meta, context)
+                attsList = Json.mapper.convert(meta.records, Json.mapper.getListType(RecordAtts::class.java))
+                if (attsList != null && processors.isNotEmpty()) {
+                    attsList = attsList.map {
+                        RecordMeta(it.getId(), attProcService.applyProcessors(it.getAtts(), processors))
+                    }
                 }
-                if (attsList!!.size != sourceIdRefs.size) {
-                    context.addMsg(MsgLevel.ERROR) { "getMetaImpl request failed. SourceId: '$sourceId' Records: $sourceIdRefs" }
-                    for (ref in recs) {
-                        results.add(ref.map(Function<RecordRef?, RecordAtts> { id: RecordRef? -> RecordAtts(id) }))
-                    }
-                } else {
-                    for (i in attsList.indices) {
-                        results.add(ValWithIdx<RecordAtts>(attsList[i], recs[i].getIdx()))
-                    }
+            } catch (e: Throwable) {
+                log.error("Local records resolver v0 error. " +
+                    "SourceId: '" + sourceId + "' recs: " + recs, e)
+                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+            }
+            if (attsList == null) {
+                attsList = emptyList()
+            }
+            if (attsList.size != sourceIdRefs.size) {
+                context.addMsg(MsgLevel.ERROR) { "getMetaImpl request failed. SourceId: '$sourceId' Records: $sourceIdRefs" }
+                for (ref in recs) {
+                    results.add(ref.withValue { RecordAtts(it) })
                 }
             } else {
-                var recAtts = recordsDao.getRecordsAtts(recs!!.stream()
-                    .map(Function<ValWithIdx<RecordRef?>?, String> { r: ValWithIdx<RecordRef?>? -> r.getValue().id })
-                    .collect(Collectors.toList())) as List<Any?>
-                if (recAtts == null) {
-                    recAtts = ArrayList()
-                    for (ignored in recs) {
-                        recAtts.add(EmptyAttValue.Companion.INSTANCE)
-                    }
-                }
-                if (recAtts.size != recs.size) {
-                    val finalRecAtts = recAtts
-                    context.addMsg(MsgLevel.ERROR) {
-                        "getRecordAtts should return " +
-                            "same amount of values as in argument. " +
-                            "SourceId: " + sourceId + "' " +
-                            "Expected length: " + recs.size + " " +
-                            "Actual length: " + finalRecAtts.size + " " +
-                            "Refs: " + recs + " Atts: " + finalRecAtts
-                    }
-                    for (ref in recs) {
-                        results.add(ref.map(Function<RecordRef?, RecordAtts> { id: RecordRef? -> RecordAtts(id) }))
-                    }
-                } else {
-                    var mixins: List<AttMixin?> = emptyList()
-                    if (recordsDao is AttMixinsHolder) {
-                        mixins = (recordsDao as AttMixinsHolder).getMixins()
-                    }
-                    val refs: List<RecordRef?> = recs.stream().map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() }).collect(Collectors.toList())
-                    val atts: List<RecordAtts> = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
-                    for (i in recs.indices) {
-                        results.add(ValWithIdx<RecordAtts>(atts[i], i))
-                    }
+                for (i in attsList.indices) {
+                    results.add(ValWithIdx(attsList[i], recs[i].idx))
                 }
             }
-        })
-        results.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<RecordAtts>?> { obj: ValWithIdx<RecordAtts>? -> obj.getIdx() }))
-        return results.stream().map(Function<ValWithIdx<RecordAtts>?, RecordAtts> { obj: ValWithIdx<RecordAtts>? -> obj.getValue() }).collect(Collectors.toList())
+        } else {
+            var recAtts = recordsDao.getRecordsAtts(recs.map { it.value.id })
+            if (recAtts == null) {
+                recAtts = ArrayList<Any>()
+                for (ignored in recs) {
+                    recAtts.add(EmptyAttValue.INSTANCE)
+                }
+            }
+            if (recAtts.size != recs.size) {
+                val finalRecAtts = recAtts
+                context.addMsg(MsgLevel.ERROR) {
+                    "getRecordAtts should return " +
+                        "same amount of values as in argument. " +
+                        "SourceId: " + sourceId + "' " +
+                        "Expected length: " + recs.size + " " +
+                        "Actual length: " + finalRecAtts.size + " " +
+                        "Refs: " + recs + " Atts: " + finalRecAtts
+                }
+                for (ref in recs) {
+                    results.add(ref.withValue { RecordAtts(it) })
+                }
+            } else {
+                var mixins: List<AttMixin> = emptyList()
+                if (recordsDao is AttMixinsHolder) {
+                    mixins = (recordsDao as AttMixinsHolder).getMixins()
+                }
+                val refs: List<RecordRef> = recs.map { it.value }
+                val atts: List<RecordAtts> = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
+                for (i in recs.indices) {
+                    results.add(ValWithIdx<RecordAtts>(atts[i], i))
+                }
+            }
+        }
+        return results
     }
 
     private fun unescapeKeys(meta: List<RecordMeta>): List<RecordMeta> {
-        return meta!!.stream().map(Function<RecordMeta, RecordMeta> { r: RecordMeta ->
-            var jsonNode: JsonNode = r.getAtts().getData().asJson()
+        return meta.map {
+            var jsonNode: JsonNode = it.getAtts().getData().asJson()
             jsonNode = attSchemaWriter.unescapeKeys(jsonNode)
-            RecordMeta(r.getId(), ObjectData.create(jsonNode))
-        }).collect(Collectors.toList())
+            RecordMeta(it.getId(), ObjectData.create(jsonNode))
+        }
     }
 
-    fun mutate(records: List<RecordAtts>): List<RecordRef?> {
-        val daoResult: List<RecordRef?> = ArrayList<RecordRef?>()
-        val refsMapping: Map<RecordRef?, RecordRef?> = HashMap<RecordRef?, RecordRef?>()
-        records.forEach(Consumer<RecordAtts> { record: RecordAtts ->
+    fun mutate(records: List<RecordAtts>): List<RecordRef> {
+
+        val daoResult = ArrayList<RecordRef>()
+        val refsMapping = HashMap<RecordRef, RecordRef>()
+
+        records.forEach { recordArg: RecordAtts ->
+
+            var record = recordArg
             val appName: String = record.getId().sourceId
             val sourceId: String = record.getId().sourceId
+
             if (currentApp == appName) {
                 val newId: RecordRef = record.getId().removeAppName()
                 refsMapping[newId] = record.getId()
                 record = RecordAtts(record, newId)
             }
-            val dao: RecordsMutateDao = getRecordsDao<RecordsMutateDao?>(sourceId, RecordsMutateDao::class.java).orElse(null)
+
+            val dao = getRecordsDao(sourceId, RecordsMutateDao::class.java)
+
             if (dao == null) {
+
                 val mutation = RecordsMutation()
-                mutation.setRecords(listOf(RecordMeta(record)))
+                mutation.records = listOf(RecordMeta(record))
                 val mutateRes: RecordsMutResult = localRecordsResolverV0.mutate(mutation)
-                if (mutateRes.getRecords() == null || mutateRes.getRecords().isEmpty()) {
+                if (mutateRes.records == null || mutateRes.records.isEmpty()) {
                     daoResult.add(record.getId())
                 } else {
-                    daoResult.add(mutateRes.getRecords().get(0).getId())
+                    daoResult.add(mutateRes.records[0].getId())
                 }
+
             } else {
+
                 val localRef: RecordRef = RecordRef.create("", record.getId().id)
-                var mutRes: List<RecordRef?>? = dao.mutate(listOf(RecordAtts(record, localRef)))
-                if (mutRes == null) {
-                    mutRes = listOf(record.getId())
-                } else {
-                    mutRes = mutRes.stream()
-                        .map(Function<RecordRef?, RecordRef?> { r: RecordRef? ->
-                            if (isBlank(r.sourceId)) {
-                                return@map RecordRef.create(sourceId, r.id)
-                            }
-                            r
-                        }).collect(Collectors.toList())
-                }
-                daoResult.addAll(mutRes!!)
+                var mutRes: List<RecordRef>? = dao.mutate(listOf(RecordAtts(record, localRef)))
+
+                mutRes = mutRes?.map {
+                    if (StringUtils.isBlank(it.sourceId)) {
+                        RecordRef.create(sourceId, it.id)
+                    } else {
+                        it
+                    }
+                } ?: listOf(record.getId())
+
+                daoResult.addAll(mutRes)
             }
-        })
-        var result: List<RecordRef?> = daoResult
-        if (!refsMapping.isEmpty()) {
-            result = daoResult
-                .stream()
-                .map(Function<RecordRef?, RecordRef?> { ref: RecordRef? -> refsMapping.getOrDefault(ref, ref) })
-                .collect(Collectors.toList())
+        }
+        var result: List<RecordRef> = daoResult
+        if (refsMapping.isNotEmpty()) {
+            result = daoResult.map { refsMapping.getOrDefault(it, it) }
         }
         return result
     }
 
-    fun delete(records: List<RecordRef?>): List<DelStatus?> {
-        val daoResult: List<DelStatus?> = ArrayList<DelStatus?>()
-        records.forEach(Consumer<RecordRef?> { record: RecordRef? ->
+    fun delete(records: List<RecordRef>): List<DelStatus> {
+        val daoResult = ArrayList<DelStatus>()
+        records.forEach { record ->
             val sourceId: String = record.sourceId
-            val dao: RecordsDeleteDao = needRecordsDao<RecordsDeleteDao?>(sourceId, RecordsDeleteDao::class.java)
-            val delResult: List<DelStatus?> = dao.delete(listOf<String>(record.id))
-            daoResult.add(if (delResult != null && !delResult.isEmpty()) delResult[0] else DelStatus.OK)
-        })
+            val dao = needRecordsDao(sourceId, RecordsDeleteDao::class.java)
+            val delResult = dao.delete(listOf(record.id))
+            daoResult.add(delResult[0])
+        }
         return daoResult
     }
 
-    private fun getDaoWithQuery(query: RecordsQuery?): ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver.DaoWithConvQuery? {
-        var sourceId = query!!.sourceId
+    private fun getDaoWithQuery(query: RecordsQuery): DaoWithConvQuery {
+        var sourceId = query.sourceId
         val sourceDelimIdx: Int = sourceId.indexOf(RecordRef.SOURCE_DELIMITER)
         var innerSourceId = ""
         if (sourceDelimIdx > 0) {
-            innerSourceId = sourceId!!.substring(sourceDelimIdx + 1)
+            innerSourceId = sourceId.substring(sourceDelimIdx + 1)
             sourceId = sourceId.substring(0, sourceDelimIdx)
         }
-        val dao = needRecordsDao<RecordsQueryDao?>(sourceId, RecordsQueryDao::class.java)
-        var convertedQuery = updateQueryLanguage(query, dao)
+        val dao = needRecordsDao(sourceId, RecordsQueryDao::class.java)
+        val convertedQuery = updateQueryLanguage(query, dao)
             ?: throw LanguageNotSupportedException(sourceId, query.language)
-        convertedQuery = RecordsQuery(convertedQuery)
-        convertedQuery.sourceId = innerSourceId
-        return ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver.DaoWithConvQuery(dao, convertedQuery)
+
+        return DaoWithConvQuery(dao, convertedQuery.copy().withSourceId(innerSourceId).build())
     }
 
-    fun register(sourceId: String, recordsDao: RecordsDao?) {
-        if (sourceId == null) {
-            log.error("id is a mandatory parameter for RecordsDao."
-                + " Type: " + recordsDao!!.javaClass
-                + " toString: " + recordsDao)
-            return
-        }
-        allDao!![sourceId] = recordsDao
-        register<RecordsAttsDao?>(sourceId, attsDao, RecordsAttsDao::class.java, recordsDao)
-        register<RecordsQueryDao?>(sourceId, queryDao, RecordsQueryDao::class.java, recordsDao)
-        register<RecordsMutateDao?>(sourceId, mutateDao, RecordsMutateDao::class.java, recordsDao)
-        register<RecordsDeleteDao?>(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
+    fun register(sourceId: String, recordsDao: RecordsDao) {
+
+        allDao[sourceId] = recordsDao
+        register(sourceId, attsDao, RecordsAttsDao::class.java, recordsDao)
+        register(sourceId, queryDao, RecordsQueryDao::class.java, recordsDao)
+        register(sourceId, mutateDao, RecordsMutateDao::class.java, recordsDao)
+        register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
+
         if (recordsDao is ServiceFactoryAware) {
-            (recordsDao as ServiceFactoryAware?).setRecordsServiceFactory(serviceFactory)
+            (recordsDao as ServiceFactoryAware).setRecordsServiceFactory(services)
         }
         if (recordsDao is JobsProvider) {
-            val jobs: List<Job?> = (recordsDao as JobsProvider?).getJobs()
+            val jobs: List<Job> = (recordsDao as JobsProvider).jobs
             for (job in jobs) {
                 jobExecutor.addJob(job)
             }
@@ -591,51 +615,54 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
     }
 
     private fun <T : RecordsDao?> register(id: String,
-                                           registry: Map<String, T?>?,
-                                           type: Class<T?>?,
-                                           value: RecordsDao?) {
-        var value = value
-        value = converter!!.convertOneToMultiDao(value)
-        if (type!!.isAssignableFrom(value!!.javaClass)) {
-            val dao = value as T?
-            registry!![id] = dao
+                                           registry: MutableMap<String, T>,
+                                           type: Class<T>,
+                                           valueArg: RecordsDao) {
+        var value = valueArg
+        value = converter.convertOneToMultiDao(value)
+        if (type.isAssignableFrom(value.javaClass)) {
+            @Suppress("UNCHECKED_CAST")
+            val dao = value as T
+            registry[id] = dao
         }
     }
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
-        val recordsDao = allDao!![sourceId] ?: return localRecordsResolverV0.getSourceInfo(sourceId)
+
+        val recordsDao = allDao[sourceId] ?: return localRecordsResolverV0.getSourceInfo(sourceId)
+
         val recordsSourceInfo = RecordsDaoInfo()
+
         recordsSourceInfo.id = sourceId
         if (recordsDao is RecordsQueryDao) {
-            recordsSourceInfo.supportedLanguages = recordsDao.supportedLanguages
+            recordsSourceInfo.supportedLanguages = recordsDao.getSupportedLanguages()
             recordsSourceInfo.features.query = true
         } else {
             recordsSourceInfo.features.query = false
         }
+
         recordsSourceInfo.features.mutate = recordsDao is RecordsMutateDao
         recordsSourceInfo.features.delete = recordsDao is RecordsDeleteDao
         recordsSourceInfo.features.getAtts = recordsDao is RecordsAttsDao
-        val columnsSourceId: ColumnsSourceId = recordsDao.javaClass.getAnnotation(ColumnsSourceId::class.java)
-        if (columnsSourceId != null && isNotBlank(columnsSourceId.value())) {
-            recordsSourceInfo.columnsSourceId = columnsSourceId.value()
+
+        val columnsSourceId = recordsDao.javaClass.getAnnotation(ColumnsSourceId::class.java)
+
+        if (columnsSourceId != null && StringUtils.isNotBlank(columnsSourceId.value)) {
+            recordsSourceInfo.columnsSourceId = columnsSourceId.value
         }
         return recordsSourceInfo
     }
 
-    val sourceInfo: List<Any?>
-        get() {
-            val result: List<RecordsDaoInfo?> = ArrayList<RecordsDaoInfo?>()
-            allDao!!.keys
-                .stream()
-                .map(Function<String, RecordsDaoInfo?> { sourceId: String -> getSourceInfo(sourceId!!) })
-                .forEach(Consumer<RecordsDaoInfo?> { e: RecordsDaoInfo? -> result.add(e) })
-            result.addAll(localRecordsResolverV0.getSourceInfo())
-            return result
-        }
+    fun getSourceInfo() : List<RecordsDaoInfo> {
+        val result = ArrayList<RecordsDaoInfo>()
+        result.addAll(allDao.keys.mapNotNull { getSourceInfo(it) })
+        result.addAll(localRecordsResolverV0.sourceInfo)
+        return result
+    }
 
     private fun <T : RecordsDao> getRecordsDao(sourceId: String, type: Class<T>): T? {
         @Suppress("UNCHECKED_CAST")
-        return daoMapByType[type] as? T
+        return daoMapByType[type]?.get(sourceId) as? T?
     }
 
     private fun <T : RecordsDao> needRecordsDao(sourceId: String, type: Class<T>): T {
@@ -646,11 +673,5 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
         return allDao.containsKey(id)
     }
 
-    private class QueryResult {
-        private val result: RecsQueryRes<*> = null
-        private val recordsDao: RecordsDao? = null
-    }
-
-    private class DaoWithConvQuery(val dao: RecordsQueryDao?, val query: RecordsQuery?)
-
+    private class DaoWithConvQuery(val dao: RecordsQueryDao, val query: RecordsQuery)
 }

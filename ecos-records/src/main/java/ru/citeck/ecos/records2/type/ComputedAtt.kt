@@ -1,9 +1,13 @@
 package ru.citeck.ecos.records2.type
 
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import ru.citeck.ecos.commons.data.ObjectData
 
 @JsonDeserialize(builder = ComputedAtt.Builder::class)
+@JackJsonDeserialize(builder = ComputedAtt.Builder::class)
 data class ComputedAtt(
     val id: String,
     val type: String,

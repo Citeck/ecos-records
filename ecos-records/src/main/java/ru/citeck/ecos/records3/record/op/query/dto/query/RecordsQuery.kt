@@ -1,7 +1,10 @@
 package ru.citeck.ecos.records3.record.op.query.dto.query
 
 import ecos.com.fasterxml.jackson210.annotation.JsonIgnore
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
@@ -11,6 +14,7 @@ import ru.citeck.ecos.records2.request.query.SortBy
 import java.util.*
 
 @JsonDeserialize(builder = RecordsQuery.Builder::class)
+@JackJsonDeserialize(builder = RecordsQuery.Builder::class)
 data class RecordsQuery(
     val sourceId: String = "",
     val sortBy: List<SortBy>,
@@ -80,7 +84,7 @@ data class RecordsQuery(
         constructor(base: RecordsQuery) : this() {
             sourceId = base.sourceId
             sortBy = DataValue.create(base.sortBy).asList(SortBy::class.java)
-            groupBy = ArrayList(groupBy)
+            groupBy = ArrayList(base.groupBy)
             page = base.page.copy()
             consistency = base.consistency
             language = base.language
@@ -92,6 +96,13 @@ data class RecordsQuery(
             return this
         }
 
+        fun withSortBy(sortBy: SortBy) : Builder {
+            this.sortBy = arrayListOf(sortBy)
+            return this
+        }
+
+        @JsonSetter
+        @JackJsonSetter
         fun withSortBy(sortBy: List<SortBy>) : Builder {
             this.sortBy = ArrayList(sortBy)
             return this

@@ -6,6 +6,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 class EmptyAttValue private constructor() : AttValue {
 
     companion object {
+        @JvmField
         val INSTANCE: EmptyAttValue = EmptyAttValue()
     }
 

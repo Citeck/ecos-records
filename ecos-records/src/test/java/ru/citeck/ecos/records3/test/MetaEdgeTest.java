@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant;
+import ru.citeck.ecos.records3.record.op.atts.dto.CreateVariant;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -16,7 +16,6 @@ import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,10 +139,13 @@ public class MetaEdgeTest extends AbstractRecordsDao
         static CreateVariant CREATE_VARIANT;
 
         static {
-            CREATE_VARIANT = new CreateVariant(RecordRef.valueOf("1231231@213123"));
-            CREATE_VARIANT.setAttribute("test", "test2");
-            CREATE_VARIANT.setAttribute("test4", "test3");
-            CREATE_VARIANT.setFormKey("SomeFormKey");
+            CREATE_VARIANT = CreateVariant.create()
+                .withLabel("Create label")
+                .withRecordRef(RecordRef.valueOf("1231231@213123"))
+                .withAttribute("test", "test2")
+                .withAttribute("test4", "test3")
+                .withFormKey("SomeFormKey")
+                .build();
         }
 
         static List<?> distinctVariants = Arrays.asList(

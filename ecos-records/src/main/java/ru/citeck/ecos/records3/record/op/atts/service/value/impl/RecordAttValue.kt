@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records3.record.op.atts.service.value.impl
 
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 
+class RecordAttValue(val atts: RecordAtts) : AttValue {
 
-class RecordAttValue(atts: RecordAtts?) : AttValue {
-    private val atts: RecordAtts?
     override fun getId(): String? {
         return atts.getId().toString()
     }
@@ -15,9 +15,5 @@ class RecordAttValue(atts: RecordAtts?) : AttValue {
 
     override fun getAtt(name: String): Any? {
         return atts.getAtt(name)
-    }
-
-    init {
-        this.atts = atts
     }
 }

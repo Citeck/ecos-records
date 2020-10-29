@@ -189,7 +189,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             }
 
             @Override
-            public String getDispName() {
+            public String getDisplayName() {
                 return str + "-disp";
             }
         }

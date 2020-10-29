@@ -2,53 +2,56 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.impl
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
-import ecos.com.fasterxml.jackson210.databind.node.MissingNode
-import ecos.com.fasterxml.jackson210.databind.node.NullNode
+import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import java.util.*
-import java.util.function.Function
 
+class InnerAttValue(value: Any?) : AttValue, HasCollectionView<InnerAttValue> {
 
-class InnerAttValue : AttValue, HasCollectionView<InnerAttValue?> {
-    private val value: JsonNode?
+    companion object {
 
-    constructor(value: Any?) {
-        this.value = mapper.convert(value, JsonNode::class.java)
-    }
-
-    constructor(value: JsonNode?) {
-        if (value == null || value is MissingNode) {
-            this.value = NullNode.getInstance()
-        } else {
-            this.value = value
+        private fun <T> getScalar(node: JsonNode, name: String, mapper: (JsonNode) -> T): T? {
+            val scalar = node.path(name)
+            return if (scalar.isNull || scalar.isMissingNode) {
+                null
+            } else {
+                mapper.invoke(scalar)
+            }
         }
     }
 
+    private val value: JsonNode = Json.mapper.toJson(value)
+
     override fun getAtt(name: String): Any? {
-        val node = value!!.path(name)
-        return if (node!!.isMissingNode || node.isNull) {
+        val node = value.path(name)
+        return if (node.isMissingNode || node.isNull) {
             null
-        } else InnerAttValue(node)
+        } else {
+            InnerAttValue(node)
+        }
     }
 
     override fun getAs(type: String): Any? {
         val node: JsonNode = value.path(RecordConstants.ATT_AS).path(type)
         return if (node.isMissingNode || node.isNull) {
             null
-        } else InnerAttValue(node)
+        } else {
+            InnerAttValue(node)
+        }
     }
 
-    val collectionView: MutableCollection<InnerAttValue?>?
-        get() {
-            if (value is ArrayNode) {
-                val result: MutableList<InnerAttValue?> = ArrayList()
-                for (`val` in value) {
-                    result.add(InnerAttValue(`val`))
-                }
-                return result
+    override fun getCollectionView(): Collection<InnerAttValue> {
+        if (value is ArrayNode) {
+            val result: MutableList<InnerAttValue> = ArrayList()
+            for (elem in value) {
+                result.add(InnerAttValue(elem))
             }
-            return listOf(this)
+            return result
         }
+        return listOf(this)
+    }
 
     override fun has(name: String): Boolean {
         val node: JsonNode = value.path(RecordConstants.ATT_HAS)
@@ -56,39 +59,32 @@ class InnerAttValue : AttValue, HasCollectionView<InnerAttValue?> {
             .path("?bool")
         return if (node.isMissingNode || node.isNull) {
             false
-        } else node.asBoolean()
+        } else {
+            node.asBoolean()
+        }
     }
 
     override fun getDisplayName(): String? {
-        return getScalar<String?>(value, "?disp", Function { obj: JsonNode? -> obj!!.asText() })
+        return getScalar(value, "?disp") { it.asText() }
     }
 
     override fun asText(): String? {
-        return getScalar<String?>(value, "?str", Function { obj: JsonNode? -> obj!!.asText() })
+        return getScalar(value, "?str") { it.asText() }
     }
 
     override fun getId(): String? {
-        return getScalar<String?>(value, "?id", Function { obj: JsonNode? -> obj!!.asText() })
+        return getScalar(value, "?id") { it.asText() }
     }
 
     override fun asDouble(): Double? {
-        return getScalar<Double?>(value, "?num", Function { obj: JsonNode? -> obj!!.asDouble() })
+        return getScalar(value, "?num") { it.asDouble() }
     }
 
     override fun asBoolean(): Boolean? {
-        return getScalar<Boolean?>(value, "?bool", Function { obj: JsonNode? -> obj!!.asBoolean() })
+        return getScalar(value, "?bool") { it.asBoolean() }
     }
 
     override fun asJson(): Any? {
-        return getScalar<JsonNode?>(value, "?json", Function { n: JsonNode? -> n })
-    }
-
-    companion object {
-        private fun <T> getScalar(node: JsonNode?, name: String?, mapper: Function<JsonNode?, T?>?): T? {
-            val scalar = node!!.path(name)
-            return if (scalar!!.isNull || scalar.isMissingNode) {
-                null
-            } else mapper!!.apply(scalar)
-        }
+        return getScalar(value, "?json") { it }
     }
 }

@@ -6,11 +6,14 @@ import java.util.*
 
 class MutateBody : RequestBody() {
 
-    var records: MutableList<RecordAtts> = ArrayList<RecordAtts>()
-        private set
+    private var records: MutableList<RecordAtts> = ArrayList<RecordAtts>()
 
     fun setRecord(record: RecordAtts) {
         records.add(record)
+    }
+
+    fun getRecords() : List<RecordAtts> {
+        return records
     }
 
     fun setRecords(records: List<RecordAtts>?) {

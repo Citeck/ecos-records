@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 
 import java.util.*;
 
+@Deprecated
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class QueryBody {
@@ -19,9 +20,9 @@ public class QueryBody {
     public static final String SINGLE_ATT_KEY = "a";
 
     @Nullable
-    @Getter @Setter private List<RecordRef> records;
+    private List<RecordRef> records;
     @Nullable
-    @Getter @Setter private RecordsQuery query;
+    private RecordsQuery query;
 
     @Getter @Setter private String schema;
     @Getter private Map<String, String> attributes;
@@ -29,8 +30,33 @@ public class QueryBody {
     private boolean isSingleRecord = false;
     private boolean isSingleAttribute = false;
 
-    @Getter @Setter
     private ru.citeck.ecos.records3.rest.v1.query.QueryBody v1Body;
+
+    @Nullable
+    public RecordsQuery getQuery() {
+        return query;
+    }
+
+    public void setQuery(@Nullable RecordsQuery query) {
+        this.query = query;
+    }
+
+    public ru.citeck.ecos.records3.rest.v1.query.QueryBody getV1Body() {
+        return v1Body;
+    }
+
+    public void setV1Body(ru.citeck.ecos.records3.rest.v1.query.QueryBody v1Body) {
+        this.v1Body = v1Body;
+    }
+
+    @Nullable
+    public List<RecordRef> getRecords() {
+        return records;
+    }
+
+    public void setRecords(@Nullable List<RecordRef> records) {
+        this.records = records;
+    }
 
     public void setRecord(RecordRef record) {
         if (records == null) {

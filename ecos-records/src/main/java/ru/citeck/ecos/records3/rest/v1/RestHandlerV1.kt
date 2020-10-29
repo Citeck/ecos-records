@@ -45,12 +45,12 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     fun queryRecords(body: QueryBody): QueryResp {
-        return doWithContext(body) { ctx -> queryRecordsImpl(body, ctx) } ?: QueryResp()
+        return doWithContext(body) { ctx -> queryRecordsImpl(body, ctx) }
     }
 
     private fun queryRecordsImpl(body: QueryBody, context: RequestContext): QueryResp {
 
-        if (body.query != null && body.records != null) {
+        if (body.query != null && body.getRecords() != null) {
             context.addMsg(MsgLevel.WARN) {
                 ("There must be one of 'records' or 'query' field "
                     + "but found both. 'records' field will be ignored")
@@ -60,15 +60,15 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         val bodyAtts = body.attributes
         val bodyAttsMap: Map<String, Any?>
 
-        if (bodyAtts.isNull) {
+        if (bodyAtts.isNull()) {
             bodyAttsMap = emptyMap()
         } else {
             when {
-                bodyAtts.isArray -> {
+                bodyAtts.isArray() -> {
                     bodyAttsMap = LinkedHashMap()
                     bodyAtts.forEach { att -> bodyAttsMap[att.asText()] = att }
                 }
-                bodyAtts.isObject -> {
+                bodyAtts.isObject() -> {
                     bodyAttsMap = DataValue.create(bodyAtts).asMap(String::class.java, Any::class.java)
                 }
                 else -> {
@@ -98,9 +98,9 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         } else {
 
             // attributes query
-            val records = body.records ?: emptyList()
+            val records = body.getRecords() ?: emptyList()
             if (records.isNotEmpty()) {
-                if (body.attributes.isNull) {
+                if (body.attributes.isNull()) {
                     resp.setRecords(records.map { RecordAtts(it) })
                 } else {
                     var atts: List<RecordAtts>
@@ -126,17 +126,17 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     private fun mutateRecordsImpl(body: MutateBody, context: RequestContext): MutateResp {
-        if (body.records.isEmpty()) {
+        if (body.getRecords().isEmpty()) {
             return MutateResp()
         }
         val resp = MutateResp()
         try {
             doInTransaction(false) {
-                resp.setRecords(recordsService.mutate(body.records).map { RecordAtts(it) })
+                resp.setRecords(recordsService.mutate(body.getRecords()).map { RecordAtts(it) })
             }
         } catch (e: Exception) {
             log.error("Records mutation completed with error. MutateBody: $body", e)
-            resp.setRecords(body.records.map { RecordAtts(it.getId()) })
+            resp.setRecords(body.getRecords().map { RecordAtts(it.getId()) })
             context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
         }
         resp.setMessages(context.getMessages())
@@ -167,7 +167,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         return RequestContext.doWithCtx(services, { ctxData ->
             ctxData.withRequestId(body.requestId)
             ctxData.withMsgLevel(body.msgLevel)
-            val trace: MutableList<String> = ArrayList(body.requestTrace)
+            val trace: MutableList<String> = ArrayList(body.getRequestTrace())
             trace.add(currentAppId)
             ctxData.withRequestTrace(trace)
         }, action)

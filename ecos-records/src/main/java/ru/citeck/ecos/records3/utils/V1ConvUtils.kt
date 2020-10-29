@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 
 object V1ConvUtils {
 
+    @JvmStatic
     fun recsQueryV1ToV0(query: RecordsQuery, context: RequestContext): RecordsQueryV0 {
         val v0Query = RecordsQueryV0()
         Json.mapper.applyData(v0Query, query)
@@ -20,18 +21,21 @@ object V1ConvUtils {
         return v0Query
     }
 
+    @JvmStatic
     fun recsQueryV0ToV1(query: RecordsQueryV0): RecordsQuery {
         val v1Query = RecordsQuery.create()
         Json.mapper.applyData(v1Query, query)
         return v1Query.build()
     }
 
+    @JvmStatic
     fun addErrorMessages(errors: List<RecordsError>?, context: RequestContext) {
         if (errors != null && errors.isNotEmpty()) {
             errors.forEach { error -> context.addMsg(MsgLevel.ERROR) { error } }
         }
     }
 
+    @JvmStatic
     fun addDebugMessage(result: DebugResult, context: RequestContext) {
         if (context.getMessages().isNotEmpty()) {
             val debug: ObjectData = ObjectData.create()

@@ -36,8 +36,7 @@ class InnerSourceTest extends AbstractRecordsDao implements RecordsQueryDao {
 
     @Test
     void test() {
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID + "@" + INNER_ID);
+        RecordsQuery query = RecordsQuery.create().withSourceId(ID + "@" + INNER_ID).build();
         recordsService.query(query);
     }
 

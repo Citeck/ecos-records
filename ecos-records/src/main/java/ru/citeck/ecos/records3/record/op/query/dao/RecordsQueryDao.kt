@@ -15,6 +15,4 @@ interface RecordsQueryDao : RecordsDao {
      * @return list of languages
      */
     fun getSupportedLanguages(): List<String> = emptyList()
-
-    fun isGroupingSupported() : Boolean = false
 }

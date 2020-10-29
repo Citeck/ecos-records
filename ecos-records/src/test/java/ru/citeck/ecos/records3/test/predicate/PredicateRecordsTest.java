@@ -83,7 +83,7 @@ public class PredicateRecordsTest {
         Map<String, Object> ctxAtts = new HashMap<>();
         ctxAtts.put("ctxatt", RecordRef.valueOf("test@ccc"));
 
-        RequestContext.doWithCtx(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
+        RequestContext.doWithCtxJ(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
 
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
 
@@ -98,7 +98,7 @@ public class PredicateRecordsTest {
                 return null;
             });
 
-            assertNull(RequestContext.getCurrentNotNull().getAttributes().get("ctxatt2"));
+            assertNull(RequestContext.getCurrentNotNull().getCtxAtts().get("ctxatt2"));
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
             assertFalse(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
 
@@ -112,13 +112,14 @@ public class PredicateRecordsTest {
 
     private List<ResultDto> check(List<String> id, List<Predicate> predicates) {
 
-        RecordsQuery query = new RecordsQuery();
-
         PredicateRecords.PredicateCheckQuery checkQuery = new PredicateRecords.PredicateCheckQuery();
         checkQuery.setPredicates(predicates);
         checkQuery.setRecords(id.stream().map(i -> RecordRef.valueOf("test@" + i)).collect(Collectors.toList()));
-        query.setQuery(checkQuery);
-        query.setSourceId("predicate");
+
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(checkQuery)
+            .withSourceId("predicate")
+            .build();
 
         return recordsService.query(query, ResultDto.class).getRecords();
     }

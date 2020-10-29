@@ -1,260 +1,321 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
+import mu.KotlinLogging
+import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.records2.RecordMeta
+import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records2.request.delete.RecordsDelResult
+import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
+import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult
+import ru.citeck.ecos.records2.request.rest.DeletionBody
+import ru.citeck.ecos.records2.request.rest.MutationBody
+import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
+import ru.citeck.ecos.records2.utils.RecordsUtils
+import ru.citeck.ecos.records2.utils.ValWithIdx
+import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.rest.v1.RequestBody
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
+import ru.citeck.ecos.records3.rest.v1.query.QueryResp
+import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
+import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Supplier
 import java.util.stream.Stream
 
+class RemoteRecordsResolver(val services: RecordsServiceFactory,
+                            val restApi: RemoteRecordsRestApi) {
 
-@Slf4j
-class RemoteRecordsResolver(factory: RecordsServiceFactory?, restApi: RemoteRecordsRestApi?) {
-    private val restApi: RemoteRecordsRestApi?
-    private var defaultAppName: String? = ""
-    private val sourceIdMapping: MutableMap<String?, String?>? = HashMap()
-    private val mapper = mapper
+    companion object {
+        val log = KotlinLogging.logger {}
+
+        const val BASE_URL: String = "/api/records/"
+        const val QUERY_URL: String = BASE_URL + "query"
+        const val MUTATE_URL: String = BASE_URL + "mutate"
+        const val DELETE_URL: String = BASE_URL + "delete"
+    }
+
+    private var defaultAppName: String = ""
+    private val sourceIdMapping = services.properties.sourceIdMapping ?: emptyMap()
+
     fun query(query: RecordsQuery,
-              attributes: MutableMap<String?, *>,
-              rawAtts: Boolean): RecsQueryRes<RecordAtts?>? {
-        val context: RequestContext = RequestContext.Companion.getCurrentNotNull()
+              attributes: Map<String, *>,
+              rawAtts: Boolean): RecsQueryRes<RecordAtts> {
+
+        val context: RequestContext = RequestContext.getCurrentNotNull()
         var sourceId = query.sourceId
-        if (sourceId!!.indexOf('/') == -1) {
+
+        if (sourceId.indexOf('/') == -1) {
             sourceId = "$defaultAppName/$sourceId"
         }
-        sourceId = sourceIdMapping!!.getOrDefault(sourceId, sourceId)
+        sourceId = sourceIdMapping.getOrDefault(sourceId, sourceId)
         val appName: String
-        val appQuery = RecordsQuery(query)
-        val appDelimIdx = sourceId!!.indexOf("/")
+
+
+        val appDelimIdx = sourceId.indexOf("/")
         appName = sourceId.substring(0, appDelimIdx)
-        appQuery.sourceId = sourceId.substring(appDelimIdx + 1)
+
+        val appQuery = query.copy()
+            .withSourceId(sourceId.substring(appDelimIdx + 1))
+            .build()
+
         val queryBody = QueryBody()
         queryBody.query = appQuery
         queryBody.setAttributes(attributes)
-        queryBody.isRawAtts = rawAtts
+        queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
+
         val queryResp: QueryResp = execQuery(appName, queryBody, context)
-        val result: RecsQueryRes<RecordAtts?> = RecsQueryRes<RecordAtts?>()
-        result.setRecords(queryResp.getRecords())
-        result.setTotalCount(queryResp.getTotalCount())
-        result.setHasMore(queryResp.isHasMore())
+        val result = RecsQueryRes<RecordAtts>()
+
+        result.setRecords(queryResp.records)
+        result.setTotalCount(queryResp.totalCount)
+        result.setHasMore(queryResp.hasMore)
         return RecordsUtils.attsWithDefaultApp(result, appName)
     }
 
-    private fun execQuery(appName: String?, queryBody: QueryBody?, context: RequestContext?): QueryResp {
+    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext): QueryResp {
+
         val v0Body = toV0QueryBody(queryBody, context)
         val appResultObj = postRecords(appName, QUERY_URL, v0Body)
         var result: QueryResp? = toQueryAttsRes(appResultObj, context)
         if (result == null) {
             result = QueryResp()
         } else {
-            context!!.addAllMsgs(result.getMessages())
+            context.addAllMsgs(result.messages)
         }
         return result
     }
 
-    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext?): QueryResp? {
+    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext): QueryResp? {
+
         if (body == null || body.isEmpty) {
             return null
         }
         if (body.path("version").asInt(0) == 1) {
-            return mapper.convert(body, QueryResp::class.java)
+            return Json.mapper.convert(body, QueryResp::class.java)
         }
-        val v0Result: RecordsMetaQueryResult = mapper.convert(body, RecordsMetaQueryResult::class.java)
-            ?: return null
-        V1ConvUtils.addErrorMessages(v0Result.getErrors(), context)
+        val v0Result: RecordsMetaQueryResult =
+            Json.mapper.convert(body, RecordsMetaQueryResult::class.java) ?: return null
+
+        V1ConvUtils.addErrorMessages(v0Result.errors, context)
         V1ConvUtils.addDebugMessage(v0Result, context)
+
         val resp = QueryResp()
-        resp.setRecords(v0Result.getRecords()
-            .stream()
-            .map(Function<RecordMeta?, RecordAtts?> { other: RecordMeta? -> RecordAtts(other) })
-            .collect(Collectors.toList()))
-        resp.setHasMore(v0Result.getHasMore())
-        resp.setTotalCount(v0Result.getTotalCount())
+
+        resp.setRecords(v0Result.records.map { RecordAtts(it) })
+        resp.hasMore = (v0Result.hasMore)
+        resp.totalCount = v0Result.totalCount
         return resp
     }
 
-    private fun toV0QueryBody(body: QueryBody?, context: RequestContext?): ru.citeck.ecos.records2.request.rest.QueryBody? {
-        val v0Body = ru.citeck.ecos.records2.request.rest.QueryBody()
-        v0Body.setAttributes(body!!.attributes)
-        v0Body.records = body.records
+    private fun toV0QueryBody(body: QueryBody, context: RequestContext): QueryBodyV0 {
+
+        val v0Body = QueryBodyV0()
+
+        v0Body.setAttributes(body.attributes.asJson())
+        v0Body.setRecords(body.getRecords())
         v0Body.v1Body = body
-        if (body.query != null) {
-            v0Body.query = V1ConvUtils.recsQueryV1ToV0(body.query, context)
+
+        val query = body.query
+        if (query != null) {
+            v0Body.query = V1ConvUtils.recsQueryV1ToV0(query, context)
         }
+
         return v0Body
     }
 
-    fun getAtts(records: MutableList<RecordRef?>,
-                attributes: MutableMap<String?, *>,
-                rawAtts: Boolean): MutableList<RecordAtts?>? {
-        val context: RequestContext = RequestContext.Companion.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<RecordAtts?>?> = ArrayList<ValWithIdx<RecordAtts?>?>()
-        val refsByApp: MutableMap<String?, MutableList<ValWithIdx<RecordRef?>?>?> = RecordsUtils.groupByApp(records)
-        refsByApp.forEach(BiConsumer<String?, MutableList<ValWithIdx<RecordRef?>?>?> { app: String?, refs: MutableList<ValWithIdx<RecordRef?>?>? ->
-            if (isBlank(app)) {
-                app = defaultAppName
+    fun getAtts(records: List<RecordRef>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+
+        val context: RequestContext = RequestContext.getCurrentNotNull()
+        val result = ArrayList<ValWithIdx<RecordAtts>>()
+        val refsByApp = RecordsUtils.groupByApp(records)
+
+        refsByApp.forEach { (appArg, refs) ->
+
+            val app = if (StringUtils.isBlank(appArg)) {
+                defaultAppName
+            } else {
+                appArg
             }
+
             val queryBody = QueryBody()
-            queryBody.records = refs!!.stream()
-                .map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() })
-                .map(Function<RecordRef?, RecordRef?> { obj: RecordRef? -> obj.removeAppName() })
-                .collect(Collectors.toList())
+            queryBody.setRecords(refs.map { it.value.removeAppName() })
+
             queryBody.setAttributes(attributes)
-            queryBody.isRawAtts = rawAtts
-            val queryResp: QueryResp = execQuery(app, queryBody, context)
-            if (queryResp.getRecords() == null || queryResp.getRecords().size != refs.size) {
-                RemoteRecordsResolver.log.error("Incorrect response: $queryBody\n query: $queryBody")
+            queryBody.rawAtts = rawAtts
+            val queryResp = execQuery(app, queryBody, context)
+
+            if (queryResp.records.size != refs.size) {
+                log.error("Incorrect response: $queryBody\n query: $queryBody")
                 for (ref in refs) {
-                    result.add(ValWithIdx<RecordAtts?>(RecordAtts(ref.getValue()), ref.getIdx()))
+                    result.add(ValWithIdx<RecordAtts>(RecordAtts(ref.value), ref.idx))
                 }
             } else {
-                val recsAtts: MutableList<RecordAtts?> = queryResp.getRecords()
+                val recsAtts: List<RecordAtts> = queryResp.records
                 for (i in refs.indices) {
-                    val ref: ValWithIdx<RecordRef?>? = refs[i]
-                    val atts: RecordAtts? = recsAtts[i]
-                    result.add(ValWithIdx<RecordAtts?>(RecordAtts(atts, ref.getValue()), ref.getIdx()))
+                    val ref: ValWithIdx<RecordRef> = refs[i]
+                    val atts: RecordAtts = recsAtts[i]
+                    result.add(ValWithIdx<RecordAtts>(RecordAtts(atts, ref.value), ref.idx))
                 }
             }
-        })
-        result.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<RecordAtts?>?> { obj: ValWithIdx<RecordAtts?>? -> obj.getIdx() }))
-        return result.stream().map(Function<ValWithIdx<RecordAtts?>?, RecordAtts?> { obj: ValWithIdx<RecordAtts?>? -> obj.getValue() }).collect(Collectors.toList())
+        }
+        result.sortBy { it.idx }
+        return result.map { it.value }
     }
 
-    fun mutate(records: MutableList<RecordAtts?>): MutableList<RecordRef?>? {
-        val context: RequestContext = RequestContext.Companion.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<RecordRef?>?> = ArrayList<ValWithIdx<RecordRef?>?>()
-        val attsByApp: MutableMap<String?, MutableList<ValWithIdx<RecordAtts?>?>?> = RecordsUtils.groupAttsByApp(records)
-        attsByApp.forEach(BiConsumer<String?, MutableList<ValWithIdx<RecordAtts?>?>?> { app: String?, atts: MutableList<ValWithIdx<RecordAtts?>?>? ->
-            if (isBlank(app)) {
-                app = defaultAppName
+    fun mutate(records: List<RecordAtts>): List<RecordRef> {
+
+        val context: RequestContext = RequestContext.getCurrentNotNull()
+        val result: MutableList<ValWithIdx<RecordRef>> = ArrayList<ValWithIdx<RecordRef>>()
+        val attsByApp: Map<String, MutableList<ValWithIdx<RecordAtts>>> = RecordsUtils.groupAttsByApp(records)
+
+        attsByApp.forEach { (appArg, atts) ->
+
+            val app = if (StringUtils.isBlank(appArg)) {
+                defaultAppName
+            } else {
+                appArg
             }
+
             val mutateBody = MutateBody()
-            mutateBody.setRecords(atts!!.stream()
-                .map(Function<ValWithIdx<RecordAtts?>?, RecordAtts?> { obj: ValWithIdx<RecordAtts?>? -> obj.getValue() })
-                .collect(Collectors.toList()))
+            mutateBody.setRecords(atts.map { it.value })
+
             setContextProps(mutateBody, context)
             val v0Body = MutationBody()
             if (context.isMsgEnabled(MsgLevel.DEBUG)) {
                 v0Body.setDebug(true)
             }
-            v0Body.setRecords(mapper.convert(mutateBody.getRecords(), mapper!!.getListType(RecordMeta::class.java)))
-            v0Body.setV1Body(mutateBody)
+            v0Body.records = (Json.mapper.convert(mutateBody.getRecords(),
+                                                  Json.mapper.getListType(RecordMeta::class.java)))
+            v0Body.v1Body = mutateBody
+
             val mutRespObj = postRecords(app, MUTATE_URL, v0Body)
             val mutateResp: MutateResp? = toMutateResp(mutRespObj, context)
-            if (mutateResp != null && mutateResp.getMessages() != null) {
-                mutateResp.getMessages().forEach(Consumer<ReqMsg?> { msg: ReqMsg? -> context.addMsg(msg) })
+
+            if (mutateResp?.messages != null) {
+                mutateResp.messages.forEach { context.addMsg(it) }
             }
-            if (mutateResp == null || mutateResp.getRecords() == null || mutateResp.getRecords().size != atts.size) {
+            if (mutateResp?.records == null || mutateResp.records.size != atts.size) {
                 context.addMsg(MsgLevel.ERROR) { "Incorrect response: $mutateResp\n query: $mutateBody" }
                 for (att in atts) {
-                    result.add(ValWithIdx<RecordRef?>(att.getValue().getId(), att.getIdx()))
+                    result.add(ValWithIdx(att.value.getId(), att.idx))
                 }
             } else {
-                val recsAtts: MutableList<RecordAtts?> = mutateResp.getRecords()
+                val recsAtts: MutableList<RecordAtts> = mutateResp.records
                 for (i in atts.indices) {
-                    val refAtts: ValWithIdx<RecordAtts?>? = atts[i]
-                    val respAtts: RecordAtts? = recsAtts[i]
-                    result.add(ValWithIdx<RecordRef?>(respAtts.getId(), refAtts.getIdx()))
+                    val refAtts: ValWithIdx<RecordAtts> = atts[i]
+                    val respAtts: RecordAtts = recsAtts[i]
+                    result.add(ValWithIdx<RecordRef>(respAtts.getId(), refAtts.idx))
                 }
             }
-        })
-        result.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<RecordRef?>?> { obj: ValWithIdx<RecordRef?>? -> obj.getIdx() }))
-        return result.stream().map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() }).collect(Collectors.toList())
+        }
+        result.sortBy { it.idx }
+        return result.map { it.value }
     }
 
-    private fun toMutateResp(body: ObjectNode?, context: RequestContext?): MutateResp? {
+    private fun toMutateResp(body: ObjectNode?, context: RequestContext): MutateResp? {
+
         if (body == null || body.isEmpty) {
             return null
         }
         if (body.path("version").asInt(0) == 1) {
-            return mapper.convert(body, MutateResp::class.java)
+            return Json.mapper.convert(body, MutateResp::class.java)
         }
-        val v0Result: RecordsMutResult = mapper.convert(body, RecordsMutResult::class.java) ?: return null
-        V1ConvUtils.addErrorMessages(v0Result.getErrors(), context)
+        val v0Result = Json.mapper.convert(body, RecordsMutResult::class.java) ?: return null
+
+        V1ConvUtils.addErrorMessages(v0Result.errors, context)
         V1ConvUtils.addDebugMessage(v0Result, context)
+
         val resp = MutateResp()
-        resp.setRecords(v0Result.getRecords()
-            .stream()
-            .map(Function<RecordMeta?, RecordAtts?> { other: RecordMeta? -> RecordAtts(other) })
-            .collect(Collectors.toList()))
+
+        resp.setRecords(v0Result.records.map { RecordAtts(it) })
         return resp
     }
 
-    private fun addAppName(meta: RecordAtts?, app: String?): RecordAtts? {
-        return RecordAtts(meta, Function<RecordRef?, RecordRef?> { r: RecordRef? -> r.addAppName(app) })
-    }
+    fun delete(records: List<RecordRef>): List<DelStatus> {
 
-    private fun removeAppName(meta: RecordAtts?): RecordAtts? {
-        return RecordAtts(meta, Function<RecordRef?, RecordRef?> { obj: RecordRef? -> obj.removeAppName() })
-    }
+        val context: RequestContext = RequestContext.getCurrentNotNull()
+        val result: MutableList<ValWithIdx<DelStatus>> = ArrayList<ValWithIdx<DelStatus>>()
+        val attsByApp: Map<String, MutableList<ValWithIdx<RecordRef>>> = RecordsUtils.groupByApp(records)
 
-    fun delete(records: MutableList<RecordRef?>): MutableList<DelStatus?> {
-        val context: RequestContext = RequestContext.Companion.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<DelStatus?>?> = ArrayList<ValWithIdx<DelStatus?>?>()
-        val attsByApp: MutableMap<String?, MutableList<ValWithIdx<RecordRef?>?>?> = RecordsUtils.groupByApp(records)
-        attsByApp.forEach(BiConsumer<String?, MutableList<ValWithIdx<RecordRef?>?>?> { app: String?, refs: MutableList<ValWithIdx<RecordRef?>?>? ->
-            if (isBlank(app)) {
-                app = defaultAppName
+        attsByApp.forEach { (appArg, refs) ->
+
+            val app = if (StringUtils.isBlank(appArg)) {
+                defaultAppName
+            } else {
+                appArg
             }
+
             val deleteBody = DeleteBody()
-            deleteBody.setRecords(refs!!.stream()
-                .map(Function<ValWithIdx<RecordRef?>?, RecordRef?> { obj: ValWithIdx<RecordRef?>? -> obj.getValue() })
-                .collect(Collectors.toList()))
+            deleteBody.setRecords(refs.map { it.value })
             setContextProps(deleteBody, context)
+
             val v0Body = DeletionBody()
-            v0Body.setRecords(deleteBody.getRecords())
+            v0Body.records = deleteBody.records
             if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                v0Body.setDebug(true)
+                v0Body.isDebug = true
             }
-            v0Body.setV1Body(deleteBody)
+            v0Body.v1Body = deleteBody
             val delRespObj = postRecords(app, DELETE_URL, v0Body)
             val resp: DeleteResp? = toDeleteResp(delRespObj, context)
-            if (resp != null && resp.getMessages() != null) {
-                resp.getMessages().forEach(Consumer<ReqMsg?> { msg: ReqMsg? -> context.addMsg(msg) })
-            }
-            val statues: MutableList<DelStatus?>? = toDelStatuses(refs.size, resp, context)
+
+            resp?.messages?.forEach { msg -> context.addMsg(msg) }
+            val statues = toDelStatuses(refs.size, resp, context)
             for (i in refs.indices) {
-                val refAtts: ValWithIdx<RecordRef?>? = refs[i]
-                val status: DelStatus? = statues!![i]
-                result.add(ValWithIdx<DelStatus?>(status, refAtts.getIdx()))
+                val refAtts: ValWithIdx<RecordRef> = refs[i]
+                val status: DelStatus = statues[i]
+                result.add(ValWithIdx(status, refAtts.idx))
             }
-        })
-        result.sort(Comparator.comparingInt(ToIntFunction<ValWithIdx<DelStatus?>?> { obj: ValWithIdx<DelStatus?>? -> obj.getIdx() }))
-        return result.stream().map(Function<ValWithIdx<DelStatus?>?, DelStatus?> { obj: ValWithIdx<DelStatus?>? -> obj.getValue() }).collect(Collectors.toList())
+        }
+        result.sortBy { it.idx }
+        return result.map { it.value }
     }
 
-    private fun toDeleteResp(data: ObjectNode?, context: RequestContext?): DeleteResp? {
+    private fun toDeleteResp(data: ObjectNode?, context: RequestContext): DeleteResp? {
+
         if (data == null || data.size() == 0) {
             return DeleteResp()
         }
         if (data.path("version").asInt(0) == 1) {
-            return mapper.convert(data, DeleteResp::class.java)
+            return Json.mapper.convert(data, DeleteResp::class.java)
         }
-        val v0Resp: RecordsDelResult = mapper.convert(data, RecordsDelResult::class.java)
-            ?: return DeleteResp()
-        val records: MutableList<RecordMeta?> = v0Resp.getRecords()
+
+        val v0Resp = Json.mapper.convert(data, RecordsDelResult::class.java) ?: return DeleteResp()
+        val records = v0Resp.records
         val resp = DeleteResp()
-        resp.setStatuses(records.stream()
-            .map(Function<RecordMeta?, DelStatus?> { r: RecordMeta? -> DelStatus.OK })
-            .collect(Collectors.toList()))
-        V1ConvUtils.addErrorMessages(v0Resp.getErrors(), context)
+
+        resp.setStatuses(records.map { DelStatus.OK })
+        V1ConvUtils.addErrorMessages(v0Resp.errors, context)
         V1ConvUtils.addDebugMessage(v0Resp, context)
+
         return resp
     }
 
-    private fun toDelStatuses(expectedSize: Int, resp: DeleteResp?, context: RequestContext?): MutableList<DelStatus?>? {
+    private fun toDelStatuses(expectedSize: Int,
+                              resp: DeleteResp?,
+                              context: RequestContext): List<DelStatus> {
         if (resp == null) {
             return getDelStatuses(expectedSize, DelStatus.ERROR)
         }
-        if (resp.getStatuses() != null && resp.getStatuses().size == expectedSize) {
-            return resp.getStatuses()
+        if (resp.statuses.size == expectedSize) {
+            return resp.statuses
         }
-        context!!.addMsg(MsgLevel.ERROR) {
+        context.addMsg(MsgLevel.ERROR) {
             ("Result statues doesn't match request. "
                 + "Expected size: " + expectedSize
                 + ". Actual response: " + resp)
@@ -262,20 +323,18 @@ class RemoteRecordsResolver(factory: RecordsServiceFactory?, restApi: RemoteReco
         return getDelStatuses(expectedSize, DelStatus.ERROR)
     }
 
-    private fun getDelStatuses(size: Int, status: DelStatus?): MutableList<DelStatus?>? {
-        return Stream.generate(Supplier<DelStatus?> { status })
-            .limit(size.toLong())
-            .collect(Collectors.toList())
+    private fun getDelStatuses(size: Int, status: DelStatus): List<DelStatus> {
+        return generateSequence { status }.take(size).toList()
     }
 
-    private fun setContextProps(body: RequestBody?, ctx: RequestContext?) {
-        val ctxData: RequestCtxData<*>? = ctx!!.ctxData
-        body!!.msgLevel = ctxData.getMsgLevel()
-        body.requestId = ctxData.getRequestId()
-        body.requestTrace = ctxData.getRequestTrace()
+    private fun setContextProps(body: RequestBody, ctx: RequestContext) {
+        val ctxData = ctx.ctxData
+        body.msgLevel = ctxData.msgLevel
+        body.requestId = ctxData.requestId
+        body.setRequestTrace(ctxData.requestTrace)
     }
 
-    private fun postRecords(appName: String?, url: String?, body: Any?): ObjectNode? {
+    private fun postRecords(appName: String, url: String, body: Any): ObjectNode? {
         val appUrl = "/$appName$url"
         return restApi.jsonPost(appUrl, body, ObjectNode::class.java)
     }
@@ -285,27 +344,9 @@ class RemoteRecordsResolver(factory: RecordsServiceFactory?, restApi: RemoteReco
         return null
     }
 
-    //todo
-    val sourceInfo: MutableList<Any?>
-        get() =//todo
-            emptyList()
+    fun getSourceInfo() : List<RecordsDaoInfo> = emptyList()
 
-    fun setDefaultAppName(defaultAppName: String?) {
+    fun setDefaultAppName(defaultAppName: String) {
         this.defaultAppName = defaultAppName
-    }
-
-    companion object {
-        val BASE_URL: String? = "/api/records/"
-        val QUERY_URL: String? = BASE_URL + "query"
-        val MUTATE_URL: String? = BASE_URL + "mutate"
-        val DELETE_URL: String? = BASE_URL + "delete"
-    }
-
-    init {
-        this.restApi = restApi
-        val sourceIdMapping: MutableMap<String?, String?> = factory.getProperties().getSourceIdMapping()
-        if (sourceIdMapping != null) {
-            this.sourceIdMapping!!.putAll(sourceIdMapping)
-        }
     }
 }

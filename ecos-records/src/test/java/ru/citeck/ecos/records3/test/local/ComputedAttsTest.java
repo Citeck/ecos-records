@@ -89,8 +89,9 @@ public class ComputedAttsTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         String intAtt = intFieldsSumName + "?num";
         String strAtt = strFieldValueWithPrefixName;

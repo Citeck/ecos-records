@@ -48,8 +48,9 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
     @Test
     void testt() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("as_with_alias_has_true", ".att(n:\"" + Val.VAL0_FIELD + "\"){att(n:\"" + Val.VAL1_FIELD + "\"){alias_for_as:as(n:\"abc\"){has(n:\"has_true\")}}}");
@@ -63,8 +64,9 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
@@ -88,7 +90,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         RecordAtts meta = result.getRecords().get(0);
         assertEquals(Val.val0.value, meta.getAtt("att0", ""));
         assertEquals(Val.val2.value, meta.getAtt("att2", ""));
-        assertEquals(Val.val1.getDispName(), meta.getAtt("disp", ""));
+        assertEquals(Val.val1.getDisplayName(), meta.getAtt("disp", ""));
         assertEquals(Val.val0.ref.toString(), meta.getAtt("assoc", ""));
 
         assertEquals(DataValue.TRUE, meta.getAtt("has_true"));
@@ -116,8 +118,9 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
     @Test
     void test2() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("null_0", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + ".unknown?str");
@@ -181,7 +184,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         }
 
         @Override
-        public String getDispName() {
+        public String getDisplayName() {
             return "DISP OF " + ref;
         }
 
@@ -201,7 +204,7 @@ class RecordRefValueFactoryTest extends AbstractRecordsDao
         }
 
         @Override
-        public Object as(@NotNull String name) {
+        public Object getAs(@NotNull String name) {
             return this;
         }
 

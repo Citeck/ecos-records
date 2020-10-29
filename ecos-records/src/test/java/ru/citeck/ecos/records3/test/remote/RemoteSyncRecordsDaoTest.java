@@ -79,10 +79,11 @@ public class RemoteSyncRecordsDaoTest {
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(REMOTE_SOURCE_ID);
-        query.setQuery(VoidPredicate.INSTANCE);
-        query.setLanguage(PredicateService.LANGUAGE_PREDICATE);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(REMOTE_SOURCE_ID)
+            .withQuery(VoidPredicate.INSTANCE)
+            .withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            .build();
 
         RecsQueryRes<RecordRef> result = recordsService.query(query);
         assertEquals(TOTAL_RECS, result.getTotalCount());
@@ -95,10 +96,11 @@ public class RemoteSyncRecordsDaoTest {
         assertEquals(origDto, dto);
 
         Predicate predicate = Predicates.eq("attributes.attKey?str", origDto.attributes.get("attKey").asText());
-        RecordsQuery query1 = new RecordsQuery();
-        query1.setLanguage(PredicateService.LANGUAGE_PREDICATE);
-        query1.setSourceId(REMOTE_SOURCE_ID);
-        query1.setQuery(predicate);
+        RecordsQuery query1 = RecordsQuery.create()
+            .withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            .withSourceId(REMOTE_SOURCE_ID)
+            .withQuery(predicate)
+            .build();
         RecsQueryRes<RecordRef> recs = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
             try {
                 return recordsService.query(query1);
@@ -169,7 +171,7 @@ public class RemoteSyncRecordsDaoTest {
                     + RecordConstants.ATT_MODIFIED + " field. " + query);
             }
 
-            log.info("Query for " + query.getMaxItems() + " records");
+            log.info("Query for " + query.getPage().getMaxItems() + " records");
 
             Predicate predicate = query.getQuery(Predicate.class);
             if (!(predicate instanceof ValuePredicate)) {
@@ -187,7 +189,7 @@ public class RemoteSyncRecordsDaoTest {
 
             List<ValueDto> result = new ArrayList<>();
             int idx = 0;
-            while (idx < sortedValues.size() && result.size() < query.getMaxItems()) {
+            while (idx < sortedValues.size() && result.size() < query.getPage().getMaxItems()) {
                 ValueDto value = sortedValues.get(idx);
                 if (value.getModified().isAfter(fromModified)) {
                     result.add(value);

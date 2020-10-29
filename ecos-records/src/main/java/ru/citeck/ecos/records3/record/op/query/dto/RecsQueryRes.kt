@@ -8,6 +8,7 @@ open class RecsQueryRes<T : Any>() {
 
     companion object {
 
+        @JvmStatic
         @SafeVarargs
         fun <T : Any> of(vararg values: T?): RecsQueryRes<T> {
             val result = RecsQueryRes<T>()
@@ -17,18 +18,16 @@ open class RecsQueryRes<T : Any>() {
     }
 
     private var records: MutableList<T> = ArrayList()
+    private var hasMore = false
+    private var totalCount: Long = 0
 
-    var hasMore = false
-    var totalCount: Long = 0
-        get() = max(field, getRecords().size.toLong())
-
-    constructor(other: RecsQueryRes<T>) {
+    constructor(other: RecsQueryRes<T>) : this() {
         hasMore = other.hasMore
         totalCount = other.totalCount
         setRecords(other.records)
     }
 
-    constructor(records: List<T>) {
+    constructor(records: List<T>) : this() {
         setRecords(records)
     }
 
@@ -53,6 +52,18 @@ open class RecsQueryRes<T : Any>() {
         this.records = ArrayList()
         addRecords(records)
     }
+
+    fun setTotalCount(totalCount: Long) {
+        this.totalCount = totalCount
+    }
+
+    fun getTotalCount() = max(totalCount, records.size.toLong())
+
+    fun setHasMore(hasMore: Boolean) {
+        this.hasMore = hasMore
+    }
+
+    fun getHasMore() : Boolean = hasMore
 
     fun addRecord(record: T?) {
         record ?: return

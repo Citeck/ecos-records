@@ -73,8 +73,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create().withSourceId(ID).build();
 
         addAttributesMixin(new MixinForExistingAtt());
 
@@ -131,8 +130,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
 
     private void checkValidComputedAttributes() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create().withSourceId(ID).build();
 
         String intAtt = intFieldsSumName + "?num";
         String strAtt = strFieldValueWithPrefixName;

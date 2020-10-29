@@ -38,10 +38,11 @@ public class RecordsConvertionTest extends AbstractRecordsDao implements Records
 
         recordsService.register(this);
 
-        RecordsQuery query = new RecordsQuery();
-        query.setQuery("123");
-        query.setLanguage(SOURCE_LANG);
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery("123")
+            .withLanguage(SOURCE_LANG)
+            .withSourceId(ID)
+            .build();
 
         recordsService.query(query);
     }

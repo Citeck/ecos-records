@@ -13,10 +13,12 @@ class AttContext {
 
         private val current: ThreadLocal<AttContext> = ThreadLocal()
 
+        @JvmStatic
         fun getCurrentSchemaAtt() : SchemaAtt {
             return getCurrentNotNull().schemaAtt
         }
 
+        @JvmStatic
         fun getInnerAttsMap() : Map<String, String> {
 
             val attContext = getCurrentNotNull()
@@ -31,6 +33,7 @@ class AttContext {
             return result
         }
 
+        @JvmStatic
         fun getCurrentSchemaAttAsStr() : String {
 
             val context = getCurrentNotNull()
@@ -39,18 +42,23 @@ class AttContext {
             return context.serviceFactory.attSchemaWriter.write(schemaAtt)
         }
 
+        @JvmStatic
         fun getCurrentSchemaAttInnerStr() : String {
             val att = getCurrentSchemaAttAsStr()
             return att.trim().substring(AttStrUtils.indexOf(att, "{") + 1, att.length - 1)
         }
 
+        @JvmStatic
         fun getCurrentNotNull() : AttContext {
             return current.get() ?: error(CONTEXT_UNDEFINED_MSG)
         }
+
+        @JvmStatic
         fun getCurrent(): AttContext? {
             return current.get()
         }
 
+        @JvmStatic
         fun <T> doWithCtx(serviceFactory: RecordsServiceFactory, action: (AttContext) -> T): T {
 
             var isOwner = false

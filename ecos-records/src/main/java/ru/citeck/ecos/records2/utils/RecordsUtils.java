@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.utils;
 
+import kotlin.jvm.functions.Function1;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
@@ -119,7 +120,7 @@ public class RecordsUtils {
     }
 
     public static RecsQueryRes<RecordRef> toScoped(String sourceId, RecsQueryRes<RecordRef> result) {
-        return new RecsQueryRes<>(result, r -> RecordRef.create(sourceId, r));
+        return result.withRecords(recordRef -> RecordRef.create(sourceId, recordRef));
     }
 
     public static List<RecordRef> toScopedRecords(String sourceId, List<RecordRef> records) {

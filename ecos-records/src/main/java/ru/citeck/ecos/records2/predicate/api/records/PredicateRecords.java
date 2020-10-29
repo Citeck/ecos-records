@@ -51,7 +51,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
         );
         if (!recordModelAtts.getModelAtts().isEmpty()) {
             RecordAtts modelAtts = recordsService.getAtts(
-                RequestContext.getCurrentNotNull().getAttributes(),
+                RequestContext.getCurrentNotNull().ctxData.getCtxAtts(),
                 recordModelAtts.getModelAtts()
             );
             resolvedAtts.forEach(rec -> modelAtts.forEach(rec::setAtt));

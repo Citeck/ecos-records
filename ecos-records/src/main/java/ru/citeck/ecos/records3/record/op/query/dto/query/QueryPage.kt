@@ -1,8 +1,12 @@
 package ru.citeck.ecos.records3.record.op.query.dto.query
 
+import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import mu.KotlinLogging
 import ru.citeck.ecos.records2.RecordRef
 
+@JsonDeserialize(builder = QueryPage.Builder::class)
+@JackJsonDeserialize(builder = QueryPage.Builder::class)
 data class QueryPage(
     val maxItems: Int,
     val skipCount: Int,

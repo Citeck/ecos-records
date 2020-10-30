@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 import ru.citeck.ecos.commons.utils.MandatoryParam
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
+import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter
 
 @JsonDeserialize(builder = SchemaAtt.Builder::class)
 @JackJsonDeserialize(builder = SchemaAtt.Builder::class)
@@ -66,18 +67,7 @@ data class SchemaAtt(
     }
 
     override fun toString(): String {
-        var res = "{"
-        if (alias.isNotEmpty()) {
-            res += "\"alias\":\"$alias\","
-        }
-        res += "\"name\":\"$name\", \"multiple\":$multiple"
-        if (inner.isNotEmpty()) {
-            res += ", \"inner\":[" + inner.map { it.toString() }.joinToString { "," } + "]"
-        }
-        if (processors.isNotEmpty()) {
-            res += ", \"processors\":[" + processors.map { it.toString() }.joinToString { "," } + "]"
-        }
-        return "$res}"
+        return AttSchemaGqlWriter.INSTANCE.write(this)
     }
 
     class Builder() {

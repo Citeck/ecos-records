@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.graphql.meta.value;
+package ru.citeck.ecos.records3.record.op.atts.service.value;
 
 import java.util.Collection;
 

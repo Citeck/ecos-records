@@ -11,34 +11,37 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaValueTest extends LocalRecordsDao
-                           implements LocalRecordsMetaDao<Object> {
+                           implements LocalRecordsMetaDao<Object>,
+                                      LocalRecordsQueryDao {
 
     private static final String SOURCE_ID = "test-source";
 
     private RecordsService recordsService;
-    private String innerSchema;
 
     @NotNull
     @Override
     public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
-        return Collections.singletonList(new MetaVal(s -> innerSchema = s));
+        return Collections.singletonList(new MetaVal());
     }
 
     @BeforeAll
@@ -51,10 +54,13 @@ public class MetaValueTest extends LocalRecordsDao
         recordsService.register(this);
     }
 
+    @Override
+    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+        return RecordsQueryResult.of(RecordRef.create(SOURCE_ID, "test"));
+    }
+
     @Test
     void test() {
-
-        String testInnerSchema = "a:att(n:\"test\"){str},b:att(n:\"number\"){num}";
 
         String schema = "str," +
                         "disp," +
@@ -63,15 +69,76 @@ public class MetaValueTest extends LocalRecordsDao
                         "num," +
                         "bool," +
                         "json," +
-                        "schema:att(n:\"schema\"){" + testInnerSchema + "}," +
                         "asNum:as(n:\"num\"){num}," +
                         "asStr:as(n:\"str\"){str}," +
-                        "date:att(n:\"date\"){str}";
+                        "date:att(n:\"date\"){str}," +
+                        "thisAsTest0:str," +
+                        "thisAsTest1:as(n:\"this\"){str}," +
+                        "thisAsTest2:as(n:\"this\"){as(n:\"this\"){str}}," +
+                        "thisAsTest3:as(n:\"this\"){as(n:\"this\"){as(n:\"this\"){str}}}," +
+                        "thisAsTest4:as(n:\"this\"){as(n:\"this\"){as(n:\"this\"){as(n:\"this\"){str}}}}," +
+                        "thisEdgeTest1:edge(n:\"this\"){val{str}}," +
+                        "thisEdgeTest2:edge(n:\"this\"){val{edge(n:\"this\"){valAlias:val{str}}}}," +
+                        "thisEdgeTest3:edge(n:\"this\"){val{edge(n:\"this\"){val{str}}}}," +
+                        "thisEdgeTest4:edge(n:\"this\"){val{edge(n:\"this\"){val{edge(n:\"this\"){val{str}}}}}}," +
+                        "thisEdgeTest5:edge(n:\"this\"){name}," +
+                        "thisEdgeTest6:edge(n:\"this\"){" +
+                            "val{" +
+                                "edge(n:\"this\"){" +
+                                    "valValue:val{" +
+                                        "asStrAtt:att(n:\"strAtt\"){str}," +
+                                        "asThisInner:as(n:\"this\"){" +
+                                            "edge(n:\"this\"){" +
+                                                "val{" +
+                                                    "str" +
+                                                "}" +
+                                            "}" +
+                                        "}," +
+                                        "edge(n:\"this\"){" +
+                                            "val{" +
+                                                "str" +
+                                            "}" +
+                                        "}" +
+                                    "}" +
+                                    "name," +
+                                    "strVal:val{att(n:\"strAtt\"){str}}" +
+                                "}" +
+                        "}}";
 
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         RecordsResult<RecordMeta> result = recordsService.getMeta(records, schema);
 
         RecordMeta meta = result.getRecords().get(0);
+        assertMeta(meta);
+
+        RecordsQuery query = new RecordsQuery();
+        query.setSourceId(SOURCE_ID);
+        RecordsQueryResult<RecordMeta> queryResult = recordsService.queryRecords(query, schema);
+
+        assertEquals(1, queryResult.getRecords().size());
+        assertMeta(queryResult.getRecords().get(0));
+    }
+
+    private void assertMeta(RecordMeta meta) {
+
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisAsTest0").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisAsTest1").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisAsTest2").get("as").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisAsTest3").get("as").get("as").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisAsTest4").get("as").get("as").get("as").get("str").asText());
+
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest1").get("val").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest2").get("val").get("edge").get("valAlias").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest3").get("val").get("edge").get("val").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest4").get("val").get("edge").get("val").get("edge").get("val").get("str").asText());
+        assertEquals("this", meta.getAttribute("thisEdgeTest5").get("name").asText());
+
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest6").get("val").get("edge").get("valValue").get("edge").get("val").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest6").get("val").get("edge").get("valValue").get("asStrAtt").get("str").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest6").get("val").get("edge").get("valValue").get("asThisInner").get("edge").get("val").get("str").asText());
+
+        assertEquals("this", meta.getAttribute("thisEdgeTest6").get("val").get("edge").get("name").asText());
+        assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("thisEdgeTest6").get("val").get("edge").get("strVal").get("att").get("str").asText());
 
         assertEquals(MetaVal.DISP_VALUE, meta.getAttribute("disp", ""));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("str", ""));
@@ -88,8 +155,6 @@ public class MetaValueTest extends LocalRecordsDao
         assertEquals(targetDate, meta.fmtDate("/date/str", format, "-"));
         assertEquals(new Date((MetaVal.DATE_VALUE.getTime() / 1000) * 1000), meta.getDateOrNull("/date/str"));
         assertEquals("--", meta.fmtDate("date1", format, "--"));
-
-        assertEquals(testInnerSchema, innerSchema);
     }
 
     public static class MetaVal implements MetaValue {
@@ -104,10 +169,7 @@ public class MetaValueTest extends LocalRecordsDao
         static String ID_VALUE = "SOME_ID";
         static Date DATE_VALUE = new Date();
 
-        private Consumer<String> schemaConsumer;
-
-        public MetaVal(Consumer<String> schemaConsumer) {
-            this.schemaConsumer = schemaConsumer;
+        public MetaVal() {
         }
 
         @Override
@@ -152,17 +214,22 @@ public class MetaValueTest extends LocalRecordsDao
                     return getDouble();
                 case "str":
                     return getString();
+                case "this":
+                    return this;
             }
             return null;
         }
 
         @Override
         public Object getAttribute(String name, MetaField field) {
-            if (name.equals("schema")) {
-                schemaConsumer.accept(field.getInnerSchema());
-            }
             if (name.equals("date")) {
                 return DATE_VALUE;
+            }
+            if (name.equals("this")) {
+                return this;
+            }
+            if (name.equals("strAtt")) {
+                return getString();
             }
             return null;
         }

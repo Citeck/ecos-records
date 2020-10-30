@@ -8,9 +8,7 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
-import ru.citeck.ecos.records2.request.error.ErrorUtils;
-import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
@@ -22,97 +20,27 @@ import java.util.stream.Collectors;
 @Deprecated
 public class RecordsMetaServiceImpl implements RecordsMetaService {
 
-    private final RecordsMetaGql graphQLService;
     private final AttributesMetaResolver attributesMetaResolver;
     private final DtoSchemaReader dtoSchemaReader;
     private final AttSchemaWriter attSchemaWriter;
 
     public RecordsMetaServiceImpl(RecordsServiceFactory serviceFactory) {
-
-        graphQLService = serviceFactory.getRecordsMetaGql();
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         attributesMetaResolver = serviceFactory.getAttributesMetaResolver();
         attSchemaWriter = serviceFactory.getAttSchemaWriter();
     }
 
     @Override
-    public RecordsResult<RecordMeta> getMeta(List<?> records, String schema) {
-        if (StringUtils.isBlank(schema)) {
-            schema = "id";
-        }
-        return new RecordsResult<>(graphQLService.getMeta(records, schema));
-    }
-
-    @Override
-    public <T> T getMeta(Object record, Class<T> metaClass) {
-
-        RecordsResult<T> meta = getMeta(Collections.singletonList(record), metaClass);
-        ErrorUtils.logErrors(meta);
-
-        if (meta.getRecords().isEmpty()) {
-            throw new IllegalStateException("Meta can't be received for record "
-                                            + record + " and metaClass: " + metaClass);
-        }
-
-        return meta.getRecords().get(0);
-    }
-
-    @Override
-    public <T> RecordsResult<T> getMeta(List<?> records, Class<T> metaClass) {
-
-        Map<String, String> attributes = getAttributes(metaClass);
-        if (attributes.isEmpty()) {
-            log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
-        }
-        RecordsResult<RecordMeta> meta = getMeta(records, attributes);
-        return new RecordsResult<>(meta, m -> instantiateMeta(metaClass, m));
-    }
-
-    @Override
-    public RecordMeta getMeta(Object record, Collection<String> attributes) {
-        Map<String, String> attsMap = new HashMap<>();
-        attributes.forEach(att -> attsMap.put(att, att));
-        return getMeta(record, attsMap);
-    }
-
-    @Override
-    public RecordMeta getMeta(Object record, Map<String, String> attributes) {
-
-        RecordsResult<RecordMeta> meta = getMeta(Collections.singletonList(record), attributes);
-        ErrorUtils.logErrors(meta);
-
-        if (meta.getRecords().isEmpty()) {
-            throw new IllegalStateException("Meta can't be received for record "
-                + record + " and attributes: " + attributes);
-        }
-
-        return meta.getRecords().get(0);
-    }
-
-    @Override
-    public RecordsResult<RecordMeta> getMeta(List<?> records, Map<String, String> attributes) {
-
-        if (attributes.isEmpty()) {
-            throw new IllegalArgumentException("Attributes is empty. Records: " + records);
-        }
-
-        AttributesSchema schema = createSchema(attributes);
-        RecordsResult<RecordMeta> meta = getMeta(records, schema.getSchema());
-        meta.setRecords(convertMetaResult(meta.getRecords(), schema, true));
-
-        return meta;
-    }
-
-    @Override
-    public List<RecordMeta> convertMetaResult(List<RecordMeta> meta, AttributesSchema schema, boolean flat) {
+    public List<RecordAtts> convertMetaResult(List<RecordAtts> meta, AttributesSchema schema, boolean flat) {
         return meta.stream()
                    .map(m -> convertMetaResult(m, schema, flat))
                    .collect(Collectors.toList());
     }
 
-    private RecordMeta convertMetaResult(RecordMeta meta, AttributesSchema schema, boolean flat) {
+    @Override
+    public RecordAtts convertMetaResult(RecordAtts meta, AttributesSchema schema, boolean flat) {
 
-        ObjectData attributes = meta.getAttributes();
+        ObjectData attributes = meta.getAtts();
         ObjectData resultAttributes = ObjectData.create();
         Map<String, AttSchemaInfo> attsInfo = schema.getAttsInfo();
 
@@ -121,8 +49,8 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
             processAttribute(fieldsIt.next(), attsInfo, attributes, resultAttributes, flat);
         }
 
-        RecordMeta recordMeta = new RecordMeta(meta.getId());
-        recordMeta.setAttributes(resultAttributes);
+        RecordAtts recordMeta = new RecordAtts(meta.getId());
+        recordMeta.setAtts(resultAttributes);
 
         return recordMeta;
     }

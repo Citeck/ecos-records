@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.meta;
 
 import java.util.Map;
 
+@Deprecated
 public class AttributesSchema {
 
     private String schema;

@@ -2,12 +2,17 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.write
 
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 
 /**
  * Writer to convert schema to legacy GraphQL format.
  */
 class AttSchemaGqlWriter : AttSchemaWriter {
+
+    companion object {
+        val INSTANCE = AttSchemaGqlWriter()
+    }
 
     override fun write(attribute: SchemaAtt, out: StringBuilder) {
         out.append(".")
@@ -104,22 +109,16 @@ class AttSchemaGqlWriter : AttSchemaWriter {
 
         sb.append(attribute.name)
 
-        when (attribute.name) {
-            "val",
-            "vals",
-            "options",
-            "distinct",
-            "createVariants" -> {
-                sb.append("{")
-                for (att in attribute.inner) {
-                    writeInner(att, sb)
-                    sb.append(",")
-                }
-                if (attribute.inner.isNotEmpty()) {
-                    sb.setLength(sb.length - 1)
-                }
-                sb.append("}")
+        if (MetaEdgeTypeDef.META_VAL_FIELDS.contains(attribute.name)) {
+            sb.append("{")
+            for (att in attribute.inner) {
+                writeInner(att, sb)
+                sb.append(",")
             }
+            if (attribute.inner.isNotEmpty()) {
+                sb.setLength(sb.length - 1)
+            }
+            sb.append("}")
         }
     }
 

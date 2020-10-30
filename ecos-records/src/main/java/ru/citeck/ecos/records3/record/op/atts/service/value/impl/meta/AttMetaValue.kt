@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.impl.meta
 
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField
+import ru.citeck.ecos.records2.graphql.meta.value.field.AttMetaField
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 
@@ -25,11 +25,11 @@ class AttMetaValue(private val metaValue: MetaValue) : AttValue {
 
     @Throws(Exception::class)
     override fun getAtt(name: String): Any? {
-        return metaValue.getAttribute(name, EmptyMetaField.INSTANCE)
+        return metaValue.getAttribute(name, AttMetaField)
     }
 
     override fun getEdge(name: String): AttEdge? {
-        return AttMetaEdge(metaValue.getEdge(name, EmptyMetaField.INSTANCE))
+        return AttMetaEdge(metaValue.getEdge(name, AttMetaField))
     }
 
     @Throws(Exception::class)
@@ -50,7 +50,7 @@ class AttMetaValue(private val metaValue: MetaValue) : AttValue {
     }
 
     override fun getAs(type: String): Any? {
-        return metaValue.getAs(type, EmptyMetaField.INSTANCE)
+        return metaValue.getAs(type, AttMetaField)
     }
 
     override fun getType(): RecordRef {

@@ -12,9 +12,9 @@ import ru.citeck.ecos.records2.RecordRef
 @JsonDeserialize(builder = CreateVariant.Builder::class)
 @JackJsonDeserialize(builder = CreateVariant.Builder::class)
 data class CreateVariant(
-    val label: MLText,
-    val formKey: String,
-    val formRef: RecordRef,
+    val label: MLText?,
+    val formKey: String?,
+    val formRef: RecordRef?,
     val recordRef: RecordRef,
     val attributes: ObjectData = ObjectData.create()
 ) {
@@ -47,44 +47,48 @@ data class CreateVariant(
 
     class Builder() {
 
-        lateinit var label: MLText
-        var formKey: String = ""
-        var formRef: RecordRef = RecordRef.EMPTY
+        var label: MLText? = null
+        var formKey: String? = null
+        var formRef: RecordRef? = null
         var recordRef: RecordRef = RecordRef.EMPTY
         var attributes = ObjectData.create()
 
         constructor(base: CreateVariant) : this() {
-            label = MLText.copy(base.label) ?: MLText()
+            label = MLText.copy(base.label)
             formKey = base.formKey
             formRef = base.formRef
             recordRef = base.recordRef
             attributes = ObjectData.deepCopyOrNew(base.attributes)
         }
 
-        fun withFormKey(formKey: String) : Builder {
+        fun withFormKey(formKey: String?) : Builder {
             this.formKey = formKey
             return this
         }
 
         @JsonSetter
         @JackJsonSetter
-        fun withLabel(label: MLText) : Builder {
+        fun withLabel(label: MLText?) : Builder {
             this.label = label
             return this
         }
 
-        fun withLabel(label: String) : Builder {
-            this.label = MLText(label)
+        fun withLabel(label: String?) : Builder {
+            if (label != null) {
+                this.label = MLText(label)
+            } else {
+                this.label = null
+            }
             return this
         }
 
-        fun withFormRef(formRef: RecordRef) : Builder {
+        fun withFormRef(formRef: RecordRef?) : Builder {
             this.formRef = formRef
             return this
         }
 
-        fun withRecordRef(recordRef: RecordRef) : Builder {
-            this.recordRef = recordRef
+        fun withRecordRef(recordRef: RecordRef?) : Builder {
+            this.recordRef = recordRef ?: RecordRef.EMPTY
             return this
         }
 

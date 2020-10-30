@@ -1,15 +1,17 @@
 package ru.citeck.ecos.records2;
 
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.json.JsonMapper;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -25,6 +27,7 @@ import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
@@ -41,18 +44,16 @@ import java.util.stream.Collectors;
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private final RecordsService recordsServiceV1;
-    private final RecordsMetaService recordsMetaService;
     private final RecordsMetaGql recordsMetaGql;
     private final LocalRecordsResolverV0 localRecordsResolverV0;
     private final AttSchemaReader attSchemaReader;
     private final AttSchemaWriter attSchemaWriter;
-
-    private final JsonMapper mapper = Json.getMapper();
+    private final DtoSchemaReader dtoSchemaReader;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
+        dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         recordsServiceV1 = serviceFactory.getRecordsServiceV1();
-        recordsMetaService = serviceFactory.getRecordsMetaService();
         recordsMetaGql = serviceFactory.getRecordsMetaGql();
         localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
         attSchemaWriter = serviceFactory.getAttSchemaWriter();
@@ -67,7 +68,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return handleRecordsQuery(() -> {
 
             ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery queryV1 =
-                mapper.convert(query, ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery.class);
+                Json.getMapper().convert(query, ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery.class);
             if (queryV1 == null) {
                 return new RecordsQueryResult<>();
             }
@@ -100,14 +101,14 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> RecordsQueryResult<T> queryRecords(RecordsQuery query, Class<T> metaClass) {
 
-        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        Map<String, String> attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(metaClass));
         if (attributes.isEmpty()) {
             throw new IllegalArgumentException("Meta class doesn't has any fields with setter. Class: " + metaClass);
         }
 
         RecordsQueryResult<RecordMeta> meta = queryRecords(query, attributes);
 
-        return new RecordsQueryResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
+        return new RecordsQueryResult<>(meta, m -> dtoSchemaReader.instantiate(metaClass, m.getAttributes()));
     }
 
     @NotNull
@@ -123,17 +124,28 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         return RequestContext.doWithCtx(serviceFactory, ctx -> {
 
+            List<SchemaAtt> attsWithFixedAliases = fixInnerAliases(attributes);
+
             RecsQueryRes<RecordAtts> result = recordsServiceV1.query(
                 V1ConvUtils.recsQueryV0ToV1(query),
-                fixInnerAliases(attributes),
+                attSchemaWriter.writeToMap(attsWithFixedAliases),
                 !flatAttributes
             );
+
             RecordsQueryResult<RecordMeta> metaResult = new RecordsQueryResult<>();
 
             metaResult.setRecords(result.getRecords()
                 .stream()
                 .map(RecordMeta::new)
+                .map(meta -> {
+                    if (!flatAttributes) {
+                        return fixRawData(attsWithFixedAliases, meta);
+                    } else {
+                        return meta;
+                    }
+                })
                 .collect(Collectors.toList()));
+
             metaResult.setHasMore(result.getHasMore());
             metaResult.setTotalCount(result.getTotalCount());
 
@@ -156,7 +168,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @NotNull
     @Override
     public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-        return queryRecords(query, convertSchemaToAtts(schema), false);
+        Map<String, String> attsToLoad = convertSchemaToAtts(schema);
+        return queryRecords(query, attsToLoad, false);
     }
 
     /* ATTRIBUTES */
@@ -209,8 +222,20 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         recsResult.setRecords(RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-            List<RecordAtts> atts = recordsServiceV1.getAtts(records, fixInnerAliases(attributes), !flatAttributes);
-            List<RecordMeta> attsMeta = mapper.convert(atts, mapper.getListType(RecordMeta.class));
+            List<SchemaAtt> attsWithFixedAliases = fixInnerAliases(attributes);
+            List<RecordAtts> atts = recordsServiceV1.getAtts(
+                records,
+                attSchemaWriter.writeToMap(attsWithFixedAliases),
+                !flatAttributes
+            );
+
+            List<RecordMeta> attsMeta = Json.getMapper().convert(atts, Json.getMapper().getListType(RecordMeta.class));
+
+            if (attsMeta != null && !flatAttributes) {
+                attsMeta = attsMeta.stream()
+                    .map(r -> fixRawData(attsWithFixedAliases, r))
+                    .collect(Collectors.toList());
+            }
 
             setDebugToResult(recsResult, ctx);
             recsResult.setErrors(ctx.getRecordErrors());
@@ -238,14 +263,14 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
 
-        Map<String, String> attributes = recordsMetaService.getAttributes(metaClass);
+        Map<String, String> attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(metaClass));
         if (attributes.isEmpty()) {
             log.warn("Attributes is empty. Query will return empty meta. MetaClass: " + metaClass);
         }
 
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
 
-        return new RecordsResult<>(meta, m -> recordsMetaService.instantiateMeta(metaClass, m));
+        return new RecordsResult<>(meta, m -> dtoSchemaReader.instantiate(metaClass, m.getAttributes()));
     }
 
     @NotNull
@@ -265,15 +290,89 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         return fixedAtts;
     }
 
-    private Map<String, String> fixInnerAliases(Map<String, String> attributes) {
+    private RecordMeta fixRawData(List<SchemaAtt> attsSchema, RecordMeta meta) {
 
-        List<SchemaAtt> atts = attSchemaReader.read(attributes);
-        atts = fixInnerAliases(atts, true, null, null);
+        ObjectData attributes = meta.getAttributes();
+        for (SchemaAtt att : attsSchema) {
+            attributes.set(att.getAliasForValue(),
+                fixRawData(null, att, attributes.get(att.getAliasForValue()).asJson(), att.getMultiple()));
+        }
+        meta.setAtts(attributes);
 
-        return attSchemaWriter.writeToMap(atts);
+        return meta;
     }
 
-    private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts, boolean root,
+    private JsonNode fixRawData(@Nullable SchemaAtt parent,
+                                SchemaAtt att,
+                                @Nullable JsonNode node,
+                                boolean isMultiple) {
+
+        if (node == null || node.isNull() || node.isMissingNode() || att.isScalar()) {
+            return node;
+        }
+
+        if (node.isArray() && isMultiple) {
+            ArrayNode result = Json.getMapper().newArrayNode();
+            node.forEach(n -> result.add(fixRawData(parent, att, n, false)));
+            return result;
+        }
+
+        String name = att.getName();
+
+        if ((name.equals(RecordConstants.ATT_HAS)
+            || name.equals(RecordConstants.ATT_AS)
+            || name.equals(RecordConstants.ATT_EDGE)) && att.getInner().size() == 1) {
+
+            List<SchemaAtt> innerAtts = att.getInner().get(0).getInner();
+
+            if (name.equals(RecordConstants.ATT_HAS)) {
+                return node.elements().next().elements().next();
+            }
+
+            ObjectNode newNode = Json.getMapper().newObjectNode();
+            JsonNode innerElements = node.elements().next();
+
+            for (SchemaAtt innerAtt : innerAtts) {
+
+                JsonNode newInnerNode = innerElements.get(innerAtt.getAliasForValue());
+
+                newNode.put(innerAtt.getAliasForValue(), fixRawData(
+                    att,
+                    innerAtt,
+                    newInnerNode,
+                    innerAtt.getMultiple()));
+            }
+            return newNode;
+        }
+
+        if (parent != null && parent.getName().equals(RecordConstants.ATT_EDGE)) {
+            if (!MetaEdgeTypeDef.META_VAL_FIELDS.contains(att.getName())) {
+                SchemaAtt newAtt = att.getInner().get(0);
+                if (newAtt.isScalar()) {
+                    return node.elements().next();
+                }
+            }
+        }
+
+        if (att.isScalar()) {
+            return node;
+        }
+
+        ObjectNode result = Json.getMapper().newObjectNode();
+        for (SchemaAtt innerAtt : att.getInner()) {
+            result.put(innerAtt.getAliasForValue(),
+                fixRawData(att, innerAtt, node.get(innerAtt.getAliasForValue()), innerAtt.getMultiple()));
+        }
+        return result;
+    }
+
+    private List<SchemaAtt> fixInnerAliases(Map<String, String> attributes) {
+        List<SchemaAtt> atts = attSchemaReader.read(attributes);
+        return fixInnerAliases(atts, true, null, null);
+    }
+
+    private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts,
+                                            boolean root,
                                             @Nullable SchemaAtt parent,
                                             @Nullable SchemaAtt parentParent) {
         if (atts.isEmpty()) {
@@ -287,9 +386,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 } else {
                     newAlias = fixInnerAlias(a.getAliasForValue());
                     if (a.getAlias().isEmpty()) {
-                        if (("?" + newAlias).equals(a.getName())) {
-                            newAlias = "";
-                        } else if (a.getName().charAt(0) != '?') {
+                        if (a.getName().charAt(0) != '?') {
                             switch (a.getName()) {
                                 case RecordConstants.ATT_AS:
                                     newAlias = "as";
@@ -339,8 +436,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public RecordsMutResult mutate(RecordsMutation mutation) {
 
-        List<RecordAtts> records = mapper.convert(mutation.getRecords(),
-            mapper.getListType(RecordAtts.class));
+        List<RecordAtts> records = Json.getMapper().convert(mutation.getRecords(),
+            Json.getMapper().getListType(RecordAtts.class));
 
         if (records == null) {
 

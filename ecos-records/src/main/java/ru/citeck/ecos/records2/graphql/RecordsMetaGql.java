@@ -73,19 +73,6 @@ public class RecordsMetaGql {
         graphQL = GraphQL.newGraphQL(graphQLSchema).build();
     }
 
-    public List<RecordMeta> getMeta(List<?> metaValues, String schema) {
-
-        String query = String.format(META_QUERY_TEMPLATE, schema);
-
-        ExecutionResult result = QueryContext.withContext(serviceFactory, () -> {
-            QueryContext context = QueryContext.getCurrent();
-            context.setMetaValues(metaValues);
-            return executeImpl(query, context);
-        });
-
-        return convertMeta(result, metaValues);
-    }
-
     public MetaField getMetaFieldFromSchema(String schema) {
 
         if (schema == null || schema.isEmpty()) {

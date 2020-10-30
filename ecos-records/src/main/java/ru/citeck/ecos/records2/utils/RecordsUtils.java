@@ -37,17 +37,27 @@ public class RecordsUtils {
         return null;
     }
 
+    public static RecordsQueryResult<RecordAtts> attsWithDefaultApp(RecordsQueryResult<RecordAtts> queryResult,
+                                                                    String appName) {
+
+        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName));
+        return queryResult;
+    }
+
     public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult,
                                                               String appName) {
-        if (StringUtils.isBlank(appName)) {
-            return queryResult;
-        }
-        queryResult.setRecords(queryResult.getRecords()
-            .stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList())
-        );
+
+        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName));
         return queryResult;
+    }
+
+    public static List<RecordAtts> attsWithDefaultApp(List<RecordAtts> records, String appName) {
+        if (StringUtils.isBlank(appName)) {
+            return records;
+        }
+        return records.stream()
+            .map(meta -> meta.withDefaultAppName(appName))
+            .collect(Collectors.toList());
     }
 
     public static RecordsQueryResult<RecordMeta> metaWithDefaultApp(RecordsQueryResult<RecordMeta> queryResult,

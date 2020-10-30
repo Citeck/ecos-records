@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records2.request.query.typed;
 
-import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 
 /**
  * Used to deserialize records meta result.
  */
-public class RecordsMetaResult extends RecordsResult<RecordMeta> {
+public class RecordsMetaResult extends RecordsResult<RecordAtts> {
 
     public RecordsMetaResult() {
     }

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.test.evaluator;
 
+import kotlin.Unit;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
@@ -13,6 +14,7 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +53,12 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
         config.someParam = EvalConfig.PARAM_VALUE;
         evaluatorDto.setConfig(Json.getMapper().convert(config, ObjectData.class));
 
-        assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto, model));
+        RequestContext.doWithCtx(factory, ctx ->
+            RequestContext.doWithAtts(model, () -> {
+                assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto));
+                return Unit.INSTANCE;
+            })
+        );
     }
 
     @Override

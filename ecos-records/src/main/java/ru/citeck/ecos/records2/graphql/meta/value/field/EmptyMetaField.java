@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public class EmptyMetaField implements MetaField {
 
     public static final MetaField INSTANCE = new EmptyMetaField();

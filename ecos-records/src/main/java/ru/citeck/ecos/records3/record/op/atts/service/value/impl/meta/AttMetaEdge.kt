@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.impl.meta
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
-import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField
+import ru.citeck.ecos.records2.graphql.meta.value.field.AttMetaField
 import ru.citeck.ecos.records3.record.op.atts.dto.CreateVariant
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge
 
@@ -20,7 +20,7 @@ class AttMetaEdge(val edge: MetaEdge) : AttEdge {
 
     override fun isSearchable(): Boolean = edge.isSearchable
 
-    override fun isReadable(): Boolean = edge.isReadable()
+    override fun isReadable(): Boolean = edge.isReadable
 
     override fun getOptions(): List<*>? = edge.options
 
@@ -35,7 +35,7 @@ class AttMetaEdge(val edge: MetaEdge) : AttEdge {
 
     override fun getEditorKey(): String? = edge.editorKey
 
-    override fun getType(): String? = edge.editorKey
+    override fun getType(): String? = edge.type
 
     override fun getTitle(): MLText? {
         val value = edge.title
@@ -57,5 +57,5 @@ class AttMetaEdge(val edge: MetaEdge) : AttEdge {
 
     override fun getName(): String? = edge.name
 
-    override fun getValue(): Any? = edge.getValue(EmptyMetaField.INSTANCE)
+    override fun getValue(): Any? = edge.getValue(AttMetaField)
 }

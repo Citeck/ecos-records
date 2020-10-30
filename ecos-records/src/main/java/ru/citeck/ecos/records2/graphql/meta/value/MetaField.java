@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public interface MetaField {
 
     String getInnerSchema();

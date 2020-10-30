@@ -7,11 +7,21 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.field.MetaFieldImpl;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MetaEdgeTypeDef implements GqlTypeDefinition {
 
     public static final String TYPE_NAME = "MetaEdge";
+    public static final Set<String> META_VAL_FIELDS = new HashSet<>(Arrays.asList(
+        "val",
+        "vals",
+        "options",
+        "distinct",
+        "createVariants"
+    ));
 
     private final MetaValueTypeDef metaValueTypeDef;
 

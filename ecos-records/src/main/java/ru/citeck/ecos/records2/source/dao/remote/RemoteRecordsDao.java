@@ -1,8 +1,19 @@
 package ru.citeck.ecos.records2.source.dao.remote;
 
+import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import ecos.com.fasterxml.jackson210.databind.node.NullNode;
+import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records2.ServiceFactoryAware;
+import ru.citeck.ecos.records2.meta.AttributesSchema;
+import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult;
@@ -14,20 +25,26 @@ import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDao;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class RemoteRecordsDao extends AbstractRecordsDao
                               implements RecordsMetaDao,
                                          RecordsQueryWithMetaDao,
-                                         RecordsQueryDao {
+                                         RecordsQueryDao,
+                                         ServiceFactoryAware {
 
     private boolean enabled = true;
 
     private RecordsRestConnection restConnection;
+    private RecordsServiceFactory services;
+    private RecordsMetaService recordsMetaService;
 
     private String recordsMethod = "/api/ecos/records";
     private String remoteSourceId = null;
@@ -54,23 +71,26 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     }
 
     @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String metaSchema) {
+    public RecordsQueryResult<RecordAtts> queryRecords(RecordsQuery query, List<SchemaAtt> schema, boolean rawAtts) {
 
         QueryBody request = new QueryBody();
 
         if (enabled) {
 
             prepareQueryBody(request, query);
-            request.setSchema(metaSchema);
+
+            Map<String, String> attsMap = services.getAttSchemaWriter().writeToMap(schema);
+            AttributesSchema attsSchema = services.getAttributesMetaResolver().createSchema(attsMap);
+
+            request.setSchema(attsSchema.getSchema());
 
             RecordsMetaQueryResult result = restConnection.jsonPost(recordsMethod,
                                                                     request,
                                                                     RecordsMetaQueryResult.class);
-            if (result != null) {
-                return result.addSourceId(getId());
-            } else {
-                log.error("[" + getId() + "] queryRecords will return nothing. " + request);
-            }
+
+            result.setRecords(recordsMetaService.convertMetaResult(result.getRecords(), attsSchema, !rawAtts));
+
+            return result.addSourceId(getId());
         }
         return new RecordsMetaQueryResult();
     }
@@ -88,23 +108,29 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     }
 
     @Override
-    public RecordsResult<RecordMeta> getMeta(List<RecordRef> records, String gqlSchema) {
+    public RecordsResult<RecordAtts> getMeta(List<RecordRef> records, List<SchemaAtt> schema, boolean rawAtts) {
 
         List<RecordRef> recordsRefs = records.stream()
                                              .map(RecordRef::getId)
                                              .map(RecordRef::valueOf)
                                              .collect(Collectors.toList());
 
+        Map<String, String> attsMap = services.getAttSchemaWriter().writeToMap(schema);
+        AttributesSchema attsSchema = services.getAttributesMetaResolver().createSchema(attsMap);
+
         QueryBody request = new QueryBody();
-        request.setSchema(gqlSchema);
+        request.setSchema(attsSchema.getSchema());
         request.setRecords(recordsRefs);
 
         RecordsMetaResult nodesResult = restConnection.jsonPost(recordsMethod, request, RecordsMetaResult.class);
 
-        List<RecordMeta> restResultRecords = nodesResult.getRecords();
-        List<RecordMeta> meta = new ArrayList<>();
+        List<RecordAtts> restResultRecords = nodesResult.getRecords();
+        List<RecordAtts> meta = new ArrayList<>();
+
         for (int i = 0; i < records.size(); i++) {
-            meta.add(new RecordMeta(restResultRecords.get(i), records.get(i)));
+            RecordAtts resAtts = restResultRecords.get(i);
+            resAtts = recordsMetaService.convertMetaResult(resAtts, attsSchema, !rawAtts);
+            meta.add(new RecordAtts(resAtts, records.get(i)));
         }
 
         nodesResult.setRecords(meta);
@@ -130,5 +156,10 @@ public class RemoteRecordsDao extends AbstractRecordsDao
 
     public RecordsRestConnection getRestConnection() {
         return restConnection;
+    }
+
+    public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.services = serviceFactory;
+        this.recordsMetaService = services.getRecordsMetaService();
     }
 }

@@ -5,6 +5,6 @@ import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDao;
 
 public abstract class LocalRecordsCrudDao<T> extends LocalRecordsDao
                                              implements LocalRecordsMetaDao<T>,
-        LocalRecordsQueryWithMetaDao<T>,
+                                                        LocalRecordsQueryWithMetaDao<T>,
                                                         MutableRecordsLocalDao<T> {
 }

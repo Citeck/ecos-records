@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.source.dao;
 
+@Deprecated
 public abstract class AbstractRecordsDao implements RecordsDao {
 
     private String id;

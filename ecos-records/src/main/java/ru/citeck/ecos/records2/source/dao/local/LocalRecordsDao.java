@@ -4,10 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
+import ru.citeck.ecos.records2.graphql.meta.value.field.AttMetaField;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
@@ -25,10 +24,16 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Local records DAO.
@@ -55,11 +60,11 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
     protected RecordsService recordsService;
     protected PredicateService predicateService;
-    protected RecordsMetaService recordsMetaService;
-    protected RecordsMetaGql recordsMetaGql;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
     protected RecordTypeService recordTypeService;
+    private RecordAttsService recordAttsService;
+    private DtoSchemaReader dtoSchemaReader;
 
     private boolean addSourceId = true;
     private final Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
@@ -132,8 +137,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
         } else if (this instanceof LocalRecordsQueryWithMetaDao) {
 
-            RecordsQueryResult<RecordMeta> records = queryRecords(query, "id");
-            return new RecordsQueryResult<>(records, RecordMeta::getId);
+            RecordsQueryResult<RecordAtts> records = queryRecords(query, emptyList(), false);
+            return new RecordsQueryResult<>(records, RecordAtts::getId);
         }
 
         writeWarn("RecordsDao doesn't implement neither "
@@ -143,21 +148,20 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsQueryResult<RecordMeta> queryRecords(@NotNull RecordsQuery query, @NotNull String metaSchema) {
+    public RecordsQueryResult<RecordAtts> queryRecords(@NotNull RecordsQuery query,
+                                                       @NotNull List<SchemaAtt> metaSchema,
+                                                       boolean rawAtts) {
 
-        RecordsQueryResult<RecordMeta> queryResult = new RecordsQueryResult<>();
+        RecordsQueryResult<RecordAtts> queryResult = new RecordsQueryResult<>();
 
         List<RecordRef> recordRefs = new ArrayList<>();
         List<Object> rawMetaValues = new ArrayList<>();
 
-        MetaField metaField = null;
-
         if (this instanceof LocalRecordsQueryWithMetaDao) {
 
             LocalRecordsQueryWithMetaDao withMeta = (LocalRecordsQueryWithMetaDao) this;
-            metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
 
-            RecordsQueryResult<?> values = withMeta.queryLocalRecords(query, metaField);
+            RecordsQueryResult<?> values = withMeta.queryLocalRecords(query, AttMetaField.INSTANCE);
 
             queryResult.merge(values);
             queryResult.setHasMore(values.getHasMore());
@@ -186,15 +190,11 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
             if (this instanceof LocalRecordsMetaDao) {
 
-                if (metaField == null) {
-                    metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
-                }
-
                 LocalRecordsMetaDao metaDao = (LocalRecordsMetaDao) this;
-                rawMetaValues.addAll(metaDao.getLocalRecordsMeta(recordRefs, metaField));
+                rawMetaValues.addAll(metaDao.getLocalRecordsMeta(recordRefs, AttMetaField.INSTANCE));
             } else if (this instanceof RecordsMetaDao) {
                 RecordsMetaDao metaDao = (RecordsMetaDao) this;
-                RecordsResult<RecordMeta> meta = metaDao.getMeta(recordRefs, metaSchema);
+                RecordsResult<RecordAtts> meta = metaDao.getMeta(recordRefs, metaSchema, rawAtts);
                 queryResult.merge(meta);
             } else {
                 writeWarn("RecordsDao implements neither LocalRecordsMetaDao "
@@ -204,64 +204,71 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         }
 
         if (!rawMetaValues.isEmpty()) {
-            queryResult.merge(getMetaImpl(rawMetaValues, metaSchema));
+            queryResult.merge(getMetaImpl(rawMetaValues, metaSchema, rawAtts));
         }
 
         if (addSourceId) {
-            queryResult.setRecords(RecordsUtils.convertToRefsMeta(getId(), queryResult.getRecords()));
+            queryResult.setRecords(RecordsUtils.convertToRefs(getId(), queryResult.getRecords()));
         }
 
         return queryResult;
     }
 
     @NotNull
-    public RecordsResult<RecordMeta> getMeta(@NotNull List<RecordRef> records, @NotNull String metaSchema) {
+    public RecordsResult<RecordAtts> getMeta(@NotNull List<RecordRef> records,
+                                             @NotNull List<SchemaAtt> metaSchema,
+                                             boolean rawAtts) {
 
-        RecordsResult<RecordMeta> result;
+        RecordsResult<RecordAtts> result;
 
         if (this instanceof LocalRecordsMetaDao) {
 
             LocalRecordsMetaDao metaLocalDao = (LocalRecordsMetaDao) this;
 
-            MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(metaSchema);
-
             List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
-            List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, metaField);
+            List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, AttMetaField.INSTANCE);
 
-            result = getMetaImpl(metaValues, metaSchema);
+            result = getMetaImpl(metaValues, metaSchema, rawAtts);
 
         } else {
 
             writeWarn("RecordsDao doesn't implement LocalRecordsMetaDao. We can't receive metadata");
 
             result = new RecordsResult<>();
-            records.stream().map(RecordMeta::new).forEach(result::addRecord);
+            records.stream().map(RecordAtts::new).forEach(result::addRecord);
         }
 
         if (addSourceId) {
-            result.setRecords(RecordsUtils.convertToRefsMeta(getId(), result.getRecords()));
+            result.setRecords(RecordsUtils.toScopedRecordsAtts(getId(), result.getRecords()));
         }
 
         return result;
     }
 
-    private RecordsResult<RecordMeta> getMetaImpl(List<?> records, String schema) {
+    private RecordsResult<RecordAtts> getMetaImpl(List<?> records, List<SchemaAtt> schema, boolean rawAtts) {
 
         Map<Object, Object> metaCache = new ConcurrentHashMap<>();
 
-        List<?> recordsWithMixin = records.stream()
-            .map(r -> metaValuesConverter.toMetaValue(r))
-            .map(mv ->
-                new AttributesMixinMetaValue(mv,
-                    recordsMetaService,
+        List<?> recordsWithMixin = QueryContext.withContext(serviceFactory, ctx ->
+            records.stream()
+                .map(r -> metaValuesConverter.toMetaValue(r))
+                .map(mv -> new AttributesMixinMetaValue(mv,
+                    dtoSchemaReader,
+                    recordAttsService,
                     recordTypeService,
                     metaValuesConverter,
                     mixins,
                     metaCache
                 ))
-            .collect(Collectors.toList());
+                .peek(v -> v.init(ctx, AttMetaField.INSTANCE))
+                .collect(Collectors.toList()));
 
-        return recordsMetaService.getMeta(recordsWithMixin, schema);
+        List<RecordAtts> atts = recordAttsService.getAtts(recordsWithMixin, schema, rawAtts, emptyList());
+
+        RecordsResult<RecordAtts> result = new RecordsResult<>();
+        result.setRecords(atts);
+
+        return result;
     }
 
     protected void writeWarn(String msg) {
@@ -273,10 +280,10 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         this.serviceFactory = serviceFactory;
         recordsService = serviceFactory.getRecordsService();
         predicateService = serviceFactory.getPredicateService();
-        recordsMetaService = serviceFactory.getRecordsMetaService();
-        recordsMetaGql = serviceFactory.getRecordsMetaGql();
+        recordAttsService = serviceFactory.getRecordsAttsService();
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
         recordTypeService = serviceFactory.getRecordTypeService();
+        dtoSchemaReader = serviceFactory.getDtoSchemaReader();
     }
 
     public void addAttributesMixin(AttributesMixin<?, ?> mixin) {

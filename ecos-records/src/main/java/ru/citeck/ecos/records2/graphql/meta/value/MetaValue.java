@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef;
 
 import java.util.Collections;
 
@@ -12,9 +11,8 @@ import java.util.Collections;
  * Metadata value. Used to get attributes by schema.
  *
  * @author Pavel Simonov
- *
- * @see MetaValueTypeDef
  */
+@Deprecated
 public interface MetaValue {
 
     /**

@@ -18,7 +18,7 @@ import kotlin.collections.emptyList
 import kotlin.collections.indices
 import kotlin.collections.listOf
 
-class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : RecordAttsService {
+class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService {
 
     companion object {
         private const val REF_ATT_ALIAS: String = "___ref___"
@@ -27,6 +27,10 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
     private val schemaReader = services.attSchemaReader
     private val dtoSchemaReader = services.dtoSchemaReader
     private val schemaResolver = services.attSchemaResolver
+
+    override fun <T: Any> getAtts(value: Any?, attributes: Class<T>): T {
+        return getAtts(listOf(value), attributes)[0]
+    }
 
     override fun getAtts(value: Any?, attributes: Map<String, String>): RecordAtts {
         return getAtts(value, attributes, false)
@@ -57,10 +61,10 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         return getAtts(values, toAttsMap(attributes), rawAtts)
     }
 
-    override fun <T : Any> getAtts(values: List<*>, attsDto: Class<T>): List<T> {
-        val attributes = dtoSchemaReader.read(attsDto)
-        return getAtts(values, attributes, false, emptyList())
-            .map { dtoSchemaReader.instantiate(attsDto, it.getAtts()) ?: attsDto.newInstance() }
+    override fun <T : Any> getAtts(values: List<*>, attributes: Class<T>): List<T> {
+        val attsMap = dtoSchemaReader.read(attributes)
+        return getAtts(values, attsMap, false, emptyList())
+            .map { dtoSchemaReader.instantiate(attributes, it.getAtts()) ?: attributes.newInstance() }
     }
 
     override fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean): List<RecordAtts> {

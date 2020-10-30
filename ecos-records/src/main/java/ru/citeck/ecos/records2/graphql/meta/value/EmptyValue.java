@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ru.citeck.ecos.records2.RecordConstants;
 
+@Deprecated
 public class EmptyValue implements MetaValue {
 
     public static final EmptyValue INSTANCE = new EmptyValue();

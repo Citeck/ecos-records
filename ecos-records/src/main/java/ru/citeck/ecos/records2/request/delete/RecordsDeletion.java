@@ -5,6 +5,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class RecordsDeletion {
 
     private List<RecordRef> records = new ArrayList<>();

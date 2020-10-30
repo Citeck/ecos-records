@@ -12,8 +12,10 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.type.RecordTypeService;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -25,8 +27,9 @@ import java.util.stream.Collectors;
 @SuppressFBWarnings({"NP_BOOLEAN_RETURN_NULL"})
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
-    private final RecordsMetaService recordsMetaService;
     private final RecordTypeService recordTypeService;
+    private final RecordAttsService recordAttsService;
+    private final DtoSchemaReader dtoSchemaReader;
 
     private final Map<String, ParameterizedAttsMixin> mixins;
     private final Map<Object, Object> metaCache;
@@ -37,7 +40,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     private boolean initialized = false;
 
     public AttributesMixinMetaValue(MetaValue impl,
-                                    RecordsMetaService recordsMetaService,
+                                    DtoSchemaReader dtoSchemaReader,
+                                    RecordAttsService recordAttsService,
                                     RecordTypeService recordTypeService,
                                     MetaValuesConverter metaValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,
@@ -45,7 +49,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         super(impl);
         this.mixins = mixins;
         this.recordTypeService = recordTypeService;
-        this.recordsMetaService = recordsMetaService;
+        this.recordAttsService = recordAttsService;
+        this.dtoSchemaReader = dtoSchemaReader;
         this.metaValuesConverter = metaValuesConverter;
         this.metaCache = metaCache != null ? metaCache : new ConcurrentHashMap<>();
     }
@@ -124,15 +129,18 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
             if (reqMeta instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, String> attributes = (Map<String, String>) reqMeta;
-                RecordMeta resMeta = recordsMetaService.getMeta(this, attributes);
+                RecordAtts resMeta = recordAttsService.getAtts(this, attributes);
                 if (resMetaType.isAssignableFrom(RecordMeta.class)) {
+                    return new RecordMeta(resMeta);
+                }
+                if (resMetaType.isAssignableFrom(RecordAtts.class)) {
                     return resMeta;
                 }
-                return recordsMetaService.instantiateMeta(resMetaType, resMeta);
+                return dtoSchemaReader.instantiate(resMetaType, resMeta.getAtts());
             } else if (reqMeta instanceof Class) {
-                return recordsMetaService.getMeta(this, (Class<?>) reqMeta);
+                return recordAttsService.getAtts(this, (Class<?>) reqMeta);
             } else {
-                return recordsMetaService.getMeta(this, reqMeta.getClass());
+                return recordAttsService.getAtts(this, reqMeta.getClass());
             }
         });
 
@@ -149,7 +157,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
         return metaValues.stream()
             .map(value -> {
                 AttributesMixinMetaValue att = new AttributesMixinMetaValue(value,
-                    recordsMetaService,
+                    dtoSchemaReader,
+                    recordAttsService,
                     recordTypeService,
                     metaValuesConverter,
                     mixins,

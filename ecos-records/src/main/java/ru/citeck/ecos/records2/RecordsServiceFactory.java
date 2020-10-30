@@ -9,9 +9,6 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl;
 import ru.citeck.ecos.records2.evaluator.evaluators.*;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.DataValueMetaFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.RecordMetaValueFactory;
 import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef;
 import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition;
 import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
@@ -23,7 +20,6 @@ import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl;
 import ru.citeck.ecos.records2.request.rest.RestHandler;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
-import ru.citeck.ecos.records2.type.ComputedAtt;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
 import ru.citeck.ecos.records3.record.op.atts.service.proc.*;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader;
@@ -46,7 +42,6 @@ import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonDeserializer;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonSerializer;
 import ru.citeck.ecos.records2.predicate.json.std.PredicateTypes;
-import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
@@ -98,10 +93,7 @@ public class RecordsServiceFactory {
 
     @Deprecated
     private Supplier<? extends QueryContext> queryContextSupplier;
-    private Supplier<? extends RequestContext> requestContextSupplier;
 
-    @Deprecated
-    private List<MetaValueFactory<?>> metaValueFactories;
     private List<AttValueFactory<?>> attValueFactories;
 
     @Deprecated
@@ -451,38 +443,6 @@ public class RecordsServiceFactory {
 
         if (LibsUtils.isJacksonPresent()) {
             metaValueFactories.add(new JacksonJsonNodeValueFactory());
-        }
-
-        return metaValueFactories;
-    }
-    public final synchronized List<MetaValueFactory<?>> getMetaValueFactories() {
-        if (metaValueFactories == null) {
-            metaValueFactories = createMetaValueFactories();
-        }
-        return metaValueFactories;
-    }
-
-    protected List<MetaValueFactory<?>> createMetaValueFactories() {
-
-        List<MetaValueFactory<?>> metaValueFactories = new ArrayList<>();
-
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.ObjectDataValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.ByteArrayValueFactory());
-        metaValueFactories.add(new DataValueMetaFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.MLTextValueFactory());
-        metaValueFactories.add(new RecordMetaValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.BeanValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.BooleanValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.DateValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.DoubleValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.IntegerValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.JsonNodeValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.LongValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.StringValueFactory());
-        metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.RecordRefValueFactory(this));
-
-        if (LibsUtils.isJacksonPresent()) {
-            metaValueFactories.add(new ru.citeck.ecos.records2.graphql.meta.value.factory.JacksonJsonNodeValueFactory());
         }
 
         return metaValueFactories;

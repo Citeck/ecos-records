@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ru.citeck.ecos.records2.RecordMeta;
 
+@Deprecated
 public class RecordMetaValue implements MetaValue {
 
     private final RecordMeta meta;

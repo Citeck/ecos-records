@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.*;
 
+@Deprecated
 public class MetaFieldImpl implements MetaField {
 
     private final Field field;
@@ -31,7 +32,7 @@ public class MetaFieldImpl implements MetaField {
 
     @Override
     public String getAttributeSchema(String fieldName) {
-        return getFieldSchema(getInnerAttFields().get(fieldName));
+        return getFieldSchema(getInnerAttFields(false).get(fieldName));
     }
 
     private String getFieldSchema(Field field) {
@@ -99,7 +100,7 @@ public class MetaFieldImpl implements MetaField {
 
     @Override
     public List<String> getInnerAttributes() {
-        return new ArrayList<>(getInnerAttFields().keySet());
+        return new ArrayList<>(getInnerAttFields(false).keySet());
     }
 
     @Override
@@ -111,7 +112,7 @@ public class MetaFieldImpl implements MetaField {
     public Map<String, String> getInnerAttributesMap(boolean withAliases) {
 
         Map<String, String> result = new HashMap<>();
-        Map<String, Field> fields = getInnerAttFields();
+        Map<String, Field> fields = getInnerAttFields(withAliases);
 
         StringBuilder sb = new StringBuilder();
         fields.forEach((k, field) -> {
@@ -127,31 +128,42 @@ public class MetaFieldImpl implements MetaField {
         return result;
     }
 
-    private Map<String, Field> getInnerAttFields() {
+    private Map<String, Field> getInnerAttFields(boolean withAliases) {
 
         Map<String, Field> attributes = new HashMap<>();
 
         for (Field field : getInnerFields(field)) {
 
-            if (field.getName().startsWith("att")) {
+            if (withAliases) {
 
-                field.getArguments()
-                     .stream()
-                     .findFirst()
-                     .filter(a -> a.getValue() instanceof StringValue)
-                     .map(a -> ((StringValue) a.getValue()).getValue())
-                     .ifPresent(name -> attributes.put(name, field));
-
-            } else if (field.getName().equals("as")) {
-
-                String key = StringUtils.isNotBlank(field.getAlias()) ? field.getAlias() : ".as";
-                if (key.equals("as")) {
-                    key = ".as";
+                String alias = field.getAlias();
+                if (StringUtils.isBlank(alias)) {
+                    alias = field.getName();
                 }
-                attributes.put(key, field);
+                attributes.put(alias, field);
 
             } else {
-                attributes.put("." + field.getName(), field);
+
+                if (field.getName().startsWith("att")) {
+
+                    field.getArguments()
+                        .stream()
+                        .findFirst()
+                        .filter(a -> a.getValue() instanceof StringValue)
+                        .map(a -> ((StringValue) a.getValue()).getValue())
+                        .ifPresent(name -> attributes.put(name, field));
+
+                } else if (field.getName().equals("as")) {
+
+                    String key = StringUtils.isNotBlank(field.getAlias()) ? field.getAlias() : ".as";
+                    if (key.equals("as")) {
+                        key = ".as";
+                    }
+                    attributes.put(key, field);
+
+                } else {
+                    attributes.put("." + field.getName(), field);
+                }
             }
         }
 

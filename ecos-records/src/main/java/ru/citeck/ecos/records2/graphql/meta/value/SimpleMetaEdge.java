@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 
 @Slf4j
+@Deprecated
 public class SimpleMetaEdge implements MetaEdge {
 
     private final String name;

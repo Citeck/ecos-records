@@ -4,7 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import java.util.*
 

@@ -57,8 +57,8 @@ public class EvaluatorsWithModelTest extends AbstractRecordsDao implements Recor
         config.someParam = EvalConfig.PARAM_VALUE;
         evaluatorDto.setConfig(Json.getMapper().convert(config, ObjectData.class));
 
-        RequestContext.doWithCtx(factory, ctx -> {
-            assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto, model));
+        RequestContext.doWithCtxJ(factory, data -> data.setCtxAtts(model), ctx -> {
+            assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto));
             return null;
         });
     }

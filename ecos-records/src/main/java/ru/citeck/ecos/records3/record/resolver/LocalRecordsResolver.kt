@@ -11,7 +11,6 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException
-import ru.citeck.ecos.records2.meta.AttributesSchema
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -33,7 +32,6 @@ import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder
-import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
@@ -46,12 +44,12 @@ import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
-import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
 
 class LocalRecordsResolver(private val services: RecordsServiceFactory) {
 
@@ -59,8 +57,9 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
 
         private val log = KotlinLogging.logger {}
 
-        private val DEBUG_QUERY_TIME: String = "queryTimeMs"
-        private val DEBUG_META_SCHEMA: String = "schema"
+        private const val DEBUG_QUERY_TIME: String = "queryTimeMs"
+        private const val DEBUG_REFS_ATTS_TIME: String = "refsAttsTimeMs"
+        private const val DEBUG_OBJ_ATTS_TIME: String = "objAttsTimeMs"
     }
 
     private val allDao = ConcurrentHashMap<String, RecordsDao>()
@@ -79,7 +78,6 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
     private val attProcService = services.attProcService
     private val attSchemaWriter = services.attSchemaWriter
     private val queryLangService = services.queryLangService
-    private val recordsMetaService = services.recordsMetaService
     private val recordsAttsService = services.recordsAttsService
     private val localRecordsResolverV0 = services.localRecordsResolverV0
 
@@ -111,29 +109,6 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                 sourceId = sourceId.substring(appDelimIdx + 1)
                 query = query.copy().withSourceId(sourceId).build()
             }
-        }
-
-        if (!allDao.containsKey(query.sourceId)) {
-
-            val v0Query = V1ConvUtils.recsQueryV1ToV0(query, context)
-            val attributesMap: Map<String, String> = attSchemaWriter.writeToMap(attributes)
-            val schema: AttributesSchema = recordsMetaService.createSchema(attributesMap)
-            val records = localRecordsResolverV0.queryRecords(v0Query, schema.schema)
-
-            records.records = recordsMetaService.convertMetaResult(records.records, schema, !rawAtts)
-            records.records = unescapeKeys(records.records)
-
-            V1ConvUtils.addErrorMessages(records.errors, context)
-            V1ConvUtils.addDebugMessage(records, context)
-
-            val queryRes = RecsQueryRes<RecordAtts>()
-            queryRes.setRecords(
-                Json.mapper.convert(records.records, Json.mapper.getListType(RecordAtts::class.java))
-            )
-            queryRes.setHasMore(records.hasMore)
-            queryRes.setTotalCount(records.totalCount)
-
-            return queryRes
         }
 
         val finalQuery = query
@@ -186,16 +161,51 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     ))
                 }
             } else {
+
                 val dao = getRecordsDao(sourceId, RecordsQueryDao::class.java)
+
                 if (dao == null) {
-                    val msg = "RecordsQueryDao is not found for id = '$sourceId'"
-                    context.addMsg(MsgLevel.ERROR) { msg }
+
+                    if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+                        context.addMsg(MsgLevel.DEBUG, "Legacy Source Dao: '${query.sourceId}'")
+                    }
+                    val v0Query = V1ConvUtils.recsQueryV1ToV0(query, context)
+
+                    val queryStartMs = System.currentTimeMillis()
+
+                    val records = localRecordsResolverV0.queryRecords(v0Query, attributes, rawAtts)
+
+                    if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+                        context.addMsg(MsgLevel.DEBUG,
+                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'")
+                    }
+
+                    records.records = unescapeKeys(records.records)
+
+                    V1ConvUtils.addErrorMessages(records.errors, context)
+                    V1ConvUtils.addDebugMessage(records, context)
+
+                    val queryRes = RecsQueryRes<RecordAtts>()
+                    queryRes.setRecords(
+                        Json.mapper.convert(records.records, Json.mapper.getListType(RecordAtts::class.java))
+                    )
+                    queryRes.setHasMore(records.hasMore)
+                    queryRes.setTotalCount(records.totalCount)
+
+                    return queryRes
+
                 } else {
 
                     recordsResult = RecsQueryRes()
                     query = updateQueryLanguage(query, dao) ?: error("Query language is not supported. $query")
 
-                    val queryRes: RecsQueryRes<*>? = dao.queryRecords(query)
+                    val queryStartMs = System.currentTimeMillis()
+                    val queryRes = dao.queryRecords(query)
+                    if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+                        context.addMsg(MsgLevel.DEBUG,
+                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'")
+                    }
+
                     if (queryRes != null) {
                         val objMixins = if (dao is AttMixinsHolder) {
                             (dao as AttMixinsHolder).getMixins()
@@ -223,16 +233,16 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
 
     private fun getDistinctValues(sourceId: String,
                                   distinctQuery: DistinctQuery,
-                                  max: Int,
+                                  maxCountArg: Int,
                                   schema: List<SchemaAtt>): List<RecordAtts> {
-        var max = max
-        if (max == -1) {
-            max = 50
+        var maxCount = maxCountArg
+        if (maxCount == -1) {
+            maxCount = 50
         }
         var recordsQuery = RecordsQuery.create()
             .withLanguage(PredicateService.LANGUAGE_PREDICATE)
             .withSourceId(sourceId)
-            .withMaxItems(Math.max(max, 20))
+            .withMaxItems(max(maxCount, 20))
             .build()
 
         val query: Optional<Any?> = queryLangService.convertLang(
@@ -289,7 +299,7 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     }
                 }
             }
-        } while (found > 0 && values.size <= max && ++requests <= max)
+        } while (found > 0 && values.size <= maxCount && ++requests <= maxCount)
 
         return values.values.filter { it != null && it.isObject() }.mapNotNull { v ->
             if (v == null) {
@@ -360,8 +370,15 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
             }
             idx++
         }
+
         val result = ArrayList<ValWithIdx<RecordAtts>>()
+
+        val refsStartMs = System.currentTimeMillis()
         val refsAtts: List<RecordAtts>? = getMetaImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
+        if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+            context.addMsg(MsgLevel.DEBUG,
+                "$DEBUG_REFS_ATTS_TIME: '${System.currentTimeMillis() - refsStartMs}'")
+        }
 
         if (refsAtts != null && refsAtts.size == recordRefs.size) {
             for (i in refsAtts.indices) {
@@ -373,12 +390,18 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                     "requested. refsAtts: " + refsAtts + " recordRefs: " + recordRefs
             }
         }
+        val objAttsStartMs = System.currentTimeMillis()
         val atts: List<RecordAtts> = recordsAttsService.getAtts(
             recordObjs.map { it.value },
             attributes,
             rawAtts,
             mixinsForObjects
         )
+        if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+            context.addMsg(MsgLevel.DEBUG,
+                "$DEBUG_OBJ_ATTS_TIME: '${System.currentTimeMillis() - objAttsStartMs}'")
+        }
+
         if (atts.size == recordObjs.size) {
             for (i in atts.indices) {
                 result.add(ValWithIdx(atts[i], recordObjs[i].idx))
@@ -429,31 +452,17 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
         if (recordsDao == null) {
 
             val sourceIdRefs: List<RecordRef?> = recs.map { it.value }
-            val processors = HashMap<String, List<AttProcDef>>()
-            val attsWithoutProcessors = ArrayList<SchemaAtt>()
 
-            attributes.forEach { att ->
-                processors[att.getAliasForValue()] = att.processors
-                attsWithoutProcessors.add(AttUtils.removeProcessors(att))
-            }
-
-            val attributesMap: Map<String, String> = attSchemaWriter.writeToMap(attsWithoutProcessors)
-            val schema: AttributesSchema = recordsMetaService.createSchema(attributesMap)
             var attsList: List<RecordAtts>? = null
 
             try {
-                val meta = localRecordsResolverV0.getMeta(sourceIdRefs, schema.schema).also {
-                    it.setRecords(recordsMetaService.convertMetaResult(it.records, schema, !rawAtts))
+                val meta = localRecordsResolverV0.getMeta(sourceIdRefs, attributes, rawAtts).also {
                     it.setRecords(unescapeKeys(it.records))
                 }
                 V1ConvUtils.addErrorMessages(meta.errors, context)
                 V1ConvUtils.addDebugMessage(meta, context)
                 attsList = Json.mapper.convert(meta.records, Json.mapper.getListType(RecordAtts::class.java))
-                if (attsList != null && processors.isNotEmpty()) {
-                    attsList = attsList.map {
-                        RecordMeta(it.getId(), attProcService.applyProcessors(it.getAtts(), processors))
-                    }
-                }
+
             } catch (e: Throwable) {
                 log.error("Local records resolver v0 error. " +
                     "SourceId: '" + sourceId + "' recs: " + recs, e)
@@ -501,14 +510,14 @@ class LocalRecordsResolver(private val services: RecordsServiceFactory) {
                 val refs: List<RecordRef> = recs.map { it.value }
                 val atts: List<RecordAtts> = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
                 for (i in recs.indices) {
-                    results.add(ValWithIdx<RecordAtts>(atts[i], i))
+                    results.add(ValWithIdx(atts[i], i))
                 }
             }
         }
         return results
     }
 
-    private fun unescapeKeys(meta: List<RecordMeta>): List<RecordMeta> {
+    private fun unescapeKeys(meta: List<RecordAtts>): List<RecordAtts> {
         return meta.map {
             var jsonNode: JsonNode = it.getAtts().getData().asJson()
             jsonNode = attSchemaWriter.unescapeKeys(jsonNode)

@@ -11,6 +11,7 @@ import java.util.List;
  * @see RecordsQueryDao
  * @see RecordsQueryWithMetaDao
  */
+@Deprecated
 public interface RecordsQueryBaseDao extends RecordsDao {
 
     /**

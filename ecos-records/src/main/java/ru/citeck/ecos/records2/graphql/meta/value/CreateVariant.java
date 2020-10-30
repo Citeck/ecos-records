@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
 
 @Data
+@Deprecated
 public class CreateVariant {
 
     private MLText label;

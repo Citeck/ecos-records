@@ -10,7 +10,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
-import ru.citeck.ecos.records2.graphql.meta.value.HasCollectionView
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.type.ComputedAtt
 import ru.citeck.ecos.records2.type.RecordTypeService
@@ -240,72 +240,86 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             context.path = attPath
             attContext.setSchemaAtt(att)
 
-            val computedAtts: Map<String, ComputedAtt> = value.computedAtts
-            val computedAtt: ComputedAtt? = computedAtts[att.name]
             var attValue: Any?
+            var attName = att.name
 
-            if (computedAtt != null && disabledComputedPaths.add(attPath)) {
-                attValue = try {
-                    val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
-                    if (valueCtx != null) {
-                        computedAttsService.compute(AttValueResolveCtx(
-                            currentValuePath,
-                            context,
-                            valueCtx), computedAtt)
-                    } else {
-                        log.debug { "Value context is not found for attribute $computedAtt" }
-                    }
-                } catch (e: Exception) {
-                    val msg = "Resolving error. Path: $attPath. Att: $computedAtt"
-                    context.reqContext.addMsg(MsgLevel.ERROR) { msg }
-                    log.error(msg, e)
-                    null
-                } finally {
-                    disabledComputedPaths.remove(attPath)
-                }
+            if (att.name.startsWith("$")) {
+
+                val contextAttName = att.name.substring(1)
+                attValue = context.reqContext.ctxData.ctxAtts[contextAttName]
+
             } else {
-                var mixin: AttMixin? = null
-                var mixinPath: String? = null
-                mixinLoop@
-                for (attMixin in context.mixins) {
-                    for (mixinAttPath in attMixin.getProvidedAtts()) {
-                        if (mixinAttPath[0] == '^') {
-                            if (attPath == mixinAttPath.substring(1)) {
-                                mixin = attMixin
-                                mixinPath = mixinAttPath
-                            }
-                        } else if (attPath.endsWith(mixinAttPath)) {
-                            if (!currentValuePath.endsWith("_edge") || mixinAttPath.contains("_edge.")) {
-                                mixin = attMixin
-                                mixinPath = mixinAttPath
-                            }
-                        }
-                        if (mixin != null) {
-                            break@mixinLoop
-                        }
-                    }
+
+                if (attName.length > 2 && attName[0] == '\\' && attName[1] == '$') {
+                    attName = attName.substring(1);
                 }
-                attValue = if (mixin != null && mixinPath != null && disabledMixinPaths.add(attPath)) {
-                    try {
-                        val mixinValueCtx = getContextForDynamicAtt(value, mixinPath)
-                        if (mixinValueCtx == null) {
-                            null
-                        } else {
-                            mixin.getAtt(mixinPath, AttValueResolveCtx(
+
+                val computedAtts: Map<String, ComputedAtt> = value.computedAtts
+                val computedAtt: ComputedAtt? = computedAtts[attName]
+
+                if (computedAtt != null && disabledComputedPaths.add(attPath)) {
+                    attValue = try {
+                        val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
+                        if (valueCtx != null) {
+                            computedAttsService.compute(AttValueResolveCtx(
                                 currentValuePath,
                                 context,
-                                mixinValueCtx))
+                                valueCtx), computedAtt)
+                        } else {
+                            log.debug { "Value context is not found for attribute $computedAtt" }
                         }
                     } catch (e: Exception) {
-                        val msg = "Resolving error. Path: $attPath"
+                        val msg = "Resolving error. Path: $attPath. Att: $computedAtt"
                         context.reqContext.addMsg(MsgLevel.ERROR) { msg }
                         log.error(msg, e)
                         null
                     } finally {
-                        disabledMixinPaths.remove(attPath)
+                        disabledComputedPaths.remove(attPath)
                     }
                 } else {
-                    value.resolve(attContext)
+                    var mixin: AttMixin? = null
+                    var mixinPath: String? = null
+                    mixinLoop@
+                    for (attMixin in context.mixins) {
+                        for (mixinAttPath in attMixin.getProvidedAtts()) {
+                            if (mixinAttPath[0] == '^') {
+                                if (attPath == mixinAttPath.substring(1)) {
+                                    mixin = attMixin
+                                    mixinPath = mixinAttPath
+                                }
+                            } else if (attPath.endsWith(mixinAttPath)) {
+                                if (!currentValuePath.endsWith("_edge") || mixinAttPath.contains("_edge.")) {
+                                    mixin = attMixin
+                                    mixinPath = mixinAttPath
+                                }
+                            }
+                            if (mixin != null) {
+                                break@mixinLoop
+                            }
+                        }
+                    }
+                    attValue = if (mixin != null && mixinPath != null && disabledMixinPaths.add(attPath)) {
+                        try {
+                            val mixinValueCtx = getContextForDynamicAtt(value, mixinPath)
+                            if (mixinValueCtx == null) {
+                                null
+                            } else {
+                                mixin.getAtt(mixinPath, AttValueResolveCtx(
+                                    currentValuePath,
+                                    context,
+                                    mixinValueCtx))
+                            }
+                        } catch (e: Exception) {
+                            val msg = "Resolving error. Path: $attPath"
+                            context.reqContext.addMsg(MsgLevel.ERROR) { msg }
+                            log.error(msg, e)
+                            null
+                        } finally {
+                            disabledMixinPaths.remove(attPath)
+                        }
+                    } else {
+                        value.resolve(attContext)
+                    }
                 }
             }
             val attValues = toList(attValue)
@@ -459,8 +473,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             return res
         }
 
-        private fun resolveImpl(attribute: String, isScalar: Boolean): Any? {
-            var attribute = attribute
+        private fun resolveImpl(attributeArg: String, isScalar: Boolean): Any? {
+            var attribute = attributeArg
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }

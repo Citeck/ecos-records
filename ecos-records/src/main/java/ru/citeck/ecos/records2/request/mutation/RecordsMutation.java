@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class RecordsMutation {
 
     private List<RecordMeta> records = new ArrayList<>();

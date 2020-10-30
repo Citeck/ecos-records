@@ -6,11 +6,13 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.factory.MetaValueFactory;
+import ru.citeck.ecos.records2.graphql.meta.value.impl.MetaAttValue;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView;
 
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -19,17 +21,10 @@ import java.util.stream.Collectors;
 @Deprecated
 public class MetaValuesConverter {
 
-    private final Map<Class<?>, MetaValueFactory<Object>> valueFactories = new ConcurrentHashMap<>();
+    private final AttValuesConverter attValuesConverter;
 
     public MetaValuesConverter(RecordsServiceFactory factory) {
-
-        for (MetaValueFactory<?> valueFactory : factory.getMetaValueFactories()) {
-            for (Class<?> type : valueFactory.getValueTypes()) {
-                @SuppressWarnings("unchecked")
-                MetaValueFactory<Object> objFactory = (MetaValueFactory<Object>) valueFactory;
-                valueFactories.put(type, objFactory);
-            }
-        }
+        attValuesConverter = factory.getAttValuesConverter();
     }
 
     public MetaValue toMetaValue(Object value) {
@@ -41,12 +36,11 @@ public class MetaValuesConverter {
             return (MetaValue) value;
         }
 
-        MetaValueFactory<Object> factory = valueFactories.get(value.getClass());
-        if (factory == null) {
-            factory = valueFactories.get(Object.class);
+        AttValue attValue = attValuesConverter.toAttValue(value);
+        if (attValue != null) {
+            return new MetaAttValue(attValue);
         }
-
-        return factory.getValue(value);
+        return null;
     }
 
     @NotNull

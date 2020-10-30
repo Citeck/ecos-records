@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.meta.RecordsMetaService;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
@@ -40,7 +39,6 @@ import java.util.Optional;
  * @see MetaValue
  * @see RecordRef
  * @see RecordMeta
- * @see RecordsMetaService
  *
  * @deprecated use RecordsService from records3 package
  *

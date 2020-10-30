@@ -137,7 +137,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
         return if (isGatewayMode || isRemoteSourceId(sourceId)) {
-            remote.getSourceInfo(sourceId)
+            remote?.getSourceInfo(sourceId)
         } else {
             local.getSourceInfo(sourceId)
         }
@@ -145,7 +145,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     fun getSourceInfo() : List<RecordsDaoInfo> {
         val result = ArrayList(local.getSourceInfo())
-        result.addAll(remote.getSourceInfo())
+        result.addAll(remote?.getSourceInfo() ?: emptyList())
         return result
     }
 

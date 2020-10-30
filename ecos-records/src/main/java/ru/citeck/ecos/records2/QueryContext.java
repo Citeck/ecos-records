@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.records3.record.request.RequestContext;
@@ -19,13 +20,16 @@ public class QueryContext {
 
     private List<?> metaValues;
 
-    @Setter
     private RecordsServiceFactory serviceFactory;
 
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
         RequestContext current = RequestContext.getCurrent();
         return current != null ? current.getVar(CTX_KEY) : null;
+    }
+
+    public void setServiceFactory(RecordsServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
     }
 
     public boolean isComputedAttsDisabled() {

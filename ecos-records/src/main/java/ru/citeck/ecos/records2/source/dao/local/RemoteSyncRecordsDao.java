@@ -22,6 +22,7 @@ import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
+import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
 import java.time.Instant;

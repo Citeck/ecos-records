@@ -14,12 +14,12 @@ class AttContext {
         private val current: ThreadLocal<AttContext> = ThreadLocal()
 
         @JvmStatic
-        fun getCurrentSchemaAtt() : SchemaAtt {
+        fun getCurrentSchemaAtt(): SchemaAtt {
             return getCurrentNotNull().schemaAtt
         }
 
         @JvmStatic
-        fun getInnerAttsMap() : Map<String, String> {
+        fun getInnerAttsMap(): Map<String, String> {
 
             val attContext = getCurrentNotNull()
             val writer = attContext.serviceFactory.attSchemaWriter
@@ -34,7 +34,7 @@ class AttContext {
         }
 
         @JvmStatic
-        fun getCurrentSchemaAttAsStr() : String {
+        fun getCurrentSchemaAttAsStr(): String {
 
             val context = getCurrentNotNull()
             val schemaAtt = context.schemaAtt
@@ -43,13 +43,13 @@ class AttContext {
         }
 
         @JvmStatic
-        fun getCurrentSchemaAttInnerStr() : String {
+        fun getCurrentSchemaAttInnerStr(): String {
             val att = getCurrentSchemaAttAsStr()
             return att.trim().substring(AttStrUtils.indexOf(att, "{") + 1, att.length - 1)
         }
 
         @JvmStatic
-        fun getCurrentNotNull() : AttContext {
+        fun getCurrentNotNull(): AttContext {
             return current.get() ?: error(CONTEXT_UNDEFINED_MSG)
         }
 
@@ -83,7 +83,7 @@ class AttContext {
     private lateinit var serviceFactory: RecordsServiceFactory
     private lateinit var schemaAtt: SchemaAtt
 
-    fun getSchemaAtt() : SchemaAtt {
+    fun getSchemaAtt(): SchemaAtt {
         return schemaAtt
     }
 

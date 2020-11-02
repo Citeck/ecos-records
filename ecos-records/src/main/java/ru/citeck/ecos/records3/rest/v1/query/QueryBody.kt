@@ -28,7 +28,7 @@ class QueryBody : RequestBody() {
         records!!.add(record)
     }
 
-    fun getRecords() : List<RecordRef>? {
+    fun getRecords(): List<RecordRef>? {
         return records
     }
 
@@ -67,10 +67,12 @@ class QueryBody : RequestBody() {
             return false
         }
         val queryBody = other as? QueryBody ?: return false
-        return (records == queryBody.records
-            && query == queryBody.query
-            && attributes == queryBody.attributes
-            && rawAtts == queryBody.rawAtts)
+        return (
+            records == queryBody.records &&
+                query == queryBody.query &&
+                attributes == queryBody.attributes &&
+                rawAtts == queryBody.rawAtts
+            )
     }
 
     override fun hashCode(): Int {

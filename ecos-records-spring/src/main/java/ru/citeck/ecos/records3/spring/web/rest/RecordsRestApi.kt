@@ -28,9 +28,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 @Api(
     description =
-    "Service for universal querying an arbitrary data set (record) " +
-    "from any available data source",
-    tags = ["Records API"])
+        "Service for universal querying an arbitrary data set (record) " +
+            "from any available data source",
+    tags = ["Records API"]
+)
 @RestController
 @RequestMapping("/api/records")
 class RecordsRestApi @Autowired constructor(private val services: RecordsServiceFactory) {
@@ -53,13 +54,14 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     fun recordsQuery(@ApiParam(value = "query") @RequestBody body: ByteArray): ByteArray? {
         val bodyData = convertRequest(body, ObjectData::class.java)
         val ctxAtts: MutableMap<String, Any?> = HashMap()
-        ctxAttsSuppliers.forEach { s->
+        ctxAttsSuppliers.forEach { s ->
             val atts = s.attributes
             if (atts.isNotEmpty()) {
                 ctxAtts.putAll(atts)
             }
         }
-        return RequestContext.doWithCtx(services,
+        return RequestContext.doWithCtx(
+            services,
             {
                 it.locale = LocaleContextHolder.getLocale()
                 it.ctxAtts = ctxAtts

@@ -10,8 +10,8 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.ResolveArgs
 import java.util.*
 import java.util.function.Consumer
-import kotlin.collections.LinkedHashMap
 import kotlin.collections.Collection
+import kotlin.collections.LinkedHashMap
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.emptyList
@@ -28,7 +28,7 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
     private val dtoSchemaReader = services.dtoSchemaReader
     private val schemaResolver = services.attSchemaResolver
 
-    override fun <T: Any> getAtts(value: Any?, attributes: Class<T>): T {
+    override fun <T : Any> getAtts(value: Any?, attributes: Class<T>): T {
         return getAtts(listOf(value), attributes)[0]
     }
 
@@ -71,38 +71,46 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         return getAtts(values, attributes, rawAtts, emptyList())
     }
 
-    override fun getAtts(values: List<*>,
-                         attributes: List<SchemaAtt>,
-                         rawAtts: Boolean,
-                         mixins: List<AttMixin>): List<RecordAtts> {
+    override fun getAtts(
+        values: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        mixins: List<AttMixin>
+    ): List<RecordAtts> {
         return getAtts(values, attributes, rawAtts, mixins, emptyList())
     }
 
-    override fun getAtts(values: List<*>,
-                         attributes: List<SchemaAtt>,
-                         rawAtts: Boolean,
-                         mixins: List<AttMixin>,
-                         recordRefs: List<RecordRef>): List<RecordAtts> {
+    override fun getAtts(
+        values: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        mixins: List<AttMixin>,
+        recordRefs: List<RecordRef>
+    ): List<RecordAtts> {
 
         var rootAtts: List<SchemaAtt> = attributes
         val valueRefsProvided = recordRefs.size == values.size
         rootAtts = ArrayList(rootAtts)
 
         if (!valueRefsProvided) {
-            rootAtts.add(SchemaAtt.create()
-                .withAlias(REF_ATT_ALIAS)
-                .withName("?id")
-                .build())
+            rootAtts.add(
+                SchemaAtt.create()
+                    .withAlias(REF_ATT_ALIAS)
+                    .withName("?id")
+                    .build()
+            )
         }
 
-        val data: List<Map<String, Any?>> = schemaResolver.resolve(ResolveArgs
-            .create()
-            .withValues(values)
-            .withAttributes(rootAtts)
-            .withRawAtts(rawAtts)
-            .withMixins(mixins)
-            .withValueRefs(recordRefs)
-            .build())
+        val data: List<Map<String, Any?>> = schemaResolver.resolve(
+            ResolveArgs
+                .create()
+                .withValues(values)
+                .withAttributes(rootAtts)
+                .withRawAtts(rawAtts)
+                .withMixins(mixins)
+                .withValueRefs(recordRefs)
+                .build()
+        )
 
         val recordAtts = ArrayList<RecordAtts>()
         if (valueRefsProvided) {
@@ -117,10 +125,12 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         return recordAtts
     }
 
-    override fun getAtts(values: List<*>,
-                         attributes: Map<String, String>,
-                         rawAtts: Boolean,
-                         mixins: List<AttMixin>): List<RecordAtts> {
+    override fun getAtts(
+        values: List<*>,
+        attributes: Map<String, String>,
+        rawAtts: Boolean,
+        mixins: List<AttMixin>
+    ): List<RecordAtts> {
         return getAtts(values, schemaReader.read(attributes), rawAtts, mixins)
     }
 
@@ -145,8 +155,10 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
 
     private fun <T> getFirst(elements: List<T>, atts: Any?, srcValues: List<Any?>): T {
         if (elements.isEmpty()) {
-            throw RuntimeException("Get atts returned 0 records. " +
-                "Attributes: " + atts + " Values: " + srcValues)
+            throw RuntimeException(
+                "Get atts returned 0 records. " +
+                    "Attributes: " + atts + " Values: " + srcValues
+            )
         }
         return elements[0]
     }

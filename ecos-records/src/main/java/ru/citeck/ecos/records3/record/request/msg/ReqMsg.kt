@@ -1,11 +1,9 @@
 package ru.citeck.ecos.records3.record.request.msg
 
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import ru.citeck.ecos.commons.data.DataValue
 import java.time.Instant
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = ReqMsg.Builder::class)
 @JackJsonDeserialize(builder = ReqMsg.Builder::class)
@@ -58,8 +56,8 @@ data class ReqMsg(
         }
 
         fun withLevel(level: MsgLevel): Builder {
-            this.level = level;
-            return this;
+            this.level = level
+            return this
         }
 
         fun withTime(time: Instant): Builder {

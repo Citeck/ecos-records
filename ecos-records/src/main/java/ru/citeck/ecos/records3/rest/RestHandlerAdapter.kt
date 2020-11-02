@@ -6,10 +6,10 @@ import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.request.rest.QueryBody
-import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
+import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
 

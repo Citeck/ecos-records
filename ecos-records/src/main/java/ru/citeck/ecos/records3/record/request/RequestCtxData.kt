@@ -1,11 +1,9 @@
 package ru.citeck.ecos.records3.record.request
 
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = RequestCtxData.Builder::class)
 @JackJsonDeserialize(builder = RequestCtxData.Builder::class)
@@ -61,32 +59,32 @@ data class RequestCtxData(
             msgLevel = base.msgLevel
         }
 
-        fun withRequestId(requestId: String) : Builder {
-            this.requestId = requestId;
+        fun withRequestId(requestId: String): Builder {
+            this.requestId = requestId
             return this
         }
 
-        fun withRequestTrace(requestTrace: List<String>) : Builder {
+        fun withRequestTrace(requestTrace: List<String>): Builder {
             this.requestTrace = requestTrace.toMutableList()
             return this
         }
 
-        fun withLocale(locale: Locale) : Builder {
+        fun withLocale(locale: Locale): Builder {
             this.locale = locale
             return this
         }
 
-        fun withCtxAtts(contextAtts: Map<String, Any?>) : Builder {
+        fun withCtxAtts(contextAtts: Map<String, Any?>): Builder {
             this.ctxAtts = contextAtts.toMutableMap()
             return this
         }
 
-        fun withComputedAttsDisabled(disabled: Boolean) : Builder {
+        fun withComputedAttsDisabled(disabled: Boolean): Builder {
             this.computedAttsDisabled = disabled
             return this
         }
 
-        fun withMsgLevel(level: MsgLevel) : Builder {
+        fun withMsgLevel(level: MsgLevel): Builder {
             this.msgLevel = level
             return this
         }

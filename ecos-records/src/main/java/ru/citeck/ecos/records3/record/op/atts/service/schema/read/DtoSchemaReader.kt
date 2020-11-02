@@ -67,17 +67,23 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(DataValue::class.java, ScalarType.JSON),
             ScalarField(RecordRef::class.java, ScalarType.ID),
             ScalarField(Map::class.java, ScalarType.JSON)
-        ).forEach(Consumer {
-            field -> scalars[field.fieldType] = field
-        })
+        ).forEach(
+            Consumer {
+                field ->
+                scalars[field.fieldType] = field
+            }
+        )
         if (LibsUtils.isJacksonPresent()) {
             listOf(
                 ScalarField(com.fasterxml.jackson.databind.JsonNode::class.java, ScalarType.JSON),
                 ScalarField(com.fasterxml.jackson.databind.node.ObjectNode::class.java, ScalarType.JSON),
                 ScalarField(com.fasterxml.jackson.databind.node.ArrayNode::class.java, ScalarType.JSON)
-            ).forEach(Consumer {
-                field -> scalars[field.fieldType] = field
-            })
+            ).forEach(
+                Consumer {
+                    field ->
+                    scalars[field.fieldType] = field
+                }
+            )
         }
     }
 
@@ -100,8 +106,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
     private fun getAttributesImpl(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {
         require(visited.add(attsClass)) {
-            ("Recursive meta fields is not supported! "
-                + "Class: " + attsClass + " visited: " + visited)
+            (
+                "Recursive meta fields is not supported! " +
+                    "Class: " + attsClass + " visited: " + visited
+                )
         }
         val descriptors: Array<PropertyDescriptor> = PropertyUtils.getPropertyDescriptors(attsClass)
         val attributes: MutableList<SchemaAtt> = ArrayList()
@@ -120,39 +128,48 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 isMultiple = true
             }
             val scalarField = scalars[propType]
-            attributes.add(getAttributeSchema(attsClass,
-                writeMethod,
-                descriptor.name,
-                isMultiple,
-                scalarField,
-                propType,
-                visited)
+            attributes.add(
+                getAttributeSchema(
+                    attsClass,
+                    writeMethod,
+                    descriptor.name,
+                    isMultiple,
+                    scalarField,
+                    propType,
+                    visited
+                )
             )
         }
         visited.remove(attsClass)
         return attributes
     }
 
-    private fun getAttributeSchema(scope: Class<*>,
-                                   writeMethod: Method,
-                                   fieldName: String,
-                                   multiple: Boolean,
-                                   scalarField: ScalarField<*>?,
-                                   propType: Class<*>,
-                                   visited: MutableSet<Class<*>>): SchemaAtt {
+    private fun getAttributeSchema(
+        scope: Class<*>,
+        writeMethod: Method,
+        fieldName: String,
+        multiple: Boolean,
+        scalarField: ScalarField<*>?,
+        propType: Class<*>,
+        visited: MutableSet<Class<*>>
+    ): SchemaAtt {
 
         val innerAtts = if (scalarField == null) {
             if (propType.isEnum) {
-                mutableListOf(SchemaAtt.create()
+                mutableListOf(
+                    SchemaAtt.create()
                         .withName("?str")
-                        .build())
+                        .build()
+                )
             } else {
                 getAttributes(propType, visited)
             }
         } else {
-            mutableListOf(SchemaAtt.create()
-                .withName(scalarField.scalarType.schema)
-                .build())
+            mutableListOf(
+                SchemaAtt.create()
+                    .withName(scalarField.scalarType.schema)
+                    .build()
+            )
         }
         var attNameValue: String? = null
         val attName: AttName? = getAnnotation(writeMethod, scope, fieldName, AttName::class.java)
@@ -191,10 +208,12 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return att.build()
     }
 
-    private fun <T : Annotation> getAnnotation(writeMethod: Method,
-                                                scope: Class<*>,
-                                                fieldName: String,
-                                                type: Class<T>): T? {
+    private fun <T : Annotation> getAnnotation(
+        writeMethod: Method,
+        scope: Class<*>,
+        fieldName: String,
+        type: Class<T>
+    ): T? {
 
         var annotation = writeMethod.getAnnotation(type)
         if (annotation == null) {

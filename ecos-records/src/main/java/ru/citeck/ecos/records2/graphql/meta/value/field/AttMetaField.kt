@@ -3,10 +3,10 @@ package ru.citeck.ecos.records2.graphql.meta.value.field
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
 
-object AttMetaField : MetaField  {
+object AttMetaField : MetaField {
 
     override fun getInnerSchema(): String {
-        return AttContext.getCurrentSchemaAttAsStr();
+        return AttContext.getCurrentSchemaAttAsStr()
     }
 
     override fun getAlias(): String {

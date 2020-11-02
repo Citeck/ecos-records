@@ -125,10 +125,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
                 if (convertedQuery == null) {
 
-                    val errorMsg = ("GroupBy is not supported by language: $query"
-                        + query.language + ". Query: " + query)
+                    val errorMsg = (
+                        "GroupBy is not supported by language: $query" +
+                            query.language + ". Query: " + query
+                        )
                     context.addMsg(MsgLevel.ERROR) { errorMsg }
-
                 } else {
 
                     val queryRes: RecsQueryRes<*>? = groupsSource.queryRecords(convertedQuery)
@@ -137,7 +138,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                         val atts: List<RecordAtts> = recordsAttsService.getAtts(
                             queryRes.getRecords(),
                             attributes,
-                            rawAtts, emptyList())
+                            rawAtts, emptyList()
+                        )
 
                         recordsResult = RecsQueryRes(atts)
                         recordsResult.setHasMore(queryRes.getHasMore())
@@ -154,11 +156,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 if (!languages.contains(DistinctQuery.LANGUAGE)) {
                     val distinctQuery: DistinctQuery = query.getQuery(DistinctQuery::class.java)
                     recordsResult = RecsQueryRes()
-                    recordsResult.setRecords(getDistinctValues(sourceId,
-                        distinctQuery,
-                        finalQuery.page.maxItems,
-                        attributes
-                    ))
+                    recordsResult.setRecords(
+                        getDistinctValues(
+                            sourceId,
+                            distinctQuery,
+                            finalQuery.page.maxItems,
+                            attributes
+                        )
+                    )
                 }
             } else {
 
@@ -176,8 +181,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     val records = localRecordsResolverV0.queryRecords(v0Query, attributes, rawAtts)
 
                     if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                        context.addMsg(MsgLevel.DEBUG,
-                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'")
+                        context.addMsg(
+                            MsgLevel.DEBUG,
+                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
+                        )
                     }
 
                     records.records = unescapeKeys(records.records)
@@ -193,7 +200,6 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     queryRes.setTotalCount(records.totalCount)
 
                     return queryRes
-
                 } else {
 
                     recordsResult = RecsQueryRes()
@@ -202,8 +208,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     val queryStartMs = System.currentTimeMillis()
                     val queryRes = dao.queryRecords(query)
                     if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                        context.addMsg(MsgLevel.DEBUG,
-                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'")
+                        context.addMsg(
+                            MsgLevel.DEBUG,
+                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
+                        )
                     }
 
                     if (queryRes != null) {
@@ -231,10 +239,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp)
     }
 
-    private fun getDistinctValues(sourceId: String,
-                                  distinctQuery: DistinctQuery,
-                                  maxCountArg: Int,
-                                  schema: List<SchemaAtt>): List<RecordAtts> {
+    private fun getDistinctValues(
+        sourceId: String,
+        distinctQuery: DistinctQuery,
+        maxCountArg: Int,
+        schema: List<SchemaAtt>
+    ): List<RecordAtts> {
         var maxCount = maxCountArg
         if (maxCount == -1) {
             maxCount = 50
@@ -267,11 +277,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         innerSchema.add(SchemaAtt.create().withAlias(distinctValueAlias).withName("?str").build())
         innerSchema.add(SchemaAtt.create().withAlias(distinctValueIdAlias).withName("?id").build())
 
-        val distinctAttSchema: List<SchemaAtt> = listOf(SchemaAtt.create()
-            .withAlias("att")
-            .withName(distinctQuery.attribute)
-            .withInner(innerSchema)
-            .build())
+        val distinctAttSchema: List<SchemaAtt> = listOf(
+            SchemaAtt.create()
+                .withAlias("att")
+                .withName(distinctQuery.attribute)
+                .withInner(innerSchema)
+                .build()
+        )
         val distinctAtt: String = distinctQuery.attribute
 
         val values = HashMap<String, DataValue?>()
@@ -338,17 +350,21 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return null
     }
 
-    override fun getAtts(records: List<*>,
-                attributes: List<SchemaAtt>,
-                rawAtts: Boolean): List<RecordAtts> {
+    override fun getAtts(
+        records: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
 
         return getAtts(records, attributes, rawAtts, emptyList())
     }
 
-    private fun getAtts(records: List<*>,
-                        attributes: List<SchemaAtt>,
-                        rawAtts: Boolean,
-                        mixinsForObjects: List<AttMixin>): List<RecordAtts> {
+    private fun getAtts(
+        records: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        mixinsForObjects: List<AttMixin>
+    ): List<RecordAtts> {
 
         val context = RequestContext.getCurrentNotNull()
 
@@ -376,8 +392,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val refsStartMs = System.currentTimeMillis()
         val refsAtts: List<RecordAtts>? = getMetaImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-            context.addMsg(MsgLevel.DEBUG,
-                "$DEBUG_REFS_ATTS_TIME: '${System.currentTimeMillis() - refsStartMs}'")
+            context.addMsg(
+                MsgLevel.DEBUG,
+                "$DEBUG_REFS_ATTS_TIME: '${System.currentTimeMillis() - refsStartMs}'"
+            )
         }
 
         if (refsAtts != null && refsAtts.size == recordRefs.size) {
@@ -398,8 +416,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             mixinsForObjects
         )
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-            context.addMsg(MsgLevel.DEBUG,
-                "$DEBUG_OBJ_ATTS_TIME: '${System.currentTimeMillis() - objAttsStartMs}'")
+            context.addMsg(
+                MsgLevel.DEBUG,
+                "$DEBUG_OBJ_ATTS_TIME: '${System.currentTimeMillis() - objAttsStartMs}'"
+            )
         }
 
         if (atts.size == recordObjs.size) {
@@ -419,9 +439,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result.map { it.value }
     }
 
-    private fun getMetaImpl(records: Collection<RecordRef>,
-                            attributes: List<SchemaAtt>,
-                            rawAtts: Boolean): List<RecordAtts> {
+    private fun getMetaImpl(
+        records: Collection<RecordRef>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
 
         if (records.isEmpty()) {
             return emptyList()
@@ -439,11 +461,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return results.map { it.value }
     }
 
-    private fun getMetaFromSource(sourceId: String,
-                                  recs: List<ValWithIdx<RecordRef>>,
-                                  attributes: List<SchemaAtt>,
-                                  rawAtts: Boolean,
-                                  context: RequestContext) : List<ValWithIdx<RecordAtts>> {
+    private fun getMetaFromSource(
+        sourceId: String,
+        recs: List<ValWithIdx<RecordRef>>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        context: RequestContext
+    ): List<ValWithIdx<RecordAtts>> {
 
         val results = ArrayList<ValWithIdx<RecordAtts>>()
 
@@ -462,10 +486,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 V1ConvUtils.addErrorMessages(meta.errors, context)
                 V1ConvUtils.addDebugMessage(meta, context)
                 attsList = Json.mapper.convert(meta.records, Json.mapper.getListType(RecordAtts::class.java))
-
             } catch (e: Throwable) {
-                log.error("Local records resolver v0 error. " +
-                    "SourceId: '" + sourceId + "' recs: " + recs, e)
+                log.error(
+                    "Local records resolver v0 error. " +
+                        "SourceId: '" + sourceId + "' recs: " + recs,
+                    e
+                )
                 context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
             }
             if (attsList == null) {
@@ -554,7 +580,6 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 } else {
                     daoResult.add(mutateRes.records[0].getId())
                 }
-
             } else {
 
                 val localId = record.getId().id
@@ -623,10 +648,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    private fun <T : RecordsDao?> register(id: String,
-                                           registry: MutableMap<String, T>,
-                                           type: Class<T>,
-                                           valueArg: RecordsDao) {
+    private fun <T : RecordsDao?> register(
+        id: String,
+        registry: MutableMap<String, T>,
+        type: Class<T>,
+        valueArg: RecordsDao
+    ) {
         var value = valueArg
         value = converter.convert(value)
         if (type.isAssignableFrom(value.javaClass)) {
@@ -662,7 +689,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return recordsSourceInfo
     }
 
-    override fun getSourceInfo() : List<RecordsDaoInfo> {
+    override fun getSourceInfo(): List<RecordsDaoInfo> {
         val result = ArrayList<RecordsDaoInfo>()
         result.addAll(allDao.keys.mapNotNull { getSourceInfo(it) })
         result.addAll(localRecordsResolverV0.sourceInfo)

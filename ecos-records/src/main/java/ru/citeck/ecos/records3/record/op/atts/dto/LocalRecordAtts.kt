@@ -11,4 +11,3 @@ data class LocalRecordAtts(
 
     constructor(atts: RecordAtts) : this(atts.getId().id, atts.getAtts())
 }
-

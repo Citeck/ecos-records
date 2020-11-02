@@ -51,10 +51,12 @@ class RecordRef : Serializable {
 
         @JvmStatic
         fun isEmpty(ref: RecordRef?): Boolean {
-            return ref == null || ref === EMPTY
-                || (isBlank(ref.id)
-                    && isBlank(ref.sourceId)
-                    && isBlank(ref.appName))
+            return ref == null || ref === EMPTY ||
+                (
+                    isBlank(ref.id) &&
+                        isBlank(ref.sourceId) &&
+                        isBlank(ref.appName)
+                    )
         }
 
         @JvmStatic
@@ -141,7 +143,7 @@ class RecordRef : Serializable {
         } else create(sourceId, id)
     }
 
-    fun isRemote() : Boolean {
+    fun isRemote(): Boolean {
         return appName.isNotEmpty()
     }
 
@@ -153,9 +155,11 @@ class RecordRef : Serializable {
             return false
         }
         val that = other as RecordRef
-        return (appName == that.appName
-            && sourceId == that.sourceId
-            && id == that.id)
+        return (
+            appName == that.appName &&
+                sourceId == that.sourceId &&
+                id == that.id
+            )
     }
 
     override fun hashCode(): Int {

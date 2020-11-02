@@ -27,10 +27,14 @@ open class RecordsRestConfiguration {
 
     @Bean
     open fun remoteRespApi(restQueryExceptionConverter: RestQueryExceptionConverter): RemoteRecordsRestApi {
-        return RemoteRecordsRestApiImpl(RecordsRestTemplate {
-            url, request -> jsonPost(url, request)
-        }, createRemoteAppInfoProvider(), properties,
-            restQueryExceptionConverter)
+        return RemoteRecordsRestApiImpl(
+            RecordsRestTemplate {
+                url, request ->
+                jsonPost(url, request)
+            },
+            createRemoteAppInfoProvider(), properties,
+            restQueryExceptionConverter
+        )
     }
 
     private fun createRemoteAppInfoProvider(): RemoteAppInfoProvider {

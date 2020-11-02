@@ -7,5 +7,5 @@ interface AttMixin {
     @Throws(Exception::class)
     fun getAtt(path: String, value: AttValueCtx): Any?
 
-    fun getProvidedAtts() : Collection<String>
+    fun getProvidedAtts(): Collection<String>
 }

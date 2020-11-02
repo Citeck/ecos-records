@@ -37,9 +37,11 @@ class RecordsAuthInterceptor @Autowired constructor(
     }
 
     @Throws(IOException::class)
-    override fun intercept(request: HttpRequest,
-                           body: ByteArray,
-                           execution: ClientHttpRequestExecution): ClientHttpResponse {
+    override fun intercept(
+        request: HttpRequest,
+        body: ByteArray,
+        execution: ClientHttpRequestExecution
+    ): ClientHttpResponse {
 
         if (!RemoteRecordsUtils.isSystemContext()) {
             return userRequestInterceptor.intercept(request, body, execution)

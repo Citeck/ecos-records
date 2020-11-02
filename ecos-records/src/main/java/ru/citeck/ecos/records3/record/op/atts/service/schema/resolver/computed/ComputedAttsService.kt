@@ -17,7 +17,7 @@ class ComputedAttsService {
         val log = KotlinLogging.logger {}
     }
 
-    fun compute(context: AttValueCtx, computedAtt: ComputedAtt) : Any? {
+    fun compute(context: AttValueCtx, computedAtt: ComputedAtt): Any? {
 
         return when (computedAtt.type) {
             TYPE_SCRIPT -> {

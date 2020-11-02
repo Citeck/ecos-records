@@ -11,7 +11,7 @@ abstract class RequestBody {
 
     private var requestTrace: List<String> = emptyList()
 
-    fun getRequestTrace() : List<String> {
+    fun getRequestTrace(): List<String> {
         return requestTrace
     }
 

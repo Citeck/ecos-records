@@ -31,7 +31,7 @@ open class RecsQueryRes<T : Any>() {
         setRecords(records)
     }
 
-    fun <K : Any> withRecords(mapper: (T) -> K?) : RecsQueryRes<K> {
+    fun <K : Any> withRecords(mapper: (T) -> K?): RecsQueryRes<K> {
         val res = RecsQueryRes(records.mapNotNull(mapper))
         res.hasMore = hasMore
         res.totalCount = totalCount
@@ -63,7 +63,7 @@ open class RecsQueryRes<T : Any>() {
         this.hasMore = hasMore
     }
 
-    fun getHasMore() : Boolean = hasMore
+    fun getHasMore(): Boolean = hasMore
 
     fun addRecord(record: T?) {
         record ?: return

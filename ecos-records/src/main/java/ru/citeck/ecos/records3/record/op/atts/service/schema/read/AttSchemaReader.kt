@@ -72,7 +72,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             throw AttReadException(alias, attribute, "Empty attribute")
         }
         val innerAtt = if (alias.isNotEmpty()) {
-            "\"${alias.replace("\"", "\\\"")}\":${attribute}"
+            "\"${alias.replace("\"", "\\\"")}\":$attribute"
         } else {
             attribute
         }
@@ -81,13 +81,16 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         return readInnerRawAtt(
             if (isDotAtt) innerAtt.substring(1) else innerAtt,
             isDotAtt,
-            false) { al, att, proc -> readInner(al, att, proc, emptyList()) }
+            false
+        ) { al, att, proc -> readInner(al, att, proc, emptyList()) }
     }
 
-    fun readInner(alias: String,
-                  attribute: String,
-                  processors: List<AttProcDef>,
-                  lastInnerAtts: List<SchemaAtt>): SchemaAtt {
+    fun readInner(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        lastInnerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         var attribute = attribute
 
@@ -105,15 +108,17 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     attribute += "{label:disp,value:str}"
                 }
             }
-            attribute = (".edge(n:\""
-                + attribute.substring(1, questionIdx)
-                           .replace("\"", "\\\"") + "\"){"
-                + attribute.substring(questionIdx + 1) + "}")
+            attribute = (
+                ".edge(n:\"" +
+                    attribute.substring(1, questionIdx)
+                        .replace("\"", "\\\"") + "\"){" +
+                    attribute.substring(questionIdx + 1) + "}"
+                )
         }
         return if (attribute[0] == '.') {
             readDotAtt(alias, attribute.substring(1), processors, lastInnerAtts)
         } else if (attribute.length > 2 && (attribute[0] == '"' || attribute[0] == '\'') && attribute[1] == '.') {
-            attribute = AttStrUtils.removeQuotes(attribute);
+            attribute = AttStrUtils.removeQuotes(attribute)
             readDotAtt(alias, attribute.substring(1), processors, lastInnerAtts)
         } else {
             readSimpleAtt(alias, attribute, processors, lastInnerAtts)
@@ -122,11 +127,15 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
     /* === PRIVATE === */
 
-    private fun readInnerRawAtts(innerAtts: String,
-                                 dotContext: Boolean,
-                                 parserFunc: (alias: String,
-                                           att: String,
-                                           processors: List<AttProcDef>) -> SchemaAtt): List<SchemaAtt> {
+    private fun readInnerRawAtts(
+        innerAtts: String,
+        dotContext: Boolean,
+        parserFunc: (
+            alias: String,
+            att: String,
+            processors: List<AttProcDef>
+        ) -> SchemaAtt
+    ): List<SchemaAtt> {
 
         val innerAttsList = AttStrUtils.split(innerAtts, ",")
         val multipleAtts = innerAttsList.size > 1
@@ -136,12 +145,16 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             .collect(Collectors.toList())
     }
 
-    private fun readInnerRawAtt(innerAtt: String,
-                                dotContext: Boolean,
-                                multipleAtts: Boolean,
-                                parserFunc: (alias: String,
-                                          att: String,
-                                          processors: List<AttProcDef>) -> SchemaAtt): SchemaAtt {
+    private fun readInnerRawAtt(
+        innerAtt: String,
+        dotContext: Boolean,
+        multipleAtts: Boolean,
+        parserFunc: (
+            alias: String,
+            att: String,
+            processors: List<AttProcDef>
+        ) -> SchemaAtt
+    ): SchemaAtt {
 
         val attWithProc = procReader.read(innerAtt.trim())
 
@@ -177,10 +190,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         )
     }
 
-    private fun readLastSimpleAtt(alias: String,
-                                  attribute: String,
-                                  processors: List<AttProcDef>,
-                                  lastInnerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun readLastSimpleAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        lastInnerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         var attribute = attribute
 
@@ -229,9 +244,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             if (lastInnerAtts.isNotEmpty()) {
                 lastInnerAtts
             } else {
-                listOf(SchemaAtt.create()
-                    .withName("?disp")
-                    .build())
+                listOf(
+                    SchemaAtt.create()
+                        .withName("?disp")
+                        .build()
+                )
             }
         } else {
             readInnerRawAtts(innerAttsStr, false) {
@@ -248,10 +265,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             .build()
     }
 
-    private fun readSimpleAtt(alias: String,
-                              attribute: String,
-                              processors: List<AttProcDef>,
-                              lastInnerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun readSimpleAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        lastInnerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         var attribute = attribute
 
@@ -295,10 +314,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
     /**
      * @param attribute - attribute without dot
      */
-    private fun readDotAtt(alias: String,
-                           attribute: String,
-                           processors: List<AttProcDef>,
-                           lastInnerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun readDotAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        lastInnerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         if (attribute.startsWith("att")) {
             return parseGqlAtt(alias, attribute, processors, lastInnerAtts)
@@ -323,10 +344,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         throw AttReadException(alias, attribute, "Unknown dot attribute")
     }
 
-    private fun parseAsAtt(alias: String,
-                           attribute: String,
-                           processors: List<AttProcDef>,
-                           lastInnerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun parseAsAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        lastInnerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         val matcher = GQL_AS_PATTERN.matcher(attribute)
         if (!matcher.matches()) {
@@ -338,12 +361,15 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             .withAlias(alias)
             .withName(RecordConstants.ATT_AS)
             .withProcessors(processors)
-            .withInner(SchemaAtt.create()
-                .withName(attName)
-                .withInner(readInnerRawAtts(attInner, true) {
-                    al, att, proc ->
-                    readInner(al, att, proc, lastInnerAtts)
-                })
+            .withInner(
+                SchemaAtt.create()
+                    .withName(attName)
+                    .withInner(
+                        readInnerRawAtts(attInner, true) {
+                            al, att, proc ->
+                            readInner(al, att, proc, lastInnerAtts)
+                        }
+                    )
             ).build()
     }
 
@@ -357,16 +383,19 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             .withAlias(alias)
             .withName(RecordConstants.ATT_HAS)
             .withProcessors(processors)
-            .withInner(SchemaAtt.create()
-                .withName(attName)
-                .withInner(SchemaAtt.create().withName("?bool"))
+            .withInner(
+                SchemaAtt.create()
+                    .withName(attName)
+                    .withInner(SchemaAtt.create().withName("?bool"))
             ).build()
     }
 
-    private fun readEdgeAtt(alias: String,
-                            attribute: String,
-                            processors: List<AttProcDef>,
-                            innerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun readEdgeAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        innerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         val matcher = GQL_EDGE_PATTERN.matcher(attribute)
         if (!matcher.matches()) {
@@ -380,11 +409,13 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         val schemaInnerAtts: MutableList<SchemaAtt> = ArrayList()
         val multipleAtts = innerAttsStr.size > 1
         for (innerAttWithAlias in innerAttsStr) {
-            schemaInnerAtts.add(readInnerRawAtt(
-                innerAttWithAlias,
-                false,
-                multipleAtts
-            ) { al, att, proc -> parseEdgeInnerAtt(al, att, proc, innerAtts) })
+            schemaInnerAtts.add(
+                readInnerRawAtt(
+                    innerAttWithAlias,
+                    false,
+                    multipleAtts
+                ) { al, att, proc -> parseEdgeInnerAtt(al, att, proc, innerAtts) }
+            )
         }
         return SchemaAtt.create()
             .withAlias(alias)
@@ -394,10 +425,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             .build()
     }
 
-    private fun parseEdgeInnerAtt(alias: String,
-                                  attribute: String,
-                                  processors: List<AttProcDef>,
-                                  innerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun parseEdgeInnerAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        innerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         val attBuilder = SchemaAtt.create()
             .withAlias(alias)
@@ -409,16 +442,18 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             "description",
             "javaClass",
             "editorKey",
-            "type" -> return attBuilder.withInner(
+            "type" ->
+                return attBuilder.withInner(
                     SchemaAtt.create().withName("?str")
                 ).withProcessors(processors)
-                .build()
+                    .build()
             "protected",
             "canBeRead",
             "multiple",
-            "isAssoc" -> return attBuilder
-                .withProcessors(processors)
-                .withInner(SchemaAtt.create().withName("?bool")).build()
+            "isAssoc" ->
+                return attBuilder
+                    .withProcessors(processors)
+                    .withInner(SchemaAtt.create().withName("?bool")).build()
         }
 
         val openBraceIdx = attribute.indexOf('{')
@@ -437,22 +472,28 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             "vals",
             "options",
             "distinct",
-            "createVariants" -> return attBuilder.withName(attWithoutInner)
-                .withMultiple(multiple)
-                .withInner(readInnerRawAtts(attInnerAtts, true) {
-                    al, att, proc -> this.readInner(al, att, proc, innerAtts)
-                })
-                .withProcessors(processors)
-                .build()
+            "createVariants" ->
+                return attBuilder.withName(attWithoutInner)
+                    .withMultiple(multiple)
+                    .withInner(
+                        readInnerRawAtts(attInnerAtts, true) {
+                            al, att, proc ->
+                            this.readInner(al, att, proc, innerAtts)
+                        }
+                    )
+                    .withProcessors(processors)
+                    .build()
         }
 
         throw AttReadException(alias, attribute, "Unknown 'edge inner' attribute")
     }
 
-    private fun parseGqlAtt(alias: String,
-                            attribute: String,
-                            processors: List<AttProcDef>,
-                            innerAtts: List<SchemaAtt>): SchemaAtt {
+    private fun parseGqlAtt(
+        alias: String,
+        attribute: String,
+        processors: List<AttProcDef>,
+        innerAtts: List<SchemaAtt>
+    ): SchemaAtt {
 
         var gqlInnerAtts: List<SchemaAtt> = emptyList()
         var attName: String? = null

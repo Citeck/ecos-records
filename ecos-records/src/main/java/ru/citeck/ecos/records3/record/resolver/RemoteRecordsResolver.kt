@@ -29,12 +29,14 @@ import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
-import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
+import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
 
-class RemoteRecordsResolver(val services: RecordsServiceFactory,
-                            val restApi: RemoteRecordsRestApi) {
+class RemoteRecordsResolver(
+    val services: RecordsServiceFactory,
+    val restApi: RemoteRecordsRestApi
+) {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -48,9 +50,11 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
     private var defaultAppName: String = ""
     private val sourceIdMapping = services.properties.sourceIdMapping ?: emptyMap()
 
-    fun query(query: RecordsQuery,
-              attributes: Map<String, *>,
-              rawAtts: Boolean): RecsQueryRes<RecordAtts> {
+    fun query(
+        query: RecordsQuery,
+        attributes: Map<String, *>,
+        rawAtts: Boolean
+    ): RecsQueryRes<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         var sourceId = query.sourceId
@@ -60,7 +64,6 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
         }
         sourceId = sourceIdMapping.getOrDefault(sourceId, sourceId)
         val appName: String
-
 
         val appDelimIdx = sourceId.indexOf("/")
         appName = sourceId.substring(0, appDelimIdx)
@@ -196,8 +199,12 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
             if (context.isMsgEnabled(MsgLevel.DEBUG)) {
                 v0Body.setDebug(true)
             }
-            v0Body.records = (Json.mapper.convert(mutateBody.getRecords(),
-                                                  Json.mapper.getListType(RecordMeta::class.java)))
+            v0Body.records = (
+                Json.mapper.convert(
+                    mutateBody.getRecords(),
+                    Json.mapper.getListType(RecordMeta::class.java)
+                )
+                )
             v0Body.v1Body = mutateBody
 
             val mutRespObj = postRecords(app, MUTATE_URL, v0Body)
@@ -302,9 +309,11 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
         return resp
     }
 
-    private fun toDelStatuses(expectedSize: Int,
-                              resp: DeleteResp?,
-                              context: RequestContext): List<DelStatus> {
+    private fun toDelStatuses(
+        expectedSize: Int,
+        resp: DeleteResp?,
+        context: RequestContext
+    ): List<DelStatus> {
         if (resp == null) {
             return getDelStatuses(expectedSize, DelStatus.ERROR)
         }
@@ -312,9 +321,11 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
             return resp.statuses
         }
         context.addMsg(MsgLevel.ERROR) {
-            ("Result statues doesn't match request. "
-                + "Expected size: " + expectedSize
-                + ". Actual response: " + resp)
+            (
+                "Result statues doesn't match request. " +
+                    "Expected size: " + expectedSize +
+                    ". Actual response: " + resp
+                )
         }
         return getDelStatuses(expectedSize, DelStatus.ERROR)
     }
@@ -336,11 +347,11 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
     }
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
-        //todo
+        // todo
         return null
     }
 
-    fun getSourceInfo() : List<RecordsDaoInfo> = emptyList()
+    fun getSourceInfo(): List<RecordsDaoInfo> = emptyList()
 
     fun setDefaultAppName(defaultAppName: String) {
         this.defaultAppName = defaultAppName

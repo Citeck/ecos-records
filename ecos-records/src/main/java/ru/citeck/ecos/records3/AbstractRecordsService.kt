@@ -24,7 +24,7 @@ abstract class AbstractRecordsService : RecordsService {
         return query(query).getRecords().firstOrNull()
     }
 
-    override fun <T: Any> queryOne(query: RecordsQuery, attributes: Class<T>): T? {
+    override fun <T : Any> queryOne(query: RecordsQuery, attributes: Class<T>): T? {
         return query(query, attributes).getRecords().firstOrNull()
     }
 
@@ -61,7 +61,7 @@ abstract class AbstractRecordsService : RecordsService {
         return meta[0].getAtt(attribute)
     }
 
-    override fun <T: Any> getAtts(record: Any?, attributes: Class<T>): T {
+    override fun <T : Any> getAtts(record: Any?, attributes: Class<T>): T {
         return getAtts(listOf(record ?: ObjectData.create()), attributes)[0]
     }
 

@@ -12,7 +12,7 @@ class MutateBody : RequestBody() {
         records.add(record)
     }
 
-    fun getRecords() : List<RecordAtts> {
+    fun getRecords(): List<RecordAtts> {
         return records
     }
 

@@ -14,5 +14,5 @@ interface AttValueCtx {
 
     fun getAtts(attributes: Map<String, *>): ObjectData
 
-    fun <T : Any> getAtts(attributes: Class<T>) : T
+    fun <T : Any> getAtts(attributes: Class<T>): T
 }

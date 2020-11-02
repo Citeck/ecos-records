@@ -27,11 +27,11 @@ open class SimpleAttEdge : AttEdge {
         getValueFunc = null
     }
 
-    override fun getName() : String {
+    override fun getName(): String {
         return name
     }
 
-    override fun getValue() : Any? {
+    override fun getValue(): Any? {
         return when {
             getValueFunc != null -> getValueFunc.get()
             scope != null -> scope.getAtt(name)

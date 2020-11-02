@@ -52,8 +52,10 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
 
         if (body.query != null && body.getRecords() != null) {
             context.addMsg(MsgLevel.WARN) {
-                ("There must be one of 'records' or 'query' field "
-                    + "but found both. 'records' field will be ignored")
+                (
+                    "There must be one of 'records' or 'query' field " +
+                        "but found both. 'records' field will be ignored"
+                    )
             }
         }
 
@@ -94,7 +96,6 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
             }
             Json.mapper.applyData(resp, result)
-
         } else {
 
             // attributes query
@@ -164,16 +165,20 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     private fun <T> doWithContext(body: RequestBody, action: (RequestContext) -> T): T {
-        return RequestContext.doWithCtx(services, { ctxData ->
-            ctxData.withRequestId(body.requestId)
-            ctxData.withMsgLevel(body.msgLevel)
-            val trace: MutableList<String> = ArrayList(body.getRequestTrace())
-            trace.add(currentAppId)
-            ctxData.withRequestTrace(trace)
-        }, action)
+        return RequestContext.doWithCtx(
+            services,
+            { ctxData ->
+                ctxData.withRequestId(body.requestId)
+                ctxData.withMsgLevel(body.msgLevel)
+                val trace: MutableList<String> = ArrayList(body.getRequestTrace())
+                trace.add(currentAppId)
+                ctxData.withRequestTrace(trace)
+            },
+            action
+        )
     }
 
-    private fun <T> doInTransaction(readOnly: Boolean, action: () -> T) : T {
+    private fun <T> doInTransaction(readOnly: Boolean, action: () -> T): T {
         return action.invoke()
     }
 }

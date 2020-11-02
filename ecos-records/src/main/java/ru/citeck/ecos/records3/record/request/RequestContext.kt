@@ -32,12 +32,14 @@ open class RequestContext {
 
         @JvmStatic
         fun getCurrentNotNull(): RequestContext {
-            return getCurrent() ?: error("Request context is mandatory. " +
-                    "Add RequestContex.withCtx(ctx -> {...}) before call")
+            return getCurrent() ?: error(
+                "Request context is mandatory. " +
+                    "Add RequestContex.withCtx(ctx -> {...}) before call"
+            )
         }
 
         @JvmStatic
-        fun getLocale() : Locale {
+        fun getLocale(): Locale {
             return getCurrentNotNull().getCtxLocale()
         }
 
@@ -75,20 +77,24 @@ open class RequestContext {
         }
 
         @JvmStatic
-        fun <T> doWithCtxJ(factory: RecordsServiceFactory?,
-                           ctxData: Consumer<RequestCtxData.Builder>,
-                           action: (RequestContext) -> T): T {
+        fun <T> doWithCtxJ(
+            factory: RecordsServiceFactory?,
+            ctxData: Consumer<RequestCtxData.Builder>,
+            action: (RequestContext) -> T
+        ): T {
 
             return doWithCtx(factory, { b: RequestCtxData.Builder -> ctxData.accept(b) }, action)
         }
 
-        fun <T> doWithCtx(factory: RecordsServiceFactory?,
-                          ctxData: ((RequestCtxData.Builder) -> Unit)?,
-                          action: (RequestContext) -> T): T {
+        fun <T> doWithCtx(
+            factory: RecordsServiceFactory?,
+            ctxData: ((RequestCtxData.Builder) -> Unit)?,
+            action: (RequestContext) -> T
+        ): T {
 
             var current = getCurrent()
-            val notNullServices = factory ?: current?.serviceFactory ?:
-                error("RecordsServiceFactory is not found in context!")
+            val notNullServices = factory ?: current?.serviceFactory
+                ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false
 
@@ -101,7 +107,6 @@ open class RequestContext {
                 current.serviceFactory = notNullServices
                 RequestContext.current.set(current)
                 isContextOwner = true
-
             }
 
             val prevCtxData = current.ctxData
@@ -156,7 +161,7 @@ open class RequestContext {
         }
     }
 
-    fun getCtxLocale() : Locale {
+    fun getCtxLocale(): Locale {
         return ctxData.locale
     }
 
@@ -184,8 +189,10 @@ open class RequestContext {
 
         var value = ctxVars.computeIfAbsent(key) { newValue.invoke() }
         if (!type.isInstance(value)) {
-            log.warn("Context data with the key '" + key + "' is not an instance of a " + type + ". "
-                + "Data will be overridden. Current data: " + value)
+            log.warn(
+                "Context data with the key '" + key + "' is not an instance of a " + type + ". " +
+                    "Data will be overridden. Current data: " + value
+            )
             value = newValue.invoke()
             ctxVars[key] = value
         }
@@ -227,7 +234,7 @@ open class RequestContext {
         return serviceFactory
     }
 
-    fun getCtxAtts() : Map<String, Any?> {
+    fun getCtxAtts(): Map<String, Any?> {
         return ctxData.ctxAtts
     }
 
@@ -272,13 +279,15 @@ open class RequestContext {
         } else {
             getMessageTypeByClass(msgValue.javaClass)
         }
-        messages.add(ReqMsg(
-            level,
-            Instant.now(),
-            type,
-            DataValue.create(msgValue),
-            ctxData.requestTrace
-        ))
+        messages.add(
+            ReqMsg(
+                level,
+                Instant.now(),
+                type,
+                DataValue.create(msgValue),
+                ctxData.requestTrace
+            )
+        )
     }
 
     private fun getMessageTypeByClass(clazz: Class<*>): String {
@@ -291,14 +300,14 @@ open class RequestContext {
         }
     }
 
-    fun getRecordErrors() : List<RecordsError> {
+    fun getRecordErrors(): List<RecordsError> {
         return messages
             .filter { MsgLevel.ERROR.isEnabled(it.level) }
             .filter { RecordsError.MSG_TYPE == it.type }
             .mapNotNull { Json.mapper.convert(it.msg, RecordsError::class.java) }
     }
 
-    fun getErrors() : List<ReqMsg> {
+    fun getErrors(): List<ReqMsg> {
         return messages.filter { MsgLevel.ERROR.isEnabled(it.level) }
     }
 }

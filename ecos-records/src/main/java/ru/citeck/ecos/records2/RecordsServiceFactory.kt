@@ -2,7 +2,6 @@ package ru.citeck.ecos.records2
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.ExceptionUtils.throwException
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
@@ -94,7 +93,7 @@ open class RecordsServiceFactory {
     @Deprecated("")
     val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
 
-    val attValueFactories: List<AttValueFactory<*>> by  lazy { createAttValueFactories() }
+    val attValueFactories: List<AttValueFactory<*>> by lazy { createAttValueFactories() }
 
     @Deprecated("")
     val localRecordsResolverV0: LocalRecordsResolverV0 by lazy { createLocalRecordsResolverV0() }
@@ -204,7 +203,7 @@ open class RecordsServiceFactory {
         return recordsService
     }
 
-    protected open fun createDefaultRecordsDao() : List<*> {
+    protected open fun createDefaultRecordsDao(): List<*> {
         return listOf(
             MetaRecordsDao(this),
             RecordsSourceRecordsDao(),

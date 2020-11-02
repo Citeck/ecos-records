@@ -55,7 +55,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             dataNode = schemaWriter.unescapeKeys(dataNode)
             innerAtts = InnerAttValue(dataNode)
 
-            //todo
+            // todo
             if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
                 atts.setAtt("?str", atts.getStringOrNull("?assoc"))
             }

@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.request.msg.ReqMsg
 
 data class ResolveArgs(
     val values: List<Any?>,
@@ -57,36 +56,36 @@ data class ResolveArgs(
             rawAtts = base.rawAtts
         }
 
-        fun withValues(values: List<*>) : Builder {
+        fun withValues(values: List<*>): Builder {
             this.values = values
             return this
         }
 
-        fun withSourceId(sourceId: String) : Builder {
+        fun withSourceId(sourceId: String): Builder {
             this.sourceId = sourceId
             return this
         }
 
-        fun withValueRefs(valueRefs: List<RecordRef>) : Builder {
+        fun withValueRefs(valueRefs: List<RecordRef>): Builder {
             this.valueRefs = valueRefs
             return this
         }
 
-        fun withAttribute(attribute: SchemaAtt) : Builder {
+        fun withAttribute(attribute: SchemaAtt): Builder {
             return withAttributes(listOf(attribute))
         }
 
-        fun withAttributes(attributes: List<SchemaAtt>) : Builder {
+        fun withAttributes(attributes: List<SchemaAtt>): Builder {
             this.attributes = attributes
             return this
         }
 
-        fun withMixins(mixins: List<AttMixin>) : Builder {
+        fun withMixins(mixins: List<AttMixin>): Builder {
             this.mixins = mixins
             return this
         }
 
-        fun withRawAtts(rawAtts: Boolean) : Builder {
+        fun withRawAtts(rawAtts: Boolean): Builder {
             this.rawAtts = rawAtts
             return this
         }

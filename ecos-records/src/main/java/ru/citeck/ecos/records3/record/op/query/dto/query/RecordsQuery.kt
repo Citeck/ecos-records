@@ -2,16 +2,16 @@ package ru.citeck.ecos.records3.record.op.query.dto.query
 
 import ecos.com.fasterxml.jackson210.annotation.JsonIgnore
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
-import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.query.SortBy
 import java.util.*
+import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = RecordsQuery.Builder::class)
 @JackJsonDeserialize(builder = RecordsQuery.Builder::class)
@@ -57,7 +57,7 @@ data class RecordsQuery(
 
     @JsonIgnore
     @JackJsonIgnore
-    fun isAfterIdMode() : Boolean {
+    fun isAfterIdMode(): Boolean {
         return page.afterId != RecordRef.EMPTY
     }
 
@@ -91,64 +91,64 @@ data class RecordsQuery(
             query = base.query
         }
 
-        fun withSourceId(sourceId: String) : Builder {
+        fun withSourceId(sourceId: String): Builder {
             this.sourceId = sourceId
             return this
         }
 
-        fun withSortBy(sortBy: SortBy) : Builder {
+        fun withSortBy(sortBy: SortBy): Builder {
             this.sortBy = arrayListOf(sortBy)
             return this
         }
 
         @JsonSetter
         @JackJsonSetter
-        fun withSortBy(sortBy: List<SortBy>) : Builder {
+        fun withSortBy(sortBy: List<SortBy>): Builder {
             this.sortBy = ArrayList(sortBy)
             return this
         }
 
-        fun withGroupBy(groupBy: List<String>) : Builder {
+        fun withGroupBy(groupBy: List<String>): Builder {
             this.groupBy = ArrayList(groupBy)
             return this
         }
 
-        fun withPage(page: QueryPage) : Builder {
+        fun withPage(page: QueryPage): Builder {
             this.page = page.copy()
             return this
         }
 
-        fun withMaxItems(maxItems: Int) : Builder {
+        fun withMaxItems(maxItems: Int): Builder {
             this.page.withMaxItems(maxItems)
             return this
         }
 
-        fun withSkipCount(skipCount: Int) : Builder {
+        fun withSkipCount(skipCount: Int): Builder {
             this.page.withSkipCount(skipCount)
             return this
         }
 
-        fun withAfterId(afterId: RecordRef) : Builder {
+        fun withAfterId(afterId: RecordRef): Builder {
             this.page.withAfterId(afterId)
             return this
         }
 
-        fun withConsistency(consistency: Consistency) : Builder {
+        fun withConsistency(consistency: Consistency): Builder {
             this.consistency = consistency
             return this
         }
 
-        fun withLanguage(language: String) : Builder {
+        fun withLanguage(language: String): Builder {
             this.language = language
             return this
         }
 
-        fun withQuery(query: Any?) : Builder {
+        fun withQuery(query: Any?): Builder {
             this.query = query as? DataValue ?: DataValue.create(query)
             return this
         }
 
-        fun addSort(sort: SortBy) : Builder {
+        fun addSort(sort: SortBy): Builder {
             sortBy.add(sort)
             return this
         }

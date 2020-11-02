@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records3.record.op.atts.dto
 
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = CreateVariant.Builder::class)
 @JackJsonDeserialize(builder = CreateVariant.Builder::class)
@@ -61,19 +61,19 @@ data class CreateVariant(
             attributes = ObjectData.deepCopyOrNew(base.attributes)
         }
 
-        fun withFormKey(formKey: String?) : Builder {
+        fun withFormKey(formKey: String?): Builder {
             this.formKey = formKey
             return this
         }
 
         @JsonSetter
         @JackJsonSetter
-        fun withLabel(label: MLText?) : Builder {
+        fun withLabel(label: MLText?): Builder {
             this.label = label
             return this
         }
 
-        fun withLabel(label: String?) : Builder {
+        fun withLabel(label: String?): Builder {
             if (label != null) {
                 this.label = MLText(label)
             } else {
@@ -82,22 +82,22 @@ data class CreateVariant(
             return this
         }
 
-        fun withFormRef(formRef: RecordRef?) : Builder {
+        fun withFormRef(formRef: RecordRef?): Builder {
             this.formRef = formRef
             return this
         }
 
-        fun withRecordRef(recordRef: RecordRef?) : Builder {
+        fun withRecordRef(recordRef: RecordRef?): Builder {
             this.recordRef = recordRef ?: RecordRef.EMPTY
             return this
         }
 
-        fun withAttribute(key: String, value: Any?) : Builder {
+        fun withAttribute(key: String, value: Any?): Builder {
             this.attributes.set(key, value)
             return this
         }
 
-        fun withAttributes(attributes: ObjectData) : Builder {
+        fun withAttributes(attributes: ObjectData): Builder {
             this.attributes = attributes
             return this
         }

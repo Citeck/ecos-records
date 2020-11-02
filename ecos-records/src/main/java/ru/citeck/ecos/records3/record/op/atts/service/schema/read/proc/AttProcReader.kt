@@ -40,19 +40,24 @@ class AttProcReader {
             if (!AttStrUtils.isInQuotes(orElsePart)) {
                 if (orElsePart.isEmpty()) {
                     orElsePart = "''"
-                } else if (orElsePart != "null"
-                    && orElsePart != "true"
-                    && orElsePart != "false"
-                    && !Character.isDigit(orElsePart[0])) {
-                    orElsePart = ("'"
-                        + AttOrElseProcessor.ATT_PREFIX
-                        + orElsePart.replace("'", "\\'")
-                        + "'")
+                } else if (orElsePart != "null" &&
+                    orElsePart != "true" &&
+                    orElsePart != "false" &&
+                    !Character.isDigit(orElsePart[0])
+                ) {
+                    orElsePart = (
+                        "'" +
+                            AttOrElseProcessor.ATT_PREFIX +
+                            orElsePart.replace("'", "\\'") +
+                            "'"
+                        )
                 }
             }
 
-            att = (att.substring(0, orElseDelimIdx) + "|or(" + orElsePart + ")"
-                + if (att.length > nextDelim) att.substring(nextDelim) else "")
+            att = (
+                att.substring(0, orElseDelimIdx) + "|or(" + orElsePart + ")" +
+                    if (att.length > nextDelim) att.substring(nextDelim) else ""
+                )
 
             orElseDelimIdx = AttStrUtils.indexOf(att, '!')
         }

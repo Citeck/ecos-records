@@ -26,7 +26,7 @@ interface LocalRecordsResolver {
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo?
 
-    fun getSourceInfo() : List<RecordsDaoInfo>
+    fun getSourceInfo(): List<RecordsDaoInfo>
 
     fun containsDao(id: String): Boolean
 }

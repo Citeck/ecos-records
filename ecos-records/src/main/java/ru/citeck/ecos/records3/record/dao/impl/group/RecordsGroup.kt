@@ -11,10 +11,12 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.impl.InnerAttValue
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import java.util.*
 
-class RecordsGroup(private val query: RecordsQuery,
-                   attributes: Map<String, DistinctValue>,
-                   private val predicate: Predicate,
-                   private val recordsService: RecordsService) : AttValue {
+class RecordsGroup(
+    private val query: RecordsQuery,
+    attributes: Map<String, DistinctValue>,
+    private val predicate: Predicate,
+    private val recordsService: RecordsService
+) : AttValue {
 
     companion object {
         const val FIELD_PREDICATE = "predicate"

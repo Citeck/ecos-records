@@ -32,7 +32,7 @@ class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun getRecordType(): RecordRef = attValue.type
 
-    override fun getEdge(name: String, field: MetaField) : MetaEdge? {
+    override fun getEdge(name: String, field: MetaField): MetaEdge? {
         val edge = attValue.getEdge(name) ?: return null
         return MetaAttEdge(edge)
     }

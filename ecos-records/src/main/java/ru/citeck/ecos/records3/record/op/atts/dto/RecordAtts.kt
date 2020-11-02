@@ -45,7 +45,7 @@ open class RecordAtts() {
         setAtts(attributes)
     }
 
-    fun getId() : RecordRef {
+    fun getId(): RecordRef {
         return id
     }
 
@@ -79,7 +79,7 @@ open class RecordAtts() {
         attributes.forEach(consumer)
     }
 
-    fun getAtts() : ObjectData {
+    fun getAtts(): ObjectData {
         return attributes
     }
 
@@ -139,7 +139,7 @@ open class RecordAtts() {
         return attributes.get(name)
     }
 
-    fun <T : Any> getAtt(name: String?, orElse: T): T  {
+    fun <T : Any> getAtt(name: String?, orElse: T): T {
         if (name == null) {
             return orElse
         }
@@ -165,7 +165,7 @@ open class RecordAtts() {
             return false
         }
         val that = other as RecordAtts
-        return (id == that.id  && attributes == that.attributes)
+        return (id == that.id && attributes == that.attributes)
     }
 
     override fun hashCode(): Int {

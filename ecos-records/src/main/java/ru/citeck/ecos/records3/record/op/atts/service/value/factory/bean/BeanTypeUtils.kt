@@ -57,9 +57,11 @@ object BeanTypeUtils {
         return getters
     }
 
-    private fun <T : Annotation> getReadAnnotation(scope: Class<*>,
-                                                   descriptor: PropertyDescriptor,
-                                                   type: Class<T>): T? {
+    private fun <T : Annotation> getReadAnnotation(
+        scope: Class<*>,
+        descriptor: PropertyDescriptor,
+        type: Class<T>
+    ): T? {
 
         val readMethod = descriptor.readMethod
         var annotation = readMethod.getAnnotation(type)

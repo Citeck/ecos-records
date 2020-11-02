@@ -70,6 +70,11 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     }
 
     @Bean
+    override fun createRecordsServiceV1(): ru.citeck.ecos.records3.RecordsService {
+        return super.createRecordsServiceV1()
+    }
+
+    @Bean
     override fun createQueryLangService(): QueryLangService {
         return super.createQueryLangService()
     }

@@ -38,7 +38,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         }
     }
 
-    override fun <T: Any> query(query: RecordsQuery, attributes: Class<T>): RecsQueryRes<T> {
+    override fun <T : Any> query(query: RecordsQuery, attributes: Class<T>): RecsQueryRes<T> {
         val schema = dtoSchemaReader.read(attributes)
         require(schema.isNotEmpty()) {
             "Meta class doesn't has any fields with setter. Class: $attributes"
@@ -58,7 +58,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         }
     }
 
-    override fun <T: Any> getAtts(records: Collection<*>, attributes: Class<T>): List<T> {
+    override fun <T : Any> getAtts(records: Collection<*>, attributes: Class<T>): List<T> {
 
         val schema = dtoSchemaReader.read(attributes)
         if (schema.isEmpty()) {
@@ -85,20 +85,22 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             val record: RecordAtts = records[i]
             val attributes = ObjectData.create()
 
-            record.forEach( BiConsumer { name, valueArg ->
-                try {
-                    val parsedAtt = attSchemaReader.read(name)
-                    val scalarName = parsedAtt.getScalarName()
-                    val value = if ("?assoc" == scalarName) {
-                        convertAssocValue(valueArg, aliasToRecordRef)
-                    } else {
-                        valueArg
+            record.forEach(
+                BiConsumer { name, valueArg ->
+                    try {
+                        val parsedAtt = attSchemaReader.read(name)
+                        val scalarName = parsedAtt.getScalarName()
+                        val value = if ("?assoc" == scalarName) {
+                            convertAssocValue(valueArg, aliasToRecordRef)
+                        } else {
+                            valueArg
+                        }
+                        attributes.set(parsedAtt.name, value)
+                    } catch (e: AttReadException) {
+                        log.error("Attribute read failed", e)
                     }
-                    attributes.set(parsedAtt.name, value)
-                } catch (e: AttReadException) {
-                    log.error("Attribute read failed", e)
                 }
-            })
+            )
             record.setAtts(attributes)
 
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)
@@ -141,7 +143,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     /* OTHER */
-    private fun <T: Any> handleRecordsQuery(supplier: () -> RecsQueryRes<T>): RecsQueryRes<T> {
+    private fun <T : Any> handleRecordsQuery(supplier: () -> RecsQueryRes<T>): RecsQueryRes<T> {
         return RequestContext.doWithCtx(services) { ctx ->
             try {
                 supplier.invoke()

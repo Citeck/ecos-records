@@ -7,8 +7,8 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
+import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import java.util.*
 
 class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
@@ -52,10 +52,12 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
         return result
     }
 
-    private fun getGroups(groupsBaseQuery: RecordsQuery,
-                          distinctValues: List<List<DistinctValue>>,
-                          basePredicate: Predicate,
-                          attributes: Array<String>): List<RecordsGroup> {
+    private fun getGroups(
+        groupsBaseQuery: RecordsQuery,
+        distinctValues: List<List<DistinctValue>>,
+        basePredicate: Predicate,
+        attributes: Array<String>
+    ): List<RecordsGroup> {
 
         val groups: MutableList<RecordsGroup> = ArrayList()
         if (distinctValues.size == 1) {
@@ -76,9 +78,11 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
         return groups
     }
 
-    private fun createGroup(groupsBaseQuery: RecordsQuery,
-                            attributes: Map<String, DistinctValue>,
-                            basePredicate: Predicate): RecordsGroup {
+    private fun createGroup(
+        groupsBaseQuery: RecordsQuery,
+        attributes: Map<String, DistinctValue>,
+        basePredicate: Predicate
+    ): RecordsGroup {
 
         val groupQuery = groupsBaseQuery.copy()
         val groupPredicate = Predicates.and()
@@ -91,10 +95,12 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
         return RecordsGroup(groupQuery.build(), attributes, groupPredicate, recordsService)
     }
 
-    private fun getDistinctValues(sourceId: String,
-                                  predicate: Predicate,
-                                  attribute: String,
-                                  max: Int): List<DistinctValue> {
+    private fun getDistinctValues(
+        sourceId: String,
+        predicate: Predicate,
+        attribute: String,
+        max: Int
+    ): List<DistinctValue> {
 
         val recordsQuery = RecordsQuery.create()
         recordsQuery.language = DistinctQuery.LANGUAGE

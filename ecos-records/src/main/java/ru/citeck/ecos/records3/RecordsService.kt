@@ -64,7 +64,7 @@ interface RecordsService {
      *
      * @see RecordsService.query
      */
-    fun <T: Any> queryOne(query: RecordsQuery, attributes: Class<T>): T?
+    fun <T : Any> queryOne(query: RecordsQuery, attributes: Class<T>): T?
 
     /**
      * Query single record.

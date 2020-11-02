@@ -13,5 +13,5 @@ interface RecordMutateDtoDao<T> : RecordsDao {
      * @return identifier of mutated record.
      *         Can be different value than recordId in getRecToMutate argument
      */
-    fun saveMutatedRec(record: T) : String
+    fun saveMutatedRec(record: T): String
 }

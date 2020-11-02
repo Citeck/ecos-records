@@ -34,7 +34,7 @@ class RestQueryExceptionConverterImpl : RestQueryExceptionConverter {
                 return bodyMessage.message
             }
         } catch (ignored: Exception) {
-            //do nothing
+            // do nothing
         }
         return null
     }

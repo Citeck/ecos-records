@@ -39,10 +39,12 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val atts: List<SchemaAtt> = reader.read(attributes)
         return AttContext.doWithCtx(services) { attContext ->
             if (atts.isNotEmpty()) {
-                attContext.setSchemaAtt(SchemaAtt.create()
-                    .withName("")
-                    .withInner(atts)
-                    .build())
+                attContext.setSchemaAtt(
+                    SchemaAtt.create()
+                        .withName("")
+                        .withInner(atts)
+                        .build()
+                )
             }
             action.invoke(atts)
         }
@@ -143,7 +145,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    fun getSourceInfo() : List<RecordsDaoInfo> {
+    fun getSourceInfo(): List<RecordsDaoInfo> {
         val result = ArrayList(local.getSourceInfo())
         result.addAll(remote?.getSourceInfo() ?: emptyList())
         return result

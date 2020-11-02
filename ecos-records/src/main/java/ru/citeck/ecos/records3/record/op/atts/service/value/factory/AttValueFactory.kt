@@ -6,5 +6,5 @@ interface AttValueFactory<T> {
 
     fun getValue(value: T): AttValue?
 
-    fun getValueTypes() : List<Class<out T>>
+    fun getValueTypes(): List<Class<out T>>
 }

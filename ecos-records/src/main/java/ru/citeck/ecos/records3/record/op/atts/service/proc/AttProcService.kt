@@ -81,9 +81,12 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
             return data
         }
         val dataMap: MutableMap<String, Any?> = HashMap()
-        data.forEach ( BiConsumer {
-            key, value -> dataMap[key] = value
-        } )
+        data.forEach(
+            BiConsumer {
+                key, value ->
+                dataMap[key] = value
+            }
+        )
         return ObjectData.create(applyProcessors(dataMap, processors))
     }
 

@@ -26,7 +26,8 @@ class MetaAttEdge(private val edge: AttEdge) : MetaEdge {
 
     override fun getCreateVariants(): List<CreateVariant>? = Json.mapper.convert(
         edge.createVariants,
-        Json.mapper.getListType(CreateVariant::class.java))
+        Json.mapper.getListType(CreateVariant::class.java)
+    )
 
     override fun getJavaClass(): Class<*>? = edge.javaClass
 

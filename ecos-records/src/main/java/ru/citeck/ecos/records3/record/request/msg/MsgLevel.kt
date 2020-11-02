@@ -1,7 +1,9 @@
 package ru.citeck.ecos.records3.record.request.msg
 
-enum class MsgLevel(val order: Int,
-                    val allowedForMsg: Boolean) {
+enum class MsgLevel(
+    val order: Int,
+    val allowedForMsg: Boolean
+) {
 
     OFF(0, false),
     ERROR(2, true),

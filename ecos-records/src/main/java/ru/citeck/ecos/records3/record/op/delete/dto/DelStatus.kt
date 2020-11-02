@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.op.delete.dto
 
-
 enum class DelStatus {
     /**
      * Deletion was successful

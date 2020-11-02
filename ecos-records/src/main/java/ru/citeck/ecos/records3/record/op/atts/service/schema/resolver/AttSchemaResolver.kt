@@ -10,7 +10,6 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.type.ComputedAtt
 import ru.citeck.ecos.records2.type.RecordTypeService
@@ -19,6 +18,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
@@ -81,9 +81,11 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         return resolveResultsWithAliases(result, schemaAtts, args.rawAtts)
     }
 
-    private fun resolveResultsWithAliases(values: List<Map<String, Any?>>,
-                                          atts: List<SchemaAtt>,
-                                          rawAtts: Boolean): List<Map<String, Any?>> {
+    private fun resolveResultsWithAliases(
+        values: List<Map<String, Any?>>,
+        atts: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): List<Map<String, Any?>> {
         if (atts.isEmpty()) {
             return values.map { emptyMap<String, Any?>() }
         }
@@ -99,24 +101,30 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         return result
     }
 
-    private fun resolveResultWithAliases(currentAtt: SchemaAtt,
-                                         value: Map<String, Any?>,
-                                         rawAtts: Boolean): Map<String, Any?> {
+    private fun resolveResultWithAliases(
+        currentAtt: SchemaAtt,
+        value: Map<String, Any?>,
+        rawAtts: Boolean
+    ): Map<String, Any?> {
 
         val resolved = resolveWithAliases(currentAtt, value, false, rawAtts, true)
         if (resolved is Map<*, *>) {
             @Suppress("UNCHECKED_CAST")
             return resolved as Map<String, Any?>
         }
-        throw IllegalStateException("Expected Map, but found " + resolved
-            + ". Value: " + value + " atts: " + currentAtt)
+        throw IllegalStateException(
+            "Expected Map, but found " + resolved +
+                ". Value: " + value + " atts: " + currentAtt
+        )
     }
 
-    private fun resolveWithAliases(currentAtt: SchemaAtt,
-                                   valueArg: Any?,
-                                   isMultiple: Boolean,
-                                   rawAtts: Boolean,
-                                   root: Boolean): Any? {
+    private fun resolveWithAliases(
+        currentAtt: SchemaAtt,
+        valueArg: Any?,
+        isMultiple: Boolean,
+        rawAtts: Boolean,
+        root: Boolean
+    ): Any? {
         var value = valueArg
         val atts: List<SchemaAtt> = currentAtt.inner
         if (value == null || atts.isEmpty()) {
@@ -190,16 +198,20 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         return resultAtts
     }
 
-    private fun resolveRoot(values: List<ValueContext>,
-                            attributes: List<SchemaAtt>,
-                            context: ResolveContext): List<Map<String, Any?>> {
+    private fun resolveRoot(
+        values: List<ValueContext>,
+        attributes: List<SchemaAtt>,
+        context: ResolveContext
+    ): List<Map<String, Any?>> {
 
         return values.map { resolveRoot(it, attributes, context) }
     }
 
-    private fun resolveRoot(value: ValueContext,
-                            attributes: List<SchemaAtt>,
-                            context: ResolveContext): Map<String, Any?> {
+    private fun resolveRoot(
+        value: ValueContext,
+        attributes: List<SchemaAtt>,
+        context: ResolveContext
+    ): Map<String, Any?> {
 
         val rootBefore: ValueContext = context.rootValue
         context.rootValue = value
@@ -210,17 +222,21 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
     }
 
-    private fun resolve(values: List<ValueContext>,
-                        attributes: List<SchemaAtt>,
-                        context: ResolveContext): List<Map<String, Any?>> {
+    private fun resolve(
+        values: List<ValueContext>,
+        attributes: List<SchemaAtt>,
+        context: ResolveContext
+    ): List<Map<String, Any?>> {
         return values.stream()
             .map { ctx -> resolve(ctx, attributes, context) }
             .collect(Collectors.toList())
     }
 
-    private fun resolve(value: ValueContext,
-                        attributes: List<SchemaAtt>,
-                        context: ResolveContext): Map<String, Any?> {
+    private fun resolve(
+        value: ValueContext,
+        attributes: List<SchemaAtt>,
+        context: ResolveContext
+    ): Map<String, Any?> {
 
         val result: MutableMap<String, Any?> = LinkedHashMap()
         val attContext: AttContext = context.attContext
@@ -247,11 +263,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
                 val contextAttName = att.name.substring(1)
                 attValue = context.reqContext.ctxData.ctxAtts[contextAttName]
-
             } else {
 
                 if (attName.length > 2 && attName[0] == '\\' && attName[1] == '$') {
-                    attName = attName.substring(1);
+                    attName = attName.substring(1)
                 }
 
                 val computedAtts: Map<String, ComputedAtt> = value.computedAtts
@@ -261,10 +276,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     attValue = try {
                         val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
                         if (valueCtx != null) {
-                            computedAttsService.compute(AttValueResolveCtx(
-                                currentValuePath,
-                                context,
-                                valueCtx), computedAtt)
+                            computedAttsService.compute(
+                                AttValueResolveCtx(
+                                    currentValuePath,
+                                    context,
+                                    valueCtx
+                                ),
+                                computedAtt
+                            )
                         } else {
                             log.debug { "Value context is not found for attribute $computedAtt" }
                         }
@@ -304,10 +323,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                             if (mixinValueCtx == null) {
                                 null
                             } else {
-                                mixin.getAtt(mixinPath, AttValueResolveCtx(
-                                    currentValuePath,
-                                    context,
-                                    mixinValueCtx))
+                                mixin.getAtt(
+                                    mixinPath,
+                                    AttValueResolveCtx(
+                                        currentValuePath,
+                                        context,
+                                        mixinValueCtx
+                                    )
+                                )
                             }
                         } catch (e: Exception) {
                             val msg = "Resolving error. Path: $attPath"
@@ -395,8 +418,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
     private fun isNull(rawValue: Any?): Boolean {
 
-        if (rawValue == null || rawValue is RecordRef && RecordRef.isEmpty(rawValue)
-                || rawValue is DataValue && rawValue.isNull()) {
+        if (rawValue == null || rawValue is RecordRef && RecordRef.isEmpty(rawValue) ||
+            rawValue is DataValue && rawValue.isNull()
+        ) {
 
             return true
         }
@@ -411,12 +435,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         return false
     }
 
-    private class ValueContext(val parent: ValueContext?,
-                               val value: AttValue,
-                               private val valueRef: RecordRef,
-                               val ctxSourceId: String,
-                               val context: RequestContext?,
-                               val computedAtts: Map<String, ComputedAtt>) {
+    private class ValueContext(
+        val parent: ValueContext?,
+        val value: AttValue,
+        private val valueRef: RecordRef,
+        val ctxSourceId: String,
+        val context: RequestContext?,
+        val computedAtts: Map<String, ComputedAtt>
+    ) {
 
         companion object {
             val EMPTY = ValueContext(
@@ -424,7 +450,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 EmptyAttValue.INSTANCE,
                 RecordRef.EMPTY,
                 "",
-                null, emptyMap())
+                null, emptyMap()
+            )
         }
 
         private val computedRef: RecordRef by lazy {

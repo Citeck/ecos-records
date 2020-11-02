@@ -26,7 +26,6 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
             val formatter = SimpleDateFormat(args.format, args.locale)
             formatter.timeZone = args.timeZone
             return formatter.format(Date.from(Instant.parse(value.asText())))
-
         } else if (value.isNumber() || value.isTextual()) {
 
             val parsed: Double = value.asDouble(Double.NaN)

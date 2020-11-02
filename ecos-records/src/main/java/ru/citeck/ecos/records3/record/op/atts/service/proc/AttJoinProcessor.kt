@@ -6,9 +6,11 @@ import java.util.function.Consumer
 
 class AttJoinProcessor : AttProcessor {
 
-    override fun process(attributes: ObjectData,
-                         value: DataValue,
-                         args: List<DataValue>): Any {
+    override fun process(
+        attributes: ObjectData,
+        value: DataValue,
+        args: List<DataValue>
+    ): Any {
 
         if (!value.isArray()) {
             return value

@@ -110,7 +110,7 @@ class RecsDaoConverter {
         }
     }
 
-    private fun <T: Any> mapToMutateCrossSrc(dao: RecordMutateDtoDao<T>) : RecordsMutateCrossSrcDao {
+    private fun <T : Any> mapToMutateCrossSrc(dao: RecordMutateDtoDao<T>): RecordsMutateCrossSrcDao {
 
         return object : RecordsMutateCrossSrcDao {
 
@@ -127,10 +127,12 @@ class RecsDaoConverter {
         }
     }
 
-    private fun <T, R> mapElements(input: List<T>,
-                                   mapFunc: (T) -> R,
-                                   onEmpty: (T) -> R,
-                                   onError: (T, Throwable) -> R): List<R> {
+    private fun <T, R> mapElements(
+        input: List<T>,
+        mapFunc: (T) -> R,
+        onEmpty: (T) -> R,
+        onError: (T, Throwable) -> R
+    ): List<R> {
 
         val result: MutableList<R> = ArrayList()
         for (value in input) {

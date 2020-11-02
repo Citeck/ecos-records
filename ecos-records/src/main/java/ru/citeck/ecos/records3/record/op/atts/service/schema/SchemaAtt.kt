@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records3.record.op.atts.service.schema
 
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 import ru.citeck.ecos.commons.utils.MandatoryParam
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter
+import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = SchemaAtt.Builder::class)
 @JackJsonDeserialize(builder = SchemaAtt.Builder::class)

@@ -7,7 +7,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 
 interface RecordAttsService {
 
-    fun <T: Any> getAtts(value: Any?, attributes: Class<T>): T
+    fun <T : Any> getAtts(value: Any?, attributes: Class<T>): T
 
     fun getAtts(value: Any?, attributes: Map<String, String>): RecordAtts
 
@@ -17,7 +17,7 @@ interface RecordAttsService {
 
     fun getAtts(value: Any?, attributes: Collection<String>, rawAtts: Boolean): RecordAtts
 
-    fun <T: Any> getAtts(values: List<*>, attributes: Class<T>): List<T>
+    fun <T : Any> getAtts(values: List<*>, attributes: Class<T>): List<T>
 
     fun getAtts(values: List<*>, attributes: Collection<String>): List<RecordAtts>
 
@@ -31,9 +31,11 @@ interface RecordAttsService {
 
     fun getAtts(values: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean, mixins: List<AttMixin>): List<RecordAtts>
 
-    fun getAtts(values: List<*>,
-                attributes: List<SchemaAtt>,
-                rawAtts: Boolean,
-                mixins: List<AttMixin>,
-                recordRefs: List<RecordRef>): List<RecordAtts>
+    fun getAtts(
+        values: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        mixins: List<AttMixin>,
+        recordRefs: List<RecordRef>
+    ): List<RecordAtts>
 }

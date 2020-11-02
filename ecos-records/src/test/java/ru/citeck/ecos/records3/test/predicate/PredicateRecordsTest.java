@@ -91,7 +91,7 @@ public class PredicateRecordsTest {
             newAtts.put("ctxatt", RecordRef.valueOf("test@aaa"));
             newAtts.put("ctxatt2", RecordRef.valueOf("test@bbb"));
 
-            RequestContext.doWithAtts(newAtts, () -> {
+            RequestContext.doWithAttsJ(newAtts, () -> {
                 assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.strField", "str2-value")));
                 assertTrue(check("aaa", Predicates.eq("$ctxatt2.intField", "${$ctxatt2.intField}")));

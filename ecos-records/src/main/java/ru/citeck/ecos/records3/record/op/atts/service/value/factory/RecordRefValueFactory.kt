@@ -13,8 +13,17 @@ import java.util.*
 class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
     companion object {
-        private val ATT_ID: String? = "?id"
-        private val ATT_LOCAL_ID: String? = "?localId"
+        private val ATT_ID: String = "?id"
+        private val ATT_LOCAL_ID: String = "?localId"
+        private val ATT_STR: String = "?str"
+        private val ATT_ASSOC: String = "?assoc"
+
+        val ATTS_WITHOUT_LOADING = setOf(
+            ATT_ID,
+            ATT_LOCAL_ID,
+            ATT_STR,
+            ATT_ASSOC
+        )
     }
 
     private val recordsService = services.recordsServiceV1
@@ -38,7 +47,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             val sb = StringBuilder()
             for (inner in innerSchema) {
                 val innerName: String = inner.name
-                if (innerName != ATT_ID && innerName != ATT_LOCAL_ID) {
+                if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
                     schemaWriter.write(inner, sb)
                     attsMap[inner.name] = sb.toString()
                     sb.setLength(0)
@@ -54,11 +63,6 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             var dataNode: JsonNode = atts.getAtts().getData().asJson()
             dataNode = schemaWriter.unescapeKeys(dataNode)
             innerAtts = InnerAttValue(dataNode)
-
-            // todo
-            if (attsMap.containsKey("?assoc") && !attsMap.containsKey("?str")) {
-                atts.setAtt("?str", atts.getStringOrNull("?assoc"))
-            }
         }
 
         override fun getId(): RecordRef {
@@ -66,7 +70,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         }
 
         override fun asText(): String? {
-            return innerAtts.asText()
+            return ref.toString()
         }
 
         override fun getDisplayName(): String? {

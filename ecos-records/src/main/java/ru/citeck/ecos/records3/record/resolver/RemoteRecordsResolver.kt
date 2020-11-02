@@ -48,7 +48,7 @@ class RemoteRecordsResolver(
     }
 
     private var defaultAppName: String = ""
-    private val sourceIdMapping = services.properties.sourceIdMapping ?: emptyMap()
+    private val sourceIdMapping = services.properties.sourceIdMapping
 
     fun query(
         query: RecordsQuery,

@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.spring.utils.registrar
 
-import lombok.RequiredArgsConstructor
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -9,15 +8,15 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import javax.annotation.PostConstruct
 
 @Component
-@RequiredArgsConstructor
-class RecordEvaluatorsRegistrar {
+class RecordEvaluatorsRegistrar(
+    private val recordEvaluatorService: RecordEvaluatorService
+) {
 
     companion object {
         val log = KotlinLogging.logger {}
     }
 
     private var evaluators: List<RecordEvaluator<*, *, *>>? = null
-    private lateinit var recordEvaluatorService: RecordEvaluatorService
 
     @PostConstruct
     fun register() {

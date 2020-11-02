@@ -57,7 +57,7 @@ abstract class AbstractRecordsService : RecordsService {
         if (record == null || StringUtils.isBlank(attribute)) {
             return DataValue.NULL
         }
-        val meta: List<RecordAtts> = getAtts(listOf<Any?>(record), listOf<String>(attribute))
+        val meta: List<RecordAtts> = getAtts(listOf<Any?>(record), listOf(attribute))
         return meta[0].getAtt(attribute)
     }
 

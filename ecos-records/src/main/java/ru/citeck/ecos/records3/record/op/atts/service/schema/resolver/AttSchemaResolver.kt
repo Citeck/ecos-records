@@ -259,7 +259,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             var attValue: Any?
             var attName = att.name
 
-            if (att.name.startsWith("$")) {
+            if (att.name.startsWith("$") && !currentValuePath.endsWith(RecordConstants.ATT_HAS)) {
 
                 val contextAttName = att.name.substring(1)
                 attValue = context.reqContext.ctxData.ctxAtts[contextAttName]

@@ -53,8 +53,13 @@ open class RequestContext {
         }
 
         @JvmStatic
-        fun <T> doWithAtts(atts: Map<String, Any?>, action: Supplier<T>): T {
+        fun <T> doWithAttsJ(atts: Map<String, Any?>, action: Supplier<T>): T {
             return doWithCtx(null, { it.withCtxAtts(atts) }) { action.get() }
+        }
+
+        @JvmStatic
+        fun <T> doWithAttsJ(atts: Map<String, Any?>, action: Runnable) {
+            return doWithCtx(null, { it.withCtxAtts(atts) }) { action.run() }
         }
 
         @JvmStatic
@@ -178,11 +183,13 @@ open class RequestContext {
     }
 
     fun <T : Any> getVar(key: String): T? {
-        return ctxVars[key] as? T
+        @Suppress("UNCHECKED_CAST")
+        return ctxVars[key] as? T?
     }
 
     fun <T : Any> removeVar(key: String): T? {
-        return ctxVars.remove(key) as? T
+        @Suppress("UNCHECKED_CAST")
+        return ctxVars.remove(key) as? T?
     }
 
     fun <T : Any> getOrPutVar(key: String, type: Class<*>, newValue: () -> T): T {

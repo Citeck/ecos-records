@@ -46,7 +46,14 @@ class RecordMetaTest {
         assertTrue(metaJson.has("id"));
 
         RecordAtts atts = Json.getMapper().convert(meta, RecordAtts.class);
+
         RecordMeta meta3 = Json.getMapper().convert(atts, RecordMeta.class);
         assertEquals(meta, meta3);
+
+        JsonNode attsJson = Json.getMapper().toJson(atts);
+
+        assertEquals(2, attsJson.size());
+        assertTrue(attsJson.has("attributes"));
+        assertTrue(attsJson.has("id"));
     }
 }

@@ -53,7 +53,7 @@ public class QueryContext {
         if (context == null) {
             throw new IllegalStateException("Query context is not defined! Attributes: " + contextAttributes);
         }
-        return RequestContext.doWithAtts(contextAttributes, callable);
+        return RequestContext.doWithAttsJ(contextAttributes, callable);
     }
 
     public static void withContext(RecordsServiceFactory serviceFactory,

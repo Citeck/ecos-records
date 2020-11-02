@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.querylang.QueryWithLang
+import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation
@@ -607,9 +608,16 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val daoResult = ArrayList<DelStatus>()
         records.forEach { record ->
             val sourceId: String = record.sourceId
-            val dao = needRecordsDao(sourceId, RecordsDeleteDao::class.java)
-            val delResult = dao.delete(listOf(record.id))
-            daoResult.add(delResult[0])
+            val dao = getRecordsDao(sourceId, RecordsDeleteDao::class.java)
+            if (dao == null) {
+                val deletion = RecordsDeletion()
+                deletion.records = listOf(record)
+                localRecordsResolverV0.delete(deletion)
+                daoResult.add(DelStatus.OK)
+            } else {
+                val delResult = dao.delete(listOf(record.id))
+                daoResult.add(delResult[0])
+            }
         }
         return daoResult
     }

@@ -54,7 +54,7 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
         evaluatorDto.setConfig(Json.getMapper().convert(config, ObjectData.class));
 
         RequestContext.doWithCtx(factory, ctx ->
-            RequestContext.doWithAtts(model, () -> {
+            RequestContext.doWithAttsJ(model, () -> {
                 assertTrue(evaluatorsService.evaluate(recordRef, evaluatorDto));
                 return Unit.INSTANCE;
             })

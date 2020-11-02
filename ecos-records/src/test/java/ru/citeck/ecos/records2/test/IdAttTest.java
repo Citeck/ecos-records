@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
+import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
@@ -57,7 +58,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
         attribute = recordsService.getAttribute(testRef, "otherRef?str");
-        assertEquals(new ValueByRef().getString(), attribute.asText());
+        assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
         MetaClass meta = recordsService.getMeta(testRef, MetaClass.class);
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
@@ -66,7 +67,9 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
     @NotNull
     @Override
     public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
-        return records.stream().map(metaValues::get).collect(Collectors.toList());
+        return records.stream()
+            .map(metaValues::get)
+            .collect(Collectors.toList());
     }
 
     @Data

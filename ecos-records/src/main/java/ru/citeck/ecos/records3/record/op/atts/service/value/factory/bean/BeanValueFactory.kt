@@ -58,7 +58,10 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         override fun getType(): RecordRef {
-            return getAttWithType("?type", RecordRef::class.java) ?: RecordRef.EMPTY
+            if (typeCtx.hasProperty("?type")) {
+                return getAttWithType("?type", RecordRef::class.java) ?: RecordRef.EMPTY
+            }
+            return RecordRef.EMPTY
         }
 
         override fun getDisplayName(): String? {

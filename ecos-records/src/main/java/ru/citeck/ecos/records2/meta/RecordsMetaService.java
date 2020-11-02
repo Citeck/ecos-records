@@ -17,7 +17,7 @@ public interface RecordsMetaService {
 
     AttributesSchema createSchema(Map<String, String> attributes);
 
-    List<RecordAtts> convertMetaResult(List<RecordAtts> nodes, AttributesSchema schema, boolean flat);
+    List<RecordAtts> convertMetaResult(List<? extends RecordAtts> nodes, AttributesSchema schema, boolean flat);
 
     RecordAtts convertMetaResult(RecordAtts meta, AttributesSchema schema, boolean flat);
 }

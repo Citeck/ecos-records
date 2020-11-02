@@ -81,12 +81,22 @@ public class RemoteRecordsDao extends AbstractRecordsDao
             RecordsMetaQueryResult result = restConnection.jsonPost(recordsMethod,
                                                                     request,
                                                                     RecordsMetaQueryResult.class);
+            result = result.addSourceId(getId());
 
-            result.setRecords(recordsMetaService.convertMetaResult(result.getRecords(), attsSchema, !rawAtts));
+            RecordsQueryResult<RecordAtts> attsResult = new RecordsQueryResult<RecordAtts>();
+            attsResult.setHasMore(result.getHasMore());
+            attsResult.setTotalCount(result.getTotalCount());
 
-            return result.addSourceId(getId());
+            List<RecordAtts> resultAtts = recordsMetaService.convertMetaResult(
+                result.getRecords(),
+                attsSchema,
+                !rawAtts
+            );
+            attsResult.setRecords(resultAtts);
+
+            return attsResult;
         }
-        return new RecordsMetaQueryResult();
+        return new RecordsQueryResult<>();
     }
 
     private void prepareQueryBody(QueryBody body, RecordsQuery query) {

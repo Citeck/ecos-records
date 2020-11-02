@@ -31,7 +31,7 @@ public class RecordsMetaServiceImpl implements RecordsMetaService {
     }
 
     @Override
-    public List<RecordAtts> convertMetaResult(List<RecordAtts> meta, AttributesSchema schema, boolean flat) {
+    public List<RecordAtts> convertMetaResult(List<? extends RecordAtts> meta, AttributesSchema schema, boolean flat) {
         return meta.stream()
                    .map(m -> convertMetaResult(m, schema, flat))
                    .collect(Collectors.toList());

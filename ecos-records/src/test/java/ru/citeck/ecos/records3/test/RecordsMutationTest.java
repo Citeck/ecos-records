@@ -1,18 +1,27 @@
 package ru.citeck.ecos.records3.test;
 
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
+import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao;
 
 import java.util.*;
 
-// todo
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsMutationTest /*extends AbstractRecordsDao
-                                implements MutableRecordsLocalDao<RecordsMutationTest.TestDto> */{
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class RecordsMutationTest extends AbstractRecordsDao
+    implements RecordMutateDtoDao<RecordsMutationTest.TestDto> {
 
     private static final String SOURCE_ID = "test-source-id";
     private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
@@ -24,32 +33,33 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
     private Map<RecordRef, TestDto> valuesToMutate;
     private Map<RecordRef, TestDto> newValues;
 
-    //@BeforeAll
+    @NotNull
+    @Override
+    public String getId() {
+        return SOURCE_ID;
+    }
+
+    @BeforeAll
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
-
-        //setId(SOURCE_ID);
-        //recordsService.register(this);
+        recordsService.register(this);
 
         valuesToMutate = Collections.singletonMap(TEST_REF, new TestDto(TEST_REF));
         newValues = new HashMap<>();
     }
 
-    //@Test
+    @Test
     void test() {
 
-        /*RecordsMutation mutation = new RecordsMutation();
-
         RecordAtts meta = new RecordAtts(TEST_REF);
-        meta.set("field", "test");
-        meta.set("field0", "test0");
-        meta.set("field1", "test1");
-        meta.set("bool", true);
-        mutation.setRecords(Collections.singletonList(meta));
+        meta.setAtt("field", "test");
+        meta.setAtt("field0", "test0");
+        meta.setAtt("field1", "test1");
+        meta.setAtt("bool", true);
 
-        recordsService.mutate(mutation);
+        recordsService.mutate(meta);
 
         assertEquals("test", valuesToMutate.get(TEST_REF).getField());
         assertEquals("test0", valuesToMutate.get(TEST_REF).getField0());
@@ -57,13 +67,12 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
         assertTrue(valuesToMutate.get(TEST_REF).isBool());
 
         meta = new RecordAtts(TEST_REF);
-        meta.set("field{.str}", "__test__");
-        meta.set("field0{.json}", "__test0__");
-        meta.set("field1{.disp}", "__test1__");
-        meta.set("bool{.bool}", false);
-        mutation.setRecords(Collections.singletonList(meta));
+        meta.setAtt("field{.str}", "__test__");
+        meta.setAtt("field0{.json}", "__test0__");
+        meta.setAtt("field1{.disp}", "__test1__");
+        meta.setAtt("bool{.bool}", false);
 
-        recordsService.mutate(mutation);
+        recordsService.mutate(meta);
 
         assertEquals("__test__", valuesToMutate.get(TEST_REF).getField());
         assertEquals("__test0__", valuesToMutate.get(TEST_REF).getField0());
@@ -71,13 +80,12 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
         assertFalse(valuesToMutate.get(TEST_REF).isBool());
 
         meta = new RecordAtts(TEST_REF);
-        meta.set(".att(n:\"field\"){str}", "test__");
-        meta.set(".att(n:\"field0\"){json}", "test0__");
-        meta.set(".att(n:\"field1\"){disp}", "test1__");
-        meta.set(".att(n:\"bool\"){bool}", true);
-        mutation.setRecords(Collections.singletonList(meta));
+        meta.setAtt(".att(n:\"field\"){str}", "test__");
+        meta.setAtt(".att(n:\"field0\"){json}", "test0__");
+        meta.setAtt(".att(n:\"field1\"){disp}", "test1__");
+        meta.setAtt(".att(n:\"bool\"){bool}", true);
 
-        recordsService.mutate(mutation);
+        recordsService.mutate(meta);
 
         assertEquals("test__", valuesToMutate.get(TEST_REF).getField());
         assertEquals("test0__", valuesToMutate.get(TEST_REF).getField0());
@@ -85,13 +93,12 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
         assertTrue(valuesToMutate.get(TEST_REF).isBool());
 
         meta = new RecordAtts(TEST_REF);
-        meta.set(".att(\"field\"){str}", "test____");
-        meta.set(".att(\"field0\"){json}", "test0____");
-        meta.set(".att('field1'){disp}", "test1____");
-        meta.set(".att('bool'){bool}", false);
-        mutation.setRecords(Collections.singletonList(meta));
+        meta.setAtt(".att(\"field\"){str}", "test____");
+        meta.setAtt(".att(\"field0\"){json}", "test0____");
+        meta.setAtt(".att('field1'){disp}", "test1____");
+        meta.setAtt(".att('bool'){bool}", false);
 
-        recordsService.mutate(mutation);
+        recordsService.mutate(meta);
 
         assertEquals("test____", valuesToMutate.get(TEST_REF).getField());
         assertEquals("test0____", valuesToMutate.get(TEST_REF).getField0());
@@ -100,17 +107,14 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
 
         assertEquals(0, newValues.size());
 
-        mutation = new RecordsMutation();
-
         RecordRef newRef = RecordRef.create(SOURCE_ID, "newRef");
         meta = new RecordAtts(newRef);
-        meta.set("field", "test");
-        meta.set("field0", "test0");
-        meta.set("field1", "test1");
-        meta.set("bool", false);
-        mutation.setRecords(Collections.singletonList(meta));
+        meta.setAtt("field", "test");
+        meta.setAtt("field0", "test0");
+        meta.setAtt("field1", "test1");
+        meta.setAtt("bool", false);
 
-        recordsService.mutate(mutation);
+        recordsService.mutate(meta);
 
         assertEquals(1, newValues.size());
 
@@ -125,22 +129,19 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
 
         RecordRef withInnerRef = RecordRef.create(SOURCE_ID, "newRefWithInner");
         RecordAtts newWithInner = new RecordAtts(withInnerRef);
-        newWithInner.set("field", "value123");
+        newWithInner.setAtt("field", "value123");
 
         RecordRef innerRef = RecordRef.create(SOURCE_ID, "newInner");
 
         RecordAtts newInner = new RecordAtts(innerRef);
-        newInner.set(RecordConstants.ATT_ALIAS, ALIAS_VALUE);
-        newWithInner.set(".att(n:\"assoc0\"){assoc}", ALIAS_VALUE);
-        newWithInner.set(".atts(n:\"assoc1\"){assoc}", ALIAS_VALUE);
+        newInner.setAtt(RecordConstants.ATT_ALIAS, ALIAS_VALUE);
+        newWithInner.setAtt(".att(n:\"assoc0\"){assoc}", ALIAS_VALUE);
+        newWithInner.setAtt(".atts(n:\"assoc1\"){assoc}", ALIAS_VALUE);
         ArrayNode innerArrayNode = JsonNodeFactory.instance.arrayNode();
         innerArrayNode.add(ALIAS_VALUE);
-        newWithInner.set("assocArr?assoc", innerArrayNode);
+        newWithInner.setAtt("assocArr?assoc", innerArrayNode);
 
-        mutation = new RecordsMutation();
-        mutation.setRecords(Arrays.asList(newWithInner, newInner));
-
-        recordsService.mutate(mutation);
+        recordsService.mutate(Arrays.asList(newWithInner, newInner));
 
         assertEquals(2, newValues.size());
 
@@ -151,67 +152,26 @@ public class RecordsMutationTest /*extends AbstractRecordsDao
         assertEquals(newInnerRef, withInnerDto.getAssoc1());
 
         assertEquals(1, withInnerDto.getAssocArr().size());
-        assertEquals(newInnerRef, withInnerDto.getAssocArr().get(0));*/
+        assertEquals(newInnerRef, withInnerDto.getAssocArr().get(0));
     }
 
-    /*@Override
-    protected RecordsMutResult mutateImpl(RecordsMutation mutation) {
-
-        for (RecordAtts meta : mutation.getRecords()) {
-            meta.forEach((name, value) -> {
-                assertFalse(name.startsWith("."));
-                assertFalse(name.contains("?"));
-                if (!RecordConstants.ATT_ALIAS.equals(name)) {
-                    assertNotEquals(ALIAS_VALUE, value.asText());
-                }
-            });
-        }
-
-        return super.mutateImpl(mutation);
-    }*/
-
-    @Nullable
-    //@Override
-    public List<RecordRef> mutate(@NotNull List<RecordAtts> records) {
-        return null;
-    }
-
-    @NotNull
-    //@Override
-    public List<TestDto> getValuesToMutate(@NotNull List<RecordRef> records) {
-        /*return records.stream().map(r -> {
-            RecordRef ref = RecordRef.create(getId(), r);
-            TestDto testDto = valuesToMutate.get(ref);
-            return testDto == null ? new TestDto(RecordRef.valueOf(ref + "-new")) : new TestDto(testDto);
-        }).collect(Collectors.toList());*/
-        return null;
-    }
-
-    /*@NotNull
     @Override
-    public RecordsMutResult save(@NotNull List<TestDto> values) {
+    public TestDto getRecToMutate(@NotNull String recordId) {
+        RecordRef ref = RecordRef.create(getId(), recordId);
+        TestDto testDto = valuesToMutate.get(ref);
+        return testDto == null ? new TestDto(RecordRef.valueOf(ref + "-new")) : new TestDto(testDto);
+    }
 
-        RecordsMutResult result = new RecordsMutResult();
-        List<RecordAtts> records = new ArrayList<>();
-
-        values.forEach(v -> {
-            TestDto testDto = valuesToMutate.get(v.getRef());
-            if (testDto != null) {
-                testDto.set(v);
-            } else {
-                newValues.put(v.getRef(), v);
-            }
-            records.add(new RecordAtts(v.getRef().getId()));
-        });
-
-        result.setRecords(records);
-        return result;
-    }*/
-
-    /*@Override
-    public RecordsDelResult delete(@NotNull RecordsDeletion deletion) {
-        return null;
-    }*/
+    @Override
+    public String saveMutatedRec(TestDto record) {
+        TestDto testDto = valuesToMutate.get(record.getRef());
+        if (testDto != null) {
+            testDto.set(record);
+        } else {
+            newValues.put(record.getRef(), record);
+        }
+        return record.getRef().getId();
+    }
 
     public static class TestDto {
 

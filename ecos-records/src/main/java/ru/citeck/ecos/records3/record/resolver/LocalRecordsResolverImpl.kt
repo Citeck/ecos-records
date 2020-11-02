@@ -29,6 +29,7 @@ import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
+import ru.citeck.ecos.records3.record.op.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder
@@ -37,7 +38,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaR
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateCrossSrcDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
@@ -65,13 +66,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val allDao = ConcurrentHashMap<String, RecordsDao>()
     private val attsDao = ConcurrentHashMap<String, RecordsAttsDao>()
     private val queryDao = ConcurrentHashMap<String, RecordsQueryDao>()
-    private val mutateDao = ConcurrentHashMap<String, RecordsMutateDao>()
+    private val mutateDao = ConcurrentHashMap<String, RecordsMutateCrossSrcDao>()
     private val deleteDao = ConcurrentHashMap<String, RecordsDeleteDao>()
 
     private val daoMapByType = mapOf<Class<*>, Map<String, RecordsDao>>(
         Pair(RecordsAttsDao::class.java, attsDao),
         Pair(RecordsQueryDao::class.java, queryDao),
-        Pair(RecordsMutateDao::class.java, mutateDao),
+        Pair(RecordsMutateCrossSrcDao::class.java, mutateDao),
         Pair(RecordsDeleteDao::class.java, deleteDao)
     )
 
@@ -80,7 +81,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val recordsAttsService = services.recordsAttsService
     private val localRecordsResolverV0 = services.localRecordsResolverV0
 
-    private val converter: OneRecDaoConverter = OneRecDaoConverter()
+    private val converter: RecsDaoConverter = RecsDaoConverter()
 
     private val currentApp = services.properties.appName
     private val jobExecutor = JobExecutor(services)
@@ -541,7 +542,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 record = RecordAtts(record, newId)
             }
 
-            val dao = getRecordsDao(sourceId, RecordsMutateDao::class.java)
+            val dao = getRecordsDao(sourceId, RecordsMutateCrossSrcDao::class.java)
 
             if (dao == null) {
 
@@ -556,16 +557,16 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             } else {
 
-                val localRef: RecordRef = RecordRef.create("", record.getId().id)
-                var mutRes: List<RecordRef>? = dao.mutate(listOf(RecordAtts(record, localRef)))
+                val localId = record.getId().id
+                var mutRes = dao.mutate(listOf(LocalRecordAtts(localId, record.getAtts())))
 
-                mutRes = mutRes?.map {
+                mutRes = mutRes.map {
                     if (StringUtils.isBlank(it.sourceId)) {
                         RecordRef.create(sourceId, it.id)
                     } else {
                         it
                     }
-                } ?: listOf(record.getId())
+                }
 
                 daoResult.addAll(mutRes)
             }
@@ -608,7 +609,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         allDao[sourceId] = recordsDao
         register(sourceId, attsDao, RecordsAttsDao::class.java, recordsDao)
         register(sourceId, queryDao, RecordsQueryDao::class.java, recordsDao)
-        register(sourceId, mutateDao, RecordsMutateDao::class.java, recordsDao)
+        register(sourceId, mutateDao, RecordsMutateCrossSrcDao::class.java, recordsDao)
         register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
 
         if (recordsDao is ServiceFactoryAware) {
@@ -627,7 +628,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                                            type: Class<T>,
                                            valueArg: RecordsDao) {
         var value = valueArg
-        value = converter.convertOneToMultiDao(value)
+        value = converter.convert(value)
         if (type.isAssignableFrom(value.javaClass)) {
             @Suppress("UNCHECKED_CAST")
             val dao = value as T
@@ -649,7 +650,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             recordsSourceInfo.features.query = false
         }
 
-        recordsSourceInfo.features.mutate = recordsDao is RecordsMutateDao
+        recordsSourceInfo.features.mutate = recordsDao is RecordsMutateCrossSrcDao
         recordsSourceInfo.features.delete = recordsDao is RecordsDeleteDao
         recordsSourceInfo.features.getAtts = recordsDao is RecordsAttsDao
 

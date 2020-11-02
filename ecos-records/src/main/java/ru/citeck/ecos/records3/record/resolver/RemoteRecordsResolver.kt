@@ -32,10 +32,6 @@ import ru.citeck.ecos.records3.rest.v1.query.QueryResp
 import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
-import java.util.function.Consumer
-import java.util.function.Function
-import java.util.function.Supplier
-import java.util.stream.Stream
 
 class RemoteRecordsResolver(val services: RecordsServiceFactory,
                             val restApi: RemoteRecordsRestApi) {
@@ -118,7 +114,7 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
         val resp = QueryResp()
 
         resp.setRecords(v0Result.records.map { RecordAtts(it) })
-        resp.hasMore = (v0Result.hasMore)
+        resp.hasMore = v0Result.hasMore
         resp.totalCount = v0Result.totalCount
         return resp
     }
@@ -128,7 +124,7 @@ class RemoteRecordsResolver(val services: RecordsServiceFactory,
         val v0Body = QueryBodyV0()
 
         v0Body.setAttributes(body.attributes.asJson())
-        v0Body.setRecords(body.getRecords())
+        v0Body.records = body.getRecords()
         v0Body.v1Body = body
 
         val query = body.query

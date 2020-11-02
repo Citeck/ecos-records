@@ -90,7 +90,7 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     }
 
     override fun createProperties(): RecordsProperties {
-        return properties!!
+        return this.props!!
     }
 
     @Autowired(required = false)

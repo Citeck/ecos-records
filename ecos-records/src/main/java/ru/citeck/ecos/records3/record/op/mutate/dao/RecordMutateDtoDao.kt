@@ -1,10 +1,17 @@
 package ru.citeck.ecos.records3.record.op.mutate.dao
 
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.dao.RecordsDao
 
-interface RecordMutateDtoDao<T> {
+interface RecordMutateDtoDao<T> : RecordsDao {
 
-    fun getRecToMutate(record: RecordRef): T
+    /**
+     * @param recordId identifier of mutated record
+     */
+    fun getRecToMutate(recordId: String): T
 
-    fun saveMutatedRec(record: T)
+    /**
+     * @return identifier of mutated record.
+     *         Can be different value than recordId in getRecToMutate argument
+     */
+    fun saveMutatedRec(record: T) : String
 }

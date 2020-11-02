@@ -1,14 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.remote;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.NullNode;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordMeta;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
@@ -49,8 +42,9 @@ public class RemoteRecordsDao extends AbstractRecordsDao
     private String recordsMethod = "/api/ecos/records";
     private String remoteSourceId = null;
 
+    @NotNull
     @Override
-    public RecordsRefsQueryResult queryRecords(RecordsQuery query) {
+    public RecordsRefsQueryResult queryRecords(@NotNull RecordsQuery query) {
 
         QueryBody request = new QueryBody();
 

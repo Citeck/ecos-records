@@ -134,13 +134,19 @@ class RecordRef : Serializable {
         if (isBlank(appName)) {
             return this
         }
-        return if (!this.appName.isEmpty()) this else addAppName(appName)
+        return if (this.appName.isNotEmpty()) {
+            this
+        } else {
+            addAppName(appName)
+        }
     }
 
     fun removeAppName(): RecordRef {
         return if (appName.isEmpty()) {
             this
-        } else create(sourceId, id)
+        } else {
+            create(sourceId, id)
+        }
     }
 
     fun isRemote(): Boolean {
@@ -155,11 +161,9 @@ class RecordRef : Serializable {
             return false
         }
         val that = other as RecordRef
-        return (
-            appName == that.appName &&
-                sourceId == that.sourceId &&
-                id == that.id
-            )
+        return appName == that.appName &&
+            sourceId == that.sourceId &&
+            id == that.id
     }
 
     override fun hashCode(): Int {

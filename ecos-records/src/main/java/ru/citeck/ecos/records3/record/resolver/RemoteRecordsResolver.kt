@@ -197,7 +197,7 @@ class RemoteRecordsResolver(
             setContextProps(mutateBody, context)
             val v0Body = MutationBody()
             if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                v0Body.setDebug(true)
+                v0Body.isDebug = true
             }
             v0Body.records = (
                 Json.mapper.convert(
@@ -219,11 +219,11 @@ class RemoteRecordsResolver(
                     result.add(ValWithIdx(att.value.getId(), att.idx))
                 }
             } else {
-                val recsAtts: MutableList<RecordAtts> = mutateResp.records
+                val recsAtts = mutateResp.records
                 for (i in atts.indices) {
-                    val refAtts: ValWithIdx<RecordAtts> = atts[i]
-                    val respAtts: RecordAtts = recsAtts[i]
-                    result.add(ValWithIdx<RecordRef>(respAtts.getId(), refAtts.idx))
+                    val refAtts = atts[i]
+                    val newAtts = recsAtts[i].getId().withDefaultAppName(refAtts.value.getId().appName)
+                    result.add(ValWithIdx(newAtts, refAtts.idx))
                 }
             }
         }
@@ -321,11 +321,9 @@ class RemoteRecordsResolver(
             return resp.statuses
         }
         context.addMsg(MsgLevel.ERROR) {
-            (
-                "Result statues doesn't match request. " +
-                    "Expected size: " + expectedSize +
-                    ". Actual response: " + resp
-                )
+            "Result statues doesn't match request. " +
+                "Expected size: " + expectedSize +
+                ". Actual response: " + resp
         }
         return getDelStatuses(expectedSize, DelStatus.ERROR)
     }

@@ -34,12 +34,13 @@ public abstract class QueryPage {
         JsonNode pageData = Json.getMapper().toJson(pageDataObj);
 
         Integer maxItems = getInt(pageData, MAX_ITEMS_FIELD);
+        Integer skipCount = getInt(pageData, SKIP_COUNT_FIELD);
 
-        if (pageData.has(AFTER_ID_FIELD)) {
+        if (pageData.has(AFTER_ID_FIELD) && skipCount == null) {
             JsonNode afterIdNode = pageData.path(AFTER_ID_FIELD);
             return new AfterPage(RecordRef.valueOf(afterIdNode.textValue()), maxItems);
         } else {
-            return new SkipPage(getInt(pageData, SKIP_COUNT_FIELD), maxItems);
+            return new SkipPage(skipCount, maxItems);
         }
     }
 

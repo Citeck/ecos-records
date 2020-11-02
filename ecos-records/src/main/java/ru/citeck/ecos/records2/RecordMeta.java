@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2;
 
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,8 @@ import java.util.function.Function;
  */
 @Slf4j
 @Deprecated
+@JsonIgnoreProperties("atts")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties("atts")
 public class RecordMeta extends RecordAtts {
 
     public RecordMeta() {

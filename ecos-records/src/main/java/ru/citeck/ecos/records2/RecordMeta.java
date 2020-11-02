@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2;
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +15,6 @@ import java.util.function.Function;
  */
 @Slf4j
 @Deprecated
-@JsonIgnoreProperties("atts")
-@com.fasterxml.jackson.annotation.JsonIgnoreProperties("atts")
 public class RecordMeta extends RecordAtts {
 
     public RecordMeta() {
@@ -71,19 +68,6 @@ public class RecordMeta extends RecordAtts {
             return false;
         }
         return hasAtt(att);
-    }
-
-    public void setAttributes(@Nullable ObjectData attributes) {
-        if (attributes == null) {
-            setAtts(ObjectData.create());
-        } else {
-            setAtts(attributes);
-        }
-    }
-
-    @NotNull
-    public ObjectData getAttributes() {
-        return getAtts();
     }
 
     @NotNull

@@ -5,6 +5,7 @@ import ecos.com.fasterxml.jackson210.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
+import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -43,5 +44,9 @@ class RecordMetaTest {
         assertEquals(2, metaJson.size());
         assertTrue(metaJson.has("attributes"));
         assertTrue(metaJson.has("id"));
+
+        RecordAtts atts = Json.getMapper().convert(meta, RecordAtts.class);
+        RecordMeta meta3 = Json.getMapper().convert(atts, RecordMeta.class);
+        assertEquals(meta, meta3);
     }
 }

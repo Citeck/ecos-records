@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.op.atts.dto
 
+import ecos.com.fasterxml.jackson210.annotation.JsonIgnore
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import lombok.extern.slf4j.Slf4j
 import ru.citeck.ecos.commons.data.DataValue
@@ -79,12 +80,22 @@ open class RecordAtts() {
         attributes.forEach(consumer)
     }
 
+    fun getAttributes(): ObjectData {
+        return getAtts()
+    }
+
+    @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnore
     fun getAtts(): ObjectData {
         return attributes
     }
 
     fun setAtts(attributes: ObjectData?) {
         this.attributes = attributes?.deepCopy() ?: ObjectData.create()
+    }
+
+    fun setAttributes(attributes: ObjectData?) {
+        setAtts(attributes)
     }
 
     fun hasAtt(name: String?): Boolean {

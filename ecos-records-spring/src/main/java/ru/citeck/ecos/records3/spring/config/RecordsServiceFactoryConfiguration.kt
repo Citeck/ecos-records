@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import ru.citeck.ecos.records2.RecordsProperties
 import ru.citeck.ecos.records2.RecordsService
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.meta.RecordsMetaService
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -16,6 +14,8 @@ import ru.citeck.ecos.records2.querylang.QueryLangService
 import ru.citeck.ecos.records2.request.rest.RestHandler
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
+import ru.citeck.ecos.records3.RecordsProperties
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 
 @Slf4j

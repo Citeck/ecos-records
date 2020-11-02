@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.predicate.model.*;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.RecordsServiceImpl;

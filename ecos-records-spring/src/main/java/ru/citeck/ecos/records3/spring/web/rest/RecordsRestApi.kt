@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.result.RecordsResult
 import ru.citeck.ecos.records2.utils.SecurityUtils
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.rest.v1.RequestResp

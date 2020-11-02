@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.record.request
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.error.RecordsError
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
@@ -267,6 +267,10 @@ open class RequestContext {
 
     fun addMsg(level: MsgLevel, msg: String) {
         addMsg(level) { msg }
+    }
+
+    fun addMsgJ(level: MsgLevel, msg: Supplier<Any?>) {
+        addMsg(level) { msg.get() }
     }
 
     fun addMsg(level: MsgLevel, msg: () -> Any?) {

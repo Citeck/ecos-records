@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.type;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 
 import java.util.Collections;
 import java.util.List;

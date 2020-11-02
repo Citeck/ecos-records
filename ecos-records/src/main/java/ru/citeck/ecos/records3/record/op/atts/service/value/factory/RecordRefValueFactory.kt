@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.value.factory
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext

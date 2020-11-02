@@ -1,8 +1,9 @@
-package ru.citeck.ecos.records2
+package ru.citeck.ecos.records3
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
+import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
 import ru.citeck.ecos.records2.evaluator.evaluators.*
@@ -52,6 +53,8 @@ import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
+import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
+import ru.citeck.ecos.records3.txn.RecordsTxnService
 import java.util.*
 import java.util.concurrent.ScheduledExecutorService
 import java.util.function.Consumer
@@ -67,8 +70,8 @@ open class RecordsServiceFactory {
     val restHandlerAdapter: RestHandlerAdapter by lazy { createRestHandlerAdapter() }
     val recordsMetaGql: RecordsMetaGql by lazy { createRecordsMetaGql() }
     val restHandler: RestHandler by lazy { createRestHandler() }
-    val recordsService: RecordsService by lazy { createRecordsService() }
-    val recordsServiceV1: ru.citeck.ecos.records3.RecordsService by lazy { createRecordsServiceV1() }
+    val recordsService: ru.citeck.ecos.records2.RecordsService by lazy { createRecordsService() }
+    val recordsServiceV1: RecordsService by lazy { createRecordsServiceV1() }
     val dtoSchemaReader: DtoSchemaReader by lazy { createDtoSchemaReader() }
     val recordsResolver: LocalRemoteResolver by lazy { createRecordsResolver() }
     val predicateService: PredicateService by lazy { createPredicateService() }
@@ -89,6 +92,7 @@ open class RecordsServiceFactory {
     val metaValuesConverter: MetaValuesConverter by lazy { createMetaValuesConverter() }
     val attProcReader: AttProcReader by lazy { createAttProcReader() }
     val computedAttsService: ComputedAttsService by lazy { createComputedAttsService() }
+    val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
 
     @Deprecated("")
     val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
@@ -106,8 +110,8 @@ open class RecordsServiceFactory {
     private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
 
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
-    private var tmpRecordsService: ru.citeck.ecos.records3.RecordsService? = null
-    private var tmpRecordsServiceV0: RecordsService? = null
+    private var tmpRecordsService: RecordsService? = null
+    private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
     val gqlTypes: List<GqlTypeDefinition> by lazy { createGqlTypes() }
 
@@ -173,26 +177,26 @@ open class RecordsServiceFactory {
         return service
     }
 
-    protected open fun createRecordsService(): RecordsService {
+    protected open fun createRecordsService(): ru.citeck.ecos.records2.RecordsService {
         if (tmpRecordsServiceV0 != null) {
             return tmpRecordsServiceV0!!
         }
-        tmpRecordsServiceV0 = RecordsServiceImpl(this)
+        tmpRecordsServiceV0 = ru.citeck.ecos.records2.RecordsServiceImpl(this)
         for (dao in defaultRecordsDao) {
             if (dao is RecordsDao) {
                 tmpRecordsServiceV0!!.register(dao)
             }
         }
-        val result: RecordsService = tmpRecordsServiceV0!!
+        val result: ru.citeck.ecos.records2.RecordsService = tmpRecordsServiceV0!!
         tmpRecordsServiceV0 = null
         return result
     }
 
-    protected open fun createRecordsServiceV1(): ru.citeck.ecos.records3.RecordsService {
+    protected open fun createRecordsServiceV1(): RecordsService {
         if (tmpRecordsService != null) {
             return tmpRecordsService!!
         }
-        val recordsService = ru.citeck.ecos.records3.RecordsServiceImpl(this)
+        val recordsService = RecordsServiceImpl(this)
         tmpRecordsService = recordsService
         for (dao in defaultRecordsDao) {
             if (dao is ru.citeck.ecos.records3.record.dao.RecordsDao) {
@@ -344,5 +348,9 @@ open class RecordsServiceFactory {
 
     protected open fun createComputedAttsService(): ComputedAttsService {
         return ComputedAttsService()
+    }
+
+    protected open fun createRecordsTxnService(): RecordsTxnService {
+        return DefaultRecordsTxnService()
     }
 }

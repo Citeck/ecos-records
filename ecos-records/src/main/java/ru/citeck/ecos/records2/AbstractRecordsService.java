@@ -7,6 +7,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;

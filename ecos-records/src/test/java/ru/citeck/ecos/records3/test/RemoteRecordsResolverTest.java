@@ -15,6 +15,8 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody;
 import ru.citeck.ecos.records2.request.rest.MutationBody;
 import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.RecordsProperties;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
 import java.util.*;

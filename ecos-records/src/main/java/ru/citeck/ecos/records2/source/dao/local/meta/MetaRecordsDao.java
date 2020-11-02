@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local.meta;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;

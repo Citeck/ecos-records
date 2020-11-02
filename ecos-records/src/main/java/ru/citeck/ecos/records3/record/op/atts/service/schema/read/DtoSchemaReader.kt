@@ -12,8 +12,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.ScalarType
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt

@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.test.predicate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.Element;
 import ru.citeck.ecos.records2.predicate.ElementAttributes;
 import ru.citeck.ecos.records2.predicate.PredicateService;

@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt

@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.test.op.atts
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
 import kotlin.test.assertEquals
 

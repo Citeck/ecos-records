@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.proc
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap

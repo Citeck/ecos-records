@@ -3,13 +3,13 @@ package ru.citeck.ecos.records3.test.op.delete
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation
 import ru.citeck.ecos.records2.source.dao.MutableRecordsDao
 import ru.citeck.ecos.records2.source.dao.RecordsDao
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus

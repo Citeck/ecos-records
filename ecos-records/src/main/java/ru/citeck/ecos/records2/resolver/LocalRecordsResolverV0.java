@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
 import ru.citeck.ecos.records2.exception.RecordsException;

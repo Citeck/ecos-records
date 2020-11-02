@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local.job;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.List;

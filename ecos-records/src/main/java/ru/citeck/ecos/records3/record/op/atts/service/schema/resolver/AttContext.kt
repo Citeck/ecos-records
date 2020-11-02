@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
 
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import java.util.*
 

@@ -4,7 +4,7 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;

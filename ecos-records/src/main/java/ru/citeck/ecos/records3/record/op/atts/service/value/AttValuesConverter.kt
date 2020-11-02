@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.record.op.atts.service.value
 
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.value.factory.AttValueFactory
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.meta.AttMetaValue
 

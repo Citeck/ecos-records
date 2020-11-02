@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2
+package ru.citeck.ecos.records3
 
 class RecordsProperties {
 
@@ -7,11 +7,6 @@ class RecordsProperties {
     var rest: RestProps = RestProps()
     var apps: Map<String, App> = emptyMap()
     var sourceIdMapping: Map<String, String> = emptyMap()
-
-    /**
-     * Disable remote records for testing.
-     */
-    var forceLocalMode = false
 
     /**
      * Used by gateway.

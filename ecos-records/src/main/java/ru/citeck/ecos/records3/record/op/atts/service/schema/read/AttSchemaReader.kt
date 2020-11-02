@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.read
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException

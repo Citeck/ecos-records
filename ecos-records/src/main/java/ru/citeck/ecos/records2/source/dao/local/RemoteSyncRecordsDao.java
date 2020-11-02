@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
@@ -22,7 +22,6 @@ import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver;
-import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
 import java.time.Instant;

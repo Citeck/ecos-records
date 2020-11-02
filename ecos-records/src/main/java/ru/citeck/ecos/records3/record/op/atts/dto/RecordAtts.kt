@@ -59,12 +59,16 @@ open class RecordAtts() {
     }
 
     open fun withDefaultAppName(appName: String?): RecordAtts {
-        if (appName == null) {
+        if (appName.isNullOrBlank()) {
             return this
         }
         val currId = id
         val newId = currId.withDefaultAppName(appName)
-        return if (newId === currId) this else RecordAtts(this, newId)
+        return if (newId === currId) {
+            this
+        } else {
+            RecordAtts(this, newId)
+        }
     }
 
     @JsonProperty

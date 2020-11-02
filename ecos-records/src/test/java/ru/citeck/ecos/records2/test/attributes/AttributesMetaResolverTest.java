@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.test.attributes;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.RecordsServiceFactory;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.meta.AttributesMetaResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

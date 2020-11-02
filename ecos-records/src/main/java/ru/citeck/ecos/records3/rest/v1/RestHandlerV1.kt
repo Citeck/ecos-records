@@ -4,8 +4,8 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.request.error.ErrorUtils
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
@@ -31,10 +31,14 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
 
     private val recordsService = services.recordsServiceV1
     private val properties = services.properties
-    private var currentAppId: String
+    private val recordsTxnService = services.recordsTxnService
+
+    private val currentAppId: String
+    private val currentAppName: String
 
     init {
-        currentAppId = if (StringUtils.isBlank(properties.appInstanceId)) {
+        currentAppName = properties.appName
+        var currentAppId = if (StringUtils.isBlank(properties.appInstanceId)) {
             properties.appName
         } else {
             properties.appInstanceId
@@ -42,6 +46,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         if (StringUtils.isBlank(currentAppId)) {
             currentAppId = "unknown:" + UUID.randomUUID()
         }
+        this.currentAppId = currentAppId
     }
 
     fun queryRecords(body: QueryBody): QueryResp {
@@ -87,7 +92,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             // search query
             var result: RecsQueryRes<RecordAtts>
             try {
-                result = doInTransaction(true) {
+                result = recordsTxnService.doInTransaction(true) {
                     recordsService.query(query, bodyAttsMap, body.rawAtts)
                 }
             } catch (e: Exception) {
@@ -106,7 +111,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 } else {
                     var atts: List<RecordAtts>
                     try {
-                        atts = doInTransaction(true) {
+                        atts = recordsTxnService.doInTransaction(true) {
                             recordsService.getAtts(records, bodyAttsMap, body.rawAtts)
                         }
                     } catch (e: Exception) {
@@ -119,6 +124,8 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             }
         }
         resp.setMessages(context.getMessages())
+
+        resp.setRecords(resp.records.map { it.withDefaultAppName(currentAppName) })
         return resp
     }
 
@@ -132,8 +139,12 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
         val resp = MutateResp()
         try {
-            doInTransaction(false) {
-                resp.setRecords(recordsService.mutate(body.getRecords()).map { RecordAtts(it) })
+            recordsTxnService.doInTransaction(false) {
+                resp.setRecords(
+                    recordsService.mutate(body.getRecords()).map {
+                        RecordAtts(it.withDefaultAppName(currentAppName))
+                    }
+                )
             }
         } catch (e: Exception) {
             log.error("Records mutation completed with error. MutateBody: $body", e)
@@ -154,7 +165,9 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
         val resp = DeleteResp()
         try {
-            doInTransaction(false) { resp.setStatuses(recordsService.delete(body.records)) }
+            recordsTxnService.doInTransaction(false) {
+                resp.setStatuses(recordsService.delete(body.records))
+            }
         } catch (e: Exception) {
             log.error("Records deletion completed with error. DeleteBody: $body", e)
             resp.setStatuses(body.records.map { DelStatus.ERROR })
@@ -176,9 +189,5 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             },
             action
         )
-    }
-
-    private fun <T> doInTransaction(readOnly: Boolean, action: () -> T): T {
-        return action.invoke()
     }
 }

@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -26,6 +25,7 @@ import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao

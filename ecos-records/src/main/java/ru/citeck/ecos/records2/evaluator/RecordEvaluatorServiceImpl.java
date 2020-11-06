@@ -161,6 +161,10 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         Object requiredMeta;
         if (resMetaType == null) {
             requiredMeta = null;
+        } else if (resMetaType.isAssignableFrom(RecordMeta.class)) {
+            RecordMeta meta = new RecordMeta(fullRecordMeta.getId());
+            meta.setAtts(evaluatorMeta);
+            requiredMeta = meta;
         } else if (resMetaType.isAssignableFrom(RecordAtts.class)) {
             RecordAtts meta = new RecordAtts(fullRecordMeta.getId());
             meta.setAtts(evaluatorMeta);

@@ -37,7 +37,6 @@ class RecordMetaTest {
         assertEquals(meta, meta2);
 
         assertEquals(new BigDecimal(5), meta.get("intValue", new BigDecimal(10)));
-        assertEquals(new BigDecimal(10), meta.get("stringValue", new BigDecimal(10)));
         assertEquals(new BigDecimal(10), meta.get("MISSING", new BigDecimal(10)));
 
         JsonNode metaJson = Json.getMapper().toJson(meta);

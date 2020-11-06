@@ -21,12 +21,12 @@ class StringValueFactory : AttValueFactory<String> {
 
         return object : AttValue {
 
-            override fun asText(): String? {
+            override fun getId(): Any? {
                 return value
             }
 
-            override fun asBoolean(): Boolean? {
-                return value == "true"
+            override fun asText(): String? {
+                return value
             }
 
             override fun asDouble(): Double? {

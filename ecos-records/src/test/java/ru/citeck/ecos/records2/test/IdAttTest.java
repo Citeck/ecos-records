@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
@@ -61,6 +63,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
         MetaClass meta = recordsService.getMeta(testRef, MetaClass.class);
         assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
+        assertTrue(meta.initialized);
     }
 
     @NotNull
@@ -74,6 +77,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
     @Data
     public static class MetaClass {
         private RecordRef otherRef;
+        private Boolean initialized;
     }
 
     public static class ValueByRef implements MetaValue {
@@ -88,8 +92,15 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
         private RecordRef ref;
 
+        private boolean initialized;
+
         Value(RecordRef ref) {
             this.ref = ref;
+        }
+
+        @Override
+        public <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
+            initialized = true;
         }
 
         @Override
@@ -102,6 +113,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
             switch (name) {
                 case "id": return "test-id";
                 case "otherRef": return RecordRef.create(ID, ValueByRef.class.getSimpleName());
+                case "initialized": return initialized;
             }
             return null;
         }

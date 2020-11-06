@@ -70,6 +70,10 @@ public class RecordMeta extends RecordAtts {
         return hasAtt(att);
     }
 
+    public boolean hasAttribute(@Nullable String att) {
+        return has(att);
+    }
+
     @NotNull
     public DataValue getAttribute(@NotNull String name) {
         return get(name);

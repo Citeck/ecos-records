@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.write
 
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef
+import ru.citeck.ecos.records2.graphql.GqlConstants
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 
 /**
@@ -109,7 +109,7 @@ class AttSchemaGqlWriter : AttSchemaWriter {
 
         sb.append(attribute.name)
 
-        if (MetaEdgeTypeDef.META_VAL_FIELDS.contains(attribute.name)) {
+        if (GqlConstants.META_VAL_FIELDS.contains(attribute.name)) {
             sb.append("{")
             for (att in attribute.inner) {
                 writeInner(att, sb)

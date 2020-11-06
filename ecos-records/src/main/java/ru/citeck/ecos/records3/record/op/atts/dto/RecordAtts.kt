@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Function
+import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty as JackJsonProperty
 
 @Slf4j
 open class RecordAtts() {
@@ -72,6 +74,7 @@ open class RecordAtts() {
     }
 
     @JsonProperty
+    @JackJsonProperty
     fun setId(id: String?) {
         this.id = RecordRef.valueOf(id)
     }
@@ -89,7 +92,7 @@ open class RecordAtts() {
     }
 
     @JsonIgnore
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JackJsonIgnore
     fun getAtts(): ObjectData {
         return attributes
     }

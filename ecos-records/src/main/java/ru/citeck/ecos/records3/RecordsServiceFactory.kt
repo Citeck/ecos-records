@@ -9,10 +9,6 @@ import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
 import ru.citeck.ecos.records2.evaluator.evaluators.*
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter
-import ru.citeck.ecos.records2.graphql.types.GqlMetaQueryDef
-import ru.citeck.ecos.records2.graphql.types.GqlTypeDefinition
-import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef
-import ru.citeck.ecos.records2.graphql.types.MetaValueTypeDef
 import ru.citeck.ecos.records2.meta.AttributesMetaResolver
 import ru.citeck.ecos.records2.meta.RecordsMetaService
 import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl
@@ -113,8 +109,6 @@ open class RecordsServiceFactory {
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
-    val gqlTypes: List<GqlTypeDefinition> by lazy { createGqlTypes() }
-
     private var isJobsInitialized = false
 
     init {
@@ -132,15 +126,6 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordsMetaGql(): RecordsMetaGql {
         return RecordsMetaGql(this)
-    }
-
-    protected open fun createGqlTypes(): List<GqlTypeDefinition> {
-        val gqlTypes: MutableList<GqlTypeDefinition> = ArrayList()
-        val metaValueTypeDef = MetaValueTypeDef(this)
-        gqlTypes.add(metaValueTypeDef)
-        gqlTypes.add(GqlMetaQueryDef(this))
-        gqlTypes.add(MetaEdgeTypeDef(metaValueTypeDef))
-        return gqlTypes
     }
 
     @Synchronized

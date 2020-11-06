@@ -1,14 +1,9 @@
-package ru.citeck.ecos.records3.spring.utils.registrar
+package ru.citeck.ecos.records3
 
 import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import javax.annotation.PostConstruct
 
-@Component
-class RecordsDaoRegistrar @Autowired constructor(
+open class RecordsDaoRegistrar constructor(
     private val recordsService: RecordsService,
     private val recordsServiceV0: ru.citeck.ecos.records2.RecordsService
 ) {
@@ -20,7 +15,6 @@ class RecordsDaoRegistrar @Autowired constructor(
     private var sources: List<RecordsDao>? = null
     private var sourcesV0: List<ru.citeck.ecos.records2.source.dao.RecordsDao>? = null
 
-    @PostConstruct
     fun register() {
         log.info("========================== RecordsDaoRegistrar ==========================")
         if (sources != null) {
@@ -42,13 +36,11 @@ class RecordsDaoRegistrar @Autowired constructor(
         recordsServiceV0.register(dao)
     }
 
-    @Autowired(required = false)
-    fun setSources(sources: List<RecordsDao>?) {
+    open fun setSources(sources: List<RecordsDao>?) {
         this.sources = sources
     }
 
-    @Autowired(required = false)
-    fun setSourcesV0(sourcesV0: List<ru.citeck.ecos.records2.source.dao.RecordsDao>?) {
+    open fun setSourcesV0(sourcesV0: List<ru.citeck.ecos.records2.source.dao.RecordsDao>?) {
         this.sourcesV0 = sourcesV0
     }
 }

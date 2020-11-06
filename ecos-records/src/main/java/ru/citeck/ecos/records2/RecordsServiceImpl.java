@@ -9,9 +9,9 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.graphql.GqlConstants;
 import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.types.MetaEdgeTypeDef;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
@@ -347,7 +347,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         }
 
         if (parent != null && parent.getName().equals(RecordConstants.ATT_EDGE)) {
-            if (!MetaEdgeTypeDef.META_VAL_FIELDS.contains(att.getName())) {
+            if (!GqlConstants.META_VAL_FIELDS.contains(att.getName())) {
                 SchemaAtt newAtt = att.getInner().get(0);
                 if (newAtt.isScalar()) {
                     return node.elements().next();

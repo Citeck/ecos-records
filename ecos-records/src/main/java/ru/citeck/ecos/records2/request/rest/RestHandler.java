@@ -7,27 +7,28 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.error.ErrorUtils;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.txn.RecordsTxnService;
 
 import java.util.List;
 
 @Slf4j
 public class RestHandler {
 
-    private RecordsService recordsService;
-    private RecordsServiceFactory factory;
-
-    @Deprecated
-    public RestHandler(RecordsService recordsService) {
-        log.error("Constructor with recordsService is deprecated");
-        this.recordsService = recordsService;
-    }
+    private final RecordsService recordsService;
+    private final RecordsServiceFactory factory;
+    private final RecordsTxnService recordsTxnService;
 
     public RestHandler(RecordsServiceFactory factory) {
         this.factory = factory;
         this.recordsService = factory.getRecordsService();
+        this.recordsTxnService = factory.getRecordsTxnService();
     }
 
     public Object queryRecords(QueryBody body) {
+        return recordsTxnService.doInTransaction(true, () -> queryRecordsImpl(body));
+    }
+
+    private Object queryRecordsImpl(QueryBody body) {
 
         if (body.getQuery() != null && body.getRecords() != null) {
             log.warn("There must be one of 'records' or 'query' field "
@@ -98,7 +99,7 @@ public class RestHandler {
 
     public Object mutateRecords(MutationBody body) {
 
-        RecordsMutResult result = recordsService.mutate(body);
+        RecordsMutResult result = recordsTxnService.doInTransaction(false, () -> recordsService.mutate(body));
 
         ErrorUtils.logErrorsWithBody(result, body);
 
@@ -114,7 +115,7 @@ public class RestHandler {
     }
 
     public Object deleteRecords(DeletionBody body) {
-        return recordsService.delete(body);
+        return recordsTxnService.doInTransaction(false, () -> recordsService.delete(body));
     }
 
     public RecordsServiceFactory getFactory() {

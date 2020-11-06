@@ -650,7 +650,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         valueArg: RecordsDao
     ) {
         var value = valueArg
-        value = converter.convert(value)
+        value = converter.convert(value, type)
         if (type.isAssignableFrom(value.javaClass)) {
             @Suppress("UNCHECKED_CAST")
             val dao = value as T

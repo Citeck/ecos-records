@@ -27,23 +27,25 @@ class RecsDaoConverter {
         val log = KotlinLogging.logger {}
     }
 
-    fun convert(dao: RecordsDao): RecordsDao {
+    fun convert(dao: RecordsDao, targetType: Class<*>): RecordsDao {
 
-        if (dao is RecordAttsDao) {
+        if (dao is RecordAttsDao && targetType == RecordsAttsDao::class.java) {
             return mapToMultiDao(dao)
         }
-        if (dao is RecordDeleteDao) {
+        if (dao is RecordDeleteDao && targetType == RecordsDeleteDao::class.java) {
             return mapToMultiDao(dao)
         }
-        if (dao is RecordMutateDao) {
-            return mapToMultiDao(dao)
-        }
-        if (dao is RecordsMutateDao) {
-            return mapToMultiDao(dao)
-        }
-        if (dao is RecordMutateDtoDao<*>) {
-            @Suppress("UNCHECKED_CAST")
-            return mapToMutateCrossSrc(dao as RecordMutateDtoDao<Any>)
+        if (targetType == RecordsMutateCrossSrcDao::class.java) {
+            if (dao is RecordMutateDao) {
+                return mapToMultiDao(dao)
+            }
+            if (dao is RecordsMutateDao) {
+                return mapToMultiDao(dao)
+            }
+            if (dao is RecordMutateDtoDao<*>) {
+                @Suppress("UNCHECKED_CAST")
+                return mapToMutateCrossSrc(dao as RecordMutateDtoDao<Any>)
+            }
         }
         return dao
     }

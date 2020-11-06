@@ -7,11 +7,12 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
+import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import java.util.*
 
-class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao {
+class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao, SupportsQueryLanguages {
 
     companion object {
         const val ID = "group"

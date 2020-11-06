@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class InMemRecordsDao<T> extends AbstractRecordsDao
                                 implements RecordsAttsDao,
                                            RecordsQueryDao,
-                                           ServiceFactoryAware {
+                                           ServiceFactoryAware, SupportsQueryLanguages {
 
     private static final List<String> SUPPORTED_LANGUAGES = Collections.singletonList(
         PredicateService.LANGUAGE_PREDICATE

@@ -31,9 +31,9 @@ abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryA
         return "[" + getId() + "](" + javaClass.name + "@" + Integer.toHexString(hashCode()) + ")"
     }
 
-    override fun getMixins() = mixinsList
-
-    open fun getSupportedLanguages(): List<String> = emptyList()
+    override fun getMixins(): List<AttMixin> {
+        return mixinsList
+    }
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         this.serviceFactory = serviceFactory

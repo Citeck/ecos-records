@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
@@ -15,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsConvertionTest extends AbstractRecordsDao implements RecordsQueryDao {
+public class RecordsConvertionTest extends AbstractRecordsDao implements RecordsQueryDao, SupportsQueryLanguages {
 
     private static final String ID = "test";
 

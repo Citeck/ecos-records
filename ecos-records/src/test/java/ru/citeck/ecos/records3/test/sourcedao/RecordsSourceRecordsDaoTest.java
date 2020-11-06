@@ -10,6 +10,7 @@ import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
@@ -21,7 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements RecordsQueryDao {
+public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements RecordsQueryDao, SupportsQueryLanguages {
 
     private static final String ID = "test";
     private static final List<String> SUPPORTED_LANGUAGES = new ArrayList<>(Arrays.asList("one", "two", "three"));

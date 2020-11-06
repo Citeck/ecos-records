@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
@@ -13,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SecurityUtilsTest implements RecordsQueryDao {
+public class SecurityUtilsTest implements RecordsQueryDao, SupportsQueryLanguages {
 
     private static final String ID = "test";
 

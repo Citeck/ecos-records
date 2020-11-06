@@ -27,8 +27,8 @@ class RecordRefAttTest {
 
         assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?id").asText())
         assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref{.id}").asText())
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?str").asText())
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref{.str}").asText())
+        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?assoc").asText())
+        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref{.assoc}").asText())
     }
 
     class RefFieldDto(

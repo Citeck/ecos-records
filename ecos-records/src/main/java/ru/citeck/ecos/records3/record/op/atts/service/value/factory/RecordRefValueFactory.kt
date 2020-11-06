@@ -13,15 +13,13 @@ import java.util.*
 class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
     companion object {
-        private val ATT_ID: String = "?id"
-        private val ATT_LOCAL_ID: String = "?localId"
-        private val ATT_STR: String = "?str"
-        private val ATT_ASSOC: String = "?assoc"
+        private const val ATT_ID: String = "?id"
+        private const val ATT_LOCAL_ID: String = "?localId"
+        private const val ATT_ASSOC: String = "?assoc"
 
         val ATTS_WITHOUT_LOADING = setOf(
             ATT_ID,
             ATT_LOCAL_ID,
-            ATT_STR,
             ATT_ASSOC
         )
     }
@@ -53,11 +51,10 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                     sb.setLength(0)
                 }
             }
-            val atts: RecordAtts
-            if (attsMap.isNotEmpty()) {
-                atts = recordsService.getAtts(setOf(ref), attsMap, true)[0]
+            val atts = if (attsMap.isNotEmpty()) {
+                recordsService.getAtts(setOf(ref), attsMap, true)[0]
             } else {
-                atts = RecordAtts(ref)
+                RecordAtts(ref)
             }
 
             var dataNode: JsonNode = atts.getAtts().getData().asJson()
@@ -70,7 +67,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         }
 
         override fun asText(): String? {
-            return ref.toString()
+            return innerAtts.asText()
         }
 
         override fun getDisplayName(): String? {

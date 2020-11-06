@@ -137,7 +137,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         ) -> SchemaAtt
     ): List<SchemaAtt> {
 
-        val innerAttsList = AttStrUtils.split(innerAtts, ",")
+        val innerAttsList = AttStrUtils.split(innerAtts, ",").filter { it.isNotBlank() }
         val multipleAtts = innerAttsList.size > 1
         return innerAttsList
             .stream()

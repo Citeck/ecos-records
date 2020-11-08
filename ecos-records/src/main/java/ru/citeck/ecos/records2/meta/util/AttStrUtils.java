@@ -6,6 +6,7 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class AttStrUtils {
 
@@ -90,6 +91,19 @@ public class AttStrUtils {
         result.add(str.substring(prevIdx));
 
         return result;
+    }
+
+    public static boolean hasCharBeforeIdx(String str, int idx, Set<Character> charsToCheck) {
+        if (charsToCheck.isEmpty()) {
+            return false;
+        }
+        for (Character ch : charsToCheck) {
+            int chIdx = indexOf(str, ch);
+            if (chIdx != -1 && chIdx < idx) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static int indexOf(String str, char ch) {

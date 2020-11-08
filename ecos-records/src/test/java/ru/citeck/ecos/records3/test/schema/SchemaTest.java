@@ -115,9 +115,9 @@ public class SchemaTest {
 
         assertAtt(".att(n:\"cm:name\"){str}", ".att(n:\"cm:name\"){str}");
         assertAtt(".att(n:\"cm:title\"){att(n:\"cm:name\"){att(n:\"deep\"){att(n:\"field\"){disp}}}}",
-            "cm:title.cm:name.deep.field?disp");
+            "cm\\:title.cm:name.deep.field?disp");
 
-        assertAtt(".att(n:\"cm:name\"){disp}", "cm:name");
+        assertAtt(".att(n:\"cm:name\"){disp}", "cm\\:name");
         assertAtt(".att(n:\"cm:name\"){att(n:\"cm:title\"){disp}}", "cm:name.cm:title");
         assertAtt(".att(n:\"cm:name\"){al:att(n:\"title\"){disp}}", "cm:name{al:title}");
 
@@ -164,7 +164,7 @@ public class SchemaTest {
     }
 
     private void assertAtt(String expected, String source) {
-        String gqlAtt = writer.write(reader.read(source));
+        String gqlAtt = writer.write(reader.read("a:" + source));
         assertEquals(expected, gqlAtt);
         assertEquals(gqlAtt, writer.write(reader.read(gqlAtt)));
     }

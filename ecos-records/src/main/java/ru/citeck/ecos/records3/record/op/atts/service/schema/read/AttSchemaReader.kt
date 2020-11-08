@@ -63,7 +63,27 @@ class AttSchemaReader(services: RecordsServiceFactory) {
      * @throws AttReadException when attribute can't be read
      */
     fun read(attribute: String): SchemaAtt {
-        return read(attribute, attribute)
+
+        val firstChar = attribute[0]
+
+        if (firstChar != '.' && firstChar != '#') {
+
+            val aliasDelimIdx = AttStrUtils.indexOf(attribute, ':')
+
+            if (aliasDelimIdx > 0 && !AttStrUtils.hasCharBeforeIdx(
+                    attribute,
+                    aliasDelimIdx,
+                    setOf('.', '?', '|', '!')
+                )
+            ) {
+
+                return read(
+                    AttStrUtils.removeQuotes(attribute.substring(0, aliasDelimIdx)),
+                    attribute.substring(aliasDelimIdx + 1)
+                )
+            }
+        }
+        return read("", attribute)
     }
 
     fun read(alias: String, attribute: String): SchemaAtt {
@@ -71,15 +91,16 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         if (isBlank(attribute)) {
             throw AttReadException(alias, attribute, "Empty attribute")
         }
-        val innerAtt = if (alias.isNotEmpty()) {
-            "\"${alias.replace("\"", "\\\"")}\":$attribute"
-        } else {
-            attribute
-        }
-        val isDotAtt = innerAtt[0] == '.'
+        return readRootAttWithoutAlias(attribute).withAlias(alias)
+    }
+
+    private fun readRootAttWithoutAlias(attribute: String): SchemaAtt {
+
+        val isDotAtt = attribute[0] == '.'
+        val innerAtt = "a:" + if (isDotAtt) { attribute.substring(1) } else { attribute }
 
         return readInnerRawAtt(
-            if (isDotAtt) innerAtt.substring(1) else innerAtt,
+            innerAtt,
             isDotAtt,
             false
         ) { al, att, proc -> readInner(al, att, proc, emptyList()) }
@@ -87,12 +108,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
     fun readInner(
         alias: String,
-        attribute: String,
+        attributeArg: String,
         processors: List<AttProcDef>,
         lastInnerAtts: List<SchemaAtt>
     ): SchemaAtt {
 
-        var attribute = attribute
+        var attribute = attributeArg
 
         if (attribute[0] == '#') {
 
@@ -192,12 +213,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
     private fun readLastSimpleAtt(
         alias: String,
-        attribute: String,
+        attributeArg: String,
         processors: List<AttProcDef>,
         lastInnerAtts: List<SchemaAtt>
     ): SchemaAtt {
 
-        var attribute = attribute
+        var attribute = attributeArg
 
         if (attribute[0] == '?') {
             attribute = attribute.substring(1)
@@ -267,12 +288,12 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
     private fun readSimpleAtt(
         alias: String,
-        attribute: String,
+        attributeArg: String,
         processors: List<AttProcDef>,
         lastInnerAtts: List<SchemaAtt>
     ): SchemaAtt {
 
-        var attribute = attribute
+        var attribute = attributeArg
 
         if (attribute.contains("?as(")) {
             var matcher = GQL_SIMPLE_AS_PATTERN.matcher(attribute)

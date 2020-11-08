@@ -15,6 +15,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
 
     private val restHandlerV0 = services.restHandler
     private val restHandlerV1 = RestHandlerV1(services)
+    private val mapper = Json.mapper
 
     fun queryRecords(body: Any): Any {
 
@@ -22,11 +23,11 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
 
         return when (bodyWithVersion.version) {
             0 -> {
-                val v0Body: QueryBody = Json.mapper.convert(bodyWithVersion.body, QueryBody::class.java) ?: QueryBody()
+                val v0Body: QueryBody = mapper.convert(bodyWithVersion.body, QueryBody::class.java) ?: QueryBody()
                 restHandlerV0.queryRecords(v0Body)
             }
             1 -> {
-                val v1Body = Json.mapper.convert(bodyWithVersion.body, QueryBodyV1::class.java) ?: QueryBodyV1()
+                val v1Body = mapper.convert(bodyWithVersion.body, QueryBodyV1::class.java) ?: QueryBodyV1()
                 restHandlerV1.queryRecords(v1Body)
             }
             else -> {
@@ -41,11 +42,11 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
 
         return when (bodyWithVersion.version) {
             0 -> {
-                val v0Body = Json.mapper.convert(bodyWithVersion.body, DeletionBody::class.java) ?: DeletionBody()
+                val v0Body = mapper.convert(bodyWithVersion.body, DeletionBody::class.java) ?: DeletionBody()
                 restHandlerV0.deleteRecords(v0Body)
             }
             1 -> {
-                val v1Body = Json.mapper.convert(bodyWithVersion.body, DeleteBody::class.java) ?: DeleteBody()
+                val v1Body = mapper.convert(bodyWithVersion.body, DeleteBody::class.java) ?: DeleteBody()
                 restHandlerV1.deleteRecords(v1Body)
             }
             else -> {
@@ -60,11 +61,11 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
 
         return when (bodyWithVersion.version) {
             0 -> {
-                val v0Body = Json.mapper.convert(bodyWithVersion.body, MutationBody::class.java) ?: MutationBody()
+                val v0Body = mapper.convert(bodyWithVersion.body, MutationBody::class.java) ?: MutationBody()
                 restHandlerV0.mutateRecords(v0Body)
             }
             1 -> {
-                val v1Body = Json.mapper.convert(bodyWithVersion.body, MutateBody::class.java) ?: MutateBody()
+                val v1Body = mapper.convert(bodyWithVersion.body, MutateBody::class.java) ?: MutateBody()
                 restHandlerV1.mutateRecords(v1Body)
             }
             else -> {
@@ -75,7 +76,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
 
     private fun getBodyWithVersion(body: Any?): BodyWithVersion {
 
-        val jsonBody: ObjectNode = Json.mapper.convert(body, ObjectNode::class.java)
+        val jsonBody: ObjectNode = mapper.convert(body, ObjectNode::class.java)
             ?: error("Incorrect request body. Expected JSON Object, but found: $body")
 
         val version = jsonBody.path("version")

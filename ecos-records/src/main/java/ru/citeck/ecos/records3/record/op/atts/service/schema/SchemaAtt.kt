@@ -34,6 +34,10 @@ data class SchemaAtt(
         }
     }
 
+    fun withAlias(alias: String): SchemaAtt {
+        return copy().withAlias(alias).build()
+    }
+
     fun getScalarName(): String? {
         return if (isScalar()) {
             name

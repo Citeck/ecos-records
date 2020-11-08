@@ -8,6 +8,7 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver;
@@ -151,11 +152,12 @@ public class ResolverTest {
                 expValue = (DataValue) expected;
             }
 
+            SchemaAtt parsedAtt = reader.read(att);
             Object result = resolver.resolve(ResolveArgs.create()
                 .withValues(Collections.singletonList(value))
-                .withAttribute(reader.read(att))
+                .withAttribute(parsedAtt)
                 .withMixins(Arrays.asList(mixins))
-                .build()).get(0).get(att);
+                .build()).get(0).get(parsedAtt.getAliasForValue());
 
             if (!(result instanceof DataValue)) {
                 result = DataValue.create(result);

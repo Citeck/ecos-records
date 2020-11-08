@@ -5,8 +5,11 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -161,6 +164,39 @@ public class SchemaTest {
     public void testInnerAliases() {
         assertAtt(".att(n:\"cm:name\"){_u0027__u002E_disp_u0027_:disp,_u0022__u002E_str_u0022_:str}", "cm:name{'.disp',\".str\"}");
         assertAtt(".att(n:\"cm:name\"){_u002E_disp:disp,_u002E_str:str}", "cm:name{.disp,.str}");
+    }
+
+    @Test
+    public void testWithError() {
+        RequestContext.doWithCtx(factory, ctx -> {
+
+            Map<String, String> atts = new LinkedHashMap<>();
+            atts.put("abc", "def");
+            atts.put("incorrectScalar", "def?protected");
+            atts.put("incorrectBrace", "def{one");
+            atts.put("incorrectBrace2", "def{one{two{}}");
+            atts.put("incorrectBrace3", "def{one{two{[}]}}");
+
+            List<SchemaAtt> readedAtts = reader.read(atts);
+
+            assertEquals(4, ctx.getErrors().size());
+            assertEquals("abc", readedAtts.get(0).getAlias());
+            assertEquals("def", readedAtts.get(0).getName());
+
+            assertEquals("incorrectScalar", readedAtts.get(1).getAlias());
+            assertEquals("_null", readedAtts.get(1).getName());
+
+            assertEquals("incorrectBrace", readedAtts.get(2).getAlias());
+            assertEquals("_null", readedAtts.get(2).getName());
+
+            assertEquals("incorrectBrace2", readedAtts.get(3).getAlias());
+            assertEquals("_null", readedAtts.get(3).getName());
+
+            assertEquals("incorrectBrace3", readedAtts.get(4).getAlias());
+            assertEquals("_null", readedAtts.get(4).getName());
+
+            return null;
+        });
     }
 
     private void assertAtt(String expected, String source) {

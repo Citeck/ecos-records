@@ -130,7 +130,7 @@ data class SchemaAtt(
             MandatoryParam.check("name", name)
             val att = SchemaAtt(alias, name, multiple, inner, processors)
 
-            if (att.isScalar() && !inner.isEmpty()) {
+            if (att.isScalar() && inner.isNotEmpty()) {
                 throw AttSchemaException("Attribute can't be a scalar and has inner attributes. $this")
             }
             if (!att.isScalar() && inner.isEmpty()) {

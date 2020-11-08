@@ -4,10 +4,14 @@ import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
+import ru.citeck.ecos.records3.record.op.atts.service.schema.ScalarType
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
+import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
 import java.util.*
 import java.util.regex.Pattern
@@ -32,6 +36,14 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         private val GQL_AS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "as"))
         private val GQL_HAS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT, "has"))
         private val GQL_SIMPLE_AS_PATTERN = Pattern.compile("\\?as\\((n:)?[\\'\"](.+?)[\\'\"]\\)")
+
+        private val ATT_NULL = SchemaAtt.create()
+            .withName(RecordConstants.ATT_NULL)
+            .withInner(
+                SchemaAtt.create()
+                    .withName(ScalarType.STR.schema)
+                    .build()
+            ).build()
     }
 
     private val procReader = services.attProcReader
@@ -48,12 +60,27 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         if (attributes.isEmpty()) {
             return emptyList()
         }
+
         val schemaAtts = ArrayList<SchemaAtt>()
-        attributes.forEach { (k, v) ->
-            if (v !is String) {
-                throw AttReadException(k, "$v", "non-string schema is not supported yet")
+        val readFunc = { key: String, value: Any? ->
+            if (value !is String) {
+                throw AttReadException(key, "$value", "non-string schema is not supported yet")
             }
-            schemaAtts.add(read(k, v))
+            schemaAtts.add(read(key, value))
+        }
+
+        val context = RequestContext.getCurrent()
+        if (context == null) {
+            attributes.forEach { (k, v) -> readFunc.invoke(k, v) }
+        } else {
+            attributes.forEach { (k, v) ->
+                try {
+                    readFunc.invoke(k, v)
+                } catch (e: Exception) {
+                    schemaAtts.add(ATT_NULL.withAlias(k))
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                }
+            }
         }
 
         return schemaAtts
@@ -253,9 +280,9 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
         if (openBraceIdx > -1) {
             attName = attName.substring(0, openBraceIdx)
-            var closeBraceIdx = AttStrUtils.indexOf(att, '}')
+            val closeBraceIdx = AttStrUtils.indexOf(att, '}')
             if (closeBraceIdx == -1) {
-                closeBraceIdx = att.length
+                throw AttReadException(alias, att, "Missing close bracket: '}'")
             }
             innerAttsStr = att.substring(openBraceIdx + 1, closeBraceIdx)
         }
@@ -292,6 +319,17 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         processors: List<AttProcDef>,
         lastInnerAtts: List<SchemaAtt>
     ): SchemaAtt {
+
+        val firstAttChar = attributeArg[0]
+        if (firstAttChar != '_' &&
+            firstAttChar != '?' &&
+            firstAttChar != '\'' &&
+            firstAttChar != '"' &&
+            firstAttChar != '$' &&
+            !Character.isLetterOrDigit(firstAttChar)
+        ) {
+            throw AttReadException(alias, attributeArg, "Incorrect attribute")
+        }
 
         var attribute = attributeArg
 

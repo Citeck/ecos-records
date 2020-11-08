@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 @JsonDeserialize(builder = RecordsQuery.Builder::class)
 @JackJsonDeserialize(builder = RecordsQuery.Builder::class)
 data class RecordsQuery(
-    val sourceId: String = "",
+    val sourceId: String,
     val sortBy: List<SortBy>,
     val groupBy: List<String>,
     val page: QueryPage,

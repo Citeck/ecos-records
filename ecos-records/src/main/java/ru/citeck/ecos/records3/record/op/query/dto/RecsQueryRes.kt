@@ -57,13 +57,17 @@ open class RecsQueryRes<T : Any>() {
         this.totalCount = totalCount
     }
 
-    fun getTotalCount() = max(totalCount, records.size.toLong())
+    fun getTotalCount(): Long {
+        return max(totalCount, records.size.toLong())
+    }
 
     fun setHasMore(hasMore: Boolean) {
         this.hasMore = hasMore
     }
 
-    fun getHasMore(): Boolean = hasMore
+    fun getHasMore(): Boolean {
+        return hasMore
+    }
 
     fun addRecord(record: T?) {
         record ?: return

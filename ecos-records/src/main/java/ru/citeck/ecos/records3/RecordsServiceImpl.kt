@@ -87,7 +87,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             record.forEach(
                 BiConsumer { name, valueArg ->
                     try {
-                        val parsedAtt = attSchemaReader.read(name)
+                        val parsedAtt = attSchemaReader.read("", name)
                         val scalarName = parsedAtt.getScalarName()
                         val value = if ("?assoc" == scalarName) {
                             convertAssocValue(valueArg, aliasToRecordRef)

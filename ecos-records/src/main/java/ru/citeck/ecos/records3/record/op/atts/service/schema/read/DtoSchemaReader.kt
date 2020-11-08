@@ -199,11 +199,18 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
             }
         } else {
-            att = if (fieldName == "id" && scalarField != null && scalarField.scalarType == ScalarType.DISP) {
-                SchemaAtt.create()
-                    .withMultiple(multiple)
-                    .withAlias(fieldName)
-                    .withName(ScalarType.LOCAL_ID.schema)
+            att = if (fieldName == "id" && scalarField != null) {
+                if (scalarField.scalarType == ScalarType.ID) {
+                    SchemaAtt.create()
+                        .withMultiple(multiple)
+                        .withAlias(fieldName)
+                        .withName(ScalarType.ID.schema)
+                } else {
+                    SchemaAtt.create()
+                        .withMultiple(multiple)
+                        .withAlias(fieldName)
+                        .withName(ScalarType.LOCAL_ID.schema)
+                }
             } else {
                 SchemaAtt.create()
                     .withMultiple(multiple)

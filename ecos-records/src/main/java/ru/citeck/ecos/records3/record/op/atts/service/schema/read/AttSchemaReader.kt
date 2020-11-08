@@ -118,13 +118,13 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         if (isBlank(attribute)) {
             throw AttReadException(alias, attribute, "Empty attribute")
         }
-        return readRootAttWithoutAlias(attribute).withAlias(alias)
-    }
-
-    private fun readRootAttWithoutAlias(attribute: String): SchemaAtt {
 
         val isDotAtt = attribute[0] == '.'
-        val innerAtt = "a:" + if (isDotAtt) { attribute.substring(1) } else { attribute }
+        val innerAtt = "\"${alias.replace("\"", "\\\"")}\":" + if (isDotAtt) {
+            attribute.substring(1)
+        } else {
+            attribute
+        }
 
         return readInnerRawAtt(
             innerAtt,
@@ -151,10 +151,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     attribute,
                     "Scalar type is mandatory for attributes with #. E.g.: #name?protected"
                 )
-            } else {
-                if (attribute.endsWith("?options")) {
-                    attribute += "{label:disp,value:str}"
-                }
+            }
+            if (attribute.endsWith("?options") || attribute.endsWith("?distinct")) {
+                attribute += "{label:disp,value:str}"
+            } else if (attribute.endsWith("?createVariants")) {
+                attribute += "{json}"
             }
             attribute = (
                 ".edge(n:\"" +

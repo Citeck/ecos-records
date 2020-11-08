@@ -44,7 +44,9 @@ data class SchemaAtt(
         } else {
             if (inner.size != 1) {
                 null
-            } else inner[0].getScalarName()
+            } else {
+                inner[0].getScalarName()
+            }
         }
     }
 

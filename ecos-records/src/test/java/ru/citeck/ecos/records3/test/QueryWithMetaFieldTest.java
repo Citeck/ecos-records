@@ -63,7 +63,7 @@ public class QueryWithMetaFieldTest extends AbstractRecordsDao implements Record
         assertEquals(".att(n:\"field1\"){num}", innerAttributesMap.get("field1"));
         assertEquals(".atts(n:\"field2\"){disp}", innerAttributesMap.get("field2"));
         assertEquals(".att(n:\"sum(\\\"field1\\\")\"){num}", innerAttributesMap.get("sum(\"field1\")"));
-        assertEquals(".att(n:\"sum(\\\\\"field2\\\\\")\"){num}", innerAttributesMap.get("sum(\\\"field2\\\")"));
+        assertEquals(".att(n:\"sum(\\\\\\\"field2\\\\\\\")\"){num}", innerAttributesMap.get("sum(\\\"field2\\\")"));
         assertEquals(".edge(n:\"field0(\\\"param\\\")\"){options{label:disp,value:str}}", innerAttributesMap.get("_edge"));
 
         TestDto dto = new TestDto();

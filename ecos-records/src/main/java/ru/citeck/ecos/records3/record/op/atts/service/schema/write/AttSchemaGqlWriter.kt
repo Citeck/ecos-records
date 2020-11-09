@@ -65,8 +65,14 @@ class AttSchemaGqlWriter : AttSchemaWriter {
             sb.append("s")
         }
         sb.append("(n:\"")
-            .append(name.replace("\"", "\\\""))
-            .append("\"){")
+        for (idx in name.indices) {
+            val char = name[idx]
+            if (char == '\\' || char == '"') {
+                sb.append("\\")
+            }
+            sb.append(char)
+        }
+        sb.append("\"){")
 
         val inner = attribute.inner
 

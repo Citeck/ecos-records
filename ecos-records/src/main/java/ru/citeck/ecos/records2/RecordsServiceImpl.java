@@ -368,8 +368,16 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     }
 
     private List<SchemaAtt> fixInnerAliases(Map<String, String> attributes) {
-        List<SchemaAtt> atts = attSchemaReader.read(attributes);
-        return fixInnerAliases(atts, true, null, null);
+        Map<String, String> atts = new LinkedHashMap<>();
+        attributes.forEach((k, v) -> {
+            if (v.charAt(0) != '.') {
+                atts.put(k, v.replace("\\\"", "\""));
+            } else {
+                atts.put(k, v);
+            }
+        });
+        List<SchemaAtt> schemaAtts = attSchemaReader.read(atts);
+        return fixInnerAliases(schemaAtts, true, null, null);
     }
 
     private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts,

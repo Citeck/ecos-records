@@ -15,7 +15,7 @@ class LocalInitWithMetaFieldTest : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
     private var innerAttsMapList: MutableList<HashMap<String, String>> = mutableListOf()
     private val factory = RecordsServiceFactory()
 
-    val attsToReq = linkedMapOf(
+    private val attsToReq = linkedMapOf(
         Pair("first", "second"),
         Pair(".att(n:\"first2\"){str}", ".att(n:\"second2\"){str}")
     )

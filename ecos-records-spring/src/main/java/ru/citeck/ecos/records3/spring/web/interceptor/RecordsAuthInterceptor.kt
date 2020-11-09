@@ -28,7 +28,7 @@ class RecordsAuthInterceptor @Autowired constructor(
 
     init {
         userRequestInterceptor = cookiesAndLangInterceptor
-        properties.apps?.forEach { (id, app) ->
+        properties.apps.forEach { (id, app) ->
             val auth = app.auth
             if (auth != null) {
                 sysReqInterceptors[id] = BasicAuthorizationInterceptor(auth.username, auth.password)

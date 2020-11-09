@@ -53,7 +53,7 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     @PostMapping(value = ["/query"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun recordsQuery(@ApiParam(value = "query") @RequestBody body: ByteArray): ByteArray? {
         val bodyData = convertRequest(body, ObjectData::class.java)
-        val ctxAtts: MutableMap<String, Any?> = HashMap()
+        val ctxAtts: MutableMap<String, Any?> = LinkedHashMap()
         ctxAttsSuppliers.forEach { s ->
             val atts = s.attributes
             if (atts.isNotEmpty()) {

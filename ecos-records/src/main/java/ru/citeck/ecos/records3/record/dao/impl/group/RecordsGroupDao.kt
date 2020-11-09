@@ -69,7 +69,7 @@ class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao, SupportsQueryLang
         } else {
             for (value0 in distinctValues[0]) {
                 for (value1 in distinctValues[1]) {
-                    val attributesMap: MutableMap<String, DistinctValue> = HashMap()
+                    val attributesMap: MutableMap<String, DistinctValue> = LinkedHashMap()
                     attributesMap[attributes[0]] = value0
                     attributesMap[attributes[1]] = value1
                     groups.add(createGroup(groupsBaseQuery, attributesMap, basePredicate))

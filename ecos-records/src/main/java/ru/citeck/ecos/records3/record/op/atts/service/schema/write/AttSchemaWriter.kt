@@ -12,7 +12,7 @@ import java.util.*
 interface AttSchemaWriter {
 
     fun writeToMap(schema: List<SchemaAtt>): Map<String, String> {
-        val result: MutableMap<String, String> = HashMap()
+        val result: MutableMap<String, String> = LinkedHashMap()
         schema.forEach { att: SchemaAtt -> result[att.alias] = write(att) }
         return result
     }

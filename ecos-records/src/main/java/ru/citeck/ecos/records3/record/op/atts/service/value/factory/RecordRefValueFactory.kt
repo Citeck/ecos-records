@@ -41,7 +41,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             val schemaAtt: SchemaAtt = AttContext.getCurrentSchemaAtt()
             val innerSchema = schemaAtt.inner
 
-            val attsMap: MutableMap<String, String> = HashMap()
+            val attsMap: MutableMap<String, String> = LinkedHashMap()
             val sb = StringBuilder()
             for (inner in innerSchema) {
                 val innerName: String = inner.name

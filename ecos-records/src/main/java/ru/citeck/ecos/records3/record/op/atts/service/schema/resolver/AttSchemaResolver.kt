@@ -240,6 +240,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         val result: MutableMap<String, Any?> = LinkedHashMap()
         val attContext: AttContext = context.attContext
+        val currentSchemaAtt = attContext.getSchemaAtt()
         val currentValuePath: String = context.path
 
         val disabledMixinPaths: MutableSet<String> = context.disabledMixinPaths
@@ -366,6 +367,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
         }
         context.path = currentValuePath
+        attContext.setSchemaAtt(currentSchemaAtt)
+
         return result
     }
 

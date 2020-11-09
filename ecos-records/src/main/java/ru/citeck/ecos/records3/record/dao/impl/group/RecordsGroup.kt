@@ -29,7 +29,7 @@ class RecordsGroup(
     private val attributes: MutableMap<String, ValueWrapper>
 
     init {
-        this.attributes = HashMap()
+        this.attributes = LinkedHashMap()
         attributes.forEach { (n, v) ->
             this.attributes[n] = ValueWrapper(v)
         }

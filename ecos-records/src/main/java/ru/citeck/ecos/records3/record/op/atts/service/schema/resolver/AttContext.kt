@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
-import java.util.*
+import kotlin.collections.LinkedHashMap
 
 class AttContext {
 
@@ -23,7 +23,7 @@ class AttContext {
 
             val attContext = getCurrentNotNull()
             val writer = attContext.serviceFactory.attSchemaWriter
-            val result = HashMap<String, String>()
+            val result = LinkedHashMap<String, String>()
 
             val schemaAtt = attContext.schemaAtt
 
@@ -78,10 +78,12 @@ class AttContext {
                 }
             }
         }
+
+        private val EMPTY = SchemaAtt.create().withName("?id").build()
     }
 
     private lateinit var serviceFactory: RecordsServiceFactory
-    private lateinit var schemaAtt: SchemaAtt
+    private var schemaAtt: SchemaAtt = EMPTY
 
     fun getSchemaAtt(): SchemaAtt {
         return schemaAtt

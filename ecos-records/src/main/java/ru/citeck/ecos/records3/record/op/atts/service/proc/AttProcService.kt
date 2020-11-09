@@ -8,6 +8,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiConsumer
+import kotlin.collections.LinkedHashMap
 
 class AttProcService(serviceFactory: RecordsServiceFactory) {
 
@@ -68,7 +69,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
         if (attributesToLoad.isEmpty()) {
             return emptyList()
         }
-        val procAtts: MutableMap<String, String> = HashMap()
+        val procAtts: MutableMap<String, String> = LinkedHashMap()
         for (att in attributesToLoad) {
             procAtts[PROC_ATT_ALIAS_PREFIX + att] = att
         }
@@ -80,7 +81,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
         if (processors.isEmpty()) {
             return data
         }
-        val dataMap: MutableMap<String, Any?> = HashMap()
+        val dataMap: MutableMap<String, Any?> = LinkedHashMap()
         data.forEach(
             BiConsumer {
                 key, value ->
@@ -93,7 +94,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
     fun applyProcessors(data: Map<String, Any?>, processors: Map<String, List<AttProcDef>>): Map<String, Any?> {
 
         val procData: ObjectData = ObjectData.create()
-        val resultData: MutableMap<String, Any?> = HashMap()
+        val resultData: MutableMap<String, Any?> = LinkedHashMap()
 
         data.forEach { (k, v) ->
             if (k.startsWith(PROC_ATT_ALIAS_PREFIX)) {

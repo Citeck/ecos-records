@@ -188,7 +188,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
     @Override
     public List<?> getRecordsAtts(List<String> records) {
-        return records.stream().map(r -> new MetaValueRecord(r)).collect(Collectors.toList());
+        return records.stream().map(MetaValueRecord::new).collect(Collectors.toList());
     }
 
     public static class MetaValueRecord implements AttValue {

@@ -48,7 +48,15 @@ public class AttStrUtilsTest {
         assertEquals(new AttStrUtils.SplitPair("a{b|}cde", "fg)"), AttStrUtils.splitByFirst("a{b|}cde|fg)", "|"));
 
         assertEquals(new AttStrUtils.SplitPair("abc", "'def'"), AttStrUtils.splitByFirst("abc|'def'", "|"));
+    }
 
+    @Test
+    void replaceTest() {
+
+        assertEquals("one two three one two three".replace("one", "replaced"), AttStrUtils.replace("one two three one two three", "one", "replaced"));
+        assertEquals("onetwo\\.th(ree.third)", AttStrUtils.replace("one.two\\.th(ree.third)", ".", ""));
+        assertEquals("one.two_th(ree.third)", AttStrUtils.replace("one.two\\.th(ree.third)", "\\.", "_"));
+        assertEquals("'one.two\\.th(ree.third)'", AttStrUtils.replace("'one.two\\.th(ree.third)'", "\\.", "_"));
     }
 
     @Test

@@ -16,6 +16,8 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaNumberTest extends LocalRecordsDao
                             implements LocalRecordsMetaDao<Object> {
@@ -33,9 +35,12 @@ public class MetaNumberTest extends LocalRecordsDao
 
     @Test
     public void test() {
-        DataValue value = recordsService.getAttribute(RecordRef.create("test", ""), ".num");
+        DataValue value = recordsService.getAttribute(RecordRef.create("test", ""), "double1_000_000_000");
         String strValue = value.asText();
-        //assertEquals("1000000000.0", strValue); //todo
+        assertEquals("1000000000", strValue);
+        value = recordsService.getAttribute(RecordRef.create("test", ""), "double2_000_000_000\\.0123458");
+        strValue = value.asText();
+        assertEquals("2000000000.0123458", strValue);
     }
 
     @NotNull
@@ -60,6 +65,17 @@ public class MetaNumberTest extends LocalRecordsDao
         @Override
         public Double getDouble() {
             return 1_000_000_000.0;
+        }
+
+        @Override
+        public Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
+            switch (name) {
+                case "double1_000_000_000":
+                    return 1_000_000_000d;
+                case "double2_000_000_000.0123458":
+                    return 2_000_000_000.0123458d;
+            }
+            return null;
         }
     }
 }

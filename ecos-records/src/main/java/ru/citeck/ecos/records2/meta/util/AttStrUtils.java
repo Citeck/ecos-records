@@ -73,6 +73,31 @@ public class AttStrUtils {
         return result;
     }
 
+    public static String replace(String str, String sub, String target) {
+
+        int idx = indexOf(str, sub);
+        if (idx == -1) {
+            return str;
+        }
+
+        int prevIdx = 0;
+        StringBuilder sb = new StringBuilder();
+
+        while (idx > -1) {
+
+            sb.append(str, prevIdx, idx);
+            sb.append(target);
+            prevIdx = idx + sub.length();
+
+            idx = indexOf(str, sub, prevIdx);
+        }
+        if (prevIdx < str.length()) {
+            sb.append(str.substring(prevIdx));
+        }
+
+        return sb.toString();
+    }
+
     public static List<String> split(String str, char delim) {
         return split(str, String.valueOf(delim));
     }

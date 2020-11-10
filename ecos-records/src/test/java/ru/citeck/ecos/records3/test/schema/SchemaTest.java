@@ -167,6 +167,11 @@ public class SchemaTest {
     }
 
     @Test
+    public void testWithDotEsc() {
+        assertAtt(".att(n:\"full.field\"){disp}", "full\\.field");
+    }
+
+    @Test
     public void testWithError() {
         RequestContext.doWithCtx(factory, ctx -> {
 

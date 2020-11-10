@@ -341,7 +341,9 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                 matcher = GQL_SIMPLE_AS_PATTERN.matcher(attribute)
             }
         }
-        val dotPath = AttStrUtils.split(attribute, '.').map { AttStrUtils.removeQuotes(it) }
+        val dotPath = AttStrUtils.split(attribute, '.').map {
+            AttStrUtils.removeQuotes(AttStrUtils.replace(it, "\\.", "."))
+        }
         val lastPathElem = dotPath[dotPath.size - 1]
 
         var schemaAtt = readLastSimpleAtt(

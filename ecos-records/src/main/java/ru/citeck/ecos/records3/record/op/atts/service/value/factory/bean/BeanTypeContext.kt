@@ -19,7 +19,7 @@ class BeanTypeContext(private val getters: Map<String, (Any) -> Any?>) {
         return if (getter != null) {
             getter.invoke(bean)
         } else {
-            log.debug("Property not found: " + name + " in type " + bean.javaClass)
+            log.trace("Property not found: " + name + " in type " + bean.javaClass)
             null
         }
     }

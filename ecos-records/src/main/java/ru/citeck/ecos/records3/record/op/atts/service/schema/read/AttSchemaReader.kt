@@ -16,11 +16,6 @@ import ru.citeck.ecos.records3.utils.AttUtils
 import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
-import kotlin.collections.Collection
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableList
-import kotlin.collections.emptyList
 
 class AttSchemaReader(services: RecordsServiceFactory) {
 
@@ -36,6 +31,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         private val GQL_AS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "as"))
         private val GQL_HAS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT, "has"))
         private val GQL_SIMPLE_AS_PATTERN = Pattern.compile("\\?as\\((n:)?[\\'\"](.+?)[\\'\"]\\)")
+
+        private val FIXED_ROOT_ATTS_MAPPING = mapOf(
+            Pair(".type{id}", "_type?id"),
+            Pair("?type{id}", "_type?id")
+        )
 
         private val ATT_NULL = SchemaAtt.create()
             .withName(RecordConstants.ATT_NULL)
@@ -119,11 +119,13 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             throw AttReadException(alias, attribute, "Empty attribute")
         }
 
-        val isDotAtt = attribute[0] == '.'
+        val fixedAtt = FIXED_ROOT_ATTS_MAPPING[attribute] ?: attribute
+
+        val isDotAtt = fixedAtt[0] == '.'
         val innerAtt = "\"${alias.replace("\"", "\\\"")}\":" + if (isDotAtt) {
-            attribute.substring(1)
+            fixedAtt.substring(1)
         } else {
-            attribute
+            fixedAtt
         }
 
         return readInnerRawAtt(

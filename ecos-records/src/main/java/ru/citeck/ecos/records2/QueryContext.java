@@ -24,7 +24,16 @@ public class QueryContext {
     @SuppressWarnings("unchecked")
     public static <T extends QueryContext> T getCurrent() {
         RequestContext current = RequestContext.getCurrent();
-        return current != null ? current.getVar(CTX_KEY) : null;
+        if (current == null) {
+            return null;
+        }
+        Object queryContext = current.getVar(CTX_KEY);
+        if (queryContext instanceof QueryContext) {
+            return (T) queryContext;
+        }
+        QueryContext newQueryContext = current.getServices().createQueryContext();
+        current.putVar(CTX_KEY, newQueryContext);
+        return (T) newQueryContext;
     }
 
     public void setServiceFactory(RecordsServiceFactory serviceFactory) {
@@ -80,7 +89,7 @@ public class QueryContext {
     }
 
     public Locale getLocale() {
-        return RequestContext.getCurrentNotNull().getLocale();
+        return RequestContext.getLocale();
     }
 
     public List<?> getMetaValues() {

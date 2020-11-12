@@ -1,116 +1,139 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
-import ecos.com.fasterxml.jackson210.annotation.JsonValue;
+import ecos.com.fasterxml.jackson210.annotation.JsonCreator
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import ecos.com.fasterxml.jackson210.annotation.JsonValue
+import ru.citeck.ecos.commons.data.DataValue
+import java.util.*
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+class ValuePredicate : AttributePredicate {
 
-public class ValuePredicate extends AttributePredicate {
-
-    public enum Type {
+    enum class Type {
 
         EQ, GT, GE, LT, LE, LIKE, IN, CONTAINS;
 
         @JsonValue
-        public String asString() {
-            return name().toLowerCase();
+        fun asString(): String {
+            return name.toLowerCase()
         }
 
-        @JsonCreator
-        public static Type fromString(String type) {
-            return Type.valueOf(type.toUpperCase());
+        companion object {
+            @JvmStatic
+            @JsonCreator
+            fun fromString(type: String): Type {
+                return valueOf(type.toUpperCase())
+            }
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun getTypes(): List<String> {
+            return Type.values().map { it.asString() }
+        }
+
+        @JvmStatic
+        fun equal(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.EQ, value)
+        }
+
+        @JvmStatic
+        fun eq(attribute: String?, value: Any?): ValuePredicate {
+            return equal(attribute, value)
+        }
+
+        @JvmStatic
+        fun contains(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.CONTAINS, value)
+        }
+
+        @JvmStatic
+        fun like(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.LIKE, value)
+        }
+
+        @JvmStatic
+        fun gt(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.GT, value)
+        }
+
+        @JvmStatic
+        fun ge(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.GE, value)
+        }
+
+        @JvmStatic
+        fun lt(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.LT, value)
+        }
+
+        @JvmStatic
+        fun le(attribute: String?, value: Any?): ValuePredicate {
+            return ValuePredicate(attribute, Type.LE, value)
         }
     }
 
     @JsonProperty("val")
-    private Object value;
+    private var value: DataValue = DataValue.NULL
+
     @JsonProperty("t")
-    private Type type = Type.EQ;
+    private var type = Type.EQ
 
-    public ValuePredicate() {
+    constructor()
+
+    constructor(attribute: String?, type: Type, value: Any?) : this(attribute, type, DataValue.create(value))
+
+    constructor(attribute: String?, type: Type, value: DataValue?) {
+        this.setAttribute(attribute)
+        this.setValue(value)
+        this.type = type
     }
 
-    public ValuePredicate(String attribute, Type type, Object value) {
-        this.setAttribute(attribute);
-        this.value = value;
-        this.type = type;
+    @JsonProperty("t")
+    fun getType(): Type {
+        return type
     }
 
-    public Object getValue() {
-        return value;
+    fun setType(type: Type) {
+        this.type = type
     }
 
-    public void setValue(Object value) {
-        this.value = value;
+    fun getValue(): DataValue {
+        return value
     }
 
-    public Type getType() {
-        return type;
+    fun setValue(value: Any?) {
+        this.value = if (value is DataValue) value else DataValue.create(value)
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    override fun <T : Predicate> copy(): T {
+        val predicate = ValuePredicate()
+        predicate.setAttribute(getAttribute())
+        predicate.type = type
+        predicate.setValue(getValue())
+        @Suppress("UNCHECKED_CAST")
+        return predicate as T
     }
 
-    @Override
-    public <T extends Predicate> T copy() {
-
-        ValuePredicate predicate = new ValuePredicate();
-        predicate.setAttribute(getAttribute());
-        predicate.setType(getType());
-        predicate.setValue(getValue());
-
-        @SuppressWarnings("unchecked")
-        T result = (T) predicate;
-
-        return result;
+    override fun toString(): String {
+        return "('${getAttribute()}' $type '$value')"
     }
 
-    @Override
-    public String toString() {
-        return "('" + getAttribute() + "' " + type + " '" + value + "')";
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
+        other as ValuePredicate
+        return getAttribute() == other.getAttribute() &&
+            value == other.value &&
+            type == other.type
     }
 
-    public static List<String> getTypes() {
-        return Arrays.stream(Type.values())
-                     .map(Type::asString)
-                     .collect(Collectors.toList());
+    override fun hashCode(): Int {
+        return Objects.hash(getAttribute(), type, value)
     }
-
-    public static ValuePredicate equal(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.EQ, value);
-    }
-
-    public static ValuePredicate eq(String attribute, Object value) {
-        return equal(attribute, value);
-    }
-
-    public static ValuePredicate contains(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.CONTAINS, value);
-    }
-
-    public static ValuePredicate like(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.LIKE, value);
-    }
-
-    public static ValuePredicate gt(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.GT, value);
-    }
-
-    public static ValuePredicate ge(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.GE, value);
-    }
-
-    public static ValuePredicate lt(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.LT, value);
-    }
-
-    public static ValuePredicate le(String attribute, Object value) {
-        return new ValuePredicate(attribute, Type.LE, value);
-    }
-
-
 }

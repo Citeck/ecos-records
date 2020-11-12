@@ -44,6 +44,8 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWrit
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.op.atts.service.value.factory.*
 import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanValueFactory
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.time.DateValueFactory
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.time.InstantValueFactory
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
@@ -231,7 +233,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createPredicateService(): PredicateService {
-        return PredicateServiceImpl()
+        return PredicateServiceImpl(this)
     }
 
     protected open fun createAttValuesConverter(): AttValuesConverter {
@@ -248,6 +250,7 @@ open class RecordsServiceFactory {
         metaValueFactories.add(BeanValueFactory())
         metaValueFactories.add(BooleanValueFactory())
         metaValueFactories.add(DateValueFactory())
+        metaValueFactories.add(InstantValueFactory())
         metaValueFactories.add(DoubleValueFactory())
         metaValueFactories.add(IntegerValueFactory())
         metaValueFactories.add(JsonNodeValueFactory())

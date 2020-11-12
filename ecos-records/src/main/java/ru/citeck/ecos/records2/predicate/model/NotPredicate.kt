@@ -1,70 +1,63 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+class NotPredicate : Predicate {
 
-public class NotPredicate implements Predicate {
+    companion object {
 
-    private static final String TYPE = "not";
+        @JsonProperty("t")
+        const val TYPE = "not"
+
+        @JvmStatic
+        fun getTypes(): List<String> {
+            return listOf(TYPE)
+        }
+    }
 
     @JsonProperty("val")
-    private Predicate predicate;
+    private var predicate: Predicate = VoidPredicate.INSTANCE
 
-    public NotPredicate(Predicate predicate) {
-        this.predicate = predicate;
-    }
+    constructor()
 
-    public NotPredicate() {
-    }
-
-    public Predicate getPredicate() {
-        return predicate;
-    }
-
-    public void setPredicate(Predicate predicate) {
-        this.predicate = predicate;
+    constructor(predicate: Predicate?) {
+        this.predicate = predicate ?: VoidPredicate.INSTANCE
     }
 
     @JsonProperty("t")
-    String getType() {
-        return TYPE;
+    fun getType(): String {
+        return TYPE
     }
 
-    public static List<String> getTypes() {
-        return Collections.singletonList(TYPE);
+    fun getPredicate(): Predicate {
+        return predicate
     }
 
-    @Override
-    public <T extends Predicate> T copy() {
-
-        @SuppressWarnings("unchecked")
-        T result = (T) new NotPredicate(predicate.copy());
-
-        return result;
+    fun setPredicate(predicate: Predicate) {
+        this.predicate = predicate
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    override fun <T : Predicate> copy(): T {
+        @Suppress("UNCHECKED_CAST")
+        return NotPredicate(predicate.copy()) as T
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+        if (other == null || javaClass != other.javaClass) {
+            return false
         }
-        NotPredicate that = (NotPredicate) o;
-        return Objects.equals(predicate, that.predicate);
+        val that = other as NotPredicate
+        return predicate == that.predicate
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(predicate);
+    override fun hashCode(): Int {
+        return predicate.hashCode()
     }
 
-    @Override
-    public String toString() {
-        return "NOT " + getPredicate();
+    override fun toString(): String {
+        return "NOT $predicate"
     }
 }

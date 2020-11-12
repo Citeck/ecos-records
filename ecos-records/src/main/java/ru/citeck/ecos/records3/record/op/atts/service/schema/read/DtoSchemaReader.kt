@@ -236,7 +236,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 field = scope.getDeclaredField(fieldName)
                 annotation = field.getAnnotation(type)
             } catch (e: NoSuchFieldException) {
-                log.error("Field not found: $fieldName", e)
+                // ignore
             }
         }
         return annotation

@@ -34,7 +34,7 @@ class PredicateTest {
 
         ObjectNode jsonNode = (ObjectNode) Json.getMapper().toJson(valuePredicate);
 
-        assertEquals(valuePredicate.getValue(), jsonNode.get("val").asInt());
+        assertEquals(valuePredicate.getValue().asInt(), jsonNode.get("val").asInt());
         assertEquals(valuePredicate.getType().asString(), jsonNode.get("t").asText());
         assertEquals(valuePredicate.getAttribute(), jsonNode.get("att").asText());
 
@@ -94,7 +94,17 @@ class PredicateTest {
         Predicate predicate = Json.getMapper().convert(pred, Predicate.class);
         Predicate predicate2 = Json.getMapper().convert(Json.getMapper().toJson(predicate), Predicate.class);
 
+        assertEquals(
+            new ValuePredicate("", ValuePredicate.Type.LIKE, ""), Json.getMapper().read("{\n" +
+            "        \"att\" : \"\",\n" +
+            "        \"val\" : \"\",\n" +
+            "        \"t\" : \"like\"\n" +
+            "      }", Predicate.class)
+        );
+
         assertEquals(predicate, predicate2);
+        assertEquals(predicate, predicate);
+        assertEquals(predicate2, predicate2);
     }
 
     @Test

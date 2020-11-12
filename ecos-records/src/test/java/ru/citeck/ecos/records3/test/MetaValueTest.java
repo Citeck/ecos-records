@@ -87,7 +87,7 @@ public class MetaValueTest extends AbstractRecordsDao
         String format = "yyyyy.MMMMM.dd GGG hh:mm aaa";
         String targetDate = (new SimpleDateFormat(format)).format(MetaVal.DATE_VALUE);
         assertEquals(targetDate, meta.fmtDate("/date", format, "-"));
-        assertEquals(new Date((MetaVal.DATE_VALUE.getTime() / 1000) * 1000), meta.getDateOrNull("/date"));
+        assertEquals(new Date(MetaVal.DATE_VALUE.getTime()), meta.getDateOrNull("/date"));
         assertEquals("--", meta.fmtDate("date1", format, "--"));
 
         assertEquals(testInnerSchema, innerSchema);

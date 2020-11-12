@@ -5,6 +5,7 @@ import ru.citeck.ecos.records2.IterableRecords;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.predicate.element.Elements;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 

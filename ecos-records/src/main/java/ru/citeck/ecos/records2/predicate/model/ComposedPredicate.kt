@@ -1,50 +1,25 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import kotlin.collections.ArrayList
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
-public abstract class ComposedPredicate implements Predicate {
+abstract class ComposedPredicate : Predicate {
 
     @JsonProperty("val")
-    private List<Predicate> predicates;
+    private var predicates: MutableList<Predicate>? = null
 
-    public List<Predicate> getPredicates() {
-        return predicates == null ? Collections.emptyList() : predicates;
+    fun getPredicates(): List<Predicate> {
+        return predicates ?: arrayListOf()
     }
 
-    public void setPredicates(List<Predicate> predicates) {
+    fun setPredicates(predicates: List<Predicate>?) {
+        this.predicates = ArrayList(predicates ?: emptyList())
+    }
+
+    fun addPredicate(predicate: Predicate) {
         if (predicates == null) {
-            this.predicates = new ArrayList<>();
-        } else {
-            this.predicates = new ArrayList<>(predicates);
+            predicates = ArrayList()
         }
-    }
-
-    public void addPredicate(Predicate predicate) {
-        if (predicates == null) {
-            predicates = new ArrayList<>();
-        }
-        predicates.add(predicate);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ComposedPredicate that = (ComposedPredicate) o;
-        return Objects.equals(predicates, that.predicates);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(predicates);
+        predicates!!.add(predicate)
     }
 }

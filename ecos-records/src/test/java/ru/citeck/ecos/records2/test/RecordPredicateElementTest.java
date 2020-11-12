@@ -9,7 +9,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.predicate.Element;
+import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.RecordElements;

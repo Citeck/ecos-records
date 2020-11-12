@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.predicate;
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.apache.commons.beanutils.PropertyUtils;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.ExceptionUtils;
@@ -36,10 +37,7 @@ public class PredicateUtils {
         Predicate result = predicate.copy();
 
         mapValuePredicatesImpl(result, v -> {
-            Object value = v.getValue();
-            if (value instanceof String) {
-                v.setValue(TmplUtils.applyAtts((String) value, attributes));
-            }
+            v.setValue(TmplUtils.applyAtts(v.getValue(), attributes));
             return v;
         }, false);
 

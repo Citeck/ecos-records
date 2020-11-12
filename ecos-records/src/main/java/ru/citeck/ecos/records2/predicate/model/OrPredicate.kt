@@ -1,64 +1,60 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+class OrPredicate : ComposedPredicate() {
 
-public class OrPredicate extends ComposedPredicate {
+    companion object {
 
-    private static final String TYPE = "or";
+        @JsonProperty("t")
+        const val TYPE = "or"
+
+        @JvmStatic
+        fun getTypes(): List<String> {
+            return listOf(TYPE)
+        }
+
+        @JvmStatic
+        fun of(vararg predicates: Predicate): OrPredicate {
+            return of(listOf(*predicates))
+        }
+
+        @JvmStatic
+        fun of(predicates: List<Predicate>): OrPredicate {
+            val or = OrPredicate()
+            or.setPredicates(predicates)
+            return or
+        }
+    }
 
     @JsonProperty("t")
-    String getType() {
-        return TYPE;
+    fun getType(): String {
+        return TYPE
     }
 
-    public static List<String> getTypes() {
-        return Collections.singletonList(TYPE);
+    override fun <T : Predicate> copy(): T {
+        val copy = OrPredicate()
+        copy.setPredicates(getPredicates().map { it.copy<Predicate>() })
+        @Suppress("UNCHECKED_CAST")
+        return copy as T
     }
 
-    public static OrPredicate of(Predicate... predicates) {
-        OrPredicate or = new OrPredicate();
-        or.setPredicates(Arrays.asList(predicates));
-        return or;
+    override fun toString(): String {
+        return "(" + getPredicates().joinToString(" OR ") { it.toString() } + ")"
     }
 
-    @Override
-    public <T extends Predicate> T copy() {
-
-        OrPredicate copy = new OrPredicate();
-        copy.setPredicates(getPredicates().stream()
-                                          .map(p -> (Predicate) p.copy())
-                                          .collect(Collectors.toList()));
-        @SuppressWarnings("unchecked")
-        T result = (T) copy;
-
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "(" + getPredicates().stream()
-                                    .map(Object::toString)
-                                    .collect(Collectors.joining(" OR ")) + ")";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+        if (other == null || OrPredicate::class.java != other::class.java) {
+            return false
         }
-        return super.equals(o);
+        other as OrPredicate
+        return getPredicates() == other.getPredicates()
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    override fun hashCode(): Int {
+        return getPredicates().hashCode()
     }
 }

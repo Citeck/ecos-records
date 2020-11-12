@@ -1,6 +1,6 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-public interface Predicate {
+interface Predicate {
 
-    <T extends Predicate> T copy();
+    fun <T : Predicate> copy(): T
 }

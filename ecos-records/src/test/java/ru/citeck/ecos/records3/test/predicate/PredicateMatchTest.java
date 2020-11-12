@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.test.predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.predicate.Element;
-import ru.citeck.ecos.records2.predicate.ElementAttributes;
+import ru.citeck.ecos.records2.predicate.element.Element;
+import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
@@ -43,6 +43,7 @@ public class PredicateMatchTest implements Element, ElementAttributes {
         );
 
         assertTrue(service.isMatch(this, pred));
+        assertTrue(service.isMatch(attributes, pred));
 
         pred = Predicates.or(
             Predicates.eq("a", "aaa"),
@@ -90,6 +91,7 @@ public class PredicateMatchTest implements Element, ElementAttributes {
 
         attributes.put("b", "bbb");
         assertFalse(service.isMatch(this, pred));
+        assertFalse(service.isMatch(attributes, pred));
 
         attributes.clear();
         attributes.put("a", "10");

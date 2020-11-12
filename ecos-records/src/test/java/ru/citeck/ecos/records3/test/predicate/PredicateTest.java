@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test.predicate;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
@@ -34,7 +35,7 @@ class PredicateTest {
 
         ObjectNode jsonNode = (ObjectNode) Json.getMapper().toJson(valuePredicate);
 
-        assertEquals(valuePredicate.getValue(), jsonNode.get("val").asInt());
+        assertEquals(valuePredicate.getValue(), DataValue.create(jsonNode.get("val")));
         assertEquals(valuePredicate.getType().asString(), jsonNode.get("t").asText());
         assertEquals(valuePredicate.getAttribute(), jsonNode.get("att").asText());
 

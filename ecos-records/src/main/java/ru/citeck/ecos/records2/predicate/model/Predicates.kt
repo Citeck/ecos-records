@@ -1,122 +1,152 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.util.*
 
-public class Predicates {
+object Predicates {
 
-    public static ValuePredicate in(String attribute, Collection<String> values) {
-        return new ValuePredicate(attribute, ValuePredicate.Type.IN, new ArrayList<>(values));
+    @JvmStatic
+    fun inVals(attribute: String?, values: Collection<String>): ValuePredicate {
+        return `in`(attribute, values)
     }
 
-    public static ValuePredicate contains(String attribute, String substring) {
-        return ValuePredicate.contains(attribute, substring);
+    @JvmStatic
+    fun `in`(attribute: String?, values: Collection<String>): ValuePredicate {
+        return ValuePredicate(attribute, ValuePredicate.Type.IN, ArrayList(values))
     }
 
-    public static AndPredicate and(Predicate... predicates) {
-        return AndPredicate.of(predicates);
+    @JvmStatic
+    fun contains(attribute: String?, substring: String?): ValuePredicate {
+        return ValuePredicate.contains(attribute, substring)
     }
 
-    public static AndPredicate and(Collection<Predicate> predicates) {
-        AndPredicate and = new AndPredicate();
-        and.setPredicates(new ArrayList<>(predicates));
-        return and;
+    @JvmStatic
+    fun and(vararg predicates: Predicate?): AndPredicate {
+        return AndPredicate.of(predicates.filterNotNull())
     }
 
-    public static OrPredicate or(Collection<Predicate> predicates) {
-        OrPredicate or = new OrPredicate();
-        or.setPredicates(new ArrayList<>(predicates));
-        return or;
+    @JvmStatic
+    fun and(predicates: Collection<Predicate?>): AndPredicate {
+        val and = AndPredicate()
+        and.setPredicates(predicates.filterNotNull())
+        return and
     }
 
-    public static OrPredicate or(Predicate... predicates) {
-        return OrPredicate.of(predicates);
+    @JvmStatic
+    fun or(predicates: Collection<Predicate?>): OrPredicate {
+        val or = OrPredicate()
+        or.setPredicates(predicates.filterNotNull())
+        return or
     }
 
-    public static NotPredicate not(Predicate predicate) {
-        return new NotPredicate(predicate);
+    @JvmStatic
+    fun or(vararg predicates: Predicate?): OrPredicate {
+        return OrPredicate.of(predicates.filterNotNull())
     }
 
-    public static NotPredicate notEmpty(String attribute) {
-        return not(empty(attribute));
+    @JvmStatic
+    fun not(predicate: Predicate?): NotPredicate {
+        return NotPredicate(predicate)
     }
 
-    public static EmptyPredicate empty(String attribute) {
-        return new EmptyPredicate(attribute);
+    @JvmStatic
+    fun notEmpty(attribute: String?): NotPredicate {
+        return not(empty(attribute))
     }
 
-    public static ValuePredicate eq(String attribute, Object value) {
-        return equal(attribute, value);
+    @JvmStatic
+    fun empty(attribute: String?): EmptyPredicate {
+        return EmptyPredicate(attribute)
     }
 
-    public static ValuePredicate equal(String attribute, Object value) {
-        return ValuePredicate.equal(attribute, value);
+    @JvmStatic
+    fun eq(attribute: String?, value: Any?): ValuePredicate {
+        return equal(attribute, value)
     }
 
-    public static ValuePredicate gt(String attribute, Instant value) {
-        return ValuePredicate.gt(attribute, value);
+    @JvmStatic
+    fun equal(attribute: String?, value: Any?): ValuePredicate {
+        return ValuePredicate.equal(attribute, value)
     }
 
-    public static ValuePredicate gt(String attribute, OffsetDateTime value) {
-        return ValuePredicate.gt(attribute, value);
+    @JvmStatic
+    fun gt(attribute: String?, value: Instant?): ValuePredicate {
+        return ValuePredicate.gt(attribute, value)
     }
 
-    public static ValuePredicate gt(String attribute, Date value) {
-        return ValuePredicate.gt(attribute, value);
+    @JvmStatic
+    fun gt(attribute: String?, value: OffsetDateTime?): ValuePredicate {
+        return ValuePredicate.gt(attribute, value)
     }
 
-    public static ValuePredicate gt(String attribute, double value) {
-        return ValuePredicate.gt(attribute, value);
+    @JvmStatic
+    fun gt(attribute: String?, value: Date?): ValuePredicate {
+        return ValuePredicate.gt(attribute, value)
     }
 
-    public static ValuePredicate ge(String attribute, OffsetDateTime value) {
-        return ValuePredicate.ge(attribute, value);
+    @JvmStatic
+    fun gt(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.gt(attribute, value)
     }
 
-    public static ValuePredicate ge(String attribute, Instant value) {
-        return ValuePredicate.ge(attribute, value);
+    @JvmStatic
+    fun ge(attribute: String?, value: OffsetDateTime?): ValuePredicate {
+        return ValuePredicate.ge(attribute, value)
     }
 
-    public static ValuePredicate ge(String attribute, Date value) {
-        return ValuePredicate.ge(attribute, value);
+    @JvmStatic
+    fun ge(attribute: String?, value: Instant?): ValuePredicate {
+        return ValuePredicate.ge(attribute, value)
     }
 
-    public static ValuePredicate ge(String attribute, double value) {
-        return ValuePredicate.ge(attribute, value);
+    @JvmStatic
+    fun ge(attribute: String?, value: Date?): ValuePredicate {
+        return ValuePredicate.ge(attribute, value)
     }
 
-    public static ValuePredicate lt(String attribute, OffsetDateTime value) {
-        return ValuePredicate.lt(attribute, value);
+    @JvmStatic
+    fun ge(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.ge(attribute, value)
     }
 
-    public static ValuePredicate lt(String attribute, Instant value) {
-        return ValuePredicate.lt(attribute, value);
+    @JvmStatic
+    fun lt(attribute: String?, value: OffsetDateTime?): ValuePredicate {
+        return ValuePredicate.lt(attribute, value)
     }
 
-    public static ValuePredicate lt(String attribute, Date value) {
-        return ValuePredicate.lt(attribute, value);
+    @JvmStatic
+    fun lt(attribute: String?, value: Instant?): ValuePredicate {
+        return ValuePredicate.lt(attribute, value)
     }
 
-    public static ValuePredicate lt(String attribute, double value) {
-        return ValuePredicate.lt(attribute, value);
+    @JvmStatic
+    fun lt(attribute: String?, value: Date?): ValuePredicate {
+        return ValuePredicate.lt(attribute, value)
     }
 
-    public static ValuePredicate le(String attribute, Instant value) {
-        return ValuePredicate.le(attribute, value);
+    @JvmStatic
+    fun lt(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.lt(attribute, value)
     }
 
-    public static ValuePredicate le(String attribute, OffsetDateTime value) {
-        return ValuePredicate.le(attribute, value);
+    @JvmStatic
+    fun le(attribute: String?, value: Instant?): ValuePredicate {
+        return ValuePredicate.le(attribute, value)
     }
 
-    public static ValuePredicate le(String attribute, Date value) {
-        return ValuePredicate.le(attribute, value);
+    @JvmStatic
+    fun le(attribute: String?, value: OffsetDateTime?): ValuePredicate {
+        return ValuePredicate.le(attribute, value)
     }
 
-    public static ValuePredicate le(String attribute, double value) {
-        return ValuePredicate.le(attribute, value);
+    @JvmStatic
+    fun le(attribute: String?, value: Date?): ValuePredicate {
+        return ValuePredicate.le(attribute, value)
+    }
+
+    @JvmStatic
+    fun le(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.le(attribute, value)
     }
 }

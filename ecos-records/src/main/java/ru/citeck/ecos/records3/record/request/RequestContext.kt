@@ -17,7 +17,7 @@ import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
-open class RequestContext {
+class RequestContext {
 
     companion object {
 

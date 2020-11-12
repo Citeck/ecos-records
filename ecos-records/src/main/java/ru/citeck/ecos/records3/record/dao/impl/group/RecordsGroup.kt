@@ -44,8 +44,10 @@ class RecordsGroup(
             FIELD_PREDICATE -> return predicate
             FIELD_PREDICATES -> {
                 return if (predicate is ComposedPredicate) {
-                    predicate.predicates
-                } else listOf(predicate)
+                    predicate.getPredicates()
+                } else {
+                    listOf(predicate)
+                }
             }
             FIELD_VALUES -> {
                 val innerAttributes = AttContext.getInnerAttsMap()

@@ -109,13 +109,13 @@ class RecordsGroupTest extends AbstractRecordsDao
             switch (valPred.getAttribute()) {
                 case "strVal":
 
-                    String value = (String) valPred.getValue();
+                    String value = valPred.getValue().asText();
                     pred = m -> Objects.equals(m.getStrVal(), value);
 
                     break;
                 case "numKey":
 
-                    double valPredValue = ((Number) valPred.getValue()).doubleValue();
+                    double valPredValue = valPred.getValue().asDouble();
 
                     switch (valPred.getType()) {
 

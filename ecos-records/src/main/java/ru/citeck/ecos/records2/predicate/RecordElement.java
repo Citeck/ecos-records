@@ -3,6 +3,8 @@ package ru.citeck.ecos.records2.predicate;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.predicate.element.Element;
+import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

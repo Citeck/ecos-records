@@ -1,36 +1,17 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 
-import java.util.Objects;
-
-public abstract class AttributePredicate implements Predicate {
+abstract class AttributePredicate : Predicate {
 
     @JsonProperty("att")
-    private String attribute;
+    private var attribute: String = ""
 
-    public String getAttribute() {
-        return attribute;
+    fun setAttribute(attribute: String?) {
+        this.attribute = attribute ?: ""
     }
 
-    public void setAttribute(String attribute) {
-        this.attribute = attribute;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        AttributePredicate that = (AttributePredicate) o;
-        return Objects.equals(attribute, that.attribute);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(attribute);
+    fun getAttribute(): String {
+        return attribute
     }
 }

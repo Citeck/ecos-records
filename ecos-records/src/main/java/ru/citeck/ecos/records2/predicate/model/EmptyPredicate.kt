@@ -1,52 +1,51 @@
-package ru.citeck.ecos.records2.predicate.model;
+package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 
-import java.util.Collections;
-import java.util.List;
+class EmptyPredicate : AttributePredicate {
 
-public class EmptyPredicate extends AttributePredicate {
+    companion object {
 
-    private static final String TYPE = "empty";
+        const val TYPE = "empty"
 
-    public EmptyPredicate() {
+        @JvmStatic
+        fun getTypes(): List<String> {
+            return listOf(TYPE)
+        }
     }
 
-    public EmptyPredicate(String attribute) {
-        setAttribute(attribute);
+    constructor()
+
+    constructor(attribute: String?) {
+        setAttribute(attribute)
     }
 
     @JsonProperty("t")
-    public String getType() {
-        return TYPE;
+    fun getType(): String {
+        return TYPE
     }
 
-    public static List<String> getTypes() {
-        return Collections.singletonList(TYPE);
+    override fun <T : Predicate> copy(): T {
+        @Suppress("UNCHECKED_CAST")
+        return EmptyPredicate(getAttribute()) as T
     }
 
-    @Override
-    public <T extends Predicate> T copy() {
-
-        @SuppressWarnings("unchecked")
-        T result = (T) new EmptyPredicate(getAttribute());
-
-        return result;
+    override fun toString(): String {
+        return "EMPTY:'${getAttribute()}'"
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+        if (other == null || javaClass != other.javaClass) {
+            return false
         }
-        return super.equals(o);
+        other as EmptyPredicate
+        return getAttribute() == other.getAttribute()
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    override fun hashCode(): Int {
+        return getAttribute().hashCode()
     }
 }

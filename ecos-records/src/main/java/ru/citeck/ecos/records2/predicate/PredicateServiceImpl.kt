@@ -13,7 +13,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import java.util.*
 
-class PredicateServiceImpl(factory: RecordsServiceFactory) : PredicateService {
+open class PredicateServiceImpl(factory: RecordsServiceFactory) : PredicateService {
 
     private val recordsService: RecordsService = factory.recordsServiceV1
 

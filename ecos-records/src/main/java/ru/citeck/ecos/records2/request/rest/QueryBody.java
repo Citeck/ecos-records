@@ -5,7 +5,6 @@ import ecos.com.fasterxml.jackson210.annotation.JsonInclude;
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
@@ -24,13 +23,21 @@ public class QueryBody {
     @Nullable
     private RecordsQuery query;
 
-    @Getter @Setter private String schema;
+    private String schema;
     @Getter private Map<String, String> attributes;
 
     private boolean isSingleRecord = false;
     private boolean isSingleAttribute = false;
 
     private ru.citeck.ecos.records3.rest.v1.query.QueryBody v1Body;
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
 
     @Nullable
     public RecordsQuery getQuery() {

@@ -22,5 +22,5 @@ class LongValueFactory : AttValueFactory<Long> {
         }
     }
 
-    override fun getValueTypes() = listOf(Long::class.java)
+    override fun getValueTypes() = listOf(java.lang.Long::class.java)
 }

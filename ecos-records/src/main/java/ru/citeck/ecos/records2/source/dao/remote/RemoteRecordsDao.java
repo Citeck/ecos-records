@@ -83,7 +83,7 @@ public class RemoteRecordsDao extends AbstractRecordsDao
                                                                     RecordsMetaQueryResult.class);
             result = result.addSourceId(getId());
 
-            RecordsQueryResult<RecordAtts> attsResult = new RecordsQueryResult<RecordAtts>();
+            RecordsQueryResult<RecordAtts> attsResult = new RecordsQueryResult<>();
             attsResult.setHasMore(result.getHasMore());
             attsResult.setTotalCount(result.getTotalCount());
 

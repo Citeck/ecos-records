@@ -54,9 +54,15 @@ class InnerAttValue(value: Any?) : AttValue, HasCollectionView<InnerAttValue> {
     }
 
     override fun has(name: String): Boolean {
-        val node: JsonNode = value.path(RecordConstants.ATT_HAS)
-            .path(name)
-            .path("?bool")
+        var node: JsonNode = value.path(RecordConstants.ATT_HAS)
+        if (node.isBoolean) {
+            return node.asBoolean()
+        }
+        node = node.path(name)
+        if (node.isBoolean) {
+            return node.asBoolean()
+        }
+        node = node.path("?bool")
         return if (node.isMissingNode || node.isNull) {
             false
         } else {

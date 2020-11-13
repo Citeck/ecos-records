@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.meta.AttributesSchema
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult
@@ -35,7 +36,7 @@ import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
 
 class RemoteRecordsResolver(
     val services: RecordsServiceFactory,
-    val restApi: RemoteRecordsRestApi
+    private val restApi: RemoteRecordsRestApi
 ) {
 
     companion object {
@@ -78,7 +79,7 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp: QueryResp = execQuery(appName, queryBody, context)
+        val queryResp: QueryResp = execQuery(appName, queryBody, context, rawAtts)
         val result = RecsQueryRes<RecordAtts>()
 
         result.setRecords(queryResp.records)
@@ -87,11 +88,18 @@ class RemoteRecordsResolver(
         return RecordsUtils.attsWithDefaultApp(result, appName)
     }
 
-    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext): QueryResp {
+    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext, rawAtts: Boolean): QueryResp {
 
-        val v0Body = toV0QueryBody(queryBody, context)
+        val attsGqlSchema: AttributesSchema? = if (rawAtts) {
+            val attsMap = queryBody.attributes.asMap(String::class.java, String::class.java)
+            services.attributesMetaResolver.createSchema(attsMap)
+        } else {
+            null
+        }
+
+        val v0Body = toV0QueryBody(queryBody, context, attsGqlSchema)
         val appResultObj = postRecords(appName, QUERY_URL, v0Body)
-        var result: QueryResp? = toQueryAttsRes(appResultObj, context)
+        var result: QueryResp? = toQueryAttsRes(appResultObj, context, attsGqlSchema)
         if (result == null) {
             result = QueryResp()
         } else {
@@ -100,7 +108,7 @@ class RemoteRecordsResolver(
         return result
     }
 
-    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext): QueryResp? {
+    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext, attsSchema: AttributesSchema?): QueryResp? {
 
         if (body == null || body.isEmpty) {
             return null
@@ -115,18 +123,29 @@ class RemoteRecordsResolver(
         V1ConvUtils.addDebugMessage(v0Result, context)
 
         val resp = QueryResp()
-
-        resp.setRecords(v0Result.records.map { RecordAtts(it) })
+        resp.setRecords(
+            v0Result.records.map {
+                var atts = RecordAtts(it)
+                if (attsSchema != null) {
+                    atts = services.recordsMetaService.convertMetaResult(atts, attsSchema, false)
+                }
+                atts
+            }
+        )
         resp.hasMore = v0Result.hasMore
         resp.totalCount = v0Result.totalCount
         return resp
     }
 
-    private fun toV0QueryBody(body: QueryBody, context: RequestContext): QueryBodyV0 {
+    private fun toV0QueryBody(body: QueryBody, context: RequestContext, attsSchema: AttributesSchema?): QueryBodyV0 {
 
         val v0Body = QueryBodyV0()
 
-        v0Body.setAttributes(body.attributes.asJson())
+        if (attsSchema != null) {
+            v0Body.schema = attsSchema.schema
+        } else {
+            v0Body.setAttributes(body.attributes.asJson())
+        }
         v0Body.records = body.getRecords()
         v0Body.v1Body = body
 
@@ -157,7 +176,7 @@ class RemoteRecordsResolver(
 
             queryBody.setAttributes(attributes)
             queryBody.rawAtts = rawAtts
-            val queryResp = execQuery(app, queryBody, context)
+            val queryResp = execQuery(app, queryBody, context, rawAtts)
 
             if (queryResp.records.size != refs.size) {
                 log.error("Incorrect response: $queryBody\n query: $queryBody")

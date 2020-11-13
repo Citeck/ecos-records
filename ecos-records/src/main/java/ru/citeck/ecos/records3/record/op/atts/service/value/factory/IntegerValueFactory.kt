@@ -22,5 +22,5 @@ class IntegerValueFactory : AttValueFactory<Int> {
         }
     }
 
-    override fun getValueTypes() = listOf(Int::class.java)
+    override fun getValueTypes() = listOf(Integer::class.java)
 }

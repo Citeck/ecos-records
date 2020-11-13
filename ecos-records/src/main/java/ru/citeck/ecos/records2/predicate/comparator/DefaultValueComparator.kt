@@ -25,7 +25,7 @@ class DefaultValueComparator : ValueComparator {
         return if (value0.isTextual() || value1.isTextual()) {
             value0.asText() == value1.asText()
         } else {
-            false
+            value0 == value1
         }
     }
 

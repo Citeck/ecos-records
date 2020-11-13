@@ -18,5 +18,5 @@ class BooleanValueFactory : AttValueFactory<Boolean> {
         }
     }
 
-    override fun getValueTypes() = listOf(Boolean::class.java)
+    override fun getValueTypes() = listOf(java.lang.Boolean::class.java)
 }

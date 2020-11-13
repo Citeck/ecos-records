@@ -246,7 +246,7 @@ open class RecordsServiceFactory {
         metaValueFactories.add(ByteArrayValueFactory())
         metaValueFactories.add(DataValueAttFactory())
         metaValueFactories.add(MLTextValueFactory())
-        metaValueFactories.add(RecordAttValueFactory())
+        metaValueFactories.add(RecordAttsValueFactory())
         metaValueFactories.add(BeanValueFactory())
         metaValueFactories.add(BooleanValueFactory())
         metaValueFactories.add(DateValueFactory())

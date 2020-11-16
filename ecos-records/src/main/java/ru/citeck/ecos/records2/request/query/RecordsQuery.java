@@ -232,7 +232,7 @@ public class RecordsQuery {
                 + "\"sourceId\":\"" + sourceId + "\","
                 + "\"sortBy\":\"" + sortBy + "\","
                 + "\"consistency\":\"" + consistency + "\","
-                + "\"language\":\"" + language + '\'' + "\","
+                + "\"language\":\"" + language + "\","
                 + "\"query\":\"" + query + "\","
                 + "\"page\":\"" + page + "\""
             + '}';

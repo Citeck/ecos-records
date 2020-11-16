@@ -5,8 +5,18 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
+import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
+import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
+import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDao
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateCrossSrcDao
+import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 
@@ -15,36 +25,41 @@ import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
  * It may be database records, generated data and so on.
  * Each record can be identified by its RecordRef. <br></br><br></br>
  *
- *
- * There are three main purposes: <br></br>
+ * There are four main purposes: <br></br>
  * 1) Query records by some language, query and other parameters; <br></br>
- * 2) Get records metadata. The metadata in this context is any record data (e.g. document status or title); <br></br>
- * 3) Delete, create or modify records. <br></br><br></br>
+ * 2) Get records attributes. The attributes in this context is any record data (e.g. document status or title); <br></br>
+ * 3) Mutate (create or modify) records. <br></br>
+ * 4) Delete records. <br></br><br></br>
  *
+ * There are two levels of abstraction for retrieving metadata: <br></br>
+ * **DTO Class > Attributes** <br></br>
  *
- * There are three levels of abstraction for retrieving metadata: <br></br>
- * **DTO Class > Attributes > Schema** <br></br>
+ * Each method to get attributes converts data to a flat view if flag "rawData" is not set.
+ * It means that {"a":{"b":{"c":"value"}}} will be replaced with {"a": "value"}<br></br><br></br>
  *
+ * Terms:<br></br>
+ * Res == Result<br></br>
+ * Att == Attribute<br></br>
+ * Atts == Attributes<br></br>
+ * Rec == Record<br></br>
+ * Recs == Records<br></br>
  *
- * Each level converts to a schema and sends to RecordsMetaDao or RecordsQueryWithMetaDao.
- * RecordsMetaService can be used to retrieve data by schema from MetaValue or any other java objects. <br></br><br></br>
+ * @see RecordAttsDao
+ * @see RecordsAttsDao
  *
+ * @see RecordMutateDao
+ * @see RecordsMutateDao
+ * @see RecordsMutateCrossSrcDao
+ * @see RecordMutateDtoDao
  *
- * A result of each method to request attributes converts data to a flat view.
- * It means that {"a":{"b":{"c":"value"}}} will be replaced with {"a": "value"}
+ * @see RecordsQueryDao
  *
- * Res == Result
- * Att == Attribute
- * Atts == Attributes
- * Rec == Record
- * Recs == Records
+ * @see RecordDeleteDao
+ * @see RecordsDeleteDao
  *
  * @see AttValue
- *
  * @see RecordRef
- *
  * @see RecordAtts
- *
  *
  * @author Pavel Simonov
  */

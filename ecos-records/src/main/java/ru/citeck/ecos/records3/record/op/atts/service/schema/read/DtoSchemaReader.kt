@@ -107,7 +107,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     private fun getAttributesImpl(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {
         require(visited.add(attsClass)) {
             (
-                "Recursive meta fields is not supported! " +
+                "Recursive attribute fields is not supported! " +
                     "Class: " + attsClass + " visited: " + visited
                 )
         }

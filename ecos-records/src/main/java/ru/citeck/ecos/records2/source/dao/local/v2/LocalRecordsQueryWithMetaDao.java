@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDao;
 
+@Deprecated
 public interface LocalRecordsQueryWithMetaDao<T> extends RecordsQueryWithMetaDao {
 
     RecordsQueryResult<T> queryLocalRecords(@NotNull RecordsQuery recordsQuery, @NotNull MetaField field);

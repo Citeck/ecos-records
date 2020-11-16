@@ -7,6 +7,7 @@ import ru.citeck.ecos.records2.source.dao.RecordsMetaDao;
 
 import java.util.List;
 
+@Deprecated
 public interface LocalRecordsMetaDao<T> extends RecordsMetaDao {
 
     List<T> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField);

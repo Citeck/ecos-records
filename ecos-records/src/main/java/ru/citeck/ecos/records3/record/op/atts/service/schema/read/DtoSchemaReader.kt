@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.op.atts.service.schema.read
 
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
@@ -20,14 +21,15 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttWithProc
 import java.beans.PropertyDescriptor
-import java.lang.reflect.Field
-import java.lang.reflect.Method
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
+import java.lang.reflect.*
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
+import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSuperclassOf
 
 class DtoSchemaReader(factory: RecordsServiceFactory) {
 
@@ -111,10 +113,25 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     "Class: " + attsClass + " visited: " + visited
                 )
         }
+
+        if (Class::class.java.isAssignableFrom(attsClass)) {
+            return listOf(SchemaAtt.create { name = ScalarType.STR.schema })
+        }
+
+        try {
+            attsClass.getDeclaredConstructor()
+        } catch (e: NoSuchMethodException) {
+            // class without no-args constructor
+            return readFromConstructor(attsClass, visited)
+        }
+
         val descriptors: Array<PropertyDescriptor> = PropertyUtils.getPropertyDescriptors(attsClass)
         val attributes: MutableList<SchemaAtt> = ArrayList()
+
         for (descriptor in descriptors) {
+
             val writeMethod = descriptor.writeMethod ?: continue
+
             var propType: Class<*> = descriptor.propertyType
             var isMultiple = false
             if (List::class.java.isAssignableFrom(propType) || Set::class.java.isAssignableFrom(propType)) {
@@ -128,9 +145,11 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 isMultiple = true
             }
             val scalarField = scalars[propType]
+
             attributes.add(
                 getAttributeSchema(
                     attsClass,
+                    null,
                     writeMethod,
                     descriptor.name,
                     isMultiple,
@@ -144,9 +163,65 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return attributes
     }
 
+    private fun getParamName(param: KParameter): String? {
+        var name = param.findAnnotation<JsonProperty>()?.value
+        if (name == null && LibsUtils.isJacksonPresent()) {
+            name = param.findAnnotation<com.fasterxml.jackson.annotation.JsonProperty>()?.value
+        }
+        if (name == null) {
+            name = param.findAnnotation<AttName>()?.value
+        }
+        return name ?: param.name
+    }
+
+    private fun readFromConstructor(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {
+
+        val kotlinClass = attsClass.kotlin
+
+        val constructor = kotlinClass.constructors.firstOrNull() ?: error("Constructor is null. Type: $attsClass")
+        val args = constructor.parameters
+
+        val atts = mutableListOf<SchemaAtt>()
+        for (arg in args) {
+
+            val paramName = getParamName(arg)
+            if (paramName == null) {
+                log.info { "Parameter doesn't has name: $arg. class: $attsClass Schema will be ['?json']" }
+                return listOf(SchemaAtt.create { name = ScalarType.JSON.schema })
+            }
+
+            var argType = arg.type.classifier as? KClass<*> ?: error("Incorrect argument: $arg")
+            var multiple = false
+
+            if (List::class.isSuperclassOf(argType) || Set::class.isSuperclassOf(argType)) {
+                multiple = true
+                argType = arg.type.arguments[0].type?.classifier as? KClass<*>
+                    ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
+            }
+
+            val javaClass = argType.java
+
+            atts.add(
+                getAttributeSchema(
+                    attsClass,
+                    arg,
+                    null,
+                    paramName,
+                    multiple,
+                    scalars[javaClass],
+                    javaClass,
+                    visited
+                )
+            )
+        }
+
+        return atts
+    }
+
     private fun getAttributeSchema(
         scope: Class<*>,
-        writeMethod: Method,
+        argument: KParameter?,
+        writeMethod: Method?,
         fieldName: String,
         multiple: Boolean,
         scalarField: ScalarField<*>?,
@@ -172,11 +247,11 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             )
         }
         var attNameValue: String? = null
-        val attName: AttName? = getAnnotation(writeMethod, scope, fieldName, AttName::class.java)
+        val attName: AttName? = getAnnotation(argument, writeMethod, scope, fieldName, AttName::class.java)
         if (attName != null) {
             attNameValue = attName.value
         } else {
-            val metaAtt: MetaAtt? = getAnnotation(writeMethod, scope, fieldName, MetaAtt::class.java)
+            val metaAtt: MetaAtt? = getAnnotation(argument, writeMethod, scope, fieldName, MetaAtt::class.java)
             if (metaAtt != null) {
                 attNameValue = metaAtt.value
             }
@@ -223,13 +298,18 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     }
 
     private fun <T : Annotation> getAnnotation(
-        writeMethod: Method,
+        argument: KParameter?,
+        writeMethod: Method?,
         scope: Class<*>,
         fieldName: String,
         type: Class<T>
     ): T? {
 
-        var annotation = writeMethod.getAnnotation(type)
+        var annotation = writeMethod?.getAnnotation(type)
+        if (annotation == null) {
+            @Suppress("UNCHECKED_CAST")
+            annotation = argument?.annotations?.firstOrNull { type.isInstance(it) } as T?
+        }
         if (annotation == null) {
             val field: Field?
             try {

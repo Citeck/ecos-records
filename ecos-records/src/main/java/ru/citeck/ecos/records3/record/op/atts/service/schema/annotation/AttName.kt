@@ -5,6 +5,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.annotation
     AnnotationTarget.FIELD,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.PROPERTY_GETTER,
-    AnnotationTarget.PROPERTY_SETTER
+    AnnotationTarget.PROPERTY_SETTER,
+    AnnotationTarget.VALUE_PARAMETER
 )
 annotation class AttName(val value: String = "")

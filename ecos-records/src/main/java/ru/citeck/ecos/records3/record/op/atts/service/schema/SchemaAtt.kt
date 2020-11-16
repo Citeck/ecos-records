@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema
 
 import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import ru.citeck.ecos.commons.utils.MandatoryParam
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.exception.AttSchemaException
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter
@@ -20,6 +19,8 @@ data class SchemaAtt(
 ) {
 
     companion object {
+
+        const val ROOT_NAME = "ROOT"
 
         @JvmStatic
         fun create(): Builder {
@@ -79,7 +80,7 @@ data class SchemaAtt(
     class Builder() {
 
         var alias: String = ""
-        lateinit var name: String
+        var name: String = ""
         var multiple: Boolean = false
         var inner: List<SchemaAtt> = emptyList()
         var processors: List<AttProcDef> = emptyList()
@@ -129,7 +130,10 @@ data class SchemaAtt(
 
         fun build(): SchemaAtt {
 
-            MandatoryParam.check("name", name)
+            if (name.isBlank()) {
+                throw AttSchemaException("Attribute can't has empty name. $this")
+            }
+
             val att = SchemaAtt(alias, name, multiple, inner, processors)
 
             if (att.isScalar() && inner.isNotEmpty()) {
@@ -146,6 +150,16 @@ data class SchemaAtt(
             }
 
             return att
+        }
+
+        override fun toString(): String {
+            return "{" +
+                "\"alias\":\"$alias\"," +
+                "\"name\":\"$name\"," +
+                "\"multiple\":$multiple," +
+                "\"inner\":\"$inner\"," +
+                "\"processors\":\"$processors\"" +
+                "}"
         }
     }
 }

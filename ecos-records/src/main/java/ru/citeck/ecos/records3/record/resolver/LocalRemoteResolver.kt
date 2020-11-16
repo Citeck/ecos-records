@@ -42,7 +42,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
             if (atts.isNotEmpty()) {
                 attContext.setSchemaAtt(
                     SchemaAtt.create()
-                        .withName("")
+                        .withName(SchemaAtt.ROOT_NAME)
                         .withInner(atts)
                         .build()
                 )

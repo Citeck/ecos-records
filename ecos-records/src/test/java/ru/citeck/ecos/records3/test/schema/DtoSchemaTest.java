@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.schema;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordConstants;
@@ -13,7 +14,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWrit
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DtoSchemaTest {
 
@@ -47,6 +48,34 @@ public class DtoSchemaTest {
         assertEquals("TestDtoDisp", serviceFactory.getRecordsServiceV1().getAtt(dto, "?disp").asText());
 
         assertEquals(dto.attWithCustomName, recordsService.getAtts(dto, CustomNameFieldAtt.class).otherField);
+
+        List<SchemaAtt> constrAtts = serviceFactory.getDtoSchemaReader().read(ConstructorDtoTest.class);
+        assertEquals(3, constrAtts.size());
+        assertEquals("field0", constrAtts.get(0).getName());
+        assertEquals("?disp", constrAtts.get(0).getInner().get(0).getName());
+        assertFalse(constrAtts.get(0).getMultiple());
+        assertEquals("fieldArr0", constrAtts.get(1).getName());
+        assertTrue(constrAtts.get(1).getMultiple());
+        assertEquals("?disp", constrAtts.get(1).getInner().get(0).getName());
+        assertEquals("intField", constrAtts.get(2).getName());
+        assertFalse(constrAtts.get(2).getMultiple());
+        assertEquals("?num", constrAtts.get(2).getInner().get(0).getName());
+    }
+
+    @Data
+    public static class ConstructorDtoTest {
+
+        private final String field0;
+        private final List<String> fieldArr0;
+        private final int intField;
+
+        public ConstructorDtoTest(@AttName("field0") String field0,
+                                  @AttName("fieldArr0") List<String> fieldArr0,
+                                  @AttName("intField") int intField) {
+            this.field0 = field0;
+            this.fieldArr0 = fieldArr0;
+            this.intField = intField;
+        }
     }
 
     @Data

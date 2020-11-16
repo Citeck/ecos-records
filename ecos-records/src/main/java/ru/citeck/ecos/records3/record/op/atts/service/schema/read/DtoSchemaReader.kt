@@ -14,6 +14,7 @@ import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.ScalarType
@@ -31,6 +32,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.primaryConstructor
 
 class DtoSchemaReader(factory: RecordsServiceFactory) {
 
@@ -69,7 +71,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(ObjectData::class.java, ScalarType.JSON),
             ScalarField(DataValue::class.java, ScalarType.JSON),
             ScalarField(RecordRef::class.java, ScalarType.ID),
-            ScalarField(Map::class.java, ScalarType.JSON)
+            ScalarField(Map::class.java, ScalarType.JSON),
+            ScalarField(Predicate::class.java, ScalarType.JSON)
         ).forEach(
             Consumer {
                 field ->
@@ -117,6 +120,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
         if (Class::class.java.isAssignableFrom(attsClass)) {
             return listOf(SchemaAtt.create { name = ScalarType.STR.schema })
+        }
+
+        if (attsClass.kotlin.primaryConstructor != null) {
+            return readFromConstructor(attsClass, visited)
         }
 
         try {
@@ -179,7 +186,9 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
         val kotlinClass = attsClass.kotlin
 
-        val constructor = kotlinClass.constructors.firstOrNull() ?: error("Constructor is null. Type: $attsClass")
+        val constructor = kotlinClass.primaryConstructor
+            ?: kotlinClass.constructors.firstOrNull() ?: error("Constructor is null. Type: $attsClass")
+
         val args = constructor.parameters
 
         val atts = mutableListOf<SchemaAtt>()

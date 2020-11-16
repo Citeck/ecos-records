@@ -29,6 +29,7 @@ import java.util.function.Consumer
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 
 class DtoSchemaReader(factory: RecordsServiceFactory) {
@@ -200,6 +201,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             }
 
             val javaClass = argType.java
+            var scalar = scalars[javaClass]
+            if (scalar == null && argType.isSubclassOf(Map::class)) {
+                scalar = scalars[Map::class.java]
+            }
 
             atts.add(
                 getAttributeSchema(
@@ -208,7 +213,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     null,
                     paramName,
                     multiple,
-                    scalars[javaClass],
+                    scalar,
                     javaClass,
                     visited
                 )

@@ -26,7 +26,7 @@ class DtoSchemaTest {
         // val atts
         val atts2 = services.dtoSchemaReader.read(ValDtoSchema::class.java)
 
-        assertEquals(7, atts2.size)
+        assertEquals(8, atts2.size)
 
         val attsMap2 = services.attSchemaWriter.writeToMap(atts2)
         assertEquals(".localId", attsMap2["id"])
@@ -36,6 +36,7 @@ class DtoSchemaTest {
         assertEquals(".att(n:\"enumTest\"){str}", attsMap2["enumTest"])
         assertEquals(".atts(n:\"enumListTest\"){str}", attsMap2["enumListTest"])
         assertEquals(".att(n:\"mapTest\"){json}", attsMap2["mapTest"])
+        assertEquals(".att(n:\"hashMapTest\"){json}", attsMap2["hashMapTest"])
 
         val valDtoValue = ValDtoSchema(
             "123",
@@ -44,7 +45,8 @@ class DtoSchemaTest {
             setOf("ghi", "jkl"),
             ValDtoSchema.EnumClass.SECOND,
             listOf(ValDtoSchema.EnumClass.FIRST, ValDtoSchema.EnumClass.SECOND),
-            mapOf(Pair("one", "two"))
+            mapOf(Pair("one", "two")),
+            hashMapOf(Pair("one", "two"))
         )
         val valDtoValue2 = services.recordsServiceV1.getAtts(valDtoValue, ValDtoSchema::class.java)
 
@@ -61,7 +63,8 @@ class DtoSchemaTest {
         val strFieldSet: Set<String>,
         val enumTest: EnumClass,
         val enumListTest: List<EnumClass>,
-        val mapTest: Map<String, Any>
+        val mapTest: Map<String, Any>,
+        val hashMapTest: HashMap<String, Any>
     ) {
         enum class EnumClass {
             FIRST, SECOND

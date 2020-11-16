@@ -2,6 +2,8 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import kotlin.test.assertEquals
 
@@ -54,7 +56,25 @@ class DtoSchemaTest {
 
         val attsMap3 = services.attSchemaWriter.writeToMap(services.dtoSchemaReader.read(DtoSchema2::class.java))
         assertEquals(".id", attsMap3["id"])
+
+        val valDtoWithDefault = ValDtoWithDefault()
+        val valDtoWithDefaultValue = services.recordsServiceV1.getAtts(valDtoWithDefault, ValDtoWithDefault::class.java)
+        assertEquals(valDtoWithDefault, valDtoWithDefaultValue)
+
+        val withDefaultSchema = services.dtoSchemaReader.read(ValDtoWithDefault::class.java)
+        assertEquals(5, withDefaultSchema.size)
     }
+
+    data class ValDtoWithDefault(
+
+        val roles: Set<String> = emptySet(),
+        val permissions: Set<String> = emptySet(),
+
+        val statuses: Set<String> = emptySet(),
+        val condition: Predicate = VoidPredicate.INSTANCE,
+
+        val type: ValDtoSchema.EnumClass = ValDtoSchema.EnumClass.FIRST
+    )
 
     data class ValDtoSchema(
         val id: String,

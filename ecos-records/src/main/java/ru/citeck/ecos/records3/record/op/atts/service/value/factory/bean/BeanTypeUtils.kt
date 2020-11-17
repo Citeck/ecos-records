@@ -43,6 +43,9 @@ object BeanTypeUtils {
                 }
             }
             if (attAnnName != null) {
+                if (attAnnName == ".type" || attAnnName == "?type") {
+                    attAnnName = "_type"
+                }
                 if (attAnnName[0] == '.' || attAnnName[0] == '?') {
                     val name = attAnnName.substring(1)
                     getters[".$name"] = getter

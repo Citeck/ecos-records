@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
@@ -58,8 +59,8 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         override fun getType(): RecordRef {
-            if (typeCtx.hasProperty("?type")) {
-                return getAttWithType("?type", RecordRef::class.java) ?: RecordRef.EMPTY
+            if (typeCtx.hasProperty(RecordConstants.ATT_TYPE)) {
+                return getAttWithType(RecordConstants.ATT_TYPE, RecordRef::class.java) ?: RecordRef.EMPTY
             }
             return RecordRef.EMPTY
         }

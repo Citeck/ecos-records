@@ -5,6 +5,7 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
 import java.beans.PropertyDescriptor
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.full.primaryConstructor
 
 object BeanTypeUtils {
 
@@ -42,6 +43,9 @@ object BeanTypeUtils {
                 }
             }
             if (attAnnName != null) {
+                if (attAnnName == ".type" || attAnnName == "?type") {
+                    attAnnName = "_type"
+                }
                 if (attAnnName[0] == '.' || attAnnName[0] == '?') {
                     val name = attAnnName.substring(1)
                     getters[".$name"] = getter
@@ -65,6 +69,14 @@ object BeanTypeUtils {
 
         val readMethod = descriptor.readMethod
         var annotation = readMethod.getAnnotation(type)
+        if (annotation == null) {
+            val primaryConstructor = scope.kotlin.primaryConstructor
+            val primaryParam = primaryConstructor?.parameters?.firstOrNull { it.name == descriptor.name }
+            if (primaryParam != null) {
+                @Suppress("UNCHECKED_CAST")
+                annotation = primaryParam.annotations.firstOrNull { type.kotlin.isInstance(it) } as? T?
+            }
+        }
         if (annotation == null) {
             var scopeIt: Class<*>? = scope
             while (scopeIt != null) {

@@ -19,7 +19,6 @@ import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt;
-import ru.citeck.ecos.records3.record.type.RecordTypeService;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -48,37 +47,33 @@ public class InnerMixinTest extends AbstractRecordsDao
     @BeforeAll
     void init() {
 
-        RecordsServiceFactory factory = new RecordsServiceFactory() {
-            @Override
-            protected RecordTypeService createRecordTypeService() {
-                return type -> {
-                    if (type.equals(TEST_TYPE0)) {
-                        ComputedAtt att = ComputedAtt.create(b -> {
-                            b.withId("computed");
-                            b.withType(ComputedAttType.ATTRIBUTE);
-                            b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
-                            return Unit.INSTANCE;
-                        });
-                        return Collections.singletonList(att);
-                    } else if (type.equals(TEST_TYPE1)) {
-                        ComputedAtt att = ComputedAtt.create(b -> {
-                            b.withId("computed");
-                            b.withType(ComputedAttType.ATTRIBUTE);
-                            b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
-                            return Unit.INSTANCE;
-                        });
-                        return Collections.singletonList(att);
-                    }
-                    return Collections.emptyList();
-                };
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        factory.setRecordTypeService(type -> {
+            if (type.equals(TEST_TYPE0)) {
+                ComputedAtt att = ComputedAtt.create(b -> {
+                    b.withId("computed");
+                    b.withType(ComputedAttType.ATTRIBUTE);
+                    b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
+                    return Unit.INSTANCE;
+                });
+                return Collections.singletonList(att);
+            } else if (type.equals(TEST_TYPE1)) {
+                ComputedAtt att = ComputedAtt.create(b -> {
+                    b.withId("computed");
+                    b.withType(ComputedAttType.ATTRIBUTE);
+                    b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
+                    return Unit.INSTANCE;
+                });
+                return Collections.singletonList(att);
             }
-        };
+            return Collections.emptyList();
+        });
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
 
         addAttributesMixin(new AttMixin() {
             @Override
-            public Object getAtt(String path, AttValueCtx value) throws Exception {
+            public Object getAtt(String path, AttValueCtx value) {
                 if (path.equals("innerMeta")) {
                     return "innerValue";
                 }

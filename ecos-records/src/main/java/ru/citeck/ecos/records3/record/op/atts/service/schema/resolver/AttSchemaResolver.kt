@@ -42,8 +42,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     private val attProcService = factory.attProcService
     private val attSchemaReader = factory.attSchemaReader
     private val dtoSchemaReader = factory.dtoSchemaReader
-    private val recordTypeService = factory.recordTypeService
     private val computedAttsService = factory.computedAttsService
+
+    private val recordTypeService by lazy { factory.recordTypeService ?: error("RecordTypeService is null") }
 
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()

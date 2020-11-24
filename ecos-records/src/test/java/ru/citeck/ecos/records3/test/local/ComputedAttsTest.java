@@ -19,7 +19,6 @@ import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt;
-import ru.citeck.ecos.records3.record.type.RecordTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,20 +67,17 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
     @BeforeAll
     void init() {
-        RecordsServiceFactory factory = new RecordsServiceFactory() {
-            @Override
-            protected RecordTypeService createRecordTypeService() {
-                return type -> {
-                    if ("type0".equals(type.getId())) {
-                        return computedAttributesType0;
-                    } else if ("type1".equals(type.getId())) {
-                        return computedAttributesType1;
-                    } else {
-                        throw new IllegalStateException("Type is unknown: " + type);
-                    }
-                };
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        factory.setRecordTypeService(type -> {
+            if ("type0".equals(type.getId())) {
+                return computedAttributesType0;
+            } else if ("type1".equals(type.getId())) {
+                return computedAttributesType1;
+            } else {
+                throw new IllegalStateException("Type is unknown: " + type);
             }
-        };
+        });
+
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
     }

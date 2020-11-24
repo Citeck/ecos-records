@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
+package ru.citeck.ecos.records3.record.op.atts.service.value
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData

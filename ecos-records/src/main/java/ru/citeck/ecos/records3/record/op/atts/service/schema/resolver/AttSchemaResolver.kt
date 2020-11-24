@@ -10,13 +10,13 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
-import ru.citeck.ecos.records2.type.ComputedAtt
-import ru.citeck.ecos.records2.type.RecordTypeService
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
 import ru.citeck.ecos.records3.record.op.atts.service.proc.AttProcDef
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttEdgeValue
@@ -24,6 +24,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.type.RecordTypeService
 import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors

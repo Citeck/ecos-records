@@ -21,7 +21,6 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
-import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
@@ -62,7 +61,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     protected PredicateService predicateService;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
-    protected RecordTypeService recordTypeService;
     private RecordAttsService recordAttsService;
     private DtoSchemaReader dtoSchemaReader;
 
@@ -255,7 +253,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                 .map(mv -> new AttributesMixinMetaValue(mv,
                     dtoSchemaReader,
                     recordAttsService,
-                    recordTypeService,
                     metaValuesConverter,
                     mixins,
                     metaCache
@@ -282,7 +279,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         predicateService = serviceFactory.getPredicateService();
         recordAttsService = serviceFactory.getRecordsAttsService();
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
-        recordTypeService = serviceFactory.getRecordTypeService();
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
     }
 

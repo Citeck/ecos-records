@@ -12,7 +12,6 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
-import ru.citeck.ecos.records2.type.RecordTypeService;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 @SuppressFBWarnings({"NP_BOOLEAN_RETURN_NULL"})
 public class AttributesMixinMetaValue extends MetaValueDelegate {
 
-    private final RecordTypeService recordTypeService;
     private final RecordAttsService recordAttsService;
     private final DtoSchemaReader dtoSchemaReader;
 
@@ -42,13 +40,11 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     public AttributesMixinMetaValue(MetaValue impl,
                                     DtoSchemaReader dtoSchemaReader,
                                     RecordAttsService recordAttsService,
-                                    RecordTypeService recordTypeService,
                                     MetaValuesConverter metaValuesConverter,
                                     Map<String, ParameterizedAttsMixin> mixins,
                                     Map<Object, Object> metaCache) {
         super(impl);
         this.mixins = mixins;
-        this.recordTypeService = recordTypeService;
         this.recordAttsService = recordAttsService;
         this.dtoSchemaReader = dtoSchemaReader;
         this.metaValuesConverter = metaValuesConverter;
@@ -159,7 +155,6 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
                 AttributesMixinMetaValue att = new AttributesMixinMetaValue(value,
                     dtoSchemaReader,
                     recordAttsService,
-                    recordTypeService,
                     metaValuesConverter,
                     mixins,
                     null

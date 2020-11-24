@@ -11,14 +11,15 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttType;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttValueCtx;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records2.type.ComputedAtt;
-import ru.citeck.ecos.records2.type.RecordTypeService;
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt;
+import ru.citeck.ecos.records3.record.type.RecordTypeService;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +55,7 @@ public class InnerMixinTest extends AbstractRecordsDao
                     if (type.equals(TEST_TYPE0)) {
                         ComputedAtt att = ComputedAtt.create(b -> {
                             b.withId("computed");
-                            b.withType("attribute");
+                            b.withType(ComputedAttType.ATTRIBUTE);
                             b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
                             return Unit.INSTANCE;
                         });
@@ -62,7 +63,7 @@ public class InnerMixinTest extends AbstractRecordsDao
                     } else if (type.equals(TEST_TYPE1)) {
                         ComputedAtt att = ComputedAtt.create(b -> {
                             b.withId("computed");
-                            b.withType("attribute");
+                            b.withType(ComputedAttType.ATTRIBUTE);
                             b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
                             return Unit.INSTANCE;
                         });

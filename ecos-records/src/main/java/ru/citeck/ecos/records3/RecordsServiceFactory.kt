@@ -28,17 +28,15 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
 import ru.citeck.ecos.records2.source.dao.local.source.RecordsSourceRecordsDao
-import ru.citeck.ecos.records2.type.DefaultRecTypeService
-import ru.citeck.ecos.records2.type.RecordTypeService
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsServiceImpl
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttsService
 import ru.citeck.ecos.records3.record.op.atts.service.proc.*
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.proc.AttProcReader
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaResolver
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.computed.ComputedAttsService
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaGqlWriter
 import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter
@@ -50,6 +48,8 @@ import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.record.type.DefaultRecTypeService
+import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
 import ru.citeck.ecos.records3.txn.RecordsTxnService
@@ -295,7 +295,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRecordTypeService(): RecordTypeService {
-        return DefaultRecTypeService(this)
+        return DefaultRecTypeService()
     }
 
     protected open fun createRecordsTemplateService(): RecordsTemplateService {
@@ -335,7 +335,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createComputedAttsService(): ComputedAttsService {
-        return ComputedAttsService()
+        return ComputedAttsService(this)
     }
 
     protected open fun createRecordsTxnService(): RecordsTxnService {

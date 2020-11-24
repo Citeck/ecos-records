@@ -18,8 +18,8 @@ import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
 
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records2.type.ComputedAtt;
-import ru.citeck.ecos.records2.type.RecordTypeService;
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt;
+import ru.citeck.ecos.records3.record.type.RecordTypeService;
 
 import java.util.*;
 import java.util.stream.Collectors;

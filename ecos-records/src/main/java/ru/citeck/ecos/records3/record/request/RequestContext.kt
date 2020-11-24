@@ -108,7 +108,7 @@ class RequestContext {
                 val builder: RequestCtxData.Builder = RequestCtxData.create()
                 ctxData?.invoke(builder)
                 current = RequestContext()
-                current.ctxData = builder.build()
+                current.ctxData = builder.withCtxAtts(mapOf(Pair("now", Date()))).build()
                 current.serviceFactory = notNullServices
                 RequestContext.current.set(current)
                 isContextOwner = true

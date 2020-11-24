@@ -15,7 +15,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttSchemaR
 import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.ResolveArgs;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttValueCtx;
+import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx;
 
 import java.util.Arrays;
 import java.util.Collection;

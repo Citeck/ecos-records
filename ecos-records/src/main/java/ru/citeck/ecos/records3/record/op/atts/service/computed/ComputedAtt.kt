@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.type
+package ru.citeck.ecos.records3.record.op.atts.service.computed
 
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.data.ObjectData
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 @JackJsonDeserialize(builder = ComputedAtt.Builder::class)
 data class ComputedAtt(
     val id: String,
-    val type: String,
+    val type: ComputedAttType,
     val config: ObjectData = ObjectData.create(),
     val persistent: Boolean = false
 ) {
@@ -41,7 +41,7 @@ data class ComputedAtt(
     class Builder() {
 
         lateinit var id: String
-        lateinit var type: String
+        lateinit var type: ComputedAttType
         var config: ObjectData = ObjectData.create()
         var persistent: Boolean = false
 
@@ -57,7 +57,7 @@ data class ComputedAtt(
             return this
         }
 
-        fun withType(type: String): Builder {
+        fun withType(type: ComputedAttType): Builder {
             this.type = type
             return this
         }

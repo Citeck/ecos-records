@@ -15,6 +15,8 @@ data class ComputedAtt(
 
     companion object {
 
+        val EMPTY = create().build()
+
         @JvmStatic
         fun create(): Builder {
             return Builder()
@@ -40,8 +42,8 @@ data class ComputedAtt(
 
     class Builder() {
 
-        lateinit var id: String
-        lateinit var type: ComputedAttType
+        var id: String = ""
+        var type: ComputedAttType = ComputedAttType.NONE
         var config: ObjectData = ObjectData.create()
         var persistent: Boolean = false
 

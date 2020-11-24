@@ -15,6 +15,7 @@ data class ComputedAtt(
 
     companion object {
 
+        @JvmField
         val EMPTY = create().build()
 
         @JvmStatic

@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.test.local;
 
-import kotlin.Unit;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,6 +11,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttType;
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttDef;
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue;
@@ -50,20 +50,22 @@ public class InnerMixinTest extends AbstractRecordsDao
         RecordsServiceFactory factory = new RecordsServiceFactory();
         factory.setRecordTypeService(type -> {
             if (type.equals(TEST_TYPE0)) {
-                ComputedAtt att = ComputedAtt.create(b -> {
-                    b.withId("computed");
-                    b.withType(ComputedAttType.ATTRIBUTE);
-                    b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
-                    return Unit.INSTANCE;
-                });
+                ComputedAtt att = new ComputedAtt(
+                    "computed",
+                    new ComputedAttDef(
+                        ComputedAttType.ATTRIBUTE,
+                        ObjectData.create("{\"attribute\":\"computedAtt0\"}")
+                    )
+                );
                 return Collections.singletonList(att);
             } else if (type.equals(TEST_TYPE1)) {
-                ComputedAtt att = ComputedAtt.create(b -> {
-                    b.withId("computed");
-                    b.withType(ComputedAttType.ATTRIBUTE);
-                    b.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
-                    return Unit.INSTANCE;
-                });
+                ComputedAtt att = new ComputedAtt(
+                    "computed",
+                    new ComputedAttDef(
+                        ComputedAttType.ATTRIBUTE,
+                        ObjectData.create("{\"attribute\":\"computedAtt1\"}")
+                    )
+                );
                 return Collections.singletonList(att);
             }
             return Collections.emptyList();

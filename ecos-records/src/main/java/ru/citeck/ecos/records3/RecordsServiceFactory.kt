@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.records2.QueryContext
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
 import ru.citeck.ecos.records2.evaluator.evaluators.*
@@ -31,6 +32,7 @@ import ru.citeck.ecos.records2.source.dao.local.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService
 import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsServiceImpl
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttsService
 import ru.citeck.ecos.records3.record.op.atts.service.proc.*
 import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader
@@ -81,6 +83,7 @@ open class RecordsServiceFactory {
     val predicateJsonDeserializer: PredicateJsonDeserializer by lazy { createPredicateJsonDeserializer() }
     val predicateTypes: PredicateTypes by lazy { createPredicateTypes() }
     val recordsTemplateService: RecordsTemplateService by lazy { createRecordsTemplateService() }
+    val recordTypeService: RecordTypeService by lazy { createRecordTypeService() }
     val attProcService: AttProcService by lazy { createAttProcService() }
     val attSchemaReader: AttSchemaReader by lazy { createAttSchemaReader() }
     val attSchemaWriter: AttSchemaWriter by lazy { createAttSchemaWriter() }
@@ -109,13 +112,21 @@ open class RecordsServiceFactory {
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
-    var recordTypeService: RecordTypeService? = null
+    private var recordTypeServiceImpl: RecordTypeService? = null
 
     private var isJobsInitialized = false
 
     init {
         Json.context.addDeserializer(predicateJsonDeserializer)
         Json.context.addSerializer(PredicateJsonSerializer())
+    }
+
+    protected open fun createRecordTypeService(): RecordTypeService {
+        return object : RecordTypeService {
+            override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
+                return recordTypeServiceImpl?.getComputedAtts(typeRef) ?: emptyList()
+            }
+        }
     }
 
     protected open fun createMetaValuesConverter(): MetaValuesConverter {
@@ -336,5 +347,9 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordsTxnService(): RecordsTxnService {
         return DefaultRecordsTxnService()
+    }
+
+    fun setRecordTypeService(recordTypeService: RecordTypeService) {
+        this.recordTypeServiceImpl = recordTypeService
     }
 }

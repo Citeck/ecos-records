@@ -7,6 +7,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt
+import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttDef
 import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAttType
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -23,50 +24,54 @@ class ComputedAttTest {
     fun test() {
 
         val type0Atts = listOf(
-            ComputedAtt.create()
-                .withId("attAttribute")
-                .withType(ComputedAttType.ATTRIBUTE)
-                .withConfig(
+            ComputedAtt(
+                "attAttribute",
+                ComputedAttDef(
+                    ComputedAttType.ATTRIBUTE,
                     ObjectData.create(
                         mapOf(
                             Pair("attribute", "attAttributeValue")
                         )
                     )
-                ).build(),
-            ComputedAtt.create()
-                .withId("attScript0")
-                .withType(ComputedAttType.SCRIPT)
-                .withConfig(
+                )
+            ),
+            ComputedAtt(
+                "attScript0",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
                     ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load('attForScript');")
                         )
                     )
-                ).build(),
-            ComputedAtt.create()
-                .withId("attScript1")
-                .withType(ComputedAttType.SCRIPT)
-                .withConfig(
+                )
+            ),
+            ComputedAtt(
+                "attScript1",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
                     ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load({'key':'attForScript'});")
                         )
                     )
-                ).build(),
-            ComputedAtt.create()
-                .withId("attScript2")
-                .withType(ComputedAttType.SCRIPT)
-                .withConfig(
+                )
+            ),
+            ComputedAtt(
+                "attScript2",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
                     ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load(['attForScript']);")
                         )
                     )
-                ).build()
+                )
+            )
         )
 
         val services = RecordsServiceFactory()
-        services.recordTypeService = object : RecordTypeService {
+        services.setRecordTypeService(object : RecordTypeService {
             override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
                 return if (typeRef == type0) {
                     type0Atts
@@ -74,7 +79,7 @@ class ComputedAttTest {
                     emptyList()
                 }
             }
-        }
+        })
 
         val type0Record = RecordValue("type0Record", type0, "first", "second")
         val type1Record = RecordValue("type1Record", type1, "third", "fourth")

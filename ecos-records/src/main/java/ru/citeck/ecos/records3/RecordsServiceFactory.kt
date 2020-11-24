@@ -48,7 +48,6 @@ import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.record.type.DefaultRecTypeService
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
@@ -81,7 +80,6 @@ open class RecordsServiceFactory {
     val recordEvaluatorService: RecordEvaluatorService by lazy { createRecordEvaluatorService() }
     val predicateJsonDeserializer: PredicateJsonDeserializer by lazy { createPredicateJsonDeserializer() }
     val predicateTypes: PredicateTypes by lazy { createPredicateTypes() }
-    val recordTypeService: RecordTypeService by lazy { createRecordTypeService() }
     val recordsTemplateService: RecordsTemplateService by lazy { createRecordsTemplateService() }
     val attProcService: AttProcService by lazy { createAttProcService() }
     val attSchemaReader: AttSchemaReader by lazy { createAttSchemaReader() }
@@ -110,6 +108,8 @@ open class RecordsServiceFactory {
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
+
+    var recordTypeService: RecordTypeService? = null
 
     private var isJobsInitialized = false
 
@@ -292,10 +292,6 @@ open class RecordsServiceFactory {
 
     protected open fun createMetaRecordsDaoAttsProvider(): MetaRecordsDaoAttsProvider {
         return MetaRecordsDaoAttsProviderImpl()
-    }
-
-    protected open fun createRecordTypeService(): RecordTypeService {
-        return DefaultRecTypeService()
     }
 
     protected open fun createRecordsTemplateService(): RecordsTemplateService {

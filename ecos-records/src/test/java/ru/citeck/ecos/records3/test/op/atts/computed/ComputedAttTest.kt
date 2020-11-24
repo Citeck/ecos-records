@@ -65,16 +65,13 @@ class ComputedAttTest {
                 ).build()
         )
 
-        val services = object : RecordsServiceFactory() {
-            override fun createRecordTypeService(): RecordTypeService {
-                return object : RecordTypeService {
-                    override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
-                        return if (typeRef == type0) {
-                            type0Atts
-                        } else {
-                            emptyList()
-                        }
-                    }
+        val services = RecordsServiceFactory()
+        services.recordTypeService = object : RecordTypeService {
+            override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
+                return if (typeRef == type0) {
+                    type0Atts
+                } else {
+                    emptyList()
                 }
             }
         }

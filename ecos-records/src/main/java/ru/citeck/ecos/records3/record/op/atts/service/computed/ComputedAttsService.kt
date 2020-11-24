@@ -18,11 +18,11 @@ class ComputedAttsService(services: RecordsServiceFactory) {
 
     fun compute(context: AttValueCtx, att: ComputedAtt): Any? {
 
-        return when (att.type) {
+        return when (att.def.type) {
 
             ComputedAttType.SCRIPT -> {
 
-                val script = att.config.get("script").asText()
+                val script = att.def.config.get("script").asText()
 
                 if (StringUtils.isBlank(script)) {
                     log.warn("Script is blank. Att: $att")
@@ -38,11 +38,11 @@ class ComputedAttsService(services: RecordsServiceFactory) {
             }
             ComputedAttType.ATTRIBUTE -> {
 
-                context.getAtt(att.config.get("attribute").asText())
+                context.getAtt(att.def.config.get("attribute").asText())
             }
             ComputedAttType.VALUE -> {
 
-                val value = att.config.get("value")
+                val value = att.def.config.get("value")
                 if (value.isTextual()) {
                     val text = value.asText()
                     val lowerText = text.toLowerCase()

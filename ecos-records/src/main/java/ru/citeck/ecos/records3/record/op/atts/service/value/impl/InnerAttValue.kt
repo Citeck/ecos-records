@@ -5,10 +5,10 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView
 import java.util.*
 
-class InnerAttValue(value: Any?) : AttValue, HasCollectionView<InnerAttValue> {
+class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
 
     companion object {
 
@@ -42,7 +42,7 @@ class InnerAttValue(value: Any?) : AttValue, HasCollectionView<InnerAttValue> {
         }
     }
 
-    override fun getCollectionView(): Collection<InnerAttValue> {
+    override fun getListView(): List<InnerAttValue> {
         if (value is ArrayNode) {
             val result: MutableList<InnerAttValue> = ArrayList()
             for (elem in value) {

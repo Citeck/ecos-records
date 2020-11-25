@@ -18,7 +18,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
@@ -397,8 +397,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         return if (rawValue == null || isNull(rawValue)) {
             emptyList()
-        } else if (rawValue is HasCollectionView<*>) {
-            ArrayList(rawValue.collectionView)
+        } else if (rawValue is HasListView<*>) {
+            ArrayList(rawValue.getListView())
+        } else if (rawValue is DataValue) {
+            if (rawValue.isArray()) {
+                rawValue.toList()
+            } else {
+                arrayListOf(rawValue)
+            }
         } else if (rawValue is Collection<*>) {
             ArrayList(rawValue.filterNotNull())
         } else if (rawValue.javaClass.isArray) {
@@ -515,7 +521,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             } else {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
-                    RecordConstants.ATT_ECOS_TYPE -> value.getType()
+                    RecordConstants.ATT_ECOS_TYPE -> value.type
                     RecordConstants.ATT_AS -> AttFuncValue { type -> value.getAs(type) }
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }

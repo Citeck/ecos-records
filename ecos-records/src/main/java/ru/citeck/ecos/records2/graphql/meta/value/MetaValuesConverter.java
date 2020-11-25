@@ -9,7 +9,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.impl.MetaAttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView;
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -58,9 +58,9 @@ public class MetaValuesConverter {
 
             result = Collections.emptyList();
 
-        } else if (rawValue instanceof HasCollectionView) {
+        } else if (rawValue instanceof HasListView) {
 
-            result = new ArrayList<>(((HasCollectionView<?>) rawValue).getCollectionView());
+            result = new ArrayList<>(((HasListView<?>) rawValue).getListView());
 
         } else if (rawValue instanceof Collection<?>) {
 

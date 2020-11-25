@@ -4,13 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView
 import java.util.ArrayList
 
 class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
 
     override fun getValue(value: JsonNode): AttValue? {
 
-        return object : AttValue {
+        return object : AttValue, HasListView<JsonNode> {
 
             override fun asText(): String? {
                 return if (value is NullNode || value is MissingNode) {
@@ -36,6 +37,14 @@ class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
 
             override fun asJson(): Any? {
                 return value
+            }
+
+            override fun getListView(): List<JsonNode> {
+                return if (value.isArray) {
+                    value.toList()
+                } else {
+                    listOf(value)
+                }
             }
         }
     }

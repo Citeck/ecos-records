@@ -67,6 +67,28 @@ class ComputedAttTest {
                         )
                     )
                 )
+            ),
+            ComputedAtt(
+                "attScript3",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
+                    ObjectData.create(
+                        mapOf(
+                            Pair("script", "return value.load('attForScript') + '-postfix';")
+                        )
+                    )
+                )
+            ),
+            ComputedAtt(
+                "attScript4",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
+                    ObjectData.create(
+                        mapOf(
+                            Pair("script", "return value.load('attForScript').asText() + '-postfix';")
+                        )
+                    )
+                )
             )
         )
 
@@ -111,6 +133,10 @@ class ComputedAttTest {
             DataValue.create("{\"attForScript\":\"${type0Record.attForScript}\"}"),
             services.recordsServiceV1.getAtt(type0Ref, "attScript2?json")
         )
+        assertEquals('"' + type0Record.attForScript + '"' + "-postfix",
+            services.recordsServiceV1.getAtt(type0Ref, "attScript3").asText())
+        assertEquals(type0Record.attForScript + "-postfix",
+            services.recordsServiceV1.getAtt(type0Ref, "attScript4").asText())
     }
 
     data class RecordValue(

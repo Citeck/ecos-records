@@ -7,16 +7,14 @@ import ecos.com.fasterxml.jackson210.databind.node.MissingNode;
 import ecos.com.fasterxml.jackson210.databind.node.NullNode;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasCollectionView;
+import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-
-public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaValue> {
+public class InnerMetaValue implements MetaValue, HasListView<InnerMetaValue> {
 
     private final JsonNode value;
 
@@ -62,8 +60,9 @@ public class InnerMetaValue implements MetaValue, HasCollectionView<InnerMetaVal
         return new InnerMetaValue(value.path("as"));
     }
 
+    @NotNull
     @Override
-    public Collection<InnerMetaValue> getCollectionView() {
+    public List<InnerMetaValue> getListView() {
         if (value instanceof ArrayNode) {
             List<InnerMetaValue> result = new ArrayList<>();
             for (JsonNode val : value) {

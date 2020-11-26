@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.op.atts.service.computed.script
 
-import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.RecordRef
 
 interface AttValueScriptCtx {
@@ -11,5 +10,5 @@ interface AttValueScriptCtx {
 
     fun getLocalId(): String
 
-    fun load(attributes: Any?): DataValue
+    fun load(attributes: Any?): Any?
 }

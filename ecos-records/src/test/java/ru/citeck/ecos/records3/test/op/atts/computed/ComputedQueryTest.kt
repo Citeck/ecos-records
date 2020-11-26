@@ -51,6 +51,33 @@ class ComputedQueryTest {
                 )
             ),
             ComputedAtt(
+                "attScript01",
+                ComputedAttDef(
+                    ComputedAttType.SCRIPT,
+                    ObjectData.create(
+                        mapOf(
+                            Pair(
+                                "script",
+                                """
+                                    var queryRes = Records.query({
+                                        sourceId: 'test',
+                                        query: {
+                                            t: 'eq',
+                                            att: 'attAttributeValue',
+                                            val: 'first'
+                                        },
+                                        language: 'predicate'
+                                    }, {
+                                        'att': 'attForScript'
+                                    });
+                                    return queryRes.records.map(function(rec) { return rec.att; });
+                                """.trimIndent()
+                            )
+                        )
+                    )
+                )
+            ),
+            ComputedAtt(
                 "attScript1",
                 ComputedAttDef(
                     ComputedAttType.SCRIPT,
@@ -112,6 +139,11 @@ class ComputedQueryTest {
                     "}"
             ),
             services.recordsServiceV1.getAtt(type0Ref, "attScript0?json")
+        )
+
+        assertEquals(
+            DataValue.create("[\"${type0Record.attForScript}\"]"),
+            services.recordsServiceV1.getAtt(type0Ref, "attScript01[]")
         )
 
         assertEquals(

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.op.atts.service.computed.script
 
+import jdk.nashorn.internal.objects.NativeArray
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
@@ -7,7 +8,6 @@ import ru.citeck.ecos.commons.utils.ScriptUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 
 class RecordsScriptService(services: RecordsServiceFactory) {
@@ -18,23 +18,32 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         return AttValueScriptCtxImpl(Record(RecordRef.valueOf(recordRef)))
     }
 
-    fun query(query: Any?, attributes: Any?): RecsQueryRes<DataValue> {
+    private fun getEmptyRes() : Any {
+        return linkedMapOf(
+            Pair("hasMore", false),
+            Pair("totalCount", 0),
+            Pair("records", NativeArray.construct(true, null)),
+            Pair("messages", NativeArray.construct(true, null))
+        )
+    }
+
+    fun query(query: Any?, attributes: Any?): Any {
 
         val javaQuery = ScriptUtils.convertToJava(query)
-        val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return RecsQueryRes()
-        val atts = ComputedScriptUtils.toRecordAttsMap(attributes) ?: return RecsQueryRes()
+        val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return getEmptyRes()
+        val atts = ComputedScriptUtils.toRecordAttsMap(attributes) ?: return getEmptyRes()
 
         val result = recordsService.query(recsQuery, atts.first)
-        val flatResult = RecsQueryRes<DataValue>()
-        flatResult.setHasMore(result.getHasMore())
-        flatResult.setTotalCount(result.getTotalCount())
-        flatResult.setRecords(
-            result.getRecords().map {
-                it.getAtts().getData().copy().set("id", it.getId().toString())
-            }
-        )
+        val flatResult = LinkedHashMap<String, Any?>()
 
-        return flatResult
+        flatResult["hasMore"] = result.getHasMore()
+        flatResult["totalCount"] = result.getTotalCount()
+        flatResult["records"] = result.getRecords().map {
+            it.getAtts().getData().copy().set("id", it.getId().toString())
+        }
+        flatResult["messages"] = NativeArray.construct(true, null)
+
+        return ScriptUtils.convertToScript(flatResult) ?: error("Conversion error. Result: $flatResult")
     }
 
     private inner class Record(val recordRef: RecordRef) : AttValueCtx {

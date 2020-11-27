@@ -11,6 +11,7 @@ object ComputedUtils {
         return RequestContext.getCurrentNotNull().doWithVar(IS_NEW_RECORD_CTX_KEY, true, action)
     }
 
+    @JvmStatic
     fun <T : Any> doWithNewRecordJ(action: Supplier<T?>): T? {
         return doWithNewRecord { action.get() }
     }

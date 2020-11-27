@@ -7,5 +7,5 @@ enum class StoringType {
      */
     ON_EMPTY,
     ON_CREATE,
-    ON_MUTATION
+    ON_MUTATE
 }

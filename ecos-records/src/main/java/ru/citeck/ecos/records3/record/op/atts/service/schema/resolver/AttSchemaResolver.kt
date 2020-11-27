@@ -25,6 +25,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.type.RecordTypeService
+import ru.citeck.ecos.records3.utils.AttUtils
 import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors
@@ -653,14 +654,21 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         override fun <T : Any> getAtts(attributes: Class<T>): T {
             val schema = dtoSchemaReader.read(attributes)
-            return dtoSchemaReader.instantiate(attributes, getAtts(schema)) ?: attributes.newInstance()
+            return dtoSchemaReader.instantiate(attributes, getAttsBySchema(schema)) ?: attributes.newInstance()
+        }
+
+        override fun getAtts(attributes: Collection<String>): ObjectData {
+            return getAtts(AttUtils.toMap(attributes))
         }
 
         override fun getAtts(attributes: Map<String, *>): ObjectData {
-            return getAtts(attSchemaReader.read(attributes))
+            return getAttsBySchema(attSchemaReader.read(attributes))
         }
 
-        private fun getAtts(schemaAtts: List<SchemaAtt>): ObjectData {
+        private fun getAttsBySchema(schemaAtts: List<SchemaAtt>): ObjectData {
+            if (schemaAtts.isEmpty()) {
+                return ObjectData.create()
+            }
             val attPathBefore: String = resolveCtx.path
             resolveCtx.path = basePath
             return try {

@@ -26,80 +26,80 @@ class ComputedAttTest {
         val type0Atts = listOf(
             ComputedAtt(
                 "attAttribute",
-                ComputedAttDef(
-                    ComputedAttType.ATTRIBUTE,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.ATTRIBUTE
+                    config = ObjectData.create(
                         mapOf(
                             Pair("attribute", "attAttributeValue")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript0",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load('attForScript');")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript1",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load({'key':'attForScript'});")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript2",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load(['attForScript']);")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript3",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load('attForScript') + '-postfix';")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript4",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return value.load('attForScript').asText() + '-postfix';")
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript5",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair("script", "return [value.load('attForScript'), 'def'];")
                         )
                     )
-                )
+                }
             )
         )
 

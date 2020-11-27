@@ -4,6 +4,7 @@ enum class ComputedAttType {
     SCRIPT,
     ATTRIBUTE,
     VALUE,
+    TEMPLATE,
     COUNTER,
     NONE
 }

@@ -223,7 +223,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                         } else {
                             emptyList()
                         }
-                        val recAtts: List<RecordAtts> = context.doWithVar(
+                        val recAtts: List<RecordAtts> = context.doWithVarNotNull(
                             AttSchemaResolver.CTX_SOURCE_ID_KEY,
                             query.sourceId
                         ) {

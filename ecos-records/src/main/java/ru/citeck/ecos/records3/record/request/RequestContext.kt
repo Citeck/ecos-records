@@ -156,7 +156,17 @@ class RequestContext {
 
     private var messages: MutableList<ReqMsg> = ArrayList()
 
-    fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T): T {
+    fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T?): T? {
+        val prevValue = getVar<Any>(key)
+        putVar(key, data)
+        return try {
+            action.invoke()
+        } finally {
+            putVar(key, prevValue)
+        }
+    }
+
+    fun <T : Any> doWithVarNotNull(key: String, data: Any?, action: () -> T): T {
         val prevValue = getVar<Any>(key)
         putVar(key, data)
         return try {

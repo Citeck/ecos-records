@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.computed
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.ScriptUtils
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.commons.utils.TmplUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.computed.script.AttValueScriptCtxImpl
 import ru.citeck.ecos.records3.record.op.atts.service.computed.script.RecordsScriptService
@@ -17,6 +18,16 @@ class ComputedAttsService(services: RecordsServiceFactory) {
     private val recordsScriptService by lazy { RecordsScriptService(services) }
 
     fun compute(context: AttValueCtx, att: ComputedAtt): Any? {
+
+        if (att.def.storingType == StoringType.ON_CREATE && !ComputedUtils.isNewRecord()) {
+            return context.getAtt(att.id)
+        }
+        if (att.def.storingType == StoringType.ON_EMPTY) {
+            val currentValue = context.getAtt(att.id)
+            if (!currentValue.isNull()) {
+                return currentValue.asJavaObj()
+            }
+        }
 
         return when (att.def.type) {
 
@@ -61,6 +72,13 @@ class ComputedAttsService(services: RecordsServiceFactory) {
                 } else {
                     value
                 }
+            }
+            ComputedAttType.TEMPLATE -> {
+
+                val value = att.def.config.get("template").asText()
+                val atts = context.getAtts(TmplUtils.getAtts(value))
+
+                return TmplUtils.applyAtts(value, atts)
             }
             ComputedAttType.COUNTER, ComputedAttType.NONE -> {
 

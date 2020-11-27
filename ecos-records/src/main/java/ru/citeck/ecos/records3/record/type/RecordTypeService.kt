@@ -6,4 +6,6 @@ import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt
 interface RecordTypeService {
 
     fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt>
+
+    // fun getNumTemplate(typeRef: RecordRef): RecordRef?
 }

@@ -18,7 +18,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         return AttValueScriptCtxImpl(Record(RecordRef.valueOf(recordRef)))
     }
 
-    private fun getEmptyRes() : Any {
+    private fun getEmptyRes(): Any {
         return linkedMapOf(
             Pair("hasMore", false),
             Pair("totalCount", 0),
@@ -61,6 +61,10 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         }
 
         override fun getAtts(attributes: Map<String, *>): ObjectData {
+            return recordsService.getAtts(recordRef, attributes).getAtts()
+        }
+
+        override fun getAtts(attributes: Collection<String>): ObjectData {
             return recordsService.getAtts(recordRef, attributes).getAtts()
         }
 

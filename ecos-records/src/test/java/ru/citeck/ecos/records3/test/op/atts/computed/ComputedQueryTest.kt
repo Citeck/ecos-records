@@ -25,9 +25,9 @@ class ComputedQueryTest {
         val type0Atts = listOf(
             ComputedAtt(
                 "attScript0",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair(
                                 "script",
@@ -48,13 +48,13 @@ class ComputedQueryTest {
                             )
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript01",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair(
                                 "script",
@@ -75,13 +75,13 @@ class ComputedQueryTest {
                             )
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript1",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair(
                                 "script",
@@ -91,13 +91,13 @@ class ComputedQueryTest {
                             )
                         )
                     )
-                )
+                }
             ),
             ComputedAtt(
                 "attScript2",
-                ComputedAttDef(
-                    ComputedAttType.SCRIPT,
-                    ObjectData.create(
+                ComputedAttDef.create {
+                    type = ComputedAttType.SCRIPT
+                    config = ObjectData.create(
                         mapOf(
                             Pair(
                                 "script",
@@ -107,7 +107,7 @@ class ComputedQueryTest {
                             )
                         )
                     )
-                )
+                }
             )
         )
 

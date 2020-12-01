@@ -7,22 +7,25 @@ object SystemContextUtil {
 
     private const val SYSTEM_CONTEXT_KEY = "is-system-context"
 
-    fun <T: Any> doAsSystem(action: () -> T?) : T? {
+    fun <T : Any> doAsSystem(action: () -> T?): T? {
         return RequestContext.getCurrentNotNull().doWithVar(SYSTEM_CONTEXT_KEY, true, action)
     }
 
-    fun <T: Any> doAsSystemNotNull(action: () -> T) : T {
+    fun <T : Any> doAsSystemNotNull(action: () -> T): T {
         return RequestContext.getCurrentNotNull().doWithVarNotNull(SYSTEM_CONTEXT_KEY, true, action)
     }
 
-    fun <T: Any> doAsSystemJ(action: Supplier<T?>) : T? {
+    @JvmStatic
+    fun <T : Any> doAsSystemJ(action: Supplier<T?>): T? {
         return doAsSystem { action.get() }
     }
 
-    fun <T: Any> doAsSystemNotNullJ(action: Supplier<T>) : T {
+    @JvmStatic
+    fun <T : Any> doAsSystemNotNullJ(action: Supplier<T>): T {
         return doAsSystemNotNull { action.get() }
     }
 
+    @JvmStatic
     fun isSystemContext(): Boolean {
         return RequestContext.getCurrentNotNull().getVar<Boolean>(SYSTEM_CONTEXT_KEY) == true
     }

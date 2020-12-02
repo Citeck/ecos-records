@@ -44,7 +44,7 @@ public class RecordElement implements Element {
             this.meta = new RecordMeta(meta);
             return;
         }
-        meta.forEach((k, v) -> this.meta.set(k, v));
+        meta.forEachJ((k, v) -> this.meta.set(k, v));
     }
 
     @Override
@@ -60,7 +60,7 @@ public class RecordElement implements Element {
                     }
                 }
                 RecordMeta atts = recordsService.getAttributes(recordRef, getQueryAtts(missingAttributes));
-                atts.forEach((k, v) -> meta.set(k, v));
+                atts.forEachJ((k, v) -> meta.set(k, v));
             }
         }
         return new Attributes(meta);

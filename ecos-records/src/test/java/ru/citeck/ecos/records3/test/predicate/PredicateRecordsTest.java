@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -37,6 +38,40 @@ public class PredicateRecordsTest {
             .addRecord("bbb", new DataDto("str2-value", 100))
             .addRecord("ccc", new DataDto("str3-value", 0))
             .build());
+    }
+
+    @Test
+    void testEmptyOr() {
+
+        DataValue predQuery = DataValue.create("{" +
+            "\"predicates\":[{\"t\":\"or\",\"val\":[{\"t\":\"or\",\"val\":[]}]}]," +
+            "\"record\":\"test@aaa\"" +
+        "}");
+
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(predQuery)
+            .withSourceId("predicate")
+            .build();
+
+        List<ResultDto> records = recordsService.query(query, ResultDto.class).getRecords();
+        assertTrue(records.get(0).result.get(0));
+    }
+
+    @Test
+    void testEmptyAnd() {
+
+        DataValue predQuery = DataValue.create("{" +
+            "\"predicates\":[{\"t\":\"or\",\"val\":[{\"t\":\"and\",\"val\":[]}]}]," +
+            "\"record\":\"test@aaa\"" +
+        "}");
+
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(predQuery)
+            .withSourceId("predicate")
+            .build();
+
+        List<ResultDto> records = recordsService.query(query, ResultDto.class).getRecords();
+        assertTrue(records.get(0).result.get(0));
     }
 
     @Test

@@ -7,7 +7,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.BiConsumer
 import kotlin.collections.LinkedHashMap
 
 class AttProcService(serviceFactory: RecordsServiceFactory) {
@@ -82,12 +81,10 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
             return data
         }
         val dataMap: MutableMap<String, Any?> = LinkedHashMap()
-        data.forEach(
-            BiConsumer {
-                key, value ->
-                dataMap[key] = value
-            }
-        )
+        data.forEach {
+            key, value ->
+            dataMap[key] = value
+        }
         return ObjectData.create(applyProcessors(dataMap, processors))
     }
 

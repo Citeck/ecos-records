@@ -181,14 +181,14 @@ class RemoteRecordsResolver(
             if (queryResp.records.size != refs.size) {
                 log.error("Incorrect response: $queryBody\n query: $queryBody")
                 for (ref in refs) {
-                    result.add(ValWithIdx<RecordAtts>(RecordAtts(ref.value), ref.idx))
+                    result.add(ValWithIdx(RecordAtts(ref.value), ref.idx))
                 }
             } else {
                 val recsAtts: List<RecordAtts> = queryResp.records
                 for (i in refs.indices) {
                     val ref: ValWithIdx<RecordRef> = refs[i]
                     val atts: RecordAtts = recsAtts[i]
-                    result.add(ValWithIdx<RecordAtts>(RecordAtts(atts, ref.value), ref.idx))
+                    result.add(ValWithIdx(RecordAtts(atts, ref.value), ref.idx))
                 }
             }
         }
@@ -204,14 +204,14 @@ class RemoteRecordsResolver(
 
         attsByApp.forEach { (appArg, atts) ->
 
-            val app = if (StringUtils.isBlank(appArg)) {
+            val appName = if (StringUtils.isBlank(appArg)) {
                 defaultAppName
             } else {
                 appArg
             }
 
             val mutateBody = MutateBody()
-            mutateBody.setRecords(atts.map { it.value })
+            mutateBody.setRecords(atts.map { it.value.withoutAppName() })
 
             setContextProps(mutateBody, context)
             val v0Body = MutationBody()
@@ -226,7 +226,7 @@ class RemoteRecordsResolver(
                 )
             v0Body.v1Body = mutateBody
 
-            val mutRespObj = postRecords(app, MUTATE_URL, v0Body)
+            val mutRespObj = postRecords(appName, MUTATE_URL, v0Body)
             val mutateResp: MutateResp? = toMutateResp(mutRespObj, context)
 
             if (mutateResp?.messages != null) {
@@ -241,8 +241,8 @@ class RemoteRecordsResolver(
                 val recsAtts = mutateResp.records
                 for (i in atts.indices) {
                     val refAtts = atts[i]
-                    val newAtts = recsAtts[i].getId().withDefaultAppName(refAtts.value.getId().appName)
-                    result.add(ValWithIdx(newAtts, refAtts.idx))
+                    val newAttsId = recsAtts[i].getId().withDefaultAppName(appName)
+                    result.add(ValWithIdx(newAttsId, refAtts.idx))
                 }
             }
         }
@@ -284,7 +284,7 @@ class RemoteRecordsResolver(
             }
 
             val deleteBody = DeleteBody()
-            deleteBody.setRecords(refs.map { it.value })
+            deleteBody.setRecords(refs.map { it.value.removeAppName() })
             setContextProps(deleteBody, context)
 
             val v0Body = DeletionBody()

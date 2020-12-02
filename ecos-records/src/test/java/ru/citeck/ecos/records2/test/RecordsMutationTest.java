@@ -168,7 +168,7 @@ public class RecordsMutationTest extends LocalRecordsDao
     protected RecordsMutResult mutateImpl(RecordsMutation mutation) {
 
         for (RecordMeta meta : mutation.getRecords()) {
-            meta.forEach((name, value) -> {
+            meta.forEachJ((name, value) -> {
                 assertFalse(name.startsWith("."));
                 assertFalse(name.contains("?"));
                 if (!RecordConstants.ATT_ALIAS.equals(name)) {

@@ -6,11 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.meta.util.AttModelUtils;
-import ru.citeck.ecos.records2.meta.util.RecordModelAtts;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
@@ -43,19 +40,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
             attributes.addAll(PredicateUtils.getAllPredicateAttributes(predicate));
         }
 
-        RecordModelAtts recordModelAtts = AttModelUtils.splitModelAttributes(attributes);
-
-        List<RecordAtts> resolvedAtts = recordsService.getAtts(
-            query.getRecords(),
-            recordModelAtts.getRecordAtts()
-        );
-        if (!recordModelAtts.getModelAtts().isEmpty()) {
-            RecordAtts modelAtts = recordsService.getAtts(
-                RequestContext.getCurrentNotNull().ctxData.getCtxAtts(),
-                recordModelAtts.getModelAtts()
-            );
-            resolvedAtts.forEach(rec -> modelAtts.forEach(rec::setAtt));
-        }
+        List<RecordAtts> resolvedAtts = recordsService.getAtts(query.getRecords(), attributes);
 
         int idx = 0;
         for (RecordAtts record : resolvedAtts) {

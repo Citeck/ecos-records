@@ -160,7 +160,7 @@ class RemoteRecordsResolverTest {
         mutation.setRecords(refs.stream().map(RecordMeta::new).collect(Collectors.toList()));
 
         RecordsMutResult mutResult = recordsService.mutate(mutation);
-        checkRecordsMeta(Collections.singletonList(refs.get(0)), mutResult.getRecords(), false);
+        checkRecordsMeta(Collections.singletonList(refs.get(0)), mutResult.getRecords(), true);
 
         RecordsDeletion deletion = new RecordsDeletion();
         deletion.setRecords(refs);

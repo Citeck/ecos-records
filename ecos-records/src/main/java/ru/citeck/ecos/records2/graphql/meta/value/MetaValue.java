@@ -64,7 +64,10 @@ public interface MetaValue {
 
     default Double getDouble() {
         String str = getString();
-        return str != null ? Double.parseDouble(str) : null;
+        if (StringUtils.isBlank(str)) {
+            return null;
+        }
+        return Double.parseDouble(str);
     }
 
     default Boolean getBool() {

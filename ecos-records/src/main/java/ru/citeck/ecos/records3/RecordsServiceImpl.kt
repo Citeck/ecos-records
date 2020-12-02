@@ -16,7 +16,6 @@ import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
-import java.util.function.BiConsumer
 
 class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService() {
 
@@ -84,22 +83,20 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             val record: RecordAtts = records[i]
             val attributes = ObjectData.create()
 
-            record.forEach(
-                BiConsumer { name, valueArg ->
-                    try {
-                        val parsedAtt = attSchemaReader.read("", name)
-                        val scalarName = parsedAtt.getScalarName()
-                        val value = if ("?assoc" == scalarName) {
-                            convertAssocValue(valueArg, aliasToRecordRef)
-                        } else {
-                            valueArg
-                        }
-                        attributes.set(parsedAtt.name, value)
-                    } catch (e: AttReadException) {
-                        log.error("Attribute read failed", e)
+            record.forEach { name, valueArg ->
+                try {
+                    val parsedAtt = attSchemaReader.read("", name)
+                    val scalarName = parsedAtt.getScalarName()
+                    val value = if ("?assoc" == scalarName) {
+                        convertAssocValue(valueArg, aliasToRecordRef)
+                    } else {
+                        valueArg
                     }
+                    attributes.set(parsedAtt.name, value)
+                } catch (e: AttReadException) {
+                    log.error("Attribute read failed", e)
                 }
-            )
+            }
             record.setAtts(attributes)
 
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)

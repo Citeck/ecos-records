@@ -73,6 +73,14 @@ open class RecordAtts() {
         }
     }
 
+    fun withoutAppName(): RecordAtts {
+        val id = this.id.removeAppName()
+        if (id == this.id) {
+            return this
+        }
+        return RecordAtts(id, attributes)
+    }
+
     @JsonProperty
     @JackJsonProperty
     fun setId(id: String?) {
@@ -83,8 +91,12 @@ open class RecordAtts() {
         this.id = RecordRef.valueOf(id)
     }
 
-    fun forEach(consumer: BiConsumer<String, DataValue>) {
+    fun forEach(consumer: (String, DataValue) -> Unit) {
         attributes.forEach(consumer)
+    }
+
+    fun forEachJ(consumer: BiConsumer<String, DataValue>) {
+        attributes.forEachJ(consumer)
     }
 
     fun getAttributes(): ObjectData {

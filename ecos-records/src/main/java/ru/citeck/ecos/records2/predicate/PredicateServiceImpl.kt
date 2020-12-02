@@ -78,6 +78,9 @@ open class PredicateServiceImpl(factory: RecordsServiceFactory) : PredicateServi
         return when (predicate) {
             is ComposedPredicate -> {
                 val predicates = predicate.getPredicates()
+                if (predicates.isEmpty()) {
+                    return true
+                }
                 val joinByAnd = predicate is AndPredicate
                 for (innerPredicate in predicates) {
                     if (isMatch(attributes, innerPredicate, comparator)) {

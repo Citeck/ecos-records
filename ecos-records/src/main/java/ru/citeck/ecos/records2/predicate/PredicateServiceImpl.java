@@ -62,6 +62,10 @@ public class PredicateServiceImpl implements PredicateService {
             List<Predicate> predicates = ((ComposedPredicate) predicate).getPredicates();
             boolean joinByAnd = predicate instanceof AndPredicate;
 
+            if (predicates.isEmpty()) {
+                return true;
+            }
+
             for (Predicate innerPredicate : predicates) {
                 if (isMatch(attributes, innerPredicate, comparator)) {
                     if (!joinByAnd) {

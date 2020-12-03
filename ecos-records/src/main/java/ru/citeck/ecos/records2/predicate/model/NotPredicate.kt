@@ -58,6 +58,6 @@ class NotPredicate : Predicate {
     }
 
     override fun toString(): String {
-        return "NOT $predicate"
+        return "{\"t\":\"not\",\"val\":$predicate}"
     }
 }

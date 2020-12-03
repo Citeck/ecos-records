@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.predicate.json.std;
 
 import ecos.com.fasterxml.jackson210.core.JsonParser;
+import ecos.com.fasterxml.jackson210.core.JsonToken;
 import ecos.com.fasterxml.jackson210.databind.DeserializationContext;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
@@ -38,7 +39,23 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
     public Predicate deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
         ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        ObjectNode predicateNode = mapper.readTree(jp);
+
+        ObjectNode predicateNode = null;
+        if (JsonToken.VALUE_STRING.equals(jp.getCurrentToken())) {
+            JsonNode node = mapper.readTree(jp.getValueAsString());
+            if (node instanceof ObjectNode) {
+                predicateNode = (ObjectNode) node;
+            }
+        } else {
+            predicateNode = mapper.readTree(jp);
+        }
+        if (predicateNode == null) {
+            throw ctxt.instantiationException(Predicate.class, "Incorrect predicate value: "
+                + jp.getCurrentValue() + " token: "
+                + jp.getCurrentToken() + " name: "
+                + jp.getCurrentName() + " location: "
+                + jp.getCurrentLocation());
+        }
 
         String type = predicateNode.path("t").asText();
 

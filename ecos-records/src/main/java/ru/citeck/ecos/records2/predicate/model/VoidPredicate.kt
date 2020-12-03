@@ -20,7 +20,7 @@ class VoidPredicate private constructor() : Predicate {
     }
 
     override fun toString(): String {
-        return "()"
+        return "{}"
     }
 
     override fun hashCode(): Int {

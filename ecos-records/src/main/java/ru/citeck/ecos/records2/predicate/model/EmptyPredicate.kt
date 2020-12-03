@@ -31,7 +31,7 @@ class EmptyPredicate : AttributePredicate {
     }
 
     override fun toString(): String {
-        return "EMPTY:'${getAttribute()}'"
+        return "{\"t\":\"$TYPE\",\"att\":\"${getAttribute()}\"}"
     }
 
     override fun equals(other: Any?): Boolean {

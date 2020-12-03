@@ -40,7 +40,7 @@ class OrPredicate : ComposedPredicate() {
     }
 
     override fun toString(): String {
-        return "(" + getPredicates().joinToString(" OR ") { it.toString() } + ")"
+        return "{\"t\":\"$TYPE\",\"val\":[${getPredicates().joinToString(",") { it.toString() }}]}"
     }
 
     override fun equals(other: Any?): Boolean {

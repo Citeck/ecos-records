@@ -117,7 +117,7 @@ class ValuePredicate : AttributePredicate {
     }
 
     override fun toString(): String {
-        return "('${getAttribute()}' $type '$value')"
+        return "{\"t\":\"${type.asString()}\",\"att\":\"${getAttribute()}\",\"val\":$value}"
     }
 
     override fun equals(other: Any?): Boolean {

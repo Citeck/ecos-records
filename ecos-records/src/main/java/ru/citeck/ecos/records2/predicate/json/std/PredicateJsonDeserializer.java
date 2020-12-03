@@ -2,13 +2,16 @@ package ru.citeck.ecos.records2.predicate.json.std;
 
 import ecos.com.fasterxml.jackson210.core.JsonParser;
 import ecos.com.fasterxml.jackson210.core.JsonToken;
+import ecos.com.fasterxml.jackson210.core.ObjectCodec;
 import ecos.com.fasterxml.jackson210.databind.DeserializationContext;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
+import ecos.com.fasterxml.jackson210.databind.ObjectReader;
 import ecos.com.fasterxml.jackson210.databind.deser.std.StdDeserializer;
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.predicate.model.*;
 
@@ -26,8 +29,8 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
 
     private static final long serialVersionUID = 1L;
 
-    private transient Map<String, PredicateResolver> predicateResolvers = new ConcurrentHashMap<>();
-    private transient PredicateTypes predicateTypes;
+    private final transient Map<String, PredicateResolver> predicateResolvers = new ConcurrentHashMap<>();
+    private final transient PredicateTypes predicateTypes;
 
     public PredicateJsonDeserializer(PredicateTypes predicateTypes) {
         super(Predicate.class);
@@ -38,16 +41,23 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
     @Override
     public Predicate deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+        ObjectCodec codec = jp.getCodec();
 
         ObjectNode predicateNode = null;
         if (JsonToken.VALUE_STRING.equals(jp.getCurrentToken())) {
-            JsonNode node = mapper.readTree(jp.getValueAsString());
+            JsonNode node;
+            if (codec instanceof ObjectMapper) {
+                node = ((ObjectMapper) codec).readTree(jp.getValueAsString());
+            } else if (codec instanceof ObjectReader) {
+                node = ((ObjectReader) codec).readTree(jp.getValueAsString());
+            } else {
+                node = Json.getMapper().read(jp.getValueAsString());
+            }
             if (node instanceof ObjectNode) {
                 predicateNode = (ObjectNode) node;
             }
         } else {
-            predicateNode = mapper.readTree(jp);
+            predicateNode = codec.readTree(jp);
         }
         if (predicateNode == null) {
             throw ctxt.instantiationException(Predicate.class, "Incorrect predicate value: "
@@ -82,18 +92,18 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
 
                 JsonNode children = predicateNode.get("val");
                 if (children instanceof ArrayNode && children.size() == 1) {
-                    predicate = mapper.treeToValue(children.get(0), Predicate.class);
+                    predicate = codec.treeToValue(children.get(0), Predicate.class);
                 }
             }
             if (predicate == null) {
-                predicate = mapper.treeToValue(predicateNode, predicateType);
+                predicate = codec.treeToValue(predicateNode, predicateType);
             }
 
         } else {
 
             PredicateResolver resolver = predicateResolvers.get(type);
             if (resolver != null) {
-                predicate = resolver.resolve(mapper, predicateNode);
+                predicate = resolver.resolve(codec, predicateNode);
             }
         }
 

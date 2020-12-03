@@ -45,13 +45,19 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
 
         ObjectNode predicateNode = null;
         if (JsonToken.VALUE_STRING.equals(jp.getCurrentToken())) {
+
+            String strValue = jp.getValueAsString();
+            if (StringUtils.isBlank(strValue) || strValue.equals("{}")) {
+                return VoidPredicate.INSTANCE;
+            }
+
             JsonNode node;
             if (codec instanceof ObjectMapper) {
-                node = ((ObjectMapper) codec).readTree(jp.getValueAsString());
+                node = ((ObjectMapper) codec).readTree(strValue);
             } else if (codec instanceof ObjectReader) {
-                node = ((ObjectReader) codec).readTree(jp.getValueAsString());
+                node = ((ObjectReader) codec).readTree(strValue);
             } else {
-                node = Json.getMapper().read(jp.getValueAsString());
+                node = Json.getMapper().read(strValue);
             }
             if (node instanceof ObjectNode) {
                 predicateNode = (ObjectNode) node;
@@ -60,8 +66,8 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
             predicateNode = codec.readTree(jp);
         }
         if (predicateNode == null) {
-            throw ctxt.instantiationException(Predicate.class, "Incorrect predicate value: "
-                + jp.getCurrentValue() + " token: "
+            throw ctxt.instantiationException(Predicate.class, "Incorrect predicate value: '"
+                + jp.getValueAsString() + "' token: "
                 + jp.getCurrentToken() + " name: "
                 + jp.getCurrentName() + " location: "
                 + jp.getCurrentLocation());

@@ -233,9 +233,14 @@ class PredicateTest {
         assert dto != null;
         assertEquals(predicate, dto.predicate);
 
-        DtoWithPredicateField dto2 = new DtoWithPredicateField();
-        Json.getMapper().applyData(dto2, dto);
-        assertEquals(predicate, dto2.predicate);
+        String dtoStr2 = "{\"predicate\":\"\"}";
+        DtoWithPredicateField dto2 = Json.getMapper().read(dtoStr2, DtoWithPredicateField.class);
+        assert dto2 != null;
+        assertEquals(VoidPredicate.INSTANCE, dto2.predicate);
+
+        DtoWithPredicateField dto3 = new DtoWithPredicateField();
+        Json.getMapper().applyData(dto3, dto);
+        assertEquals(predicate, dto3.predicate);
 
         String predicateFromRecordStr = services.getRecordsServiceV1().getAtt(dto, "predicate").asText();
         Predicate predicateFromRecord = Json.getMapper().read(predicateFromRecordStr, Predicate.class);

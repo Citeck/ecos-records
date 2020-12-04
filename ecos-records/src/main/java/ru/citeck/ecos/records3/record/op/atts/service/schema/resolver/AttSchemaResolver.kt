@@ -478,7 +478,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 } else {
                     RecordRef.create(ctxSourceId, id.toString())
                 }
-                if (ctxSourceId.isNotEmpty() && computedRef.sourceId.isEmpty()) {
+                if (ctxSourceId.isNotEmpty() &&
+                    computedRef.appName.isEmpty() &&
+                    computedRef.sourceId.isEmpty()
+                ) {
                     computedRef = RecordRef.create(ctxSourceId, computedRef.id)
                 }
                 computedRef

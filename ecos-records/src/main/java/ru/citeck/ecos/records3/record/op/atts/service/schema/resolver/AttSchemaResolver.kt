@@ -475,6 +475,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     RecordRef.create(ctxSourceId, UUID.randomUUID().toString())
                 } else if (id is RecordRef) {
                     id
+                } else if (id is DataValue) {
+                    RecordRef.create(ctxSourceId, id.asText())
                 } else {
                     RecordRef.create(ctxSourceId, id.toString())
                 }

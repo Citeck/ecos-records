@@ -94,7 +94,7 @@ class RecordsGroup(
             return value.displayName
         }
 
-        override fun getId(): String {
+        override fun getId(): Any? {
             return value.id
         }
     }

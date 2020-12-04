@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean
 
-import mu.KotlinLogging
 import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
@@ -16,10 +15,6 @@ import java.lang.reflect.ParameterizedType
 
 class BeanValueFactory : AttValueFactory<Any> {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
-
     override fun getValue(value: Any): AttValue {
         return Value(value)
     }
@@ -30,11 +25,11 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         private val typeCtx: BeanTypeContext = BeanTypeUtils.getTypeContext(bean.javaClass)
 
-        override fun getId(): String? {
+        override fun getId(): Any? {
             return if (typeCtx.hasProperty("?id")) {
-                getAttWithType("?id", String::class.java)
+                getAttWithType("?id", Any::class.java)
             } else try {
-                PropertyUtils.getProperty(bean, "id")?.toString()
+                PropertyUtils.getProperty(bean, "id")
             } catch (e: NoSuchMethodException) {
                 null
             } catch (e: IllegalAccessException) {
@@ -46,7 +41,7 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         override fun asDouble(): Double? {
             if (typeCtx.hasProperty("?num")) {
-                return getAttWithType<Double>("?num", Double::class.java)
+                return getAttWithType("?num", Double::class.java)
             }
             return asText()?.toDouble()
         }
@@ -67,14 +62,14 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         override fun getDisplayName(): String? {
             if (typeCtx.hasProperty("?disp")) {
-                return getAttWithType<String>("?disp", String::class.java)
+                return getAttWithType("?disp", String::class.java)
             }
             return asText()
         }
 
         override fun asText(): String? {
             if (typeCtx.hasProperty("?str")) {
-                return getAttWithType<String>("?str", String::class.java)
+                return getAttWithType("?str", String::class.java)
             }
             return bean.toString()
         }
@@ -104,7 +99,13 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         private fun <T : Any> getAttWithType(name: String, type: Class<T>): T? {
             return try {
-                Json.mapper.convert(getAtt(name), type)
+                val value = getAtt(name)
+                return if (type != Any::class.java) {
+                    Json.mapper.convert(getAtt(name), type)
+                } else {
+                    @Suppress("UNCHECKED_CAST")
+                    value as? T
+                }
             } catch (e: Exception) {
                 null
             }

@@ -123,7 +123,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         }
 
         if (attsClass.kotlin.primaryConstructor != null) {
-            return readFromConstructor(attsClass, visited)
+            val attributes = readFromConstructor(attsClass, visited)
+            if (attributes.isNotEmpty()) {
+                return attributes
+            }
         }
 
         try {

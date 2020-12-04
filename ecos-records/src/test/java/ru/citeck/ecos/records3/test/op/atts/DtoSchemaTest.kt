@@ -2,10 +2,12 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DtoSchemaTest {
 
@@ -63,6 +65,24 @@ class DtoSchemaTest {
 
         val withDefaultSchema = services.dtoSchemaReader.read(ValDtoWithDefault::class.java)
         assertEquals(5, withDefaultSchema.size)
+    }
+
+    @Test
+    fun test2() {
+
+        val services = RecordsServiceFactory()
+
+        val schema = services.dtoSchemaReader.read(TestDtoWithMetaAttAndSet::class.java)
+        assertEquals(1, schema.size)
+        assertEquals("abc", schema[0].name)
+        assertEquals("attributes", schema[0].alias)
+        assertTrue(schema[0].multiple)
+        assertEquals("?disp", schema[0].inner[0].name)
+    }
+
+    class TestDtoWithMetaAttAndSet {
+        @MetaAtt("abc[]")
+        var attributes: Set<String>? = emptySet()
     }
 
     data class ValDtoWithDefault(

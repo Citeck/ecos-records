@@ -263,7 +263,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             var attValue: Any?
             var attName = att.name
 
-            if (att.name.startsWith("$") && !currentValuePath.endsWith(RecordConstants.ATT_HAS)) {
+            if (currentValuePath.isEmpty() && att.name.startsWith("$")) {
 
                 val contextAttName = att.name.substring(1)
                 attValue = context.reqContext.ctxData.ctxAtts[contextAttName]
@@ -470,7 +470,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             if (RecordRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
-                val id = value.getId()
+                val id = value.id
                 var computedRef = if (id == null || id is String && StringUtils.isBlank(id)) {
                     RecordRef.create(ctxSourceId, UUID.randomUUID().toString())
                 } else if (id is RecordRef) {

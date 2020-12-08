@@ -1,39 +1,40 @@
-package ru.citeck.ecos.records2;
+package ru.citeck.ecos.records2
 
-public final class RecordConstants {
+object RecordConstants {
 
-    private RecordConstants() {}
+    const val ATT_NULL = "_null"
 
-    public static final String ATT_NULL = "_null";
+    const val ATT_TYPE = "_type"
+    @Deprecated(message = "Use ATT_TYPE instead", replaceWith = ReplaceWith("ATT_TYPE"))
+    const val ATT_ECOS_TYPE = "_etype"
 
-    public static final String ATT_TYPE = "_type";
-    public static final String ATT_ECOS_TYPE = "_etype";
-    public static final String ATT_NOT_EXISTS = "_notExists";
-    public static final String ATT_LOCAL_ID = "_localId";
+    const val ATT_NOT_EXISTS = "_notExists"
+    const val ATT_LOCAL_ID = "_localId"
 
-    public static final String ATT_AS = "_as";
-    public static final String ATT_HAS = "_has";
-    public static final String ATT_EDGE = "_edge";
+    const val ATT_AS = "_as"
+    const val ATT_HAS = "_has"
+    const val ATT_EDGE = "_edge"
 
-    public static final String ATT_ALIAS = "_alias";
-    public static final String ATT_PARENT = "_parent";
-    public static final String ATT_PARENT_ATT = "_parentAtt";
+    const val ATT_ALIAS = "_alias"
 
-    public static final String ATT_FORM_KEY = "_formKey";
-    public static final String ATT_FORM_REF = "_formRef";
-    public static final String ATT_FORM_MODE = "_formMode";
+    const val ATT_PARENT = "_parent"
+    const val ATT_PARENT_ATT = "_parentAtt"
+    const val ATT_FORM_KEY = "_formKey"
+    const val ATT_FORM_REF = "_formRef"
+    const val ATT_FORM_MODE = "_formMode"
 
-    public static final String ATT_MODIFIED = "_modified";
-    public static final String ATT_MODIFIER = "_modifier";
-    public static final String ATT_CREATED = "_created";
-    public static final String ATT_CREATOR = "_creator";
-    public static final String ATT_CONTENT = "_content";
-    public static final String ATT_ACTIONS = "_actions";
-    public static final String ATT_DOC_NUM = "_docNum";
-    public static final String ATT_DISP_NAME = "_dispName";
+    const val ATT_MODIFIED = "_modified"
+    const val ATT_MODIFIER = "_modifier"
+    const val ATT_CREATED = "_created"
+    const val ATT_CREATOR = "_creator"
 
-    public static final String FORM_MODE_CREATE = "CREATE";
-    public static final String FORM_MODE_EDIT = "EDIT";
+    const val ATT_CONTENT = "_content"
+    const val ATT_ACTIONS = "_actions"
+    const val ATT_DOC_NUM = "_docNum"
+    const val ATT_DISP_NAME = "_dispName"
 
-    public static final String LANG_COLUMNS_META = "columns-meta";
+    const val FORM_MODE_CREATE = "CREATE"
+    const val FORM_MODE_EDIT = "EDIT"
+
+    const val LANG_COLUMNS_META = "columns-meta"
 }

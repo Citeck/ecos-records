@@ -157,18 +157,16 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             }
             val scalarField = scalars[propType]
 
-            attributes.add(
-                getAttributeSchema(
-                    attsClass,
-                    null,
-                    writeMethod,
-                    descriptor.name,
-                    isMultiple,
-                    scalarField,
-                    propType,
-                    visited
-                )
-            )
+            getAttributeSchema(
+                attsClass,
+                null,
+                writeMethod,
+                descriptor.name,
+                isMultiple,
+                scalarField,
+                propType,
+                visited
+            )?.let { attributes.add(it) }
         }
         visited.remove(attsClass)
         return attributes
@@ -218,18 +216,16 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 scalar = scalars[Map::class.java]
             }
 
-            atts.add(
-                getAttributeSchema(
-                    attsClass,
-                    arg,
-                    null,
-                    paramName,
-                    multiple,
-                    scalar,
-                    javaClass,
-                    visited
-                )
-            )
+            getAttributeSchema(
+                attsClass,
+                arg,
+                null,
+                paramName,
+                multiple,
+                scalar,
+                javaClass,
+                visited
+            )?.let { atts.add(it) }
         }
 
         return atts
@@ -244,7 +240,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         scalarField: ScalarField<*>?,
         propType: Class<*>,
         visited: MutableSet<Class<*>>
-    ): SchemaAtt {
+    ): SchemaAtt? {
 
         val innerAtts = if (scalarField == null) {
             if (propType.isEnum) {
@@ -276,6 +272,11 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         val att: SchemaAtt.Builder
         val processors: List<AttProcDef>
         if (StringUtils.isNotBlank(attNameValue)) {
+
+            if (attNameValue == "...") {
+                return null
+            }
+
             val attWithProc: AttWithProc = attProcReader.read(attNameValue ?: "")
             processors = attWithProc.processors
             attNameValue = attWithProc.attribute.trim()

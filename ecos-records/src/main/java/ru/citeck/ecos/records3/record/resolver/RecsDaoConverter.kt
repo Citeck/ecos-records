@@ -2,13 +2,13 @@ package ru.citeck.ecos.records3.record.resolver
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
 import ru.citeck.ecos.records3.record.op.atts.dto.LocalRecordAtts
+import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanTypeUtils
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
@@ -119,7 +119,10 @@ class RecsDaoConverter {
             override fun mutate(records: List<LocalRecordAtts>): List<RecordRef> {
                 return records.map {
                     val record = dao.getRecToMutate(it.id)
-                    Json.mapper.applyData(record, it.attributes)
+
+                    val ctx = BeanTypeUtils.getTypeContext(record::class.java)
+                    ctx.applyData(record, it.attributes)
+
                     val resultId = dao.saveMutatedRec(record)
                     RecordRef.create(dao.getId(), resultId)
                 }

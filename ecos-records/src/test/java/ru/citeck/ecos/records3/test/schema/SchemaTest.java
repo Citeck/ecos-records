@@ -47,7 +47,7 @@ public class SchemaTest {
         assertEdgeMetaVal("createVariants", true);
 
         assertEdgeScalar("protected", "bool");
-        assertEdgeScalar("canBeRead", "bool");
+        assertEdgeScalar("unreadable", "bool");
         assertEdgeScalar("multiple", "bool");
         assertEdgeScalar("isAssoc", "bool");
 

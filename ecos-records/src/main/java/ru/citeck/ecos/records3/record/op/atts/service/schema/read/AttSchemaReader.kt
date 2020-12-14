@@ -512,7 +512,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                 ).withProcessors(processors)
                     .build()
             "protected",
-            "canBeRead",
+            "unreadable",
             "multiple",
             "isAssoc" ->
                 return attBuilder

@@ -20,7 +20,7 @@ class AttMetaEdge(val edge: MetaEdge) : AttEdge {
 
     override fun isSearchable(): Boolean = edge.isSearchable
 
-    override fun isReadable(): Boolean = edge.isReadable
+    override fun isUnreadable(): Boolean = edge.isUnreadable
 
     override fun getOptions(): List<*>? = edge.options
 

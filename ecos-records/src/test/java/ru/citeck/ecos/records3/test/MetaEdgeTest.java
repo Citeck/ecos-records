@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MetaEdgeTest extends AbstractRecordsDao
@@ -57,13 +57,15 @@ public class MetaEdgeTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        String att = ".edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json}}";
+        String att = ".edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json},unreadable}";
         List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
         List<RecordAtts> result = recordsService.getAtts(records, Collections.singletonMap("edge", att));
 
         RecordAtts meta = result.get(0);
 
         DataValue edgeNode = meta.getAtt("edge");
+
+        assertTrue(edgeNode.get("unreadable").asBoolean());
 
         assertEquals(MetaTestEdge.TYPE, edgeNode.get("type").asText());
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
@@ -164,6 +166,13 @@ public class MetaEdgeTest extends AbstractRecordsDao
 
         MetaTestEdge(String name) {
             this.name = name;
+        }
+
+        // invisible
+
+        @Override
+        public boolean isUnreadable() {
+            return true;
         }
 
         @Override

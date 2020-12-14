@@ -26,8 +26,8 @@ public interface MetaEdge {
     /**
      * Can client read value of this attribute or not.
      */
-    default boolean isReadable() {
-        return true;
+    default boolean isUnreadable() {
+        return false;
     }
 
     default List<?> getOptions() {

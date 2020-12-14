@@ -24,8 +24,8 @@ public interface AttEdge {
         return true;
     }
 
-    default boolean isReadable() throws Exception {
-        return true;
+    default boolean isUnreadable() throws Exception {
+        return false;
     }
 
     @Nullable

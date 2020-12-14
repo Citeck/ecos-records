@@ -21,7 +21,7 @@ class AttEdgeValue(val edge: AttEdge?) : AttValue {
             "title" -> edge?.title
             "description" -> edge?.description
             "protected" -> edge?.isProtected
-            "isReadable" -> edge?.isReadable
+            "unreadable" -> edge?.isUnreadable
             "multiple" -> edge?.isMultiple
             "options" -> edge?.options
             "javaClass" -> edge?.javaClass?.name

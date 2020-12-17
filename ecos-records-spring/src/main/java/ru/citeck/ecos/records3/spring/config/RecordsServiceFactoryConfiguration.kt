@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.i18n.LocaleContextHolder
 import ru.citeck.ecos.records2.RecordsService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.meta.RecordsMetaService
@@ -17,6 +18,7 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import java.util.*
 
 @Slf4j
 @Configuration
@@ -32,13 +34,17 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     @Value("\${spring.application.name:}")
     private lateinit var springAppName: String
 
+    override fun createLocaleSupplier(): () -> Locale {
+        return { LocaleContextHolder.getLocale() }
+    }
+
     override fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
         val restApi = this.restApi
         return if (restApi != null) {
             if (props.gatewayMode) {
                 log.info("Initialize remote records resolver in Gateway mode")
             } else {
-                log.info("Initialize remote records resolver in normal mode")
+                log.info("Initialize remote records resolver in Normal mode")
             }
             val resolver = RemoteRecordsResolver(this, restApi)
             if (props.gatewayMode) {

@@ -6,7 +6,6 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.core.env.Environment
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
@@ -23,8 +22,6 @@ import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.rest.v1.RequestResp
 import ru.citeck.ecos.records3.spring.utils.web.exception.RequestHandlingException
 import ru.citeck.ecos.records3.spring.utils.web.exception.ResponseHandlingException
-import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
 
 @Api(
     description =
@@ -43,7 +40,6 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     private val restHandlerAdapter: RestHandlerAdapter = services.restHandlerAdapter
     private var isProdProfile = true
     private var environment: Environment? = null
-    private val ctxAttsSuppliers: MutableList<ContextAttributesSupplier> = CopyOnWriteArrayList()
 
     @EventListener
     fun onApplicationEvent(event: ContextRefreshedEvent?) {
@@ -53,19 +49,8 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
     @PostMapping(value = ["/query"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun recordsQuery(@ApiParam(value = "query") @RequestBody body: ByteArray): ByteArray? {
         val bodyData = convertRequest(body, ObjectData::class.java)
-        val ctxAtts: MutableMap<String, Any?> = LinkedHashMap()
-        ctxAttsSuppliers.forEach { s ->
-            val atts = s.attributes
-            if (atts.isNotEmpty()) {
-                ctxAtts.putAll(atts)
-            }
-        }
         return RequestContext.doWithCtx(
-            services,
-            {
-                it.locale = LocaleContextHolder.getLocale()
-                it.ctxAtts = ctxAtts
-            }
+            services
         ) {
             encodeResponse(restHandlerAdapter.queryRecords(bodyData))
         }
@@ -108,10 +93,6 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
             log.error("Jackson cannot write response body as bytes", jpe)
             throw ResponseHandlingException(jpe)
         }
-    }
-
-    fun registerContextAttsSupplier(supplier: ContextAttributesSupplier) {
-        ctxAttsSuppliers.add(supplier)
     }
 
     @Autowired(required = false)

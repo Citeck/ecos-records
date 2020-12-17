@@ -123,8 +123,14 @@ class RequestContext {
 
             val prevCtxData = current.ctxData
             if (ctxData != null) {
+
                 val builder = prevCtxData.copy()
                 ctxData.invoke(builder)
+
+                val ctxAtts = HashMap(prevCtxData.ctxAtts)
+                ctxAtts.putAll(builder.ctxAtts)
+                builder.ctxAtts = ctxAtts
+
                 current.ctxData = builder.build()
             }
 

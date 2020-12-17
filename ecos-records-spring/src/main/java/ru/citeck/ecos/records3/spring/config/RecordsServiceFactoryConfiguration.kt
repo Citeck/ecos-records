@@ -17,6 +17,7 @@ import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.request.ContextAttsProvider
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import java.util.*
 
@@ -33,6 +34,23 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
 
     @Value("\${spring.application.name:}")
     private lateinit var springAppName: String
+
+    var customDefaultCtxAttsProvider: ContextAttsProvider? = null
+
+    override fun createDefaultCtxAttsProvider(): ContextAttsProvider {
+        val superAttsProvider = super.createDefaultCtxAttsProvider()
+        return object : ContextAttsProvider {
+            override fun getContextAttributes(): Map<String, Any?> {
+                var result = superAttsProvider.getContextAttributes()
+                val customAtts = customDefaultCtxAttsProvider
+                if (customAtts != null) {
+                    result = HashMap(result)
+                    result.putAll(customAtts.getContextAttributes());
+                }
+                return result
+            }
+        }
+    }
 
     override fun createLocaleSupplier(): () -> Locale {
         return { LocaleContextHolder.getLocale() }

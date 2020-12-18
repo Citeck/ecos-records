@@ -24,7 +24,7 @@ class ComputedAttsService(services: RecordsServiceFactory) {
         }
         if (att.def.storingType == StoringType.ON_EMPTY) {
             val currentValue = context.getAtt(att.id)
-            if (!currentValue.isNull()) {
+            if (!currentValue.isNull() && (!currentValue.isTextual() || !currentValue.asText().isBlank())) {
                 return currentValue.asJavaObj()
             }
         }

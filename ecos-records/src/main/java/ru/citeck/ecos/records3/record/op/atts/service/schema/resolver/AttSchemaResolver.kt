@@ -528,6 +528,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
                     RecordConstants.ATT_ECOS_TYPE -> value.type
+                    RecordConstants.ATT_LOCAL_ID -> getLocalId()
                     RecordConstants.ATT_AS -> AttFuncValue { type -> value.getAs(type) }
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }

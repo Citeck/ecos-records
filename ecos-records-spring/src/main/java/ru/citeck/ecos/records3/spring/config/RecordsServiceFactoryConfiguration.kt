@@ -45,7 +45,7 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
                 val customAtts = customDefaultCtxAttsProvider
                 if (customAtts != null) {
                     result = HashMap(result)
-                    result.putAll(customAtts.getContextAttributes());
+                    result.putAll(customAtts.getContextAttributes())
                 }
                 return result
             }

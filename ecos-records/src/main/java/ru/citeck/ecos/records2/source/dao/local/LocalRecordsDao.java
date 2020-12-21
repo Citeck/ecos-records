@@ -245,8 +245,6 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
     private RecordsResult<RecordAtts> getMetaImpl(List<?> records, List<SchemaAtt> schema, boolean rawAtts) {
 
-        Map<Object, Object> metaCache = new ConcurrentHashMap<>();
-
         List<?> recordsWithMixin = QueryContext.withContext(serviceFactory, ctx ->
             records.stream()
                 .map(r -> metaValuesConverter.toMetaValue(r))
@@ -255,7 +253,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                     recordAttsService,
                     metaValuesConverter,
                     mixins,
-                    metaCache
+                    null
                 ))
                 .peek(v -> v.init(ctx, AttMetaField.INSTANCE))
                 .collect(Collectors.toList()));

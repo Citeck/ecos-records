@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records3.record.resolver
 
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
@@ -17,6 +19,10 @@ import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDao
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateCrossSrcDao
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryResDao
+import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
+import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
@@ -29,6 +35,9 @@ class RecsDaoConverter {
 
     fun convert(dao: RecordsDao, targetType: Class<*>): RecordsDao {
 
+        if (dao is RecordsQueryDao && targetType == RecordsQueryResDao::class.java) {
+            return mapToRecordsQueryResDao(dao)
+        }
         if (dao is RecordAttsDao && targetType == RecordsAttsDao::class.java) {
             return mapToMultiDao(dao)
         }
@@ -48,6 +57,39 @@ class RecsDaoConverter {
             }
         }
         return dao
+    }
+
+    private fun mapToRecordsQueryResDao(dao: RecordsQueryDao): RecordsQueryResDao {
+        return object : RecordsQueryResDao {
+
+            override fun queryRecords(query: RecordsQuery): RecsQueryRes<*>? {
+                var records = dao.queryRecords(query) ?: return null
+                if (records is RecsQueryRes<*>) {
+                    return records
+                }
+                if (records is Set<*>) {
+                    records = ArrayList(records)
+                }
+                if (records is List<*>) {
+                    val result = RecsQueryRes<Any>()
+                    result.setRecords(records)
+                    return result
+                }
+                if (records is DataValue && records.isArray()) {
+                    val result = RecsQueryRes<Any>()
+                    result.setRecords(records.asList(DataValue::class.java))
+                    return result
+                }
+                if (records is ArrayNode) {
+                    val result = RecsQueryRes<Any>()
+                    result.setRecords(DataValue.create(records).asList(DataValue::class.java))
+                    return result
+                }
+                return RecsQueryRes(listOf(records))
+            }
+
+            override fun getId() = dao.getId()
+        }
     }
 
     private fun mapToMultiDao(dao: RecordAttsDao): RecordsAttsDao {

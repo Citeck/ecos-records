@@ -39,7 +39,7 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateCrossSrcDao
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
+import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
@@ -66,13 +66,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private val allDao = ConcurrentHashMap<String, RecordsDao>()
     private val attsDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsAttsDao>>()
-    private val queryDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsQueryDao>>()
+    private val queryDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsQueryResDao>>()
     private val mutateDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsMutateCrossSrcDao>>()
     private val deleteDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsDeleteDao>>()
 
     private val daoMapByType = mapOf<Class<*>, Map<String, Pair<RecordsDao, RecordsDao>>>(
         Pair(RecordsAttsDao::class.java, attsDao),
-        Pair(RecordsQueryDao::class.java, queryDao),
+        Pair(RecordsQueryResDao::class.java, queryDao),
         Pair(RecordsMutateCrossSrcDao::class.java, mutateDao),
         Pair(RecordsDeleteDao::class.java, deleteDao)
     )
@@ -117,12 +117,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         if (query.groupBy.isNotEmpty()) {
 
-            val dao = getRecordsDao(sourceId, RecordsQueryDao::class.java)
+            val dao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
 
             if (dao == null || dao.first !is RecsGroupQueryDao) {
 
-                val groupsSource = needRecordsDao(RecordsGroupDao.ID, RecordsQueryDao::class.java)
-                val convertedQuery = updateQueryLanguage(query, groupsSource.second)
+                val groupsSource = needRecordsDao(RecordsGroupDao.ID, RecordsQueryResDao::class.java)
+                val convertedQuery = updateQueryLanguage(query, groupsSource)
 
                 if (convertedQuery == null) {
 
@@ -154,7 +154,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             if (DistinctQuery.LANGUAGE == query.language) {
 
-                val recsQueryDao = getRecordsDao(sourceId, RecordsQueryDao::class.java)
+                val recsQueryDao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
                 val languages = (recsQueryDao?.first as? SupportsQueryLanguages)?.getSupportedLanguages() ?: emptyList()
                 if (!languages.contains(DistinctQuery.LANGUAGE)) {
                     val distinctQuery: DistinctQuery = query.getQuery(DistinctQuery::class.java)
@@ -170,7 +170,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 }
             } else {
 
-                val dao = getRecordsDao(sourceId, RecordsQueryDao::class.java)
+                val dao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
 
                 if (dao == null) {
 
@@ -206,7 +206,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 } else {
 
                     recordsResult = RecsQueryRes()
-                    query = updateQueryLanguage(query, dao.second) ?: error("Query language is not supported. $query")
+                    query = updateQueryLanguage(query, dao) ?: error("Query language is not supported. $query")
 
                     val queryStartMs = System.currentTimeMillis()
                     val queryRes = dao.second.queryRecords(query)
@@ -329,12 +329,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    private fun updateQueryLanguage(recordsQuery: RecordsQuery, dao: RecordsQueryDao?): RecordsQuery? {
+    private fun updateQueryLanguage(
+        recordsQuery: RecordsQuery,
+        dao: Pair<RecordsDao, RecordsQueryResDao>?
+    ): RecordsQuery? {
 
         if (dao == null) {
             return null
         }
-        val supportedLanguages = (dao as? SupportsQueryLanguages)?.getSupportedLanguages() ?: emptyList()
+        val supportedLanguages = (dao.first as? SupportsQueryLanguages)?.getSupportedLanguages() ?: emptyList()
         if (supportedLanguages.isEmpty()) {
             return recordsQuery
         }
@@ -628,7 +631,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         allDao[sourceId] = recordsDao
         register(sourceId, attsDao, RecordsAttsDao::class.java, recordsDao)
-        register(sourceId, queryDao, RecordsQueryDao::class.java, recordsDao)
+        register(sourceId, queryDao, RecordsQueryResDao::class.java, recordsDao)
         register(sourceId, mutateDao, RecordsMutateCrossSrcDao::class.java, recordsDao)
         register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
 
@@ -663,20 +666,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val recordsDao = allDao[sourceId] ?: return localRecordsResolverV0.getSourceInfo(sourceId)
 
         val recordsSourceInfo = RecordsDaoInfo()
-
         recordsSourceInfo.id = sourceId
-        if (recordsDao is RecordsQueryDao) {
-            if (recordsDao is SupportsQueryLanguages) {
-                recordsSourceInfo.supportedLanguages = recordsDao.getSupportedLanguages()
-            }
-            recordsSourceInfo.features.query = true
-        } else {
-            recordsSourceInfo.features.query = false
-        }
 
-        recordsSourceInfo.features.mutate = recordsDao is RecordsMutateCrossSrcDao
-        recordsSourceInfo.features.delete = recordsDao is RecordsDeleteDao
-        recordsSourceInfo.features.getAtts = recordsDao is RecordsAttsDao
+        if (recordsDao is SupportsQueryLanguages) {
+            recordsSourceInfo.supportedLanguages = recordsDao.getSupportedLanguages()
+        }
+        recordsSourceInfo.features.query = queryDao[sourceId] != null
+        recordsSourceInfo.features.mutate = mutateDao[sourceId] != null
+        recordsSourceInfo.features.delete = deleteDao[sourceId] != null
+        recordsSourceInfo.features.getAtts = attsDao[sourceId] != null
 
         val columnsSourceId = recordsDao.javaClass.getAnnotation(ColumnsSourceId::class.java)
 
@@ -706,5 +704,5 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return allDao.containsKey(id)
     }
 
-    private class DaoWithConvQuery(val dao: RecordsQueryDao, val query: RecordsQuery)
+    private class DaoWithConvQuery(val dao: RecordsQueryResDao, val query: RecordsQuery)
 }

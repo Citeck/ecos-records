@@ -30,7 +30,7 @@ class CtxAttributesTest {
         )
 
         val nowYearValue = services.recordsServiceV1.getAtt(
-            RecordRef.valueOf("test@record"), "\$now|fmt('YYYY')"
+            RecordRef.valueOf("test@record"), "\$now|fmt('yyyy')"
         ).asText()
 
         assertEquals(Calendar.getInstance().get(Calendar.YEAR).toString(), nowYearValue)
@@ -38,7 +38,7 @@ class CtxAttributesTest {
         val (nowYearValue2, aaValue) = RequestContext.doWithCtx(services, { it.withCtxAtts(mapOf("aa" to "bb")) }) {
             Pair(
                 services.recordsServiceV1.getAtt(
-                    RecordRef.valueOf("test@record"), "\$now|fmt('YYYY')"
+                    RecordRef.valueOf("test@record"), "\$now|fmt('yyyy')"
                 ).asText(),
                 services.recordsServiceV1.getAtt(
                     RecordRef.valueOf("test@record"), "\$aa"

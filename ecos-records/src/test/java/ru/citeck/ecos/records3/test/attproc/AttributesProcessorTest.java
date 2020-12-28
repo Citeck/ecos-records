@@ -52,22 +52,22 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
         attribute = recordsService.getAtt(ref, "doubleNum?num|fmt('0.0')");
         assertEquals("123.3", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy')");
         assertEquals("2020", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD')");
         assertEquals("2020.01.01", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD___HH')");
         assertEquals("2020.01.01___01", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD___HH','','GMT+7:00')");
         assertEquals("2020.01.01___08", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY,MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy,MM.DD___HH','','GMT+7:00')");
         assertEquals("2020,01.01___08", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "datee!'_____'|fmt('YYYY.MM.DD___HH','','GMT+7:00')");
+        attribute = recordsService.getAtt(ref, "datee!'_____'|fmt('yyyy.MM.DD___HH','','GMT+7:00')");
         assertEquals("_____", attribute.asText());
     }
 
@@ -76,10 +76,10 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
 
         RecordRef ref = RecordRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ')");
+        DataValue attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD___HH','','GMT+7:00')|presuf('№ ')");
         assertEquals("№ 2020.01.01___08", attribute.asText());
 
-        attribute = recordsService.getAtt(ref, "date|fmt('YYYY.MM.DD___HH','','GMT+7:00')|presuf('№ ', '-ohoh')");
+        attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD___HH','','GMT+7:00')|presuf('№ ', '-ohoh')");
         assertEquals("№ 2020.01.01___08-ohoh", attribute.asText());
     }
 

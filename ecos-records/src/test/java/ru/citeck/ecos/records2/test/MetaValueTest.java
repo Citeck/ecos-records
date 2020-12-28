@@ -149,7 +149,7 @@ public class MetaValueTest extends LocalRecordsDao
         assertEquals(MetaVal.INT_VALUE, meta.getAttribute("asNum").get("num").asInt(0));
         assertEquals(MetaVal.STRING_VALUE, meta.getAttribute("asStr").get("str").asText());
 
-        String format = "yyyyy.MMMMM.dd GGG hh:mm aaa";
+        String format = "yyyy.MMMMM.dd GGG hh:mm aaa";
         String targetDate = (new SimpleDateFormat(format)).format(MetaVal.DATE_VALUE);
         assertEquals(targetDate, meta.fmtDate("/date/str", format, "-"));
         assertEquals(MetaVal.DATE_VALUE, meta.getDateOrNull("/date/str"));

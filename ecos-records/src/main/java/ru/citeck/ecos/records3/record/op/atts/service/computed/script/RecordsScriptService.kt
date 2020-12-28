@@ -14,8 +14,16 @@ class RecordsScriptService(services: RecordsServiceFactory) {
 
     private val recordsService = services.recordsServiceV1
 
-    fun get(recordRef: String): AttValueScriptCtx {
-        return AttValueScriptCtxImpl(Record(RecordRef.valueOf(recordRef)))
+    fun get(record: Any): AttValueScriptCtx {
+        if (record is AttValueScriptCtx) {
+            return record
+        }
+        val recordRef = when (record) {
+            is RecordRef -> record
+            is String -> RecordRef.valueOf(record)
+            else -> error("Incorrect record: $record")
+        }
+        return AttValueScriptCtxImpl(Record(recordRef))
     }
 
     private fun getEmptyRes(): Any {

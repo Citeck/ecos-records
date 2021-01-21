@@ -53,7 +53,12 @@ class CtxAttributesTest {
             RecordRef.valueOf("test@record"), "\$now|fmt('MM')"
         ).asText()
 
-        assertEquals((Calendar.getInstance().get(Calendar.MONTH) + 1).toString(), nowMonthValue)
+        val expectedMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
+        assertEquals(if (expectedMonth < 10) {
+            "0$expectedMonth"
+        } else {
+            "$expectedMonth"
+        }, nowMonthValue)
 
         // context attributes should be disabled for inner values
         assertTrue(

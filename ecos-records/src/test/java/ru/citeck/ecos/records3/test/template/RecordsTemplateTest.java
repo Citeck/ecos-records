@@ -43,13 +43,13 @@ public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAt
     @Test
     void test() {
 
-        MLText text = new MLText();
-        text.set(new Locale("ru"), "Договор №${_docNum} для ${contractor}");
-        text.set(new Locale("en"), "Contract №${_docNum} for ${contractor}");
+        MLText text = new MLText()
+            .withValue(new Locale("ru"), "Договор №${_docNum} для ${contractor}")
+            .withValue(new Locale("en"), "Contract №${_docNum} for ${contractor}");
 
-        MLText expected = new MLText();
-        expected.set(new Locale("ru"), "Договор №100 для Поставщик №1");
-        expected.set(new Locale("en"), "Contract №100 for Поставщик №1");
+        MLText expected = new MLText()
+            .withValue(new Locale("ru"), "Договор №100 для Поставщик №1")
+            .withValue(new Locale("en"), "Contract №100 for Поставщик №1");
 
         MLText resolved = recordsTemplateService.resolve(text, RecordRef.create(ID, "rec"));
         assertEquals(expected, resolved);

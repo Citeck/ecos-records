@@ -1,12 +1,16 @@
 package ru.citeck.ecos.records3.record.op.query.dto
 
-import ru.citeck.ecos.commons.json.Json
+import mu.KotlinLogging
+import java.lang.Exception
+import java.lang.StringBuilder
 import java.util.*
 import kotlin.math.max
 
 open class RecsQueryRes<T : Any>() {
 
     companion object {
+
+        private val log = KotlinLogging.logger {}
 
         @JvmStatic
         @SafeVarargs
@@ -81,6 +85,20 @@ open class RecsQueryRes<T : Any>() {
     }
 
     override fun toString(): String {
-        return Json.mapper.toString(this) ?: "RecsQueryRes"
+        val result = StringBuilder()
+        result.append("{\"records\":[")
+        for (record in records) {
+            try {
+                result.append(record)
+            } catch (e: Exception) {
+                result.append("\"toString error: ${e.message?.replace("\"", "\\\"")}\"")
+                log.error { "Record toString error. Record: ${record::class.java.simpleName}. Message: ${e.message}" }
+            }
+            result.append(",")
+        }
+        result.setLength(result.length - 1)
+        result.append("],\"hasMore\":$hasMore,")
+        result.append("\"totalCount\":$totalCount}")
+        return result.toString()
     }
 }

@@ -33,7 +33,7 @@ class MLTextValueFactory : AttValueFactory<MLText> {
         }
 
         override fun asJson(): Any? {
-            return value.asMap
+            return value.getValues()
         }
 
         override fun has(name: String): Boolean {

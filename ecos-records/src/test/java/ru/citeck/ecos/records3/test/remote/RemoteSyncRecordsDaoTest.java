@@ -140,9 +140,9 @@ public class RemoteSyncRecordsDaoTest {
                 dto.setAttributes(ObjectData.create("{\"attKey\":\"" + UUID.randomUUID() + "\"}"));
                 dto.setId("id-" + i);
 
-                MLText mlText = new MLText();
-                mlText.set(Locale.ENGLISH, "en_value_" + i);
-                mlText.set(new Locale("ru"), "ру_знач_" + i);
+                MLText mlText = new MLText()
+                    .withValue(Locale.ENGLISH, "en_value_" + i)
+                    .withValue(new Locale("ru"), "ру_знач_" + i);
                 dto.setName(mlText);
 
                 dto.setModified(Instant.now().plus((long) (random.nextFloat() * 60_000_000), ChronoUnit.MILLIS));

@@ -40,7 +40,7 @@ class RequestContext {
 
         @JvmStatic
         fun getLocale(): Locale {
-            return getCurrentNotNull().getCtxLocale()
+            return getCurrent()?.getCtxLocale() ?: Locale.ENGLISH
         }
 
         @JvmStatic

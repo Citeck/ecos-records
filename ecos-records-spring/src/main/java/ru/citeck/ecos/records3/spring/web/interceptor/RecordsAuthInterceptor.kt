@@ -60,10 +60,9 @@ class RecordsAuthInterceptor @Autowired constructor(
 
         val appId = path.substring(1, secondSlashIdx)
 
-        sysUserByApp[appId]?.let {
-            request.headers.add("X-ECOS-User", it)
-            request.headers.add("X-Alfresco-Remote-User", it)
-        }
+        val userName = sysUserByApp[appId] ?: "system"
+        request.headers.add("X-ECOS-User", userName)
+        request.headers.add("X-Alfresco-Remote-User", userName)
 
         val interceptor = sysReqInterceptors[appId]
 

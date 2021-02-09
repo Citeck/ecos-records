@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.source.dao.local.job;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
@@ -56,10 +57,16 @@ public class JobExecutor {
     }
 
     private void execute(Job job) {
+
         try {
+
             int count = 0;
+
             while (count++ < 20) {
-                if (!RequestContext.doWithCtx(serviceFactory, ctx -> job.execute())) {
+
+                if (!RequestContext.doWithCtx(serviceFactory,
+                    ctx -> RemoteRecordsUtils.runAsSystem(job::execute))) {
+
                     break;
                 }
             }

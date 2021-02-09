@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsProperties
 import java.io.IOException
-import java.util.*
+import kotlin.collections.HashMap
 
 @Component
 class RecordsAuthInterceptor @Autowired constructor(
@@ -25,13 +25,16 @@ class RecordsAuthInterceptor @Autowired constructor(
 
     private val userRequestInterceptor: ClientHttpRequestInterceptor
     private val sysReqInterceptors: MutableMap<String, ClientHttpRequestInterceptor> = HashMap()
+    private val sysUserByApp: MutableMap<String, String> = HashMap()
 
     init {
         userRequestInterceptor = cookiesAndLangInterceptor
         properties.apps.forEach { (id, app) ->
             val auth = app.auth
-            if (auth != null) {
-                sysReqInterceptors[id] = BasicAuthorizationInterceptor(auth.username, auth.password)
+            val userName = auth?.username
+            if (!userName.isNullOrBlank()) {
+                sysUserByApp[id] = userName
+                sysReqInterceptors[id] = BasicAuthorizationInterceptor(userName, auth.password)
             }
         }
     }
@@ -46,14 +49,24 @@ class RecordsAuthInterceptor @Autowired constructor(
         if (!RemoteRecordsUtils.isSystemContext()) {
             return userRequestInterceptor.intercept(request, body, execution)
         }
+
         val path = request.uri.path
+
         val secondSlashIdx = path.indexOf('/', 1)
         if (secondSlashIdx < 0) {
             log.warn("App id can't be extracted. URI: " + request.uri)
             return execution.execute(request, body)
         }
+
         val appId = path.substring(1, secondSlashIdx)
+
+        sysUserByApp[appId]?.let {
+            request.headers.add("X-ECOS-User", it)
+            request.headers.add("X-Alfresco-Remote-User", it)
+        }
+
         val interceptor = sysReqInterceptors[appId]
+
         return if (interceptor != null) {
             interceptor.intercept(request, body, execution)
         } else {

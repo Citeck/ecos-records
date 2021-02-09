@@ -20,6 +20,8 @@ import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class InMemRecordsDao<T> extends AbstractRecordsDao
@@ -31,14 +33,16 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
         PredicateService.LANGUAGE_PREDICATE
     );
 
+    private final String sourceId;
+
     private final Map<String, T> records = new ConcurrentHashMap<>();
+    private final List<Consumer<T>> onChangeListeners = new CopyOnWriteArrayList<>();
+
     protected PredicateService predicateService;
     protected RecordsService recordsService;
     protected RecordsServiceFactory serviceFactory;
     protected RecordAttsService recordsMetaService;
     protected ru.citeck.ecos.records2.RecordsService recordsServiceV0;
-
-    private final String sourceId;
 
     @NotNull
     @Override
@@ -60,6 +64,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
 
     public void setRecord(String recordId, T value) {
         this.records.put(recordId, value);
+        onChangeListeners.forEach(it -> it.accept(value));
     }
 
     public Optional<T> getRecord(String recordId) {
@@ -101,6 +106,10 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
                 return res;
             })
             .collect(Collectors.toList());
+    }
+
+    public void addOnChangeListener(Consumer<T> listener) {
+        this.onChangeListeners.add(listener);
     }
 
     @NotNull

@@ -65,12 +65,14 @@ object BeanTypeUtils {
                 if (attAnnName == "...") {
 
                     getGetters(descriptor.propertyType).forEach { (k, innerGetter) ->
-                        getters[k] = {
-                            val innerValue = getter.invoke(it)
-                            if (innerValue != null) {
-                                innerGetter.invoke(innerValue)
-                            } else {
-                                null
+                        if (!getters.containsKey(k)) {
+                            getters[k] = {
+                                val innerValue = getter.invoke(it)
+                                if (innerValue != null) {
+                                    innerGetter.invoke(innerValue)
+                                } else {
+                                    null
+                                }
                             }
                         }
                     }

@@ -10,7 +10,6 @@ import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.factory.AttValueFactory
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.SimpleAttEdge
 import java.beans.PropertyDescriptor
-import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
 
 class BeanValueFactory : AttValueFactory<Any> {
@@ -26,16 +25,10 @@ class BeanValueFactory : AttValueFactory<Any> {
         private val typeCtx: BeanTypeContext = BeanTypeUtils.getTypeContext(bean.javaClass)
 
         override fun getId(): Any? {
-            return if (typeCtx.hasProperty("?id")) {
-                getAttWithType("?id", Any::class.java)
-            } else try {
-                PropertyUtils.getProperty(bean, "id")
-            } catch (e: NoSuchMethodException) {
-                null
-            } catch (e: IllegalAccessException) {
-                null
-            } catch (e: InvocationTargetException) {
-                null
+            return when {
+                typeCtx.hasProperty("?id") -> getAttWithType("?id", Any::class.java)
+                typeCtx.hasProperty("id") -> getAttWithType("id", Any::class.java)
+                else -> null
             }
         }
 

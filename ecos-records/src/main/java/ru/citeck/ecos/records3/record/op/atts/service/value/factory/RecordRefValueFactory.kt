@@ -72,7 +72,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             return ref.toString()
         }
 
-        override fun getDisplayName(): String? {
+        override fun getDisplayName(): Any? {
             return innerAtts.displayName
         }
 

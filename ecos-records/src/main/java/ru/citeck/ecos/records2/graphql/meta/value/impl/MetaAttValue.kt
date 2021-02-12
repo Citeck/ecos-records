@@ -1,16 +1,25 @@
 package ru.citeck.ecos.records2.graphql.meta.value.impl
 
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.request.RequestContext
 
 class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun getString(): String? = attValue.asText()
 
-    override fun getDisplayName(): String? = attValue.displayName
+    override fun getDisplayName(): String? {
+        val disp = attValue.displayName ?: return null
+        return when (disp) {
+            is String -> disp
+            is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
+            else -> disp.toString()
+        }
+    }
 
     override fun getId(): String? = attValue.id?.toString() ?: ""
 

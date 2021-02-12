@@ -70,7 +70,7 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
         }
     }
 
-    override fun getDisplayName(): String? {
+    override fun getDisplayName(): Any? {
         return getScalar(value, "?disp") { it.asText() }
     }
 

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
 import ecos.com.fasterxml.jackson210.databind.JsonNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
@@ -550,7 +551,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         private fun getScalar(scalar: String?): Any? {
             return when (scalar) {
                 "?str" -> value.asText()
-                "?disp" -> value.displayName
+                "?disp" -> {
+                    val disp = value.displayName
+                    when (disp) {
+                        is String -> disp
+                        is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
+                        else -> disp.toString()
+                    }
+                }
                 "?id",
                 "?assoc" -> getRef().toString()
                 "?localId" -> getLocalId()

@@ -20,7 +20,7 @@ public interface AttValue {
     }
 
     @Nullable
-    default String getDisplayName() throws Exception {
+    default Object getDisplayName() throws Exception {
         return asText();
     }
 

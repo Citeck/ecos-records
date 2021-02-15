@@ -1,12 +1,16 @@
 package ru.citeck.ecos.records2.graphql.meta.value.impl
 
+import ecos.com.fasterxml.jackson210.databind.node.NullNode
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
+import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
 class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
@@ -14,7 +18,17 @@ class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun getDisplayName(): String? {
         val disp = attValue.displayName ?: return null
+
+        if (LibsUtils.isJacksonPresent()) {
+            if (disp is JackNullNode) {
+                return null
+            }
+        }
+        if (disp is DataValue && disp.isNull()) {
+            return null
+        }
         return when (disp) {
+            is NullNode -> null
             is String -> disp
             is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
             else -> disp.toString()

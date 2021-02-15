@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.op.atts.service.schema.resolver
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
+import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -31,6 +32,7 @@ import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors
 import kotlin.collections.LinkedHashMap
+import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
 class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
@@ -46,7 +48,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     private val dtoSchemaReader = factory.dtoSchemaReader
     private val computedAttsService = factory.computedAttsService
 
-    private val recordTypeService by lazy { factory.recordTypeService ?: error("RecordTypeService is null") }
+    private val recordTypeService by lazy { factory.recordTypeService }
 
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()
@@ -553,10 +555,18 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 "?str" -> value.asText()
                 "?disp" -> {
                     val disp = value.displayName
-                    when (disp) {
-                        is String -> disp
-                        is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
-                        else -> disp.toString()
+
+                    if (disp == null || LibsUtils.isJacksonPresent() && disp is JackNullNode) {
+                        null
+                    } else if (disp is DataValue && disp.isNull()) {
+                        null
+                    } else {
+                        when (disp) {
+                            is NullNode -> null
+                            is String -> disp
+                            is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
+                            else -> disp.toString()
+                        }
                     }
                 }
                 "?id",

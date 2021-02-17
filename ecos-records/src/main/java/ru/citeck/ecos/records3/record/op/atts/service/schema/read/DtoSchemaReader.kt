@@ -97,8 +97,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return getAttributes(attsClass, null)
     }
 
-    fun <T : Any> instantiate(metaClass: Class<T>, attributes: ObjectData): T? {
-        return Json.mapper.convert(attributes, metaClass)
+    fun <T : Any> instantiate(attsClass: Class<T>, attributes: ObjectData): T? {
+        return Json.mapper.convert(attributes, attsClass)
     }
 
     private fun getAttributes(attsClass: Class<*>, visited: MutableSet<Class<*>>?): List<SchemaAtt> {
@@ -173,14 +173,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     }
 
     private fun getParamName(param: KParameter): String? {
-        var name = param.findAnnotation<JsonProperty>()?.value
-        if (name == null && LibsUtils.isJacksonPresent()) {
-            name = param.findAnnotation<com.fasterxml.jackson.annotation.JsonProperty>()?.value
-        }
-        if (name == null) {
-            name = param.findAnnotation<AttName>()?.value
-        }
-        return name ?: param.name
+        return param.findAnnotation<JsonProperty>()?.value ?: param.name
     }
 
     private fun readFromConstructor(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {
@@ -197,8 +190,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
             val paramName = getParamName(arg)
             if (paramName == null) {
-                log.info { "Parameter doesn't has name: $arg. class: $attsClass Schema will be ['?json']" }
-                return listOf(SchemaAtt.create { name = ScalarType.JSON.schema })
+                log.info { "Parameter doesn't has name: $arg and will be ignored. class: $attsClass" }
+                continue
             }
 
             var argType = arg.type.classifier as? KClass<*> ?: error("Incorrect argument: $arg")

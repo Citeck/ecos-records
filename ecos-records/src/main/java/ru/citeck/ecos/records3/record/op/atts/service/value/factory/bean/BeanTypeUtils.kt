@@ -53,6 +53,10 @@ object BeanTypeUtils {
 
         for (descriptor in descriptors) {
 
+            if (descriptor.name == "class") {
+                continue
+            }
+
             val readMethod = descriptor.readMethod ?: continue
             readMethod.isAccessible = true
 
@@ -124,31 +128,43 @@ object BeanTypeUtils {
     private fun <T : Annotation> getFieldAnnotation(
         scope: Class<*>,
         name: String,
-        type: Class<T>
+        annType: Class<T>
     ): T? {
-        var annotation: T? = null
 
-        val primaryConstructor = scope.kotlin.primaryConstructor
-        val primaryParam = primaryConstructor?.parameters?.firstOrNull { it.name == name }
-        if (primaryParam != null) {
-            @Suppress("UNCHECKED_CAST")
-            annotation = primaryParam.annotations.firstOrNull { type.kotlin.isInstance(it) } as? T?
-            if (annotation != null) {
-                return annotation
-            }
+        var annotation: T? = getPrimaryConstructorParamAnnotation(scope, name, annType)
+        if (annotation != null) {
+            return annotation
         }
 
         var scopeIt: Class<*>? = scope
         while (scopeIt != null) {
             try {
                 val field = scopeIt.getDeclaredField(name)
-                annotation = field.getAnnotation(type)
+                annotation = field.getAnnotation(annType)
                 break
             } catch (e: Exception) {
                 annotation = null
             }
             scopeIt = scopeIt.superclass
         }
+        return annotation
+    }
+
+    private fun <T : Annotation> getPrimaryConstructorParamAnnotation(
+        scope: Class<*>,
+        name: String,
+        annType: Class<T>
+    ): T? {
+
+        var annotation: T? = null
+
+        val primaryConstructor = scope.kotlin.primaryConstructor
+        val primaryParam = primaryConstructor?.parameters?.firstOrNull { it.name == name }
+        if (primaryParam != null) {
+            @Suppress("UNCHECKED_CAST")
+            annotation = primaryParam.annotations.firstOrNull { annType.kotlin.isInstance(it) } as? T?
+        }
+
         return annotation
     }
 }

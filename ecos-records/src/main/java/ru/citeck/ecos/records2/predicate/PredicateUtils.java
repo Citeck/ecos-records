@@ -22,9 +22,9 @@ public class PredicateUtils {
 
         mapValuePredicatesImpl(predicate, v -> {
             result.add(v.getAttribute());
-            Object value = v.getValue();
-            if (value instanceof String) {
-                result.addAll(TmplUtils.getAtts((String) value));
+            DataValue value = v.getValue();
+            if (value.isTextual()) {
+                result.addAll(TmplUtils.getAtts(value.asText()));
             }
             return v;
         }, false);
@@ -60,7 +60,14 @@ public class PredicateUtils {
                                                Function<ValuePredicate, ValuePredicate> mapFunc,
                                                boolean onlyAnd) {
 
-        return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd);
+        return mapValuePredicates(predicate, mapFunc, onlyAnd, true);
+    }
+
+    public static Predicate mapValuePredicates(Predicate predicate,
+                                               Function<ValuePredicate, ValuePredicate> mapFunc,
+                                               boolean onlyAnd, boolean optimize) {
+
+        return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, optimize);
     }
 
     public static <T> T convertToDto(Predicate predicate, Class<T> type) {
@@ -129,6 +136,13 @@ public class PredicateUtils {
                                                     Function<ValuePredicate, ValuePredicate> mapFunc,
                                                     boolean onlyAnd) {
 
+        return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, true);
+    }
+
+    private static Predicate mapValuePredicatesImpl(Predicate predicate,
+                                                    Function<ValuePredicate, ValuePredicate> mapFunc,
+                                                    boolean onlyAnd, boolean optimize) {
+
         if (predicate == null) {
             return null;
         }
@@ -140,14 +154,14 @@ public class PredicateUtils {
         } else if (predicate instanceof ComposedPredicate) {
 
             if (onlyAnd && !(predicate instanceof AndPredicate)) {
-                return null;
+                return predicate;
             }
 
             ComposedPredicate composed = (ComposedPredicate) predicate;
             List<Predicate> mappedPredicates = new ArrayList<>();
 
             for (Predicate pred : composed.getPredicates()) {
-                Predicate mappedPred = mapValuePredicatesImpl(pred, mapFunc, onlyAnd);
+                Predicate mappedPred = mapValuePredicatesImpl(pred, mapFunc, onlyAnd, optimize);
                 if (mappedPred != null) {
                     mappedPredicates.add(mappedPred);
                 }
@@ -155,7 +169,7 @@ public class PredicateUtils {
 
             if (mappedPredicates.isEmpty()) {
                 return null;
-            } else if (mappedPredicates.size() == 1) {
+            } else if (optimize && mappedPredicates.size() == 1) {
                 return mappedPredicates.get(0);
             }
 
@@ -170,8 +184,11 @@ public class PredicateUtils {
         } else if (predicate instanceof NotPredicate) {
 
             NotPredicate notPred = (NotPredicate) predicate;
-            Predicate mapped = mapValuePredicatesImpl(notPred.getPredicate(), mapFunc, onlyAnd);
+            Predicate mapped = mapValuePredicatesImpl(notPred.getPredicate(), mapFunc, onlyAnd, optimize);
             if (mapped != null) {
+                if (optimize && mapped instanceof NotPredicate) {
+                    return ((NotPredicate) mapped).getPredicate();
+                }
                 return Predicates.not(mapped);
             } else {
                 return null;

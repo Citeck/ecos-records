@@ -3,22 +3,22 @@ package ru.citeck.ecos.records3
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
-import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
-import ru.citeck.ecos.records3.record.op.delete.dao.RecordsDeleteDao
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDao
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateCrossSrcDao
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordsMutateDao
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
+import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateCrossSrcDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 
 /**
  * Service to work with some abstract "records" from any source.

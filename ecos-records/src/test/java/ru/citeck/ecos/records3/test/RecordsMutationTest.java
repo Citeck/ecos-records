@@ -11,8 +11,8 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao;
 
 import java.util.*;
 

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.predicate.element.elematts
 
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 
 class RecordAttsElementAtts(private val atts: RecordAtts) : ElementAttributes {
 

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.List;

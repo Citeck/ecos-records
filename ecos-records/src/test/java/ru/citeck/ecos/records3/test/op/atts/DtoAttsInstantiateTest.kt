@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import kotlin.test.assertEquals
 
 class DtoAttsInstantiateTest {

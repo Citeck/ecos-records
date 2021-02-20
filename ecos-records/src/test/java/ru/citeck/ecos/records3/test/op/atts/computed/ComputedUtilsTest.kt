@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.test.op.atts.computed
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedUtils
+import ru.citeck.ecos.records3.record.atts.computed.ComputedUtils
 import ru.citeck.ecos.records3.record.request.RequestContext
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

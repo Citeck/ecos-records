@@ -4,8 +4,8 @@ import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixinsHolder
+import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.record.mixin.AttMixinsHolder
 import java.util.concurrent.CopyOnWriteArrayList
 
 abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryAware {

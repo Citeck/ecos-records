@@ -8,11 +8,11 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.List;

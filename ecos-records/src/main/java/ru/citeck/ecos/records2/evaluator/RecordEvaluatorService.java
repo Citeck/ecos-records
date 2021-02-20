@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.evaluator;
 
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 
 import java.util.List;
 import java.util.Map;

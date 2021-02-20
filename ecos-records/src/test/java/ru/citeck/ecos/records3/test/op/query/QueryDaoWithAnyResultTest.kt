@@ -3,9 +3,9 @@ package ru.citeck.ecos.records3.test.op.query
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import kotlin.test.assertEquals
 
 class QueryDaoWithAnyResultTest {

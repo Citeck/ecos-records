@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.util.concurrent.ScheduledExecutorService
 
 interface LocalRecordsResolver {

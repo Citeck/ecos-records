@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.dto.LocalRecordAtts
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDao
+import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import kotlin.test.assertEquals
 
 class RawMutateTest {

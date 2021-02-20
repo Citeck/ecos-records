@@ -5,16 +5,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records3.record.op.atts.dto.CreateVariant;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.value.AttEdge;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class MetaEdgeTest extends AbstractRecordsDao
         assertEquals(MetaTestEdge.EDITOR_KEY, edgeNode.get("editorKey").asText());
         assertEquals(MetaTestEdge.IS_ASSOC, edgeNode.get("isAssoc").asBoolean(false));
 
-        CreateVariant variant = Json.getMapper().convert(edgeNode.get("/createVariants{json}/0"), CreateVariant.class);
+        ObjectData variant = Json.getMapper().convert(edgeNode.get("/createVariants{json}/0"), ObjectData.class);
         assertEquals(MetaTestEdge.CREATE_VARIANT, variant);
 
         assertEquals(EDGE_FIELD_NAME, edgeNode.get("name").asText());
@@ -138,16 +138,12 @@ public class MetaEdgeTest extends AbstractRecordsDao
         static String EDITOR_KEY = "editor key";
         static String TYPE = "_type_";
         static boolean IS_ASSOC = true;
-        static CreateVariant CREATE_VARIANT;
+        static ObjectData CREATE_VARIANT;
 
         static {
-            CREATE_VARIANT = CreateVariant.create()
-                .withLabel("Create label")
-                .withRecordRef(RecordRef.valueOf("1231231@213123"))
-                .withAttribute("test", "test2")
-                .withAttribute("test4", "test3")
-                .withFormKey("SomeFormKey")
-                .build();
+            CREATE_VARIANT = ObjectData.create();
+            CREATE_VARIANT.set("label", "Create Label");
+            CREATE_VARIANT.set("recordRef", RecordRef.valueOf("1231231@213123"));
         }
 
         static List<?> distinctVariants = Arrays.asList(
@@ -216,8 +212,8 @@ public class MetaEdgeTest extends AbstractRecordsDao
         }
 
         @Override
-        public List<CreateVariant> getCreateVariants() {
-            List<CreateVariant> variants = new ArrayList<>();
+        public List<ObjectData> getCreateVariants() {
+            List<ObjectData> variants = new ArrayList<>();
             variants.add(CREATE_VARIANT);
             return variants;
         }

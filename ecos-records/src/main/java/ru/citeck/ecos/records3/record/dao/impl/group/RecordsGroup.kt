@@ -5,10 +5,10 @@ import ru.citeck.ecos.records2.predicate.model.ComposedPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
-import ru.citeck.ecos.records3.record.op.atts.service.value.impl.InnerAttValue
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import java.util.*
 
 class RecordsGroup(

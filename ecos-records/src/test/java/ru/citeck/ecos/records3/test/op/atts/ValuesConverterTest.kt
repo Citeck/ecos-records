@@ -2,8 +2,8 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.value.factory.*
-import ru.citeck.ecos.records3.record.op.atts.service.value.factory.time.DateValueFactory
+import ru.citeck.ecos.records3.record.atts.value.factory.*
+import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals

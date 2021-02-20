@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.rest.v1.delete
 
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.rest.v1.RequestResp
 import java.util.*
 

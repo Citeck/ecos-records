@@ -5,8 +5,8 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.*
 import kotlin.test.assertEquals

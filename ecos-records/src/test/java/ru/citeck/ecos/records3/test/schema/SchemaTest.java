@@ -2,9 +2,9 @@ package ru.citeck.ecos.records3.test.schema;
 
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.LinkedHashMap;

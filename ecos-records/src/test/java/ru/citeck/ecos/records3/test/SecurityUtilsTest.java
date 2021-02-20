@@ -2,11 +2,11 @@ package ru.citeck.ecos.records3.test;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages;
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 
 import java.util.Collections;
 import java.util.List;

@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.meta;
 
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 
 import java.util.Collection;
 import java.util.List;

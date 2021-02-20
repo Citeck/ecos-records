@@ -6,10 +6,10 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dao.SupportsQueryLanguages
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.util.*
 
 class RecordsGroupDao : AbstractRecordsDao(), RecordsQueryDao, SupportsQueryLanguages {

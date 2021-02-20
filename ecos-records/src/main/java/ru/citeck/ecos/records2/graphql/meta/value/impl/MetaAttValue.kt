@@ -8,7 +8,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 

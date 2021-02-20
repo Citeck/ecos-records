@@ -4,7 +4,6 @@ import kotlin.Deprecated;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdgeDelegate;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin;
 
 import java.util.List;
 import java.util.function.Supplier;

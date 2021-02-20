@@ -4,7 +4,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records2.request.result.DebugResult
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records2.request.query.RecordsQuery as RecordsQueryV0

@@ -7,9 +7,9 @@ import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.impl.MetaAttValue;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValuesConverter;
-import ru.citeck.ecos.records3.record.op.atts.service.value.HasListView;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter;
+import ru.citeck.ecos.records3.record.atts.value.HasListView;
 
 import java.lang.reflect.Array;
 import java.util.*;

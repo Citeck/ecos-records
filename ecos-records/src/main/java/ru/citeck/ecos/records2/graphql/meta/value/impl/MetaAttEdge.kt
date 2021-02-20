@@ -5,7 +5,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttEdge
+import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.request.RequestContext
 
 class MetaAttEdge(private val edge: AttEdge) : MetaEdge {

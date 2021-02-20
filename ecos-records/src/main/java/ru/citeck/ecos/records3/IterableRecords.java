@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 
 import java.util.Iterator;
 import java.util.List;

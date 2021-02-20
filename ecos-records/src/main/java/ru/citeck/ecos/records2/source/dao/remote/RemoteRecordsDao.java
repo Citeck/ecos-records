@@ -18,8 +18,8 @@ import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.RecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDao;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 
 import java.util.ArrayList;
 import java.util.List;

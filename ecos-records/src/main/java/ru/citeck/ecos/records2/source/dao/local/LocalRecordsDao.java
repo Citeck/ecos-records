@@ -23,10 +23,10 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.RecordAttsService;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

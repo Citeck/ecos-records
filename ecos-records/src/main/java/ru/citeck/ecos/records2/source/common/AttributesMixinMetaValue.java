@@ -12,9 +12,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.RecordAttsService;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.RecordAttsService;
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 
 import java.util.*;
 import java.util.concurrent.Callable;

@@ -7,10 +7,10 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;

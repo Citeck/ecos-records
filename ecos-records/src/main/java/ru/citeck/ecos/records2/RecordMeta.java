@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 
 import java.util.Objects;
 import java.util.function.Function;

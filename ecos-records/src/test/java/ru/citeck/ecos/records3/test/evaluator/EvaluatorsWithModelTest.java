@@ -10,8 +10,8 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 

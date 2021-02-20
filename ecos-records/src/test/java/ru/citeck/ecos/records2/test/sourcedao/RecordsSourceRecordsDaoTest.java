@@ -12,7 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 
 import java.util.ArrayList;
 import java.util.Arrays;

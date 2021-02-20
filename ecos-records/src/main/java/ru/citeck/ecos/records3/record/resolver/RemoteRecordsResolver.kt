@@ -16,11 +16,11 @@ import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.rest.v1.RequestBody

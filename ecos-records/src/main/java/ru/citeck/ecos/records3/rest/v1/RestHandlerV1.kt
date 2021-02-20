@@ -6,9 +6,9 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody

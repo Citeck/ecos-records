@@ -3,13 +3,13 @@ package ru.citeck.ecos.records3.test.op.atts
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
-import ru.citeck.ecos.records3.record.op.atts.service.mixin.AttMixin
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValueCtx
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.records3.record.mixin.AttMixin
 import kotlin.test.assertEquals
 
 class MixinTest {

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.type
 
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 
 interface RecordTypeService {
 

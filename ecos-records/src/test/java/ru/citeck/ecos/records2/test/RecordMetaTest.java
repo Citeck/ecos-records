@@ -5,7 +5,7 @@ import ecos.com.fasterxml.jackson210.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 
 import java.math.BigDecimal;
 import java.util.Date;

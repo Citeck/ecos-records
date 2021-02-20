@@ -24,13 +24,13 @@ import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.AttSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader;
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
@@ -68,8 +68,8 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
 
-            ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery queryV1 =
-                Json.getMapper().convert(query, ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery.class);
+            ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery queryV1 =
+                Json.getMapper().convert(query, ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery.class);
             if (queryV1 == null) {
                 return new RecordsQueryResult<>();
             }

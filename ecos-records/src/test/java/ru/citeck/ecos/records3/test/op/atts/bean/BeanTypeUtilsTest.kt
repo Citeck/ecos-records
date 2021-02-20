@@ -3,8 +3,8 @@ package ru.citeck.ecos.records3.test.op.atts.bean
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.op.atts.service.value.factory.bean.BeanTypeUtils
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanTypeUtils
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

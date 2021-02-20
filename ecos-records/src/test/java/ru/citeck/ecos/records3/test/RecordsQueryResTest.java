@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

@@ -8,7 +8,7 @@ import ecos.com.fasterxml.jackson210.databind.node.TextNode
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.rest.v1.RequestBody
 import java.util.*
 

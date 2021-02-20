@@ -12,8 +12,8 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.query.SortBy;
-import ru.citeck.ecos.records3.record.op.query.dto.query.Consistency;
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.Consistency;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 
 import java.io.IOException;
 import java.util.Arrays;

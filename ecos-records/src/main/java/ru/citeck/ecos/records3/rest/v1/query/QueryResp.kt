@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.rest.v1.query
 
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.rest.v1.RequestResp
 import java.util.*
 

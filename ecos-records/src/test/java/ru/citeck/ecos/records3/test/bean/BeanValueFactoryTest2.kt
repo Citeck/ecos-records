@@ -3,11 +3,11 @@ package ru.citeck.ecos.records3.test.bean
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import kotlin.test.assertEquals
 
 class BeanValueFactoryTest2 {

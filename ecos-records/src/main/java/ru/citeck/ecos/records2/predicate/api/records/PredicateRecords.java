@@ -5,14 +5,14 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.*;

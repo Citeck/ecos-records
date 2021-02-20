@@ -7,8 +7,8 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import kotlin.test.assertEquals
 
 class RecordRefAttTest {

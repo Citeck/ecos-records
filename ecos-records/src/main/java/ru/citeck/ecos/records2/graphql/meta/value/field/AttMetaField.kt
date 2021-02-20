@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.graphql.meta.value.field
 
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records3.record.op.atts.service.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 
 object AttMetaField : MetaField {
 

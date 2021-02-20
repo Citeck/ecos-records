@@ -15,7 +15,7 @@ import ru.citeck.ecos.records2.evaluator.evaluators.GroupEvaluator;
 import ru.citeck.ecos.records2.evaluator.evaluators.PredicateEvaluator;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 
 import java.util.Arrays;

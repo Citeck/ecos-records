@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.utils;
 
-import kotlin.jvm.functions.Function1;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
@@ -8,9 +7,9 @@ import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;

@@ -10,15 +10,15 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao;
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.record.op.atts.service.computed.ComputedAtt;
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt;
 
 import java.util.*;
 import java.util.stream.Collectors;

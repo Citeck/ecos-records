@@ -2,8 +2,8 @@ package ru.citeck.ecos.records2.source.dao;
 
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
-import ru.citeck.ecos.records3.record.op.atts.dto.RecordAtts;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 
 import java.util.List;
 

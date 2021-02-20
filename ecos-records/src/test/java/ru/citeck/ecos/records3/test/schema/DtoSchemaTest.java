@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.SchemaAtt;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.read.DtoSchemaReader;
-import ru.citeck.ecos.records3.record.op.atts.service.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
 
 import java.util.List;
 import java.util.Map;

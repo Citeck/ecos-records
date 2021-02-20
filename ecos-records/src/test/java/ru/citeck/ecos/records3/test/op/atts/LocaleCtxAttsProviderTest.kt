@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.*
 import kotlin.test.assertEquals

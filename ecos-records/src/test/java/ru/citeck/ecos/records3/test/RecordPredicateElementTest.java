@@ -7,8 +7,8 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordsAttsDao;
-import ru.citeck.ecos.records3.record.op.atts.service.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.RecordElement;
@@ -175,7 +175,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             return new AttValue(attributes.get(ref.getId()).get(name));
         }
 
-        class AttValue implements ru.citeck.ecos.records3.record.op.atts.service.value.AttValue {
+        class AttValue implements ru.citeck.ecos.records3.record.atts.value.AttValue {
 
             private String str;
 

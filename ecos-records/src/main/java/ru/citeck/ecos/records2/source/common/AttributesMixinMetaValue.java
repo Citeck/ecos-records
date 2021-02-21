@@ -178,6 +178,12 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
             return getRecordType();
         }
+        if (RecordConstants.ATT_DISP.equals(attribute)) {
+            return getDisplayName();
+        }
+        if (RecordConstants.ATT_STR.equals(attribute)) {
+            return getString();
+        }
 
         ParameterizedAttsMixin mixin = mixins.get(attribute);
 

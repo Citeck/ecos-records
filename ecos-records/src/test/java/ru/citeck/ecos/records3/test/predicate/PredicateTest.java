@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.RecordConstants;
+import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.model.*;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
@@ -182,6 +184,12 @@ class PredicateTest {
             Predicates.eq("Test", "value2"),
             Predicates.eq("testTest", "value2")
         );
+
+        Predicate mappedWithOnlyAnd = PredicateUtils.mapValuePredicates(pred, p -> p, true, false);
+        assertEquals(pred, mappedWithOnlyAnd);
+
+        Predicate mappedWithoutOnlyAnd = PredicateUtils.mapValuePredicates(pred, p -> p, false, false);
+        assertEquals(pred, mappedWithoutOnlyAnd);
 
         List<Predicate> testedPredicates = new ArrayList<>();
         Optional<Predicate> filtered = PredicateUtils.filterValuePredicates(pred, p -> {

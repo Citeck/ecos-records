@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate
 import ru.citeck.ecos.records2.rest.*
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.spring.web.SkipSslVerificationHttpRequestFactory
+import ru.citeck.ecos.records3.spring.web.interceptor.AuthHeaderInterceptor
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
 
 @Slf4j
@@ -23,6 +24,8 @@ open class RecordsRestConfiguration {
     private var eurekaClient: EurekaClient? = null
     private var properties: RecordsProperties? = null
     private var authInterceptor: RecordsAuthInterceptor? = null
+    private var authHeaderInterceptor: AuthHeaderInterceptor? = null
+
     private lateinit var restTemplateBuilder: RestTemplateBuilder
 
     @Bean
@@ -67,7 +70,7 @@ open class RecordsRestConfiguration {
     open fun recordsRestTemplate(): RestTemplate {
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
-            .additionalInterceptors(authInterceptor)
+            .additionalInterceptors(authInterceptor, authHeaderInterceptor)
             .build()
     }
 
@@ -89,5 +92,10 @@ open class RecordsRestConfiguration {
     @Autowired
     fun setAuthInterceptor(authInterceptor: RecordsAuthInterceptor) {
         this.authInterceptor = authInterceptor
+    }
+
+    @Autowired
+    fun setAuthHeaderInterceptor(authHeaderInterceptor: AuthHeaderInterceptor) {
+        this.authHeaderInterceptor = authHeaderInterceptor
     }
 }

@@ -1,11 +1,12 @@
 package ru.citeck.ecos.records3.spring.web.interceptor
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.ClientHttpRequestExecution
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
 import org.springframework.stereotype.Component
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.IOException
 import javax.servlet.http.HttpServletRequest
 
@@ -17,7 +18,6 @@ class AuthHeaderInterceptor : ClientHttpRequestInterceptor {
     }
 
     private var authHeaderProvider: AuthHeaderProvider? = null
-    private var thisRequest: HttpServletRequest? = null
 
     @Throws(IOException::class)
     override fun intercept(
@@ -26,7 +26,7 @@ class AuthHeaderInterceptor : ClientHttpRequestInterceptor {
         execution: ClientHttpRequestExecution
     ): ClientHttpResponse {
 
-        val currentRequest = thisRequest
+        val currentRequest = getCurrentRequest()
         if (currentRequest != null) {
             request.headers.set(AUTH_HEADER, currentRequest.getHeader(AUTH_HEADER))
         }
@@ -48,12 +48,11 @@ class AuthHeaderInterceptor : ClientHttpRequestInterceptor {
         return execution.execute(request, body)
     }
 
-    fun setAuthHeaderProvider(authHeaderProvider: AuthHeaderProvider) {
-        this.authHeaderProvider = authHeaderProvider
+    private fun getCurrentRequest(): HttpServletRequest? {
+        return (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)?.request
     }
 
-    @Autowired(required = false)
-    fun setThisRequest(thisRequest: HttpServletRequest?) {
-        this.thisRequest = thisRequest
+    fun setAuthHeaderProvider(authHeaderProvider: AuthHeaderProvider) {
+        this.authHeaderProvider = authHeaderProvider
     }
 }

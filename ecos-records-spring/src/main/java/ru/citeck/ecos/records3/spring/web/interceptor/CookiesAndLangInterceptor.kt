@@ -20,12 +20,14 @@ class CookiesAndLangInterceptor : ClientHttpRequestInterceptor {
         bytes: ByteArray,
         clientHttpRequestExecution: ClientHttpRequestExecution
     ): ClientHttpResponse {
+
         val newHeaders = newRequest.headers
-        if (thisRequest != null) {
-            newHeaders["Cookie"] = thisRequest!!.getHeader("Cookie")
-            newHeaders["Accept-Language"] = thisRequest!!.getHeader("Accept-Language")
-            newHeaders["X-Alfresco-Remote-User"] = thisRequest!!.getHeader("X-Alfresco-Remote-User")
-            newHeaders["X-ECOS-User"] = thisRequest!!.getHeader("X-ECOS-User")
+        val request = thisRequest
+        if (request != null) {
+            newHeaders["Cookie"] = request.getHeader("Cookie")
+            newHeaders["Accept-Language"] = request.getHeader("Accept-Language")
+            newHeaders["X-Alfresco-Remote-User"] = request.getHeader("X-Alfresco-Remote-User")
+            newHeaders["X-ECOS-User"] = request.getHeader("X-ECOS-User")
         }
         return clientHttpRequestExecution.execute(newRequest, bytes)
     }

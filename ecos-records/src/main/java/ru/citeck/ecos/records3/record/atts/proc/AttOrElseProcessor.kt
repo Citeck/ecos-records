@@ -12,9 +12,15 @@ class AttOrElseProcessor : AbstractAttProcessor<List<DataValue>>(true) {
 
     override fun processOne(attributes: ObjectData, value: DataValue, args: List<DataValue>): Any? {
 
-        if (args.isEmpty() || value.isNotNull()) {
+        if (args.isEmpty()) {
             return value
         }
+        if (value.isNotNull()) {
+            if (!value.isTextual() || value.asText().isNotEmpty()) {
+                return value
+            }
+        }
+
         var newValue = value
         for (orElseAtt in args) {
             newValue = if (orElseAtt.isTextual()) {

@@ -60,6 +60,8 @@ public class OrElseAttTest {
         assertAtt(true, "boolNullField?bool!boolField?bool");
         assertAtt(true, "boolNullField?bool!true");
         assertAtt(true, "boolField?bool!boolNullField?bool");
+
+        assertAtt("123", "emptyStr?str!'123'");
     }
 
     @Test
@@ -92,6 +94,7 @@ public class OrElseAttTest {
 
     @Data
     public static class RecordData {
+        private String emptyStr = "";
         private String strField = "strField";
         private String strNullField = null;
         private Double numberField = 1000.0;

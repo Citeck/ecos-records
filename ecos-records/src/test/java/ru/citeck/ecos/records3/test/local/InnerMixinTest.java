@@ -79,14 +79,14 @@ public class InnerMixinTest extends AbstractRecordsDao
         addAttributesMixin(new AttMixin() {
             @Override
             public Object getAtt(String path, AttValueCtx value) {
-                if (path.equals("innerMeta")) {
+                if (path.equals("*innerMeta")) {
                     return "innerValue";
                 }
                 return null;
             }
             @Override
             public Collection<String> getProvidedAtts() {
-                return Collections.singletonList("innerMeta");
+                return Collections.singletonList("*innerMeta");
             }
         });
     }

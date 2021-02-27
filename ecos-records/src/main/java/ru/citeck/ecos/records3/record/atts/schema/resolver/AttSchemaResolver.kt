@@ -308,12 +308,15 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     mixinLoop@
                     for (attMixin in context.mixins) {
                         for (mixinAttPath in attMixin.getProvidedAtts()) {
-                            if (mixinAttPath[0] == '^') {
-                                if (attPath == mixinAttPath.substring(1)) {
+                            if (mixinAttPath.isBlank()) {
+                                continue
+                            }
+                            if (mixinAttPath[0] == '*') {
+                                if (attPath.endsWith(mixinAttPath.substring(1))) {
                                     mixin = attMixin
                                     mixinPath = mixinAttPath
                                 }
-                            } else if (attPath.endsWith(mixinAttPath)) {
+                            } else if (attPath == mixinAttPath) {
                                 if (!currentValuePath.endsWith("_edge") || mixinAttPath.contains("_edge.")) {
                                     mixin = attMixin
                                     mixinPath = mixinAttPath

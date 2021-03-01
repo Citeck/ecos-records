@@ -33,7 +33,7 @@ class ComputedAttsService(services: RecordsServiceFactory) {
 
             ComputedAttType.SCRIPT -> {
 
-                val script = att.def.config.get("script").asText()
+                val script = att.def.config.get("fn").asText()
 
                 if (StringUtils.isBlank(script)) {
                     log.warn("Script is blank. Att: $att")

@@ -41,7 +41,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return value.load('attForScript');")
+                            Pair("fn", "return value.load('attForScript');")
                         )
                     )
                 }
@@ -52,7 +52,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return value.load({'key':'attForScript'});")
+                            Pair("fn", "return value.load({'key':'attForScript'});")
                         )
                     )
                 }
@@ -63,7 +63,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return value.load(['attForScript']);")
+                            Pair("fn", "return value.load(['attForScript']);")
                         )
                     )
                 }
@@ -74,7 +74,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return value.load('attForScript') + '-postfix';")
+                            Pair("fn", "return value.load('attForScript') + '-postfix';")
                         )
                     )
                 }
@@ -85,7 +85,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return value.load('attForScript').asText() + '-postfix';")
+                            Pair("fn", "return value.load('attForScript').asText() + '-postfix';")
                         )
                     )
                 }
@@ -96,7 +96,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("script", "return [value.load('attForScript'), 'def'];")
+                            Pair("fn", "return [value.load('attForScript'), 'def'];")
                         )
                     )
                 }

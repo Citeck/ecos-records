@@ -30,7 +30,7 @@ class ComputedQueryTest {
                     config = ObjectData.create(
                         mapOf(
                             Pair(
-                                "script",
+                                "fn",
                                 """
                                     var queryRes = Records.query({
                                         sourceId: 'test',
@@ -57,7 +57,7 @@ class ComputedQueryTest {
                     config = ObjectData.create(
                         mapOf(
                             Pair(
-                                "script",
+                                "fn",
                                 """
                                     var queryRes = Records.query({
                                         sourceId: 'test',
@@ -84,7 +84,7 @@ class ComputedQueryTest {
                     config = ObjectData.create(
                         mapOf(
                             Pair(
-                                "script",
+                                "fn",
                                 """
                                     return Records.get('test@type0Record').load('attAttributeValue');
                                 """.trimIndent()
@@ -100,7 +100,7 @@ class ComputedQueryTest {
                     config = ObjectData.create(
                         mapOf(
                             Pair(
-                                "script",
+                                "fn",
                                 """
                                     return Records.get('test@type0Record').load(['attAttributeValue']);
                                 """.trimIndent()

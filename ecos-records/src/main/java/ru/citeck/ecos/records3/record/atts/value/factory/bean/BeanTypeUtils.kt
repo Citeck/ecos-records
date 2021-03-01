@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.atts.value.factory.bean
 
 import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import java.beans.PropertyDescriptor
 import java.lang.reflect.Method
@@ -85,20 +86,46 @@ object BeanTypeUtils {
                     if (attAnnName == ".type" || attAnnName == "?type") {
                         attAnnName = "_type"
                     }
-                    if (attAnnName[0] == '.' || attAnnName[0] == '?') {
-                        val name = attAnnName.substring(1)
-                        getters[".$name"] = getter
-                        getters["?$name"] = getter
+                    val scalar = ScalarType.getBySchemaOrMirrorAtt(attAnnName)
+                    if (scalar != null) {
+                        getters[scalar.schema] = getter
                     } else {
-                        if (attAnnName.contains("?")) {
-                            attAnnName = attAnnName.substring(0, attAnnName.indexOf('?'))
+                        if (attAnnName[0] == '.' || attAnnName[0] == '?') {
+                            val name = attAnnName.substring(1)
+                            getters[".$name"] = getter
+                            getters["?$name"] = getter
+                        } else {
+                            if (attAnnName.contains("?")) {
+                                attAnnName = attAnnName.substring(0, attAnnName.indexOf('?'))
+                            }
                         }
+                        getters[attAnnName] = getter
                     }
-                    getters[attAnnName] = getter
                 }
             } else {
 
                 getters[descriptor.name] = getter
+            }
+        }
+        if (!getters.containsKey(ScalarType.DISP.schema)) {
+            var dispNameGetter = getters["displayName"]
+            if (dispNameGetter == null) {
+                dispNameGetter = getters["label"]
+                if (dispNameGetter == null) {
+                    dispNameGetter = getters["title"]
+                    if (dispNameGetter == null) {
+                        dispNameGetter = getters["name"]
+                    }
+                }
+            }
+            if (dispNameGetter != null) {
+                getters[ScalarType.DISP.schema] = dispNameGetter
+            }
+        }
+        if (!getters.containsKey(ScalarType.ID.schema)) {
+            val idGetter = getters["id"]
+            if (idGetter != null) {
+                getters[ScalarType.ID.schema] = idGetter
             }
         }
         return getters

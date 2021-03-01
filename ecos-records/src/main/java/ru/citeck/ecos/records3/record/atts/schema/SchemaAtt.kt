@@ -145,7 +145,7 @@ data class SchemaAtt(
             if (att.isScalar() && att.multiple) {
                 throw AttSchemaException("Scalar can't hold multiple values. $this")
             }
-            if (att.isScalar() && !ScalarType.getBySchema(att.name).isPresent) {
+            if (att.isScalar() && ScalarType.getBySchema(att.name) == null) {
                 throw AttSchemaException("Unknown scalar: '" + att.name + "'")
             }
 

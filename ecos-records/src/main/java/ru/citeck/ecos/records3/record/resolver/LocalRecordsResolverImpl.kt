@@ -42,8 +42,8 @@ import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.record.mixin.AttMixin
 import ru.citeck.ecos.records3.record.mixin.AttMixinsHolder
+import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.V1ConvUtils
@@ -139,7 +139,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                         val atts: List<RecordAtts> = recordsAttsService.getAtts(
                             queryRes.getRecords(),
                             attributes,
-                            rawAtts, emptyList()
+                            rawAtts,
+                            MixinContext()
                         )
 
                         recordsResult = RecsQueryRes(atts)
@@ -219,9 +220,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
                     if (queryRes != null) {
                         val objMixins = if (dao.first is AttMixinsHolder) {
-                            (dao.first as AttMixinsHolder).getMixins()
+                            (dao.first as AttMixinsHolder).getMixinContext()
                         } else {
-                            emptyList()
+                            MixinContext()
                         }
                         val recAtts: List<RecordAtts> = context.doWithVarNotNull(
                             AttSchemaResolver.CTX_SOURCE_ID_KEY,
@@ -362,14 +363,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         rawAtts: Boolean
     ): List<RecordAtts> {
 
-        return getAtts(records, attributes, rawAtts, emptyList())
+        return getAtts(records, attributes, rawAtts, MixinContext())
     }
 
     private fun getAtts(
         records: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        mixinsForObjects: List<AttMixin>
+        mixinsForObjects: MixinContext
     ): List<RecordAtts> {
 
         val context = RequestContext.getCurrentNotNull()
@@ -535,9 +536,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     results.add(ref.withValue { RecordAtts(it) })
                 }
             } else {
-                var mixins: List<AttMixin> = emptyList()
-                if (recordsDao.first is AttMixinsHolder) {
-                    mixins = (recordsDao.first as AttMixinsHolder).getMixins()
+                val mixins = if (recordsDao.first is AttMixinsHolder) {
+                    (recordsDao.first as AttMixinsHolder).getMixinContext()
+                } else {
+                    MixinContext()
                 }
                 val refs: List<RecordRef> = recs.map { it.value }
                 val atts: List<RecordAtts> = recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)

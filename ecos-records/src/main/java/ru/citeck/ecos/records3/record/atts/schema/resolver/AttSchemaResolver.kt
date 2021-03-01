@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
@@ -23,7 +24,7 @@ import ru.citeck.ecos.records3.record.atts.value.HasListView
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
-import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -31,6 +32,7 @@ import ru.citeck.ecos.records3.utils.AttUtils
 import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
@@ -72,7 +74,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
         }
         val schemaAtts = schemaAttsToLoad
-        val context = ResolveContext(attValuesConverter, args.mixins, recordTypeService)
+        val context = ResolveContext(attValuesConverter, args.mixinCtx, recordTypeService)
         val attValues = ArrayList<ValueContext>()
         for (i in values.indices) {
             val ref = if (args.valueRefs.isEmpty()) {
@@ -303,38 +305,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         disabledComputedPaths.remove(attPath)
                     }
                 } else {
-                    var mixin: AttMixin? = null
-                    var mixinPath: String? = null
-                    mixinLoop@
-                    for (attMixin in context.mixins) {
-                        for (mixinAttPath in attMixin.getProvidedAtts()) {
-                            if (mixinAttPath.isBlank()) {
-                                continue
-                            }
-                            if (mixinAttPath[0] == '*') {
-                                if (attPath.endsWith(mixinAttPath.substring(1))) {
-                                    mixin = attMixin
-                                    mixinPath = mixinAttPath
-                                }
-                            } else if (attPath == mixinAttPath) {
-                                if (!currentValuePath.endsWith("_edge") || mixinAttPath.contains("_edge.")) {
-                                    mixin = attMixin
-                                    mixinPath = mixinAttPath
-                                }
-                            }
-                            if (mixin != null) {
-                                break@mixinLoop
-                            }
-                        }
-                    }
-                    attValue = if (mixin != null && mixinPath != null && disabledMixinPaths.add(attPath)) {
+
+                    val mixinAttCtx = context.mixinCtx.getMixin(attPath)
+
+                    attValue = if (mixinAttCtx != null && disabledMixinPaths.add(attPath)) {
                         try {
-                            val mixinValueCtx = getContextForDynamicAtt(value, mixinPath)
+                            val mixinValueCtx = getContextForDynamicAtt(value, mixinAttCtx.path)
                             if (mixinValueCtx == null) {
                                 null
                             } else {
-                                mixin.getAtt(
-                                    mixinPath,
+                                mixinAttCtx.mixin.getAtt(
+                                    mixinAttCtx.path,
                                     AttValueResolveCtx(
                                         currentValuePath,
                                         context,
@@ -500,7 +481,6 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
             val schemaAtt = attContext.getSchemaAtt()
             val name = schemaAtt.name
-            val isScalar = schemaAtt.isScalar()
 
             if (log.isTraceEnabled) {
                 log.trace("Resolve $schemaAtt")
@@ -509,7 +489,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             val res: Any?
 
             res = try {
-                resolveImpl(name, isScalar)
+                resolveImpl(name)
             } catch (e: Throwable) {
                 val msg = "Attribute resolving error. Attribute: $name Value: $value"
                 context?.addMsg(MsgLevel.ERROR) { msg }
@@ -523,28 +503,28 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             return res
         }
 
-        private fun resolveImpl(attributeArg: String, isScalar: Boolean): Any? {
-            var attribute = attributeArg
+        private fun resolveImpl(attribute: String): Any? {
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }
-            return if (isScalar) {
-                getScalar(attribute)
+            val scalarType = ScalarType.getBySchemaOrMirrorAtt(attribute)
+            return if (scalarType != null) {
+                getScalar(scalarType)
             } else {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
                     RecordConstants.ATT_ECOS_TYPE -> value.type
-                    RecordConstants.ATT_LOCAL_ID -> getLocalId()
-                    RecordConstants.ATT_DISP -> value.displayName
-                    RecordConstants.ATT_STR -> value.asText()
                     RecordConstants.ATT_AS -> AttFuncValue { type -> value.getAs(type) }
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }
                     else -> {
-                        if (attribute.startsWith("\\_")) {
-                            attribute = attribute.substring(1)
-                        }
-                        value.getAtt(attribute)
+                        value.getAtt(
+                            if (attribute.startsWith("\\_")) {
+                                attribute.substring(1)
+                            } else {
+                                attribute
+                            }
+                        )
                     }
                 }
             }
@@ -555,10 +535,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         fun getLocalId() = getRef().id
 
         @Throws(Exception::class)
-        private fun getScalar(scalar: String?): Any? {
+        private fun getScalar(scalar: ScalarType): Any? {
             return when (scalar) {
-                "?str" -> value.asText()
-                "?disp" -> {
+                ScalarType.STR -> value.asText()
+                ScalarType.DISP -> {
                     val disp = value.displayName
 
                     if (disp == null || LibsUtils.isJacksonPresent() && disp is JackNullNode) {
@@ -574,12 +554,12 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         }
                     }
                 }
-                "?id",
-                "?assoc" -> getRef().toString()
-                "?localId" -> getLocalId()
-                "?num" -> value.asDouble()
-                "?bool" -> value.asBoolean()
-                "?json" -> {
+                ScalarType.ID,
+                ScalarType.ASSOC -> getRef().toString()
+                ScalarType.LOCAL_ID -> getLocalId()
+                ScalarType.NUM -> value.asDouble()
+                ScalarType.BOOL -> value.asBoolean()
+                ScalarType.JSON -> {
                     var json = value.asJson()
                     json = if (json is String) {
                         Json.mapper.read(json)
@@ -588,17 +568,15 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     }
                     json
                 }
-                else -> throw ResolveException("Unknown scalar type: '$scalar'")
             }
         }
     }
 
     private class ResolveContext(
         val converter: AttValuesConverter,
-        val mixins: List<AttMixin>,
+        val mixinCtx: MixinContext,
         val recordTypeService: RecordTypeService
     ) {
-
         val attContext: AttContext = AttContext.getCurrentNotNull()
         val reqContext: RequestContext = RequestContext.getCurrentNotNull()
         val disabledMixinPaths: MutableSet<String> = HashSet()
@@ -652,10 +630,20 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
             try {
-                val typeRef = value?.getType() ?: RecordRef.EMPTY
+                val typeRef = value?.type ?: RecordRef.EMPTY
                 if (RecordRef.isNotEmpty(typeRef)) {
                     for (att in recordTypeService.getComputedAtts(typeRef)) {
-                        computedAtts[att.id] = att
+                        if (AttUtils.isValidComputedAtt(att.id)) {
+                            val scalar = ScalarType.getBySchemaOrMirrorAtt(att.id)
+                            if (scalar != null) {
+                                if (scalar.overridable) {
+                                    computedAtts.putIfAbsent(scalar.schema, att)
+                                    computedAtts.putIfAbsent(scalar.mirrorAtt, att)
+                                }
+                            } else {
+                                computedAtts[att.id] = att
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {

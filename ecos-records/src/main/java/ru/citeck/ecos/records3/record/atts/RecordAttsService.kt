@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.atts
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.record.mixin.MixinContext
 
 interface RecordAttsService {
 
@@ -27,15 +27,15 @@ interface RecordAttsService {
 
     fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean): List<RecordAtts>
 
-    fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean, mixins: List<AttMixin>): List<RecordAtts>
+    fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean, mixins: MixinContext): List<RecordAtts>
 
-    fun getAtts(values: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean, mixins: List<AttMixin>): List<RecordAtts>
+    fun getAtts(values: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean, mixins: MixinContext): List<RecordAtts>
 
     fun getAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        mixins: List<AttMixin>,
+        mixins: MixinContext,
         recordRefs: List<RecordRef>
     ): List<RecordAtts>
 }

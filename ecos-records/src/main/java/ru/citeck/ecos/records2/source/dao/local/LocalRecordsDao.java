@@ -27,6 +27,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.mixin.MixinContext;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -258,7 +259,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                 .peek(v -> v.init(ctx, AttMetaField.INSTANCE))
                 .collect(Collectors.toList()));
 
-        List<RecordAtts> atts = recordAttsService.getAtts(recordsWithMixin, schema, rawAtts, emptyList());
+        List<RecordAtts> atts = recordAttsService.getAtts(recordsWithMixin, schema, rawAtts, new MixinContext());
 
         RecordsResult<RecordAtts> result = new RecordsResult<>();
         result.setRecords(atts);

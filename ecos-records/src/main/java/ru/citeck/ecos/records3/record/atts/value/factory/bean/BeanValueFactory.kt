@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.factory.AttValueFactory
@@ -25,11 +26,10 @@ class BeanValueFactory : AttValueFactory<Any> {
         private val typeCtx: BeanTypeContext = BeanTypeUtils.getTypeContext(bean.javaClass)
 
         override fun getId(): Any? {
-            return when {
-                typeCtx.hasProperty("?id") -> getAttWithType("?id", Any::class.java)
-                typeCtx.hasProperty("id") -> getAttWithType("id", Any::class.java)
-                else -> null
+            if (typeCtx.hasProperty(ScalarType.ID.schema)) {
+                return getAttWithType("?id", Any::class.java)
             }
+            return null
         }
 
         override fun asDouble(): Double? {

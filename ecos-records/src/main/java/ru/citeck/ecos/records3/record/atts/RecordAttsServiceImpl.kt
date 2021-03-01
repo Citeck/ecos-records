@@ -7,7 +7,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
-import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.record.mixin.MixinContext
 import java.util.*
 import java.util.function.Consumer
 import kotlin.collections.Collection
@@ -63,19 +63,19 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
 
     override fun <T : Any> getAtts(values: List<*>, attributes: Class<T>): List<T> {
         val attsMap = dtoSchemaReader.read(attributes)
-        return getAtts(values, attsMap, false, emptyList())
+        return getAtts(values, attsMap, false, MixinContext())
             .map { dtoSchemaReader.instantiate(attributes, it.getAtts()) ?: attributes.newInstance() }
     }
 
     override fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean): List<RecordAtts> {
-        return getAtts(values, attributes, rawAtts, emptyList())
+        return getAtts(values, attributes, rawAtts, MixinContext())
     }
 
     override fun getAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        mixins: List<AttMixin>
+        mixins: MixinContext
     ): List<RecordAtts> {
         return getAtts(values, attributes, rawAtts, mixins, emptyList())
     }
@@ -84,7 +84,7 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        mixins: List<AttMixin>,
+        mixins: MixinContext,
         recordRefs: List<RecordRef>
     ): List<RecordAtts> {
 
@@ -107,7 +107,7 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
                 .withValues(values)
                 .withAttributes(rootAtts)
                 .withRawAtts(rawAtts)
-                .withMixins(mixins)
+                .withMixinContext(mixins)
                 .withValueRefs(recordRefs)
                 .build()
         )
@@ -129,28 +129,30 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         values: List<*>,
         attributes: Map<String, String>,
         rawAtts: Boolean,
-        mixins: List<AttMixin>
+        mixins: MixinContext
     ): List<RecordAtts> {
         return getAtts(values, schemaReader.read(attributes), rawAtts, mixins)
     }
 
     private fun toRecAtts(data: Map<String, Any?>, id: RecordRef): RecordAtts {
-        var data = data
-        var id: RecordRef = id
-        if (id === RecordRef.EMPTY) {
-            val alias = data[REF_ATT_ALIAS]
-            id = if (alias == null) {
+
+        var resData = data
+        var resId: RecordRef = id
+
+        if (resId === RecordRef.EMPTY) {
+            val alias = resData[REF_ATT_ALIAS]
+            resId = if (alias == null) {
                 RecordRef.EMPTY
             } else {
                 RecordRef.valueOf(alias.toString())
             }
-            if (StringUtils.isBlank(id.id)) {
-                id = RecordRef.create(id.appName, id.sourceId, UUID.randomUUID().toString())
+            if (StringUtils.isBlank(resId.id)) {
+                resId = RecordRef.create(resId.appName, resId.sourceId, UUID.randomUUID().toString())
             }
-            data = LinkedHashMap(data)
-            data.remove(REF_ATT_ALIAS)
+            resData = LinkedHashMap(resData)
+            resData.remove(REF_ATT_ALIAS)
         }
-        return RecordAtts(id, ObjectData.create(data))
+        return RecordAtts(resId, ObjectData.create(resData))
     }
 
     private fun <T> getFirst(elements: List<T>, atts: Any?, srcValues: List<Any?>): T {

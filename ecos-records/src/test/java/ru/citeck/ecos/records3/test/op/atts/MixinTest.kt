@@ -34,6 +34,8 @@ class MixinTest {
         factory.recordsServiceV1.register(recordsDao)
 
         val field0Title = "field0_Title"
+        val displayName = "Display Name"
+
         recordsDao.addAttributesMixin(object : AttMixin {
             override fun getAtt(path: String, value: AttValueCtx): Any? {
                 if (path == "providedAtt" || path == "*innerProvided") {
@@ -42,10 +44,14 @@ class MixinTest {
                 if (path == "_edge.field0.title") {
                     return field0Title
                 }
+                if (path == "_disp") {
+                    return displayName
+                }
                 return null
             }
             override fun getProvidedAtts(): Collection<String> {
                 return setOf(
+                    "_disp",
                     "providedAtt",
                     "*innerProvided",
                     "_edge.field0.title"
@@ -72,6 +78,12 @@ class MixinTest {
 
         val field0TitleFromRec2 = factory.recordsServiceV1.getAtt(ref, ".edge(n:\"field0\"){title}").asText()
         assertEquals(field0Title, field0TitleFromRec2)
+
+        val dispNameScalar = factory.recordsServiceV1.getAtt(ref, "?disp").asText()
+        assertEquals(displayName, dispNameScalar)
+
+        val dispNameAtt = factory.recordsServiceV1.getAtt(ref, "_disp").asText()
+        assertEquals(displayName, dispNameAtt)
     }
 
     class RecordInfo(

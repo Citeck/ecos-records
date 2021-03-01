@@ -13,6 +13,7 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs;
+import ru.citeck.ecos.records3.record.mixin.MixinContext;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
@@ -70,11 +71,15 @@ public class ResolverTest {
         testAtt(dto, "inner.innerField?str", "inner");
         testAtt(dto, "inner.innerField?disp", "inner");*/
 
-        testAtt(dto, "inner.innerField{?disp,?str}", "{\"?disp\":\"inner-dispName\",\"?str\":\"inner\"}",
-            createMixin("inner.innerField?disp", (n, ctx) -> ctx.getAtt("inner.innerField?str").asText() + "-dispName"));
+        testAtt(dto,
+            "inner.innerField{?disp,?str}",
+            "{\"?disp\":\"inner-dispName\",\"?str\":\"inner\"}",
+            createMixin("inner.innerField._disp",
+                (n, ctx) -> ctx.getAtt("inner.innerField?str").asText() + "-dispName")
+        );
 
         testAtt(dto, "inner.innerField?disp", "aa@bb",
-            createMixin("inner.innerField?disp", (n, ctx) -> ctx.getRef()));
+            createMixin("inner.innerField._disp", (n, ctx) -> ctx.getRef()));
     }
 
     @Test
@@ -156,7 +161,7 @@ public class ResolverTest {
             Object result = resolver.resolve(ResolveArgs.create()
                 .withValues(Collections.singletonList(value))
                 .withAttribute(parsedAtt)
-                .withMixins(Arrays.asList(mixins))
+                .withMixinContext(new MixinContext(mixins))
                 .build()).get(0).get(parsedAtt.getAliasForValue());
 
             if (!(result instanceof DataValue)) {

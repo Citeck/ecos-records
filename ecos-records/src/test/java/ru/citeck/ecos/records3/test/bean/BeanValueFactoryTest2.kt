@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.bean
 
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -18,10 +19,10 @@ class BeanValueFactoryTest2 {
         val services = RecordsServiceFactory()
 
         services.recordsServiceV1.register(object : RecordsQueryDao, RecordAttsDao {
-            override fun queryRecords(query: RecordsQuery): RecsQueryRes<*>? {
+            override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
                 return RecsQueryRes.of(TestClass(RecordRef.valueOf("test@test")))
             }
-            override fun getRecordAtts(record: String): Any? {
+            override fun getRecordAtts(recordId: String): Any? {
                 return TestClass(RecordRef.valueOf("test@test"))
             }
             override fun getId() = "test"
@@ -50,6 +51,67 @@ class BeanValueFactoryTest2 {
         assertEquals(dto.inner.field0, records.getAtt(dto, "field0").asText())
         assertEquals(dto.inner.field1, records.getAtt(dto, "field1").asInt())
         assertEquals(dto.getCustom(), records.getAtt(dto, "custom").asText())
+
+        assertEquals("abc", records.getAtt(DispNameDispNameDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameLabelDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameNameDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameDispNameWithLabelDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameDispNameWithLabelWithScalarMirrorDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameDispNameWithLabelWithScalarDto(), "?disp").asText())
+        assertEquals("abc", records.getAtt(DispNameDispNameWithLabelWithScalarDto(), "_disp").asText())
+    }
+
+    class DispNameDispNameWithLabelWithScalarMirrorDto {
+        fun getDisplayName(): MLText {
+            return MLText("abcdef")
+        }
+        fun getLabel(): MLText {
+            return MLText("abcdef")
+        }
+        @AttName("_disp")
+        fun getCustomDispName(): MLText {
+            return MLText("abc")
+        }
+    }
+
+    class DispNameDispNameWithLabelWithScalarDto {
+        fun getDisplayName(): MLText {
+            return MLText("abcdef")
+        }
+        fun getLabel(): MLText {
+            return MLText("abcdef")
+        }
+        @AttName("?disp")
+        fun getCustomDispName(): MLText {
+            return MLText("abc")
+        }
+    }
+
+    class DispNameDispNameWithLabelDto {
+        fun getDisplayName(): MLText {
+            return MLText("abc")
+        }
+        fun getLabel(): MLText {
+            return MLText("abcdef")
+        }
+    }
+
+    class DispNameDispNameDto {
+        fun getDisplayName(): MLText {
+            return MLText("abc")
+        }
+    }
+
+    class DispNameLabelDto {
+        fun getLabel(): MLText {
+            return MLText("abc")
+        }
+    }
+
+    class DispNameNameDto {
+        fun getName(): MLText {
+            return MLText("abc")
+        }
     }
 
     class TestClass(val id: RecordRef) {

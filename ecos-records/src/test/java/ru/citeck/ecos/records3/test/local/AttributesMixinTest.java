@@ -109,7 +109,6 @@ public class AttributesMixinTest extends AbstractRecordsDao
         });
 
         checkValidComputedAttributes();
-        removeAttributesMixin(mixinWithDto);
 
         addAttributesMixin(new MixinWithMap());
         checkValidComputedAttributes();

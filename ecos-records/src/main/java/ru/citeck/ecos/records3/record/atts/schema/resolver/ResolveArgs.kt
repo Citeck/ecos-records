@@ -2,14 +2,14 @@ package ru.citeck.ecos.records3.record.atts.schema.resolver
 
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.record.mixin.MixinContext
 
 data class ResolveArgs(
     val values: List<Any?>,
     val sourceId: String,
     val valueRefs: List<RecordRef>,
     val attributes: List<SchemaAtt>,
-    val mixins: List<AttMixin>,
+    val mixinCtx: MixinContext,
     val rawAtts: Boolean
 ) {
 
@@ -44,7 +44,7 @@ data class ResolveArgs(
         var sourceId: String = ""
         var valueRefs: List<RecordRef> = emptyList()
         var attributes: List<SchemaAtt> = emptyList()
-        var mixins: List<AttMixin> = emptyList()
+        var mixinCtx: MixinContext = MixinContext()
         var rawAtts = false
 
         constructor(base: ResolveArgs) : this() {
@@ -52,7 +52,7 @@ data class ResolveArgs(
             sourceId = base.sourceId
             valueRefs = ArrayList(base.valueRefs)
             attributes = ArrayList(base.attributes)
-            mixins = ArrayList(base.mixins)
+            mixinCtx = base.mixinCtx
             rawAtts = base.rawAtts
         }
 
@@ -80,8 +80,8 @@ data class ResolveArgs(
             return this
         }
 
-        fun withMixins(mixins: List<AttMixin>): Builder {
-            this.mixins = mixins
+        fun withMixinContext(mixinCtx: MixinContext): Builder {
+            this.mixinCtx = mixinCtx
             return this
         }
 
@@ -94,7 +94,7 @@ data class ResolveArgs(
             if (valueRefs.isNotEmpty() && valueRefs.size != values.size) {
                 throw RuntimeException("valueRefs should have same size with values")
             }
-            return ResolveArgs(values, sourceId, valueRefs, attributes, mixins, rawAtts)
+            return ResolveArgs(values, sourceId, valueRefs, attributes, mixinCtx, rawAtts)
         }
     }
 }

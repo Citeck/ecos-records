@@ -149,7 +149,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     }
                 }
             } else {
-                // todo
+
+                recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
             }
         } else {
 
@@ -206,34 +207,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     return queryRes
                 } else {
 
-                    recordsResult = RecsQueryRes()
-                    query = updateQueryLanguage(query, dao) ?: error("Query language is not supported. $query")
-
-                    val queryStartMs = System.currentTimeMillis()
-                    val queryRes = dao.second.queryRecords(query)
-                    if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                        context.addMsg(
-                            MsgLevel.DEBUG,
-                            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
-                        )
-                    }
-
-                    if (queryRes != null) {
-                        val objMixins = if (dao.first is AttMixinsHolder) {
-                            (dao.first as AttMixinsHolder).getMixinContext()
-                        } else {
-                            MixinContext()
-                        }
-                        val recAtts: List<RecordAtts> = context.doWithVarNotNull(
-                            AttSchemaResolver.CTX_SOURCE_ID_KEY,
-                            query.sourceId
-                        ) {
-                            getAtts(queryRes.getRecords(), attributes, rawAtts, objMixins)
-                        }
-                        recordsResult.setRecords(recAtts)
-                        recordsResult.setTotalCount(queryRes.getTotalCount())
-                        recordsResult.setHasMore(queryRes.getHasMore())
-                    }
+                    recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
                 }
             }
         }
@@ -241,6 +215,46 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             recordsResult = RecsQueryRes()
         }
         return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp)
+    }
+
+    private fun queryRecordsFromDao(
+        dao: Pair<RecordsDao, RecordsQueryResDao>,
+        extQuery: RecordsQuery,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        context: RequestContext
+    ): RecsQueryRes<RecordAtts> {
+
+        val recordsResult = RecsQueryRes<RecordAtts>()
+        val query = updateQueryLanguage(extQuery, dao) ?: error("Query language is not supported. $extQuery")
+
+        val queryStartMs = System.currentTimeMillis()
+        val queryRes = dao.second.queryRecords(query)
+        if (context.isMsgEnabled(MsgLevel.DEBUG)) {
+            context.addMsg(
+                MsgLevel.DEBUG,
+                "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
+            )
+        }
+
+        if (queryRes != null) {
+            val objMixins = if (dao.first is AttMixinsHolder) {
+                (dao.first as AttMixinsHolder).getMixinContext()
+            } else {
+                MixinContext()
+            }
+            val recAtts: List<RecordAtts> = context.doWithVarNotNull(
+                AttSchemaResolver.CTX_SOURCE_ID_KEY,
+                query.sourceId
+            ) {
+                getAtts(queryRes.getRecords(), attributes, rawAtts, objMixins)
+            }
+            recordsResult.setRecords(recAtts)
+            recordsResult.setTotalCount(queryRes.getTotalCount())
+            recordsResult.setHasMore(queryRes.getHasMore())
+        }
+
+        return recordsResult
     }
 
     private fun getDistinctValues(

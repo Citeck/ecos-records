@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records3.record.dao.impl.group
 
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
@@ -39,7 +41,7 @@ class RecordsGroup(
         return predicate.toString()
     }
 
-    override fun getAtt(name: String): Any {
+    override fun getAtt(name: String): Any? {
         when (name) {
             FIELD_PREDICATE -> return predicate
             FIELD_PREDICATES -> {
@@ -81,7 +83,25 @@ class RecordsGroup(
             }
             return sum
         }
-        return attributes[name]!!
+        return attributes[name]
+    }
+
+    override fun getType(): RecordRef {
+
+        val type = attributes[RecordConstants.ATT_TYPE]
+            ?: return RecordRef.EMPTY
+
+        var typeRefStr = type.id
+        if (typeRefStr is RecordRef) {
+            return typeRefStr
+        }
+        if (typeRefStr is String) {
+            if (!typeRefStr.startsWith("emodel/type@")) {
+                typeRefStr = "emodel/type@$typeRefStr"
+            }
+            return RecordRef.valueOf(typeRefStr)
+        }
+        return RecordRef.EMPTY
     }
 
     private class ValueWrapper internal constructor(private val value: DistinctValue) : AttValue {

@@ -30,6 +30,9 @@ public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordA
     @Override
     public boolean evaluate(RecordAtts meta, Config config) {
         Predicate predicate = Json.getMapper().convert(config.predicate, Predicate.class);
+        if (predicate != null) {
+            predicate = PredicateUtils.resolvePredicateWithAttributes(predicate, meta.getAtts());
+        }
         return predicateService.isMatch(new RecordElement(new RecordMeta(meta)), predicate);
     }
 

@@ -43,7 +43,7 @@ class RecordMutateErrorTest {
         }
         assertEquals(exceptionMessage, runtimeEx.message)
 
-        val illegalArgEx = assertThrows<RuntimeException> {
+        val illegalArgEx = assertThrows<IllegalArgumentException> {
             records.mutate(RecordRef.valueOf("mut-error-test@IllegalArg"), attributes)
         }
         assertEquals(exceptionMessage, illegalArgEx.message)

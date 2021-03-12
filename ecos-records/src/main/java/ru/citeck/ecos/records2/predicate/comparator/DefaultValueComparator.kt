@@ -34,7 +34,7 @@ class DefaultValueComparator : ValueComparator {
             return false
         }
         if (value.isArray()) {
-            return value.any { it == subValue }
+            return value.any { isEquals(it, subValue) }
         }
         if (value.isTextual() || subValue.isTextual()) {
             val v0 = value.asText().toLowerCase()
@@ -49,7 +49,7 @@ class DefaultValueComparator : ValueComparator {
             return false
         }
         if (inValue.isArray()) {
-            return inValue.any { it == value }
+            return inValue.any { isEquals(it, value) }
         }
         return false
     }

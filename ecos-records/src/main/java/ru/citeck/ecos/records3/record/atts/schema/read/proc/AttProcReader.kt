@@ -101,10 +101,7 @@ class AttProcReader {
                     it == "true" -> DataValue.TRUE
                     it == "false" -> DataValue.FALSE
                     Character.isDigit(it[0]) -> DataValue.create(it.toDouble())
-                    else -> {
-                        val withoutQuotes = AttStrUtils.removeQuotes(it)
-                        DataValue.createStr(AttStrUtils.removeEscaping(withoutQuotes))
-                    }
+                    else -> DataValue.createStr(AttStrUtils.removeQuotes(it))
                 }
             }
             .forEach { e: DataValue -> result.add(e) }

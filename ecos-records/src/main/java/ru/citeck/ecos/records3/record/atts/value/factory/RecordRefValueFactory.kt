@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -48,9 +49,16 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             val scalarMirrorAtts = mutableListOf<ScalarType>()
             val attsMap: MutableMap<String, String> = LinkedHashMap()
             val sb = StringBuilder()
+
             for (inner in innerSchema) {
+
                 val innerName: String = inner.name
-                if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
+
+                if (inner.name == RecordConstants.ATT_TYPE) {
+
+                    attsMap["_type"] = "_type?id"
+                } else if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
+
                     schemaWriter.write(inner, sb)
                     val mirrorScalarType = ScalarType.getByMirrorAtt(innerName)
                     if (mirrorScalarType != null) {
@@ -117,6 +125,10 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
         override fun getAtt(name: String): Any? {
             return innerAtts.getAtt(name)
+        }
+
+        override fun getType(): RecordRef {
+            return innerAtts.type
         }
     }
 }

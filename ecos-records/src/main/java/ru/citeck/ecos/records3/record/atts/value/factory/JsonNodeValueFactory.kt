@@ -13,6 +13,13 @@ class JsonNodeValueFactory : AttValueFactory<JsonNode> {
 
         return object : AttValue, HasListView<JsonNode> {
 
+            override fun getId(): Any? {
+                if (value.isTextual) {
+                    return value.asText()
+                }
+                return null
+            }
+
             override fun asText(): String? {
                 return if (value is NullNode || value is MissingNode) {
                     null

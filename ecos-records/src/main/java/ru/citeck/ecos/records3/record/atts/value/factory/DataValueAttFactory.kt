@@ -11,6 +11,13 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
 
         return object : AttValue, HasListView<DataValue> {
 
+            override fun getId(): Any? {
+                if (value.isTextual()) {
+                    return value.asText()
+                }
+                return null
+            }
+
             override fun asText(): String? {
                 return if (value.isValueNode()) {
                     value.asText()

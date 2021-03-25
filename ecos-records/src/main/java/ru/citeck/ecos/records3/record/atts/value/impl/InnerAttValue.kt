@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.HasListView
 import java.util.*
@@ -92,5 +93,13 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
 
     override fun asJson(): Any? {
         return getScalar(value, "?json") { it }
+    }
+
+    override fun getType(): RecordRef {
+        val res = value.path("_type").path("?id")
+        if (res.isNull || res.isMissingNode) {
+            return RecordRef.EMPTY
+        }
+        return RecordRef.valueOf(res.asText())
     }
 }

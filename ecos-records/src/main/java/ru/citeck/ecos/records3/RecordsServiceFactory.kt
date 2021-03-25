@@ -340,7 +340,8 @@ open class RecordsServiceFactory {
             AttPrefixSuffixProcessor(),
             AttOrElseProcessor(),
             AttJoinProcessor(),
-            AttCastProcessor()
+            AttCastProcessor(),
+            AttRegexpGroupProcessor()
         )
     }
 

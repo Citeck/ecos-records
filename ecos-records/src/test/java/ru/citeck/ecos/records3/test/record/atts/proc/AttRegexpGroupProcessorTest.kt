@@ -28,7 +28,8 @@ class AttRegexpGroupProcessorTest {
 
         val res4 = records.getAtt(
             TestDto("et-status://emodel/type@type-ecos-fin-request/draft"),
-            "field|rxg('.+/(.+)')").asText()
+            "field|rxg('.+/(.+)')"
+        ).asText()
         assertEquals("draft", res4)
     }
 

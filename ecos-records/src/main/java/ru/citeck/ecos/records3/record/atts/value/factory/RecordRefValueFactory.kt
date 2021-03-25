@@ -1,9 +1,11 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -43,18 +45,35 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             val schemaAtt: SchemaAtt = AttContext.getCurrentSchemaAtt()
             val innerSchema = schemaAtt.inner
 
+            val scalarMirrorAtts = mutableListOf<ScalarType>()
             val attsMap: MutableMap<String, String> = LinkedHashMap()
             val sb = StringBuilder()
             for (inner in innerSchema) {
                 val innerName: String = inner.name
                 if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
                     schemaWriter.write(inner, sb)
-                    attsMap[inner.name] = sb.toString()
+                    val mirrorScalarType = ScalarType.getByMirrorAtt(innerName)
+                    if (mirrorScalarType != null) {
+                        scalarMirrorAtts.add(mirrorScalarType)
+                    }
+                    attsMap[innerName] = sb.toString()
                     sb.setLength(0)
                 }
             }
             val atts = if (attsMap.isNotEmpty()) {
-                recordsService.getAtts(setOf(ref), attsMap, true)[0]
+                val atts = recordsService.getAtts(setOf(ref), attsMap, true)[0]
+                scalarMirrorAtts.forEach {
+                    var scalarValue = atts.getAtt(it.mirrorAtt)
+                    while (scalarValue.isObject()) {
+                        scalarValue = if (scalarValue.size() > 0) {
+                            scalarValue.get(scalarValue.fieldNamesList()[0])
+                        } else {
+                            DataValue.NULL
+                        }
+                    }
+                    atts.setAtt(it.schema, scalarValue)
+                }
+                atts
             } else {
                 RecordAtts(ref)
             }

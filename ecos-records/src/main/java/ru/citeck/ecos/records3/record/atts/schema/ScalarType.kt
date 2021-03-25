@@ -17,6 +17,9 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
 
         @JvmStatic
         fun getBySchema(schema: String): ScalarType? {
+            if (schema.isEmpty() || schema[0] != '?') {
+                return null
+            }
             return when (schema) {
                 ID.schema -> ID
                 STR.schema -> STR
@@ -32,6 +35,9 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
 
         @JvmStatic
         fun getByMirrorAtt(att: String): ScalarType? {
+            if (att.isEmpty() || att[0] != '_') {
+                return null
+            }
             return when (att) {
                 ID.mirrorAtt -> ID
                 STR.mirrorAtt -> STR

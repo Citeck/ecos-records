@@ -6,6 +6,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 
 import java.util.*;
 
+/**
+ * @deprecated -> you should not use this
+ */
 @Deprecated
 public class MetaFieldImpl implements MetaField {
 

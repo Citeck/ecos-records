@@ -7,6 +7,9 @@ import ru.citeck.ecos.records2.source.dao.RecordsMetaDao;
 
 import java.util.List;
 
+/**
+ * @deprecated should be replaced with Record(s)AttsDao
+ */
 @Deprecated
 public interface LocalRecordsMetaDao<T> extends RecordsMetaDao {
 

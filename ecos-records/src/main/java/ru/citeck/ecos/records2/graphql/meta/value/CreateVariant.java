@@ -5,6 +5,9 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
 
+/**
+ * @deprecated actual version of create variant model located in ecos-model-lib
+ */
 @Data
 @Deprecated
 public class CreateVariant {

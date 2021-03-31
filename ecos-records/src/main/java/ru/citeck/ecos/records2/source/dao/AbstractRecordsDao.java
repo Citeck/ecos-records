@@ -1,5 +1,8 @@
 package ru.citeck.ecos.records2.source.dao;
 
+/**
+ * @deprecated use AbstractRecordsDao from records3 package
+ */
 @Deprecated
 public abstract class AbstractRecordsDao implements RecordsDao {
 

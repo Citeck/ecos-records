@@ -6,6 +6,9 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryWithMetaDao;
 
+/**
+ * @deprecated you should use RecordsQueryDao
+ */
 @Deprecated
 public interface LocalRecordsQueryWithMetaDao<T> extends RecordsQueryWithMetaDao {
 

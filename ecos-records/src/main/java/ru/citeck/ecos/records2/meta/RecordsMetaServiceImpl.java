@@ -16,6 +16,9 @@ import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated use RecordsService from records3 package
+ */
 @Slf4j
 @Deprecated
 public class RecordsMetaServiceImpl implements RecordsMetaService {

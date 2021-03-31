@@ -7,7 +7,7 @@
 
     <groupId>ru.citeck.ecos.records</groupId>
     <artifactId>ecos-records-project</artifactId>
-    <version>3.17.0</version>
+    <version>3.17.1</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -169,6 +169,13 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
             <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.19.0</version>
             <scope>test</scope>
         </dependency>
 

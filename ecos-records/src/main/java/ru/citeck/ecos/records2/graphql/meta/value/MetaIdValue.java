@@ -2,6 +2,9 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 
+/**
+ * @deprecated -> AttIdValue
+ */
 @Deprecated
 public class MetaIdValue implements MetaValue {
 

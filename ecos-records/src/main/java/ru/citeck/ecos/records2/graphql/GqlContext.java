@@ -6,7 +6,7 @@ import ru.citeck.ecos.records2.RecordsService;
 
 /**
  * Query context.
- * @deprecated use QueryContext instead
+ * @deprecated use RequestContext instead
  */
 @Slf4j
 @Deprecated

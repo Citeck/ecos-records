@@ -5,6 +5,9 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 
+/**
+ * @deprecated -> RecordsQueryDao from records3 package
+ */
 @Deprecated
 public interface RecordsQueryDao extends RecordsQueryBaseDao {
 

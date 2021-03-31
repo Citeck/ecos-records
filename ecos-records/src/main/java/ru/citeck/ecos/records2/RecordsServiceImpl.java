@@ -40,6 +40,9 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated use RecordsService from records3 package
+ */
 @Slf4j
 @Deprecated
 public class RecordsServiceImpl extends AbstractRecordsService {

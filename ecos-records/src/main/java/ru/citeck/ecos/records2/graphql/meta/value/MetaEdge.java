@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * @deprecated use AttEdge instead
+ */
 @Deprecated
 public interface MetaEdge {
 

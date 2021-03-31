@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 
+/**
+ * @deprecated -> AttValueDelegate
+ */
 @Deprecated
 public class MetaValueDelegate implements MetaValue {
 

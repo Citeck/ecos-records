@@ -10,6 +10,8 @@ import java.util.Collections;
 /**
  * Metadata value. Used to get attributes by schema.
  *
+ * @deprecated -> AttValue
+ *
  * @author Pavel Simonov
  */
 @Deprecated

@@ -5,6 +5,9 @@ import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 
 import java.util.List;
 
+/**
+ * @deprecated -> AttEdgeDelegate
+ */
 @Deprecated
 public class MetaEdgeDelegate implements MetaEdge {
 

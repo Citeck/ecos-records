@@ -7,6 +7,9 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 
 import java.util.List;
 
+/**
+ * @deprecated RecordsQueryDao from records3 package
+ */
 @Deprecated
 public interface RecordsQueryWithMetaDao extends RecordsQueryBaseDao {
 

@@ -3,6 +3,9 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 
+/**
+ * @deprecated -> SimpleAttEdge
+ */
 @Slf4j
 @Deprecated
 public class SimpleMetaEdge implements MetaEdge {

@@ -13,6 +13,9 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 
 import java.util.*;
 
+/**
+ * @deprecated use RecordsGroupDao from records3 package
+ */
 @Deprecated
 public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQueryWithMetaDao {
 

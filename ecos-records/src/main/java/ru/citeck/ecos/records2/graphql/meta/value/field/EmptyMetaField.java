@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @deprecated should not be used in records3
+ */
 @Deprecated
 public class EmptyMetaField implements MetaField {
 

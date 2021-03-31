@@ -6,6 +6,9 @@ import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 
+/**
+ * @deprecated -> Record(s)MutateDao + Record(s)DeleteDao
+ */
 @Deprecated
 public interface MutableRecordsDao extends RecordsDao {
 

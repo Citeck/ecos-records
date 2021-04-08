@@ -291,7 +291,6 @@ public class LocalRecordsResolverV0 {
 
                 meta = new RecordsResult<>();
                 meta.setRecords(recs.stream().map(r -> new RecordMeta(r.getValue())).collect(Collectors.toList()));
-                meta.addError(new RecordsError("Records source '" + sourceId + "' can't return attributes"));
 
                 log.debug("Records source '" + sourceId + "' can't return attributes");
             }

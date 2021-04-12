@@ -411,7 +411,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val result = ArrayList<ValWithIdx<RecordAtts>>()
 
         val refsStartMs = System.currentTimeMillis()
-        val refsAtts: List<RecordAtts>? = getMetaImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
+        val refsAtts: List<RecordAtts>? = getAttsImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             context.addMsg(
                 MsgLevel.DEBUG,
@@ -460,7 +460,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result.map { it.value }
     }
 
-    private fun getMetaImpl(
+    private fun getAttsImpl(
         records: Collection<RecordRef>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -476,13 +476,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val results = ArrayList<ValWithIdx<RecordAtts>>()
 
         RecordsUtils.groupRefBySource(records).forEach { (sourceId, recs) ->
-            results.addAll(getMetaFromSource(sourceId, recs, attributes, rawAtts, context))
+            results.addAll(getAttsFromSource(sourceId, recs, attributes, rawAtts, context))
         }
         results.sortBy { it.idx }
         return results.map { it.value }
     }
 
-    private fun getMetaFromSource(
+    private fun getAttsFromSource(
         sourceId: String,
         recs: List<ValWithIdx<RecordRef>>,
         attributes: List<SchemaAtt>,
@@ -508,12 +508,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 V1ConvUtils.addDebugMessage(meta, context)
                 attsList = Json.mapper.convert(meta.records, Json.mapper.getListType(RecordAtts::class.java))
             } catch (e: Throwable) {
-                log.error(
-                    "Local records resolver v0 error. " +
-                        "SourceId: '" + sourceId + "' recs: " + recs,
-                    e
-                )
-                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                if (context.ctxData.omitErrors) {
+                    log.error("Local records resolver v0 error. SourceId: '$sourceId' recs: $recs")
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                } else {
+                    throw e
+                }
             }
             if (attsList == null) {
                 attsList = emptyList()

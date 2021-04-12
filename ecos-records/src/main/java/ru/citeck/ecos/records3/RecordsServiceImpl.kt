@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
+import kotlin.collections.ArrayList
 
 class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService() {
 
@@ -51,9 +52,34 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* ATTRIBUTES */
     override fun getAtts(records: Collection<*>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
-        return handleRecordsListRead {
-            recordsResolver.getAtts(ArrayList(records), attributes, rawAtts)
+        return RequestContext.doWithCtx(services) { ctx ->
+            try {
+                recordsResolver.getAtts(ArrayList(records), attributes, rawAtts)
+            } catch (e: Throwable) {
+                if (ctx.ctxData.omitErrors) {
+                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+
+                    val emptyAtts = ObjectData.create()
+                    attributes.keys.forEach { emptyAtts.set(it, DataValue.NULL) }
+
+                    val result = ArrayList<RecordAtts>(records.size)
+                    for (record in records) {
+                        result.add(RecordAtts(tryToGetRecordRef(record), emptyAtts.deepCopy()))
+                    }
+                    result
+                } else {
+                    throw e
+                }
+            }
         }
+    }
+
+    private fun tryToGetRecordRef(record: Any?): RecordRef {
+        record ?: return RecordRef.EMPTY
+        if (record is RecordRef) {
+            return record
+        }
+        return RecordRef.EMPTY
     }
 
     override fun <T : Any> getAtts(records: Collection<*>, attributes: Class<T>): List<T> {
@@ -144,19 +170,13 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             try {
                 supplier.invoke()
             } catch (e: Throwable) {
-                ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
-                log.error("Records resolving error", e)
-                RecsQueryRes()
+                if (ctx.ctxData.omitErrors) {
+                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                    RecsQueryRes()
+                } else {
+                    throw e
+                }
             }
-        }
-    }
-
-    private fun <T> handleRecordsListRead(impl: () -> List<T>): List<T> {
-        return try {
-            RequestContext.doWithCtx(services) { impl.invoke() }
-        } catch (e: Throwable) {
-            log.error("Records resolving error", e)
-            emptyList()
         }
     }
 

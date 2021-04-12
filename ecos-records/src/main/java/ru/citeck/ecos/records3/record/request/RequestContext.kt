@@ -23,7 +23,18 @@ class RequestContext {
 
         private val log = KotlinLogging.logger {}
 
+        private var defaultServices: RecordsServiceFactory? = null
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
+
+        fun setDefaultServicesIfNotSet(defaultServices: RecordsServiceFactory) {
+            if (this.defaultServices == null) {
+                this.defaultServices = defaultServices
+            }
+        }
+
+        fun setDefaultServices(defaultServices: RecordsServiceFactory) {
+            this.defaultServices = defaultServices
+        }
 
         @JvmStatic
         fun getCurrent(): RequestContext? {
@@ -77,6 +88,16 @@ class RequestContext {
         }
 
         @JvmStatic
+        fun <T> doWithCtxJ(action: (RequestContext) -> T): T {
+            return doWithCtx(action)
+        }
+
+        @JvmStatic
+        fun <T> doWithCtxJ(factory: RecordsServiceFactory?, action: (RequestContext) -> T): T {
+            return doWithCtx(factory, action)
+        }
+
+        @JvmStatic
         fun <T> doWithCtxJ(ctxData: Consumer<RequestCtxData.Builder>, action: (RequestContext) -> T): T {
             return doWithCtx(null, { ctxData.accept(it) }, action)
         }
@@ -98,7 +119,7 @@ class RequestContext {
         ): T {
 
             var current = getCurrent()
-            val notNullServices = factory ?: current?.serviceFactory
+            val notNullServices = factory ?: current?.serviceFactory ?: defaultServices
                 ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false
@@ -148,10 +169,7 @@ class RequestContext {
                         when (msg.level) {
                             MsgLevel.ERROR -> log.error(msg.toString())
                             MsgLevel.WARN -> log.warn(msg.toString())
-                            MsgLevel.INFO -> log.info(msg.toString())
                             MsgLevel.DEBUG -> log.debug(msg.toString())
-                            MsgLevel.TRACE -> log.trace(msg.toString())
-                            else -> log.warn("Unknown msg type: $msg")
                         }
                     }
                     RequestContext.current.remove()
@@ -297,10 +315,6 @@ class RequestContext {
     }
 
     fun addMsg(level: MsgLevel, msg: () -> Any?) {
-        if (!level.allowedForMsg) {
-            log.error("You can't add message with level " + level + ". Msg: " + msg.invoke())
-            return
-        }
         if (!isMsgEnabled(level)) {
             return
         }
@@ -319,6 +333,7 @@ class RequestContext {
                 Instant.now(),
                 type,
                 DataValue.create(msgValue),
+                ctxData.requestId,
                 ctxData.requestTrace
             )
         )

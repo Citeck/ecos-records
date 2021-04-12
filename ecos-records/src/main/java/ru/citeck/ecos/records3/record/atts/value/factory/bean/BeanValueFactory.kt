@@ -91,16 +91,12 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         private fun <T : Any> getAttWithType(name: String, type: Class<T>): T? {
-            return try {
-                val value = getAtt(name)
-                return if (type != Any::class.java) {
-                    Json.mapper.convert(getAtt(name), type)
-                } else {
-                    @Suppress("UNCHECKED_CAST")
-                    value as? T
-                }
-            } catch (e: Exception) {
-                null
+            val value = getAtt(name)
+            return if (type != Any::class.java) {
+                Json.mapper.convert(getAtt(name), type)
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                value as? T
             }
         }
     }

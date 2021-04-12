@@ -12,7 +12,8 @@ data class ReqMsg(
     val time: Instant,
     val type: String,
     val msg: DataValue,
-    val queryTrace: List<String>
+    val requestId: String,
+    val requestTrace: List<String>
 ) {
     companion object {
 
@@ -41,18 +42,25 @@ data class ReqMsg(
 
     class Builder() {
 
-        var level: MsgLevel = MsgLevel.INFO
+        var level: MsgLevel = MsgLevel.DEBUG
         var time: Instant = Instant.now()
         lateinit var type: String
         lateinit var msg: DataValue
-        var queryTrace: List<String> = emptyList()
+        var requestId: String = ""
+        var requestTrace: List<String> = emptyList()
 
         constructor(base: ReqMsg) : this() {
             this.level = base.level
             this.time = base.time
             this.type = base.type
             this.msg = base.msg.copy()
-            this.queryTrace = ArrayList(base.queryTrace)
+            this.requestId = base.requestId
+            this.requestTrace = ArrayList(base.requestTrace)
+        }
+
+        fun withRequestId(requestId: String): Builder {
+            this.requestId = requestId
+            return this
         }
 
         fun withLevel(level: MsgLevel): Builder {
@@ -75,13 +83,13 @@ data class ReqMsg(
             return this
         }
 
-        fun withQueryTrace(queryTrace: List<String>): Builder {
-            this.queryTrace = queryTrace
+        fun withQueryTrace(requestTrace: List<String>): Builder {
+            this.requestTrace = requestTrace
             return this
         }
 
         fun build(): ReqMsg {
-            return ReqMsg(level, time, type, msg, queryTrace)
+            return ReqMsg(level, time, type, msg, requestId, requestTrace)
         }
     }
 }

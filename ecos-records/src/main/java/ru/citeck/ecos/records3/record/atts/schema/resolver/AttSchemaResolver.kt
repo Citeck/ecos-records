@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
@@ -499,9 +500,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             res = try {
                 resolveImpl(name)
             } catch (e: Throwable) {
-                val msg = "Attribute resolving error. Attribute: $name Value: $value"
-                context?.addMsg(MsgLevel.ERROR) { msg }
-                log.error(msg, e)
+                log.error {
+                    "Attribute resolving error. Attribute: $name Value type: ${value::class.qualifiedName} " +
+                        "Message: ${e.message} RequestId: ${context?.ctxData?.requestId}"
+                }
+                if (context == null || !context.ctxData.omitErrors) {
+                    throw e
+                }
+                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
                 null
             }
 

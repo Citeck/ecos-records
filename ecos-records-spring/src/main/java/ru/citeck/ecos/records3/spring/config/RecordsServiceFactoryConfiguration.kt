@@ -18,8 +18,10 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import java.util.*
+import javax.annotation.PostConstruct
 
 @Slf4j
 @Configuration
@@ -36,6 +38,11 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     private lateinit var springAppName: String
 
     var customDefaultCtxAttsProvider: ContextAttsProvider? = null
+
+    @PostConstruct
+    fun init() {
+        RequestContext.setDefaultServices(this)
+    }
 
     override fun createDefaultCtxAttsProvider(): ContextAttsProvider {
         val superAttsProvider = super.createDefaultCtxAttsProvider()
@@ -119,7 +126,7 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     }
 
     override fun createProperties(): RecordsProperties {
-        return this.props!!
+        return this.props
     }
 
     @Autowired(required = false)

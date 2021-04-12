@@ -47,6 +47,7 @@ import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.InstantValueFactory
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
@@ -60,6 +61,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.function.Consumer
 import java.util.function.Supplier
 
+@Suppress("LeakingThis")
 open class RecordsServiceFactory {
 
     companion object {
@@ -122,6 +124,8 @@ open class RecordsServiceFactory {
     init {
         Json.context.addDeserializer(predicateJsonDeserializer)
         Json.context.addSerializer(PredicateJsonSerializer())
+
+        RequestContext.setDefaultServicesIfNotSet(this)
     }
 
     protected open fun createLocaleSupplier(): () -> Locale {

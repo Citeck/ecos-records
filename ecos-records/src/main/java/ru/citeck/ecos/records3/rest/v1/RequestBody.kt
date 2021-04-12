@@ -7,7 +7,7 @@ import java.util.*
 abstract class RequestBody {
 
     var requestId = ""
-    var msgLevel: MsgLevel = MsgLevel.INFO
+    var msgLevel: MsgLevel = MsgLevel.WARN
 
     private var requestTrace: List<String> = emptyList()
 

@@ -4,21 +4,17 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.request.error.RecordsError;
-import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
@@ -40,16 +36,17 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
     void test() {
 
         List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
-        RecordsResult<RecordMeta> res = recordsService.getMeta(refs, "str");
 
-        List<RecordsError> errors = res.getErrors();
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            recordsService.getMeta(refs, "str");
+        });
 
-        assertEquals(1, errors.size());
-        RecordsError error = errors.get(0);
-
-        assertEquals(MSG, error.getMsg());
-        assertEquals(3, error.getStackTrace().size());
-        assertTrue(error.getStackTrace().get(0).contains("QueryExceptionTest.java"));
+        Throwable rootCause = exception.getCause();
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        assertEquals("state", exception.getMessage());
+        assertEquals(MSG, rootCause.getMessage());
     }
 
     @NotNull

@@ -13,7 +13,8 @@ data class RequestCtxData(
     val locale: Locale,
     val ctxAtts: Map<String, Any?>,
     val computedAttsDisabled: Boolean,
-    val msgLevel: MsgLevel
+    val msgLevel: MsgLevel,
+    val omitErrors: Boolean
 ) {
 
     companion object {
@@ -48,7 +49,8 @@ data class RequestCtxData(
         var locale: Locale = Locale.ENGLISH
         var ctxAtts: MutableMap<String, Any?> = mutableMapOf()
         var computedAttsDisabled = false
-        var msgLevel: MsgLevel = MsgLevel.INFO
+        var msgLevel: MsgLevel = MsgLevel.WARN
+        var omitErrors: Boolean = false
 
         constructor(base: RequestCtxData) : this() {
             requestId = base.requestId
@@ -57,6 +59,12 @@ data class RequestCtxData(
             ctxAtts = base.ctxAtts.toMutableMap()
             computedAttsDisabled = base.computedAttsDisabled
             msgLevel = base.msgLevel
+            omitErrors = base.omitErrors
+        }
+
+        fun withOmitErrors(omitErrors: Boolean): Builder {
+            this.omitErrors = omitErrors
+            return this
         }
 
         fun withRequestId(requestId: String): Builder {
@@ -101,7 +109,8 @@ data class RequestCtxData(
                 locale,
                 ctxAtts,
                 computedAttsDisabled,
-                msgLevel
+                msgLevel,
+                omitErrors
             )
         }
     }

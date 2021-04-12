@@ -50,7 +50,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     fun queryRecords(body: QueryBody): QueryResp {
-        return doWithContext(body) { ctx -> queryRecordsImpl(body, ctx) }
+        return doWithContext(body, true) { ctx -> queryRecordsImpl(body, ctx) }
     }
 
     private fun queryRecordsImpl(body: QueryBody, context: RequestContext): QueryResp {
@@ -130,7 +130,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     fun mutateRecords(body: MutateBody): MutateResp {
-        return doWithContext(body) { ctx -> mutateRecordsImpl(body, ctx) }
+        return doWithContext(body, false) { ctx -> mutateRecordsImpl(body, ctx) }
     }
 
     private fun mutateRecordsImpl(body: MutateBody, context: RequestContext): MutateResp {
@@ -156,7 +156,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     fun deleteRecords(body: DeleteBody): DeleteResp {
-        return doWithContext(body) { ctx -> deleteRecordsImpl(body, ctx) }
+        return doWithContext(body, false) { ctx -> deleteRecordsImpl(body, ctx) }
     }
 
     private fun deleteRecordsImpl(body: DeleteBody, context: RequestContext): DeleteResp {
@@ -177,10 +177,11 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         return resp
     }
 
-    private fun <T> doWithContext(body: RequestBody, action: (RequestContext) -> T): T {
+    private fun <T> doWithContext(body: RequestBody, omitErrors: Boolean, action: (RequestContext) -> T): T {
         return RequestContext.doWithCtx(
             services,
             { ctxData ->
+                ctxData.withOmitErrors(omitErrors)
                 ctxData.withRequestId(body.requestId)
                 ctxData.withMsgLevel(body.msgLevel)
                 val trace: MutableList<String> = ArrayList(body.getRequestTrace())

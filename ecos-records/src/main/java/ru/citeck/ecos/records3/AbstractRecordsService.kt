@@ -82,12 +82,17 @@ abstract class AbstractRecordsService : RecordsService {
     }
 
     /* MUTATE */
+
+    override fun create(sourceId: String, attributes: Any): RecordRef {
+        return mutate(RecordRef.valueOf(sourceId + RecordRef.SOURCE_DELIMITER), attributes)
+    }
+
     override fun mutate(record: Any, attribute: String, value: Any?): RecordRef {
         return if (StringUtils.isBlank(attribute)) {
             if (record is RecordRef) {
                 record
             } else {
-                RecordRef.EMPTY
+                error("Mutation of custom objects is not supported yet")
             }
         } else {
             mutate(record, Collections.singletonMap(attribute, value))
@@ -95,6 +100,10 @@ abstract class AbstractRecordsService : RecordsService {
     }
 
     override fun mutate(record: Any, attributes: Map<String, *>): RecordRef {
+        return mutate(record, ObjectData.create(attributes))
+    }
+
+    override fun mutate(record: Any, attributes: Any): RecordRef {
         return mutate(record, ObjectData.create(attributes))
     }
 
@@ -109,7 +118,7 @@ abstract class AbstractRecordsService : RecordsService {
         val records: List<RecordAtts> = listOf(record)
         val recordRefs: List<RecordRef> = this.mutate(records)
         if (recordRefs.size != 1) {
-            log.warn("Strange behaviour. Expected 1 record, but found " + recordRefs.size)
+            log.warn("Unexpected result. Expected 1 record, but found " + recordRefs.size)
         }
         return recordRefs[0]
     }
@@ -118,7 +127,7 @@ abstract class AbstractRecordsService : RecordsService {
     override fun delete(record: RecordRef): DelStatus {
         val result: List<DelStatus> = delete(listOf(record))
         if (result.size != 1) {
-            log.warn("Strange behaviour. Expected 1 record, but found " + result.size)
+            log.warn("Unexpected result. Expected 1 record, but found " + result.size)
         }
         return result[0]
     }

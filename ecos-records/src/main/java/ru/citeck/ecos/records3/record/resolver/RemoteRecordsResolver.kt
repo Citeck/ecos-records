@@ -6,8 +6,10 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.exception.RemoteRecordsException
 import ru.citeck.ecos.records2.meta.AttributesSchema
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
+import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult
 import ru.citeck.ecos.records2.request.rest.DeletionBody
@@ -23,6 +25,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.request.msg.ReqMsg
 import ru.citeck.ecos.records3.rest.v1.RequestBody
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp
@@ -103,6 +106,7 @@ class RemoteRecordsResolver(
         if (result == null) {
             result = QueryResp()
         } else {
+            throwErrorIfRequired(result.messages, context)
             context.addAllMsgs(result.messages)
         }
         return result
@@ -230,6 +234,7 @@ class RemoteRecordsResolver(
             val mutateResp: MutateResp? = toMutateResp(mutRespObj, context)
 
             if (mutateResp?.messages != null) {
+                throwErrorIfRequired(mutateResp.messages, context)
                 mutateResp.messages.forEach { context.addMsg(it) }
             }
             if (mutateResp?.records == null || mutateResp.records.size != atts.size) {
@@ -325,6 +330,8 @@ class RemoteRecordsResolver(
         V1ConvUtils.addErrorMessages(v0Resp.errors, context)
         V1ConvUtils.addDebugMessage(v0Resp, context)
 
+        throwErrorIfRequired(resp.messages, context)
+
         return resp
     }
 
@@ -356,6 +363,24 @@ class RemoteRecordsResolver(
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
         body.setRequestTrace(ctxData.requestTrace)
+    }
+
+    private fun throwErrorIfRequired(messages: List<ReqMsg>, context: RequestContext) {
+
+        if (context.ctxData.omitErrors) {
+            return
+        }
+
+        for (idx in messages.size - 1 downTo 0) {
+            val msg = messages[idx]
+            if (msg.level == MsgLevel.ERROR) {
+                val textMessage = when (msg.type) {
+                    RecordsError.MSG_TYPE -> msg.msg.getAs(RecordsError::class.java)?.msg ?: msg.msg.asText()
+                    else -> msg.msg.asText()
+                }
+                throw RemoteRecordsException(msg, textMessage)
+            }
+        }
     }
 
     private fun postRecords(appName: String, url: String, body: Any): ObjectNode? {

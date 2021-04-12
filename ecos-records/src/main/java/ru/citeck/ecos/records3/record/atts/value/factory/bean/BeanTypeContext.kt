@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import java.lang.reflect.InvocationTargetException
 import java.util.HashMap
 
 class BeanTypeContext(
@@ -48,7 +49,11 @@ class BeanTypeContext(
         bean ?: return null
         val getter = getters[name]
         return if (getter != null) {
-            getter.invoke(bean)
+            try {
+                getter.invoke(bean)
+            } catch (e: InvocationTargetException) {
+                throw e.cause ?: e
+            }
         } else {
             log.trace("Property not found: " + name + " in type " + bean.javaClass)
             null

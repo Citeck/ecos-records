@@ -4,6 +4,7 @@ enum class MsgLevel {
 
     ERROR,
     WARN,
+    INFO,
     DEBUG;
 
     fun isEnabled(other: MsgLevel): Boolean {

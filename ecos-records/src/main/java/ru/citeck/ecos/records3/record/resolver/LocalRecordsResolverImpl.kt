@@ -581,13 +581,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         records.forEach { recordArg: RecordAtts ->
 
             var record = recordArg
-            val appName: String = record.getId().sourceId
-            val sourceId: String = record.getId().sourceId
+            val appName: String = record.getId().appName
+            var sourceId: String = record.getId().sourceId
 
             if (currentApp == appName) {
                 val newId: RecordRef = record.getId().removeAppName()
                 refsMapping[newId] = record.getId()
                 record = RecordAtts(record, newId)
+            } else if (appName.isNotBlank()) {
+                sourceId = "$appName/$sourceId"
             }
 
             val dao = getRecordsDao(sourceId, RecordsMutateCrossSrcDao::class.java)
@@ -609,7 +611,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
                 mutRes = mutRes.map {
                     if (StringUtils.isBlank(it.sourceId)) {
-                        RecordRef.create(sourceId, it.id)
+                        if (sourceId.contains('/')) {
+                            RecordRef.valueOf("$sourceId@${it.id}")
+                        } else {
+                            RecordRef.create(sourceId, it.id)
+                        }
                     } else {
                         it
                     }
@@ -627,8 +633,18 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     override fun delete(records: List<RecordRef>): List<DelStatus> {
         val daoResult = ArrayList<DelStatus>()
-        records.forEach { record ->
-            val sourceId: String = record.sourceId
+        records.forEach { recordArg ->
+
+            var record = recordArg
+            val appName = recordArg.appName
+            var sourceId = recordArg.sourceId
+
+            if (currentApp == appName) {
+                record = recordArg.removeAppName()
+            } else if (appName.isNotBlank()) {
+                sourceId = "$appName/$sourceId"
+            }
+
             val dao = getRecordsDao(sourceId, RecordsDeleteDao::class.java)
             if (dao == null) {
                 val deletion = RecordsDeletion()

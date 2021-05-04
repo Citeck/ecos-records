@@ -8,11 +8,8 @@ import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import java.util.concurrent.ScheduledExecutorService
 
 interface LocalRecordsResolver {
-
-    fun initJobs(executor: ScheduledExecutorService?)
 
     fun query(queryArg: RecordsQuery, attributes: List<SchemaAtt>, rawAtts: Boolean): RecsQueryRes<RecordAtts>
 
@@ -23,6 +20,8 @@ interface LocalRecordsResolver {
     fun delete(records: List<RecordRef>): List<DelStatus>
 
     fun register(sourceId: String, recordsDao: RecordsDao)
+
+    fun unregister(sourceId: String)
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo?
 

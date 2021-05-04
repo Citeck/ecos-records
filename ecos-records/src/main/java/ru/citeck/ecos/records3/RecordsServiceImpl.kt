@@ -195,4 +195,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     override fun register(sourceId: String, recordsSource: RecordsDao) {
         recordsResolver.register(sourceId, recordsSource)
     }
+
+    override fun unregister(sourceId: String) {
+        recordsResolver.unregister(sourceId)
+    }
 }

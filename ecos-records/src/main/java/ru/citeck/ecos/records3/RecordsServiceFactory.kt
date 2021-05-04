@@ -25,6 +25,7 @@ import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl
 import ru.citeck.ecos.records2.request.rest.RestHandler
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0
 import ru.citeck.ecos.records2.source.dao.RecordsDao
+import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
@@ -97,6 +98,7 @@ open class RecordsServiceFactory {
     val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
     val defaultCtxAttsProvider: ContextAttsProvider by lazy { createDefaultCtxAttsProvider() }
     val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
+    val jobExecutor: JobExecutor by lazy { createJobExecutor() }
 
     @Deprecated("")
     val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
@@ -126,6 +128,10 @@ open class RecordsServiceFactory {
         Json.context.addSerializer(PredicateJsonSerializer())
 
         RequestContext.setDefaultServicesIfNotSet(this)
+    }
+
+    protected open fun createJobExecutor(): JobExecutor {
+        return JobExecutor(this)
     }
 
     protected open fun createLocaleSupplier(): () -> Locale {
@@ -162,7 +168,7 @@ open class RecordsServiceFactory {
     open fun initJobs(executor: ScheduledExecutorService?) {
         if (!isJobsInitialized) {
             log.info("Records jobs initialization started. Executor: $executor")
-            localRecordsResolver.initJobs(executor)
+            jobExecutor.init(executor)
             isJobsInitialized = true
         }
     }

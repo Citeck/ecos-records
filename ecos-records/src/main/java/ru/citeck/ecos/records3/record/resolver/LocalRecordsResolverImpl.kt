@@ -19,7 +19,6 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.dao.local.job.Job
-import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
@@ -49,8 +48,6 @@ import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
 open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) : LocalRecordsResolver {
@@ -85,17 +82,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val converter: RecsDaoConverter = RecsDaoConverter()
 
     private val currentApp = services.properties.appName
-    private val jobExecutor = JobExecutor(services)
-    private val jobsInitialized = AtomicBoolean()
-
-    override fun initJobs(executor: ScheduledExecutorService?) {
-        if (jobsInitialized.compareAndSet(false, true)) {
-            for (job in localRecordsResolverV0.jobs) {
-                jobExecutor.addJob(job)
-            }
-            jobExecutor.init(executor)
-        }
-    }
+    private val jobExecutor = services.jobExecutor
 
     override fun query(queryArg: RecordsQuery, attributes: List<SchemaAtt>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
 
@@ -673,9 +660,20 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         if (recordsDao is JobsProvider) {
             val jobs: List<Job> = (recordsDao as JobsProvider).jobs
             for (job in jobs) {
-                jobExecutor.addJob(job)
+                jobExecutor.addJob(sourceId, job)
             }
         }
+    }
+
+    override fun unregister(sourceId: String) {
+
+        allDao.remove(sourceId)
+        attsDao.remove(sourceId)
+        queryDao.remove(sourceId)
+        mutateDao.remove(sourceId)
+        deleteDao.remove(sourceId)
+
+        jobExecutor.removeJobs(sourceId)
     }
 
     private fun <T : RecordsDao?> register(
@@ -735,6 +733,4 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     override fun containsDao(id: String): Boolean {
         return allDao.containsKey(id)
     }
-
-    private class DaoWithConvQuery(val dao: RecordsQueryResDao, val query: RecordsQuery)
 }

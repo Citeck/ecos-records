@@ -130,7 +130,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
             remote.mutate(records)
-        } else local.mutate(records)
+        } else {
+            local.mutate(records)
+        }
     }
 
     fun delete(records: List<RecordRef>): List<DelStatus> {
@@ -139,7 +141,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
             remote.delete(records)
-        } else local.delete(records)
+        } else {
+            local.delete(records)
+        }
     }
 
     fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
@@ -177,5 +181,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     fun register(sourceId: String, recordsDao: RecordsDao) {
         local.register(sourceId, recordsDao)
+    }
+
+    fun unregister(sourceId: String) {
+        local.unregister(sourceId)
     }
 }

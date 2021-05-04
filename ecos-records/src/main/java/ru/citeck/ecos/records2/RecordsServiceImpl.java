@@ -520,4 +520,9 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     public void register(@NotNull String sourceId, @NotNull RecordsDao recordsDao) {
         localRecordsResolverV0.register(recordsDao.getId(), recordsDao);
     }
+
+    @Override
+    public void unregister(String sourceId) {
+        localRecordsResolverV0.unregister(sourceId);
+    }
 }

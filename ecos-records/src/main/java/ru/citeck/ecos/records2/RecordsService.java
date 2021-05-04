@@ -274,5 +274,7 @@ public interface RecordsService {
 
     void register(@NotNull RecordsDao recordsDao);
 
+    void unregister(String sourceId);
+
     void register(@NotNull String sourceId, @NotNull RecordsDao recordsDao);
 }

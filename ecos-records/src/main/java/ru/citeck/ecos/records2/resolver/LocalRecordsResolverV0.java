@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
@@ -22,7 +23,6 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.*;
-import ru.citeck.ecos.records2.source.dao.local.job.Job;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
@@ -55,24 +55,20 @@ public class LocalRecordsResolverV0 {
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
     private final String currentApp;
-
-    private final List<Job> jobs = new ArrayList<>();
+    private final JobExecutor jobExecutor;
 
     public LocalRecordsResolverV0(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getProperties().getAppName();
+        this.jobExecutor = serviceFactory.getJobExecutor();
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsMetaDao.class, metaDao);
         daoMapByType.put(RecordsQueryDao.class, queryDao);
         daoMapByType.put(MutableRecordsDao.class, mutableDao);
         daoMapByType.put(RecordsQueryWithMetaDao.class, queryWithMetaDao);
-    }
-
-    public List<Job> getJobs() {
-       return jobs;
     }
 
     public RecordsQueryResult<RecordAtts> queryRecords(RecordsQuery query,
@@ -421,8 +417,19 @@ public class LocalRecordsResolverV0 {
         }
 
         if (recordsDao instanceof JobsProvider) {
-            jobs.addAll(((JobsProvider) recordsDao).getJobs());
+            jobExecutor.addJobs(sourceId, ((JobsProvider) recordsDao).getJobs());
         }
+    }
+
+    public void unregister(String sourceId) {
+
+        allDao.remove(sourceId);
+        metaDao.remove(sourceId);
+        queryDao.remove(sourceId);
+        mutableDao.remove(sourceId);
+        queryWithMetaDao.remove(sourceId);
+
+        jobExecutor.removeJobs(sourceId);
     }
 
     private <T extends RecordsDao> void register(String id, Map<String, T> map, Class<T> type, RecordsDao value) {

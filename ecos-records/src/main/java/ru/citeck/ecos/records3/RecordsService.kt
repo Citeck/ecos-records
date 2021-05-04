@@ -287,6 +287,8 @@ interface RecordsService {
      */
     fun register(sourceId: String, recordsSource: RecordsDao)
 
+    fun unregister(sourceId: String)
+
     /**
      * Add info about RecordsDao with specified Id.
      */

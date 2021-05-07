@@ -381,8 +381,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         val recordObjs = ArrayList<ValWithIdx<Any?>>()
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
-        var idx = 0
-        for (rec in records) {
+        for ((idx, rec) in records.withIndex()) {
             if (rec is RecordRef) {
                 var ref = rec
                 if (ref.appName == currentApp) {
@@ -392,13 +391,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             } else {
                 recordObjs.add(ValWithIdx(rec, idx))
             }
-            idx++
         }
 
         val result = ArrayList<ValWithIdx<RecordAtts>>()
 
         val refsStartMs = System.currentTimeMillis()
-        val refsAtts: List<RecordAtts>? = getAttsImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
+        val refsAtts: List<RecordAtts> = getAttsImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             context.addMsg(
                 MsgLevel.DEBUG,
@@ -406,7 +404,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             )
         }
 
-        if (refsAtts != null && refsAtts.size == recordRefs.size) {
+        if (refsAtts.size == recordRefs.size) {
             for (i in refsAtts.indices) {
                 result.add(ValWithIdx(refsAtts[i], recordRefs[i].idx))
             }

@@ -1,6 +1,8 @@
 package ru.citeck.ecos.records3.record.dao.impl.proxy
 
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
@@ -19,7 +21,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 open class RecordsDaoProxy(
     private val id: String,
     private val targetId: String,
-    processor: ProxyProcessor? = null
+    private val processor: ProxyProcessor? = null
 ) : AbstractRecordsDao(),
     RecordsQueryResDao,
     RecordsAttsDao,
@@ -129,6 +131,13 @@ open class RecordsDaoProxy(
 
     override fun getId(): String {
         return id
+    }
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        super.setRecordsServiceFactory(serviceFactory)
+        if (processor is ServiceFactoryAware) {
+            processor.setRecordsServiceFactory(serviceFactory)
+        }
     }
 
     private class ProxyRecVal(

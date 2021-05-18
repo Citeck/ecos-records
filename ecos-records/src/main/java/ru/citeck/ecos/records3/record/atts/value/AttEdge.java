@@ -12,7 +12,7 @@ public interface AttEdge {
     }
 
     default boolean isMultiple() throws Exception {
-        return true;
+        return false;
     }
 
     default boolean isAssociation() throws Exception {

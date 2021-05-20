@@ -128,6 +128,12 @@ object BeanTypeUtils {
                 getters[ScalarType.ID.schema] = idGetter
             }
         }
+        if (!getters.containsKey("_type")) {
+            val typeGetter = getters["ecosType"]
+            if (typeGetter != null) {
+                getters["_type"] = typeGetter
+            }
+        }
         return getters
     }
 

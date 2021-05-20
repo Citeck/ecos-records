@@ -50,7 +50,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     fun queryRecords(body: QueryBody): QueryResp {
-        return doWithContext(body, true) { ctx -> queryRecordsImpl(body, ctx) }
+        return doWithContext(body, false) { ctx -> queryRecordsImpl(body, ctx) }
     }
 
     private fun queryRecordsImpl(body: QueryBody, context: RequestContext): QueryResp {

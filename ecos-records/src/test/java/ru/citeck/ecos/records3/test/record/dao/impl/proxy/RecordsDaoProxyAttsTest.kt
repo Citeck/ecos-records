@@ -104,6 +104,7 @@ class RecordsDaoProxyAttsTest {
     private fun checkFull(getAtts: (sourceId: String, atts: List<String>) -> List<ObjectData>) {
 
         compareAtts(listOf("_type?id"), getAtts)
+        compareAtts(listOf("_etype?id"), getAtts)
         // compareAtts(listOf("_type?disp"), getAtts)
 
         compareAtts(listOf("strField", "unknownField"), getAtts, listOf("unknownField"))

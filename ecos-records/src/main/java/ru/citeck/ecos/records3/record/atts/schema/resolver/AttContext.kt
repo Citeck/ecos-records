@@ -25,9 +25,10 @@ class AttContext {
             val writer = attContext.serviceFactory.attSchemaWriter
             val result = LinkedHashMap<String, String>()
 
-            val schemaAtt = attContext.schemaAtt
+            // without simplifying attributes with the same name overrides each other
+            val schemaAtts = AttSchemaUtils.simplifySchema(attContext.schemaAtt.inner)
 
-            schemaAtt.inner.forEach { att ->
+            schemaAtts.forEach { att ->
                 result[att.name] = writer.write(att)
             }
             return result

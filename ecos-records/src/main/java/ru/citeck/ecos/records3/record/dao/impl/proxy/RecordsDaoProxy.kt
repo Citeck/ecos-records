@@ -6,6 +6,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttValueDelegate
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
@@ -41,26 +42,22 @@ open class RecordsDaoProxy(
 
     private fun postProcessAtts(attsFromTarget: List<RecordAtts>): List<AttValue> {
 
-        val postProcAtts = attsProc?.postProcessAtts(attsFromTarget)
-        if (!postProcAtts.isNullOrEmpty() && postProcAtts.size != attsFromTarget.size) {
+        val proxyTargetAtts = attsFromTarget.map { ProxyRecordAtts(it) }
+        val postProcAtts = attsProc?.postProcessAtts(proxyTargetAtts) ?: proxyTargetAtts
+
+        if (postProcAtts.size != attsFromTarget.size) {
             error(
                 "Post process additional attributes should has " +
                     "the same size with records from argument. Id: $id Records: ${attsFromTarget.map { it.getId() }}"
             )
         }
 
-        return if (postProcAtts.isNullOrEmpty()) {
-            attsFromTarget.map { InnerAttValue(it.getAtts().getData().asJson()) }
-        } else {
-            var idx = 0
-            attsFromTarget.map {
-                val innerAtts = InnerAttValue(it.getAtts().getData().asJson())
-                val additionalAtts = postProcAtts[idx++]
-                if (additionalAtts.isEmpty()) {
-                    innerAtts
-                } else {
-                    ProxyRecVal(innerAtts, additionalAtts)
-                }
+        return postProcAtts.map { proxyAtts ->
+            val innerAttValue = InnerAttValue(proxyAtts.atts.getAtts().getData().asJson())
+            if (proxyAtts.additionalAtts.isEmpty()) {
+                innerAttValue
+            } else {
+                ProxyRecVal(innerAttValue, proxyAtts.additionalAtts)
             }
         }
     }
@@ -95,13 +92,7 @@ open class RecordsDaoProxy(
 
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
 
-        val recsToMutate = if (mutProc != null) {
-            val recsCopy = records.map { LocalRecordAtts(it.id, it.attributes.deepCopy()) }
-            mutProc.prepareMutation(recsCopy)
-            recsCopy
-        } else {
-            records
-        }
+        val recsToMutate = mutProc?.prepareMutation(records) ?: records
 
         return recordsService.mutate(
             recsToMutate.map {
@@ -121,12 +112,18 @@ open class RecordsDaoProxy(
     }
 
     private fun getContextAtts(): Map<String, String> {
-        val contextAtts = AttContext.getInnerAttsMap()
-        return attsProc?.let {
-            val atts = LinkedHashMap(contextAtts)
-            it.prepareAtts(atts)
-            atts
-        } ?: contextAtts
+
+        var schemaAtts = AttSchemaUtils.simplifySchema(AttContext.getCurrentSchemaAtt().inner)
+        schemaAtts = attsProc?.prepareAttsSchema(schemaAtts) ?: schemaAtts
+
+        val writer = serviceFactory.attSchemaWriter
+        val result = LinkedHashMap<String, String>()
+
+        schemaAtts.forEach { att ->
+            result[att.name] = writer.write(att)
+        }
+
+        return result
     }
 
     override fun getId(): String {

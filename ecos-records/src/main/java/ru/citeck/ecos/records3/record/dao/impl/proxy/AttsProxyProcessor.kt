@@ -1,13 +1,10 @@
 package ru.citeck.ecos.records3.record.dao.impl.proxy
 
-import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 
 interface AttsProxyProcessor : ProxyProcessor {
 
-    fun prepareAtts(atts: MutableMap<String, String>)
+    fun prepareAttsSchema(schemaAtts: List<SchemaAtt>): List<SchemaAtt>
 
-    /**
-     * Return additional atts
-     */
-    fun postProcessAtts(atts: List<RecordAtts>): List<Map<String, Any>>?
+    fun postProcessAtts(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts>
 }

@@ -7,8 +7,9 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.impl.proxy.AttsProxyProcessor
+import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import kotlin.test.assertEquals
@@ -62,11 +63,9 @@ class RecordsDaoProxyAttsTest {
         val proxyWithProc = RecordsDaoProxy(
             PROXY_ID, TARGET_ID,
             object : AttsProxyProcessor {
-                override fun prepareAtts(atts: MutableMap<String, String>) {
-                }
-
-                override fun postProcessAtts(atts: List<RecordAtts>): List<Map<String, Any>> {
-                    return atts.map { mapOf("proc-att" to "proc-value") }
+                override fun prepareAttsSchema(schemaAtts: List<SchemaAtt>) = schemaAtts
+                override fun postProcessAtts(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts> {
+                    return atts.map { ProxyRecordAtts(it.atts, mapOf("proc-att" to "proc-value")) }
                 }
             }
         )
@@ -89,25 +88,27 @@ class RecordsDaoProxyAttsTest {
         compareAtts(listOf("unknownField"), getAtts, listOf("unknownField"))
         compareAtts(listOf("linkedDto"), getAtts)
 
-        listOf(
-            "linkedDto",
-            "linkedDto?str",
-            "linkedDto.linkedValue",
-            "linkedDto.linkedValue?str",
-            "linkedDto.linkedValue?disp"
-        ).forEach {
-            compareAtts(listOf(it), getAtts)
-        }
+        compareAtts(
+            listOf(
+                "linkedDto",
+                "linkedDto?str",
+                "linkedDto.linkedValue",
+                "linkedDto.linkedValue?str",
+                "linkedDto.linkedValue?disp"
+            ),
+            getAtts
+        )
 
-        listOf(
-            "linkedRef",
-            "linkedRef?str",
-            "linkedRef.linkedValue",
-            "linkedRef.linkedValue?str",
-            "linkedRef.linkedValue?disp"
-        ).forEach {
-            compareAtts(listOf(it), getAtts)
-        }
+        compareAtts(
+            listOf(
+                "linkedRef",
+                "linkedRef?str",
+                "linkedRef.linkedValue",
+                "linkedRef.linkedValue?str",
+                "linkedRef.linkedValue?disp"
+            ),
+            getAtts
+        )
     }
 
     private fun compareAtts(

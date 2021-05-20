@@ -4,5 +4,5 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 
 interface MutateProxyProcessor : ProxyProcessor {
 
-    fun prepareMutation(atts: List<LocalRecordAtts>)
+    fun prepareMutation(atts: List<LocalRecordAtts>): List<LocalRecordAtts>
 }

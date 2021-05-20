@@ -85,7 +85,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
             attValues.add(context.toRootValueContext(values[i] ?: EmptyAttValue.INSTANCE, ref))
         }
-        val simpleAtts = simplifySchema(schemaAtts)
+        val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
         val result = resolveRoot(attValues, simpleAtts, context)
         return resolveResultsWithAliases(result, schemaAtts, args.rawAtts)
     }
@@ -177,34 +177,6 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         } else {
             throw IllegalStateException("Unknown value: $value. Atts: $atts")
         }
-    }
-
-    private fun simplifySchema(schema: List<SchemaAtt>): List<SchemaAtt> {
-        if (schema.isEmpty()) {
-            return schema
-        }
-        val result = HashMap<String, SchemaAtt.Builder>()
-        for (att in schema) {
-            var resAtt = result[att.name]
-            if (resAtt == null) {
-                resAtt = att.copy()
-                    .withAlias(att.name)
-                    .withProcessors(emptyList())
-                result[att.name] = resAtt
-            } else {
-                resAtt.withMultiple(resAtt.multiple || att.multiple)
-                val innerAtts = ArrayList<SchemaAtt>()
-                innerAtts.addAll(resAtt.inner)
-                innerAtts.addAll(att.inner)
-                resAtt.withInner(innerAtts)
-            }
-        }
-        val resultAtts = ArrayList<SchemaAtt>()
-        for (att in result.values) {
-            att.withInner(simplifySchema(att.inner))
-            resultAtts.add(att.build())
-        }
-        return resultAtts
     }
 
     private fun resolveRoot(
@@ -709,7 +681,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     .withName("root")
                     .withInner(schemaAtts)
                     .build()
-                val simpleAtts = simplifySchema(schemaAtts)
+                val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
                 val result = resolve(valueCtx, simpleAtts, resolveCtx)
                 ObjectData.create(resolveResultWithAliases(currentAtt, result, false))
             } finally {

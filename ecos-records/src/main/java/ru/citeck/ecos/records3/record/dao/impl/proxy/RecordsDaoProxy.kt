@@ -120,7 +120,7 @@ open class RecordsDaoProxy(
         val result = LinkedHashMap<String, String>()
 
         schemaAtts.forEach { att ->
-            result[att.name] = writer.write(att)
+            result[att.alias] = writer.write(att)
         }
 
         return result

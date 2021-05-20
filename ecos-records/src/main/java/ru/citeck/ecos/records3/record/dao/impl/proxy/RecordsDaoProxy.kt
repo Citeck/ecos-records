@@ -54,11 +54,8 @@ open class RecordsDaoProxy(
 
         return postProcAtts.map { proxyAtts ->
             val innerAttValue = InnerAttValue(proxyAtts.atts.getAtts().getData().asJson())
-            if (proxyAtts.additionalAtts.isEmpty()) {
-                innerAttValue
-            } else {
-                ProxyRecVal(innerAttValue, proxyAtts.additionalAtts)
-            }
+            val ref = RecordRef.create(id, proxyAtts.atts.getId().id)
+            ProxyRecVal(ref, innerAttValue, proxyAtts.additionalAtts)
         }
     }
 
@@ -138,9 +135,14 @@ open class RecordsDaoProxy(
     }
 
     private class ProxyRecVal(
+        private val id: RecordRef,
         base: AttValue,
         val postProcAtts: Map<String, Any>
     ) : AttValueDelegate(base) {
+
+        override fun getId(): Any {
+            return id
+        }
 
         override fun getAtt(name: String?): Any? {
             if (postProcAtts.containsKey(name)) {

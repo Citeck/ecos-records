@@ -1,10 +1,13 @@
 package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -28,16 +31,32 @@ class RecordsDaoProxyAttsTest {
         val services = RecordsServiceFactory()
         val records = services.recordsServiceV1
 
-        records.register(
-            RecordsDaoBuilder.create(TARGET_ID)
-                .addRecord("test", ValueDto())
-                .addRecord("linked", LinkedDto())
-                .build()
-        )
+        val targetRecordsDao = RecordsDaoBuilder.create(TARGET_ID)
+            .addRecord("test", ValueDto())
+            .addRecord("linked", LinkedDto())
+            .build() as InMemRecordsDao<*>
+
+        records.register(targetRecordsDao)
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
 
         val txtId = records.getAtt(RecordRef.create(PROXY_ID, "test"), "?id").asText()
         assertEquals("$PROXY_ID@test", txtId)
+
+        // ================== test query result id ==================
+
+        val query = RecordsQuery.create()
+            .withQuery(VoidPredicate.INSTANCE)
+            .withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            .withSourceId(PROXY_ID)
+            .build()
+
+        val queryResWithoutAtts = records.query(query)
+        assertThat(queryResWithoutAtts.getRecords().map { it.id }).containsAll(targetRecordsDao.records.keys)
+
+        val queryResWithAtts = records.query(query, listOf("strField"))
+        assertThat(queryResWithAtts.getRecords().map { it.getId().id }).containsAll(targetRecordsDao.records.keys)
+
+        // ==========================================================
 
         // test atts with getAtts
         val getAttsById: (sourceId: String, atts: List<String>) -> List<ObjectData> = { sourceId, atts ->
@@ -47,12 +66,12 @@ class RecordsDaoProxyAttsTest {
 
         // test atts with query
         val getAttsByQuery: (sourceId: String, atts: List<String>) -> List<ObjectData> = { sourceId, atts ->
-            val query = RecordsQuery.create()
+            val queryWithSourceId = RecordsQuery.create()
                 .withQuery(Predicates.eq("strField", "str-value"))
                 .withLanguage(PredicateService.LANGUAGE_PREDICATE)
                 .withSourceId(sourceId)
                 .build()
-            val res = records.query(query, atts)
+            val res = records.query(queryWithSourceId, atts)
             res.getRecords().map { it.getAtts() }
         }
         checkFull(getAttsByQuery)

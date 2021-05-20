@@ -96,7 +96,12 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
     }
 
     override fun getType(): RecordRef {
-        val res = value.path("_type").path("?id")
+        val type = if (value.has("_type")) {
+            value.path("_type")
+        } else {
+            value.path("_etype")
+        }
+        val res = type.path("?id")
         if (res.isNull || res.isMissingNode) {
             return RecordRef.EMPTY
         }

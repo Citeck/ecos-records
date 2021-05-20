@@ -15,6 +15,10 @@ import java.lang.reflect.ParameterizedType
 
 class BeanValueFactory : AttValueFactory<Any> {
 
+    companion object {
+        private const val EMODEL_TYPE_PREFIX = "emodel/type@"
+    }
+
     override fun getValue(value: Any): AttValue {
         return Value(value)
     }
@@ -48,7 +52,14 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         override fun getType(): RecordRef {
             if (typeCtx.hasProperty(RecordConstants.ATT_TYPE)) {
-                return getAttWithType(RecordConstants.ATT_TYPE, RecordRef::class.java) ?: RecordRef.EMPTY
+                var result = getAttWithType(RecordConstants.ATT_TYPE, Any::class.java) ?: RecordRef.EMPTY
+                if (result is String) {
+                    if (!result.startsWith(EMODEL_TYPE_PREFIX)) {
+                        result = EMODEL_TYPE_PREFIX + result
+                    }
+                    return RecordRef.valueOf(result)
+                }
+                return Json.mapper.convert(result, RecordRef::class.java) ?: RecordRef.EMPTY
             }
             return RecordRef.EMPTY
         }
@@ -69,7 +80,7 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         @Throws(Exception::class)
         override fun getAtt(name: String): Any? {
-            if (bean is MutableMap<*, *>) {
+            if (bean is Map<*, *>) {
                 return bean[name]
             }
             return typeCtx.getProperty(bean, name)

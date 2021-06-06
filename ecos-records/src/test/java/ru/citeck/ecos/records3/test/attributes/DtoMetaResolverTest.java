@@ -26,7 +26,7 @@ public class DtoMetaResolverTest {
         Map<String, String> atts = writer.writeToMap(attributes);
 
         Map<String, String> expected = new HashMap<>();
-        expected.put("model", ".att(n:\"model\"){json}");
+        expected.put("model", "model?json");
 
         assertEquals(expected, atts);
     }

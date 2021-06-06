@@ -10,6 +10,8 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.utils.V1ConvUtils;
 
 import java.util.*;
 
@@ -114,7 +116,7 @@ public class RecordsGroupDao extends LocalRecordsDao implements LocalRecordsQuer
         groupQuery.setQuery(groupPredicate);
         groupQuery.setLanguage(PredicateService.LANGUAGE_PREDICATE);
 
-        return new RecordsGroup(groupQuery, attributes, groupPredicate, recordsService);
+        return new RecordsGroup(V1ConvUtils.recsQueryV0ToV1(groupQuery), attributes, groupPredicate, recordsServiceV1);
     }
 
     private List<DistinctValue> getDistinctValues(String sourceId, Predicate predicate, String attribute, int max) {

@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.test.schema;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.records2.RecordConstants;
@@ -31,8 +30,8 @@ public class DtoSchemaTest {
         Map<String, String> attributes = writer.writeToMap(attributesSchema);
 
         assertEquals(4, attributes.size());
-        assertEquals(".att(n:\"strField\"){disp}", attributes.get("strField"));
-        assertEquals(".att(n:\"inner\"){dumb:att(n:\"_null\"){disp},innerStr:att(n:\"innerStr\"){disp}}", attributes.get("inner"));
+        assertEquals("strField", attributes.get("strField"));
+        assertEquals("inner{dumb:_null,innerStr}", attributes.get("inner"));
 
         TestDto dto = new TestDto();
         dto.setInner(new Inner());

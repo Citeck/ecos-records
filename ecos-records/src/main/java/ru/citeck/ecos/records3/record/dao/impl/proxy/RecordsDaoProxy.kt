@@ -117,7 +117,7 @@ open class RecordsDaoProxy(
         val result = LinkedHashMap<String, String>()
 
         schemaAtts.forEach { att ->
-            result[att.alias] = writer.write(att)
+            result[att.getAliasForValue()] = writer.write(att)
         }
 
         return result

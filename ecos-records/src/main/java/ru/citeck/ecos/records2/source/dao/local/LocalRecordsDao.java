@@ -59,6 +59,7 @@ import static java.util.Collections.emptyList;
 public abstract class LocalRecordsDao extends AbstractRecordsDao implements ServiceFactoryAware {
 
     protected RecordsService recordsService;
+    protected ru.citeck.ecos.records3.RecordsService recordsServiceV1;
     protected PredicateService predicateService;
     protected MetaValuesConverter metaValuesConverter;
     protected RecordsServiceFactory serviceFactory;
@@ -279,6 +280,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         recordAttsService = serviceFactory.getRecordsAttsService();
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
+        recordsServiceV1 = serviceFactory.getRecordsServiceV1();
     }
 
     public void addAttributesMixin(AttributesMixin<?, ?> mixin) {

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
@@ -34,22 +35,23 @@ public class RecordsMetaQueryTest {
     @Test
     void testQueryBuild() {
 
-        Map<String, String> attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(SimplePojo.class));
+        List<SchemaAtt> dtoAtts = dtoSchemaReader.read(SimplePojo.class);
+        Map<String, String> attributes = attSchemaWriter.writeToMap(dtoAtts);
 
         assertEquals(12, attributes.size());
 
-        assertEquals(".att(n:\"jsonArrayNode\"){json}", attributes.get("jsonArrayNode"));
-        assertEquals(".att(n:\"jsonObjectNode\"){json}", attributes.get("jsonObjectNode"));
-        assertEquals(".att(n:\"jsonNode\"){json}", attributes.get("jsonNode"));
-        assertEquals(".att(n:\"aaa\"){atts(n:\"bbb\"){disp}}", attributes.get("someatt"));
-        assertEquals(".edge(n:\"cm:title\"){multiple}", attributes.get("edge"));
-        assertEquals(".edge(n:\"cm:field\"){options{label:disp,value:str}}", attributes.get("options"));
-        assertEquals(".att(n:\"cm:name\"){disp}", attributes.get("value0"));
-        assertEquals(".att(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){disp}}", attributes.get("status"));
-        assertEquals(".att(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("status1"));
-        assertEquals(".atts(n:\"cm:caseStatus\"){att(n:\"cm:statusName\"){str}}", attributes.get("statuses"));
-        assertEquals(".att(n:\"cm:caseStatus\"){atts(n:\"cm:statusName\"){str}}", attributes.get("statuses1"));
-        assertEquals(".att(n:\"enumField\"){str}", attributes.get("enumField"));
+        assertEquals("jsonArrayNode?json", attributes.get("jsonArrayNode"));
+        assertEquals("jsonObjectNode?json", attributes.get("jsonObjectNode"));
+        assertEquals("jsonNode?json", attributes.get("jsonNode"));
+        assertEquals("aaa.bbb[]", attributes.get("someatt"));
+        assertEquals("_edge.cm:title.multiple?bool", attributes.get("edge"));
+        assertEquals("_edge.cm:field.options[]{label:?disp,value:?str}", attributes.get("options"));
+        assertEquals("cm:name", attributes.get("value0"));
+        assertEquals("cm:caseStatus.cm:statusName", attributes.get("status"));
+        assertEquals("cm:caseStatus.cm:statusName?str", attributes.get("status1"));
+        assertEquals("cm:caseStatus[].cm:statusName?str", attributes.get("statuses"));
+        assertEquals("cm:caseStatus.cm:statusName[]?str", attributes.get("statuses1"));
+        assertEquals("enumField?str", attributes.get("enumField"));
     }
 
     public static class SimplePojo {

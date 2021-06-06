@@ -28,7 +28,10 @@ public class AttStrUtils {
             return false;
         }
         char ch = str.charAt(0);
-        return (ch == '"' || ch == '\'') && str.charAt(str.length() - 1) == ch;
+        int lastIdx = str.length() - 1;
+        return (ch == '"' || ch == '\'')
+            && str.charAt(lastIdx) == ch
+            && indexOf(str, String.valueOf(ch), 1) == lastIdx;
     }
 
     public static String removeEscaping(String str) {
@@ -182,6 +185,17 @@ public class AttStrUtils {
             }
         }
         return -1;
+    }
+
+    public static int getLastNonWhitespaceCharIdx(String str) {
+        if (str.isEmpty()) {
+            return -1;
+        }
+        int idx = str.length() - 1;
+        while (idx >= 0 && Character.isWhitespace(str.charAt(idx))) {
+            idx--;
+        }
+        return idx;
     }
 
     private static boolean containsAt(String str, int idx, String subString) {

@@ -91,55 +91,55 @@ data class RecordsQuery(
             query = base.query
         }
 
-        fun withSourceId(sourceId: String): Builder {
-            this.sourceId = sourceId
+        fun withSourceId(sourceId: String?): Builder {
+            this.sourceId = sourceId ?: ""
             return this
         }
 
-        fun withSortBy(sortBy: SortBy): Builder {
-            this.sortBy = arrayListOf(sortBy)
+        fun withSortBy(sortBy: SortBy?): Builder {
+            this.sortBy = sortBy?.let { arrayListOf(it) } ?: arrayListOf()
             return this
         }
 
         @JsonSetter
         @JackJsonSetter
-        fun withSortBy(sortBy: List<SortBy>): Builder {
-            this.sortBy = ArrayList(sortBy)
+        fun withSortBy(sortBy: List<SortBy>?): Builder {
+            this.sortBy = sortBy?.let { ArrayList(it) } ?: arrayListOf()
             return this
         }
 
-        fun withGroupBy(groupBy: List<String>): Builder {
-            this.groupBy = ArrayList(groupBy)
+        fun withGroupBy(groupBy: List<String>?): Builder {
+            this.groupBy = groupBy?.let { ArrayList(it) } ?: arrayListOf()
             return this
         }
 
-        fun withPage(page: QueryPage): Builder {
-            this.page = page.copy()
+        fun withPage(page: QueryPage?): Builder {
+            this.page = page?.copy() ?: QueryPage.create()
             return this
         }
 
-        fun withMaxItems(maxItems: Int): Builder {
+        fun withMaxItems(maxItems: Int?): Builder {
             this.page.withMaxItems(maxItems)
             return this
         }
 
-        fun withSkipCount(skipCount: Int): Builder {
+        fun withSkipCount(skipCount: Int?): Builder {
             this.page.withSkipCount(skipCount)
             return this
         }
 
-        fun withAfterId(afterId: RecordRef): Builder {
+        fun withAfterId(afterId: RecordRef?): Builder {
             this.page.withAfterId(afterId)
             return this
         }
 
-        fun withConsistency(consistency: Consistency): Builder {
-            this.consistency = consistency
+        fun withConsistency(consistency: Consistency?): Builder {
+            this.consistency = consistency ?: Consistency.DEFAULT
             return this
         }
 
-        fun withLanguage(language: String): Builder {
-            this.language = language
+        fun withLanguage(language: String?): Builder {
+            this.language = language ?: ""
             return this
         }
 

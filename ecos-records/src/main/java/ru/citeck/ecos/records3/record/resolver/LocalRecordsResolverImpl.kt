@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.resolver
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
@@ -178,8 +177,6 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                             "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
                         )
                     }
-
-                    records.records = unescapeKeys(records.records)
 
                     V1ConvUtils.addErrorMessages(records.errors, context)
                     V1ConvUtils.addDebugMessage(records, context)
@@ -487,7 +484,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             try {
                 val meta = localRecordsResolverV0.getMeta(sourceIdRefs, attributes, rawAtts).also {
-                    it.setRecords(unescapeKeys(it.records))
+                    it.setRecords(it.records)
                 }
                 V1ConvUtils.addErrorMessages(meta.errors, context)
                 V1ConvUtils.addDebugMessage(meta, context)
@@ -548,14 +545,6 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             }
         }
         return results
-    }
-
-    private fun unescapeKeys(meta: List<RecordAtts>): List<RecordAtts> {
-        return meta.map {
-            var jsonNode: JsonNode = it.getAtts().getData().asJson()
-            jsonNode = attSchemaWriter.unescapeKeys(jsonNode)
-            RecordMeta(it.getId(), ObjectData.create(jsonNode))
-        }
     }
 
     override fun mutate(records: List<RecordAtts>): List<RecordRef> {

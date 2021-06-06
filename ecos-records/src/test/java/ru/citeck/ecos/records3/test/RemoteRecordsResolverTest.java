@@ -50,7 +50,7 @@ class RemoteRecordsResolverTest {
         }
     }
 
-    private static final String TEST_SCHEMA = "att(n:\"test\"){str}";
+    private static final String TEST_ATT = ".att(n:\"test\"){str}";
 
     private RecordsService recordsService;
 
@@ -151,7 +151,7 @@ class RemoteRecordsResolverTest {
         urls.clear();
 
         List<RecordRef> qrefs = new ArrayList<>(refs);
-        RecordsResult<RecordMeta> metaResult = recordsService.getMeta(qrefs, TEST_SCHEMA);
+        RecordsResult<RecordMeta> metaResult = recordsService.getAttributes(qrefs, Collections.singleton(TEST_ATT));
 
         assertEquals(4, urls.size());
         checkRecordsMeta(refs, metaResult.getRecords(), false);

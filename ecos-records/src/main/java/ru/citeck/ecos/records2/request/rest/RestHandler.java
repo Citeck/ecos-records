@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records3.txn.RecordsTxnService;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -47,10 +48,6 @@ public class RestHandler {
 
                 recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
 
-            } else if (body.getSchema() != null) {
-
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getSchema());
-
             } else {
 
                 recordsResult = recordsService.queryRecords(body.getQuery());
@@ -66,7 +63,7 @@ public class RestHandler {
 
             if (body.getAttributes() == null) {
 
-                recordsResult = recordsService.getMeta(body.getRecords(), body.getSchema());
+                recordsResult = recordsService.getAttributes(body.getRecords(), Collections.emptyList());
 
             } else {
 

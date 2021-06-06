@@ -52,18 +52,18 @@ data class QueryPage(
             afterId = base.afterId
         }
 
-        fun withMaxItems(maxItems: Int): Builder {
-            this.maxItems = maxItems
+        fun withMaxItems(maxItems: Int?): Builder {
+            this.maxItems = maxItems ?: -1
             return this
         }
 
-        fun withSkipCount(skipCount: Int): Builder {
-            this.skipCount = skipCount
+        fun withSkipCount(skipCount: Int?): Builder {
+            this.skipCount = skipCount ?: 0
             return this
         }
 
-        fun withAfterId(afterId: RecordRef): Builder {
-            this.afterId = afterId
+        fun withAfterId(afterId: RecordRef?): Builder {
+            this.afterId = afterId ?: RecordRef.EMPTY
             return this
         }
 

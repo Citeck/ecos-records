@@ -38,7 +38,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
         List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            recordsService.getMeta(refs, "str");
+            recordsService.getAttributes(refs, Collections.singleton("str"));
         });
 
         Throwable rootCause = exception.getCause();

@@ -76,12 +76,12 @@ public class MetaFieldTest extends AbstractRecordsDao
 
         SchemaAtt schemaAtt = AttContext.getCurrentSchemaAtt();
 
-        if ("one".equals(schemaAtt.getAlias())) {
+        if ("one".equals(schemaAtt.getAliasForValue())) {
 
             Map<String, String> expectedAttsMap = new HashMap<>();
-            expectedAttsMap.put("innerOne", ".att(n:\"innerOne\"){_u003F_str:str}");
-            expectedAttsMap.put("innerTwo", ".atts(n:\"innerTwo\"){innerInnerTest:att(n:\"innerInnerTest\"){_u003F_json:json}}");
-            expectedAttsMap.put("?disp", ".disp");
+            expectedAttsMap.put("innerOne", "innerOne?str");
+            expectedAttsMap.put("innerTwo", "innerTwo[].innerInnerTest?json");
+            expectedAttsMap.put("?disp", "?disp");
 
             assertEquals(expectedAttsMap, new HashMap<>(AttContext.getInnerAttsMap()));
 

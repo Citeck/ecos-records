@@ -53,7 +53,7 @@ public class MetaValueTest extends AbstractRecordsDao
     @Test
     void test() {
 
-        String testInnerSchema = "number:att(n:\"number\"){_u003F_num:num},test:att(n:\"test\"){_u003F_str:str}";
+        String testInnerSchema = "number?num,test?str";
 
         Map<String, String> attributes = new HashMap<>();
         attributes.put("str", ".str");
@@ -64,7 +64,7 @@ public class MetaValueTest extends AbstractRecordsDao
         attributes.put("num", ".num");
         attributes.put("bool", ".bool");
         attributes.put(".json", ".json");
-        attributes.put("schema", ".att(n:\"schema\"){" + testInnerSchema + "}");
+        attributes.put("schema", "schema{" + testInnerSchema + "}");
         attributes.put("asNum", ".as(n:\"num\"){num}");
         attributes.put("asStr", ".as(n:\"str\"){str}");
         attributes.put("date", ".att(n:\"date\"){str}");

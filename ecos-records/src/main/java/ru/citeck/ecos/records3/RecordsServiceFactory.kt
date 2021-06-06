@@ -8,11 +8,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
 import ru.citeck.ecos.records2.evaluator.evaluators.*
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter
-import ru.citeck.ecos.records2.meta.AttributesMetaResolver
-import ru.citeck.ecos.records2.meta.RecordsMetaService
-import ru.citeck.ecos.records2.meta.RecordsMetaServiceImpl
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl
@@ -39,8 +35,8 @@ import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
 import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttProcReader
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver
-import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaGqlWriter
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriterV2
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.atts.value.factory.*
 import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanValueFactory
@@ -69,9 +65,7 @@ open class RecordsServiceFactory {
         val log = KotlinLogging.logger {}
     }
 
-    val attributesMetaResolver: AttributesMetaResolver by lazy { createAttributesMetaResolver() }
     val restHandlerAdapter: RestHandlerAdapter by lazy { createRestHandlerAdapter() }
-    val recordsMetaGql: RecordsMetaGql by lazy { createRecordsMetaGql() }
     val restHandler: RestHandler by lazy { createRestHandler() }
     val recordsService: ru.citeck.ecos.records2.RecordsService by lazy { createRecordsService() }
     val recordsServiceV1: RecordsService by lazy { createRecordsServiceV1() }
@@ -79,7 +73,6 @@ open class RecordsServiceFactory {
     val recordsResolver: LocalRemoteResolver by lazy { createRecordsResolver() }
     val predicateService: PredicateService by lazy { createPredicateService() }
     val queryLangService: QueryLangService by lazy { createQueryLangService() }
-    val recordsMetaService: RecordsMetaService by lazy { createRecordsMetaService() }
     val recordsAttsService: RecordAttsService by lazy { createRecordsAttsService() }
     val remoteRecordsResolver: RemoteRecordsResolver? by lazy { createRemoteRecordsResolver() }
     val attValuesConverter: AttValuesConverter by lazy { createAttValuesConverter() }
@@ -154,14 +147,6 @@ open class RecordsServiceFactory {
 
     protected open fun createMetaValuesConverter(): MetaValuesConverter {
         return MetaValuesConverter(this)
-    }
-
-    protected open fun createAttributesMetaResolver(): AttributesMetaResolver {
-        return AttributesMetaResolver()
-    }
-
-    protected open fun createRecordsMetaGql(): RecordsMetaGql {
-        return RecordsMetaGql(this)
     }
 
     @Synchronized
@@ -258,10 +243,6 @@ open class RecordsServiceFactory {
         return QueryLangServiceImpl()
     }
 
-    protected open fun createRecordsMetaService(): RecordsMetaService {
-        return RecordsMetaServiceImpl(this)
-    }
-
     protected open fun createRecordsAttsService(): RecordAttsService {
         return RecordAttsServiceImpl(this)
     }
@@ -337,7 +318,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createAttSchemaWriter(): AttSchemaWriter {
-        return AttSchemaGqlWriter()
+        return AttSchemaWriterV2()
     }
 
     protected open fun createAttSchemaResolver(): AttSchemaResolver {

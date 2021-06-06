@@ -22,10 +22,10 @@ class DtoSchemaTest {
         assertEquals(4, atts.size)
 
         val attsMap = services.attSchemaWriter.writeToMap(atts)
-        assertEquals(".localId", attsMap["id"])
-        assertEquals(".att(n:\"strField\"){disp}", attsMap["strField"])
-        assertEquals(".atts(n:\"strFieldList\"){disp}", attsMap["strFieldList"])
-        assertEquals(".atts(n:\"strFieldSet\"){disp}", attsMap["strFieldSet"])
+        assertEquals("?localId", attsMap["id"])
+        assertEquals("strField", attsMap["strField"])
+        assertEquals("strFieldList[]", attsMap["strFieldList"])
+        assertEquals("strFieldSet[]", attsMap["strFieldSet"])
 
         // val atts
         val atts2 = services.dtoSchemaReader.read(ValDtoSchema::class.java)
@@ -33,14 +33,14 @@ class DtoSchemaTest {
         assertEquals(8, atts2.size)
 
         val attsMap2 = services.attSchemaWriter.writeToMap(atts2)
-        assertEquals(".localId", attsMap2["id"])
-        assertEquals(".att(n:\"strField\"){disp}", attsMap2["strField"])
-        assertEquals(".atts(n:\"strFieldList\"){disp}", attsMap2["strFieldList"])
-        assertEquals(".atts(n:\"strFieldSet\"){disp}", attsMap2["strFieldSet"])
-        assertEquals(".att(n:\"enumTest\"){str}", attsMap2["enumTest"])
-        assertEquals(".atts(n:\"enumListTest\"){str}", attsMap2["enumListTest"])
-        assertEquals(".att(n:\"mapTest\"){json}", attsMap2["mapTest"])
-        assertEquals(".att(n:\"hashMapTest\"){json}", attsMap2["hashMapTest"])
+        assertEquals("?localId", attsMap2["id"])
+        assertEquals("strField", attsMap2["strField"])
+        assertEquals("strFieldList[]", attsMap2["strFieldList"])
+        assertEquals("strFieldSet[]", attsMap2["strFieldSet"])
+        assertEquals("enumTest?str", attsMap2["enumTest"])
+        assertEquals("enumListTest[]?str", attsMap2["enumListTest"])
+        assertEquals("mapTest?json", attsMap2["mapTest"])
+        assertEquals("hashMapTest?json", attsMap2["hashMapTest"])
 
         val valDtoValue = ValDtoSchema(
             "123",
@@ -57,7 +57,7 @@ class DtoSchemaTest {
         assertEquals(valDtoValue, valDtoValue2)
 
         val attsMap3 = services.attSchemaWriter.writeToMap(services.dtoSchemaReader.read(DtoSchema2::class.java))
-        assertEquals(".id", attsMap3["id"])
+        assertEquals("?id", attsMap3["id"])
 
         val valDtoWithDefault = ValDtoWithDefault()
         val valDtoWithDefaultValue = services.recordsServiceV1.getAtts(valDtoWithDefault, ValDtoWithDefault::class.java)

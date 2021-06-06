@@ -59,12 +59,12 @@ public class QueryWithMetaFieldTest extends AbstractRecordsDao implements Record
         Map<String, String> innerAttributesMap = AttContext.getInnerAttsMap();
 
         assertEquals(6, innerAttributesMap.size());
-        assertEquals(".att(n:\"field0\"){_u003F_disp:disp}", innerAttributesMap.get("field0"));
-        assertEquals(".att(n:\"field1\"){_u003F_num:num}", innerAttributesMap.get("field1"));
-        assertEquals(".atts(n:\"field2\"){_u003F_disp:disp}", innerAttributesMap.get("field2"));
-        assertEquals(".att(n:\"sum(\\\"field1\\\")\"){_u003F_num:num}", innerAttributesMap.get("sum(\"field1\")"));
-        assertEquals(".att(n:\"sum(\\\\\\\"field2\\\\\\\")\"){_u003F_num:num}", innerAttributesMap.get("sum(\\\"field2\\\")"));
-        assertEquals(".edge(n:\"field0(\\\"param\\\")\"){options:options{_u003F_disp:disp,_u003F_str:str}}", innerAttributesMap.get("_edge"));
+        assertEquals("field0", innerAttributesMap.get("field0"));
+        assertEquals("field1?num", innerAttributesMap.get("field1"));
+        assertEquals("field2[]", innerAttributesMap.get("field2"));
+        assertEquals("sum(\"field1\")?num", innerAttributesMap.get("sum(\"field1\")"));
+        assertEquals("sum(\\\"field2\\\")?num", innerAttributesMap.get("sum(\\\"field2\\\")"));
+        assertEquals("_edge.field0(\"param\").options[]{?disp,?str}", innerAttributesMap.get("_edge"));
 
         TestDto dto = new TestDto();
         dto.setField0("value0");

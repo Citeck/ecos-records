@@ -7,7 +7,6 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.exception.RemoteRecordsException
-import ru.citeck.ecos.records2.meta.AttributesSchema
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
@@ -93,16 +92,9 @@ class RemoteRecordsResolver(
 
     private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext, rawAtts: Boolean): QueryResp {
 
-        val attsGqlSchema: AttributesSchema? = if (rawAtts) {
-            val attsMap = queryBody.attributes.asMap(String::class.java, String::class.java)
-            services.attributesMetaResolver.createSchema(attsMap)
-        } else {
-            null
-        }
-
-        val v0Body = toV0QueryBody(queryBody, context, attsGqlSchema)
+        val v0Body = toV0QueryBody(queryBody, context)
         val appResultObj = postRecords(appName, QUERY_URL, v0Body)
-        var result: QueryResp? = toQueryAttsRes(appResultObj, context, attsGqlSchema)
+        var result: QueryResp? = toQueryAttsRes(appResultObj, context)
         if (result == null) {
             result = QueryResp()
         } else {
@@ -112,7 +104,7 @@ class RemoteRecordsResolver(
         return result
     }
 
-    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext, attsSchema: AttributesSchema?): QueryResp? {
+    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext): QueryResp? {
 
         if (body == null || body.isEmpty) {
             return null
@@ -128,28 +120,18 @@ class RemoteRecordsResolver(
 
         val resp = QueryResp()
         resp.setRecords(
-            v0Result.records.map {
-                var atts = RecordAtts(it)
-                if (attsSchema != null) {
-                    atts = services.recordsMetaService.convertMetaResult(atts, attsSchema, false)
-                }
-                atts
-            }
+            v0Result.records.map { RecordAtts(it) }
         )
         resp.hasMore = v0Result.hasMore
         resp.totalCount = v0Result.totalCount
         return resp
     }
 
-    private fun toV0QueryBody(body: QueryBody, context: RequestContext, attsSchema: AttributesSchema?): QueryBodyV0 {
+    private fun toV0QueryBody(body: QueryBody, context: RequestContext): QueryBodyV0 {
 
         val v0Body = QueryBodyV0()
 
-        if (attsSchema != null) {
-            v0Body.schema = attsSchema.schema
-        } else {
-            v0Body.setAttributes(body.attributes.asJson())
-        }
+        v0Body.setAttributes(body.attributes.asJson())
         v0Body.records = body.getRecords()
         v0Body.v1Body = body
 

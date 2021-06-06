@@ -32,7 +32,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
     private val recordsService = services.recordsServiceV1
     private val schemaWriter = services.attSchemaWriter
 
-    override fun getValue(value: RecordRef): AttValue? {
+    override fun getValue(value: RecordRef): AttValue {
         return RecordRefValue(value)
     }
 
@@ -59,7 +59,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                     attsMap["_type"] = "_type?id"
                 } else if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
 
-                    schemaWriter.write(inner, sb)
+                    schemaWriter.write(inner, sb, true)
                     val mirrorScalarType = ScalarType.getByMirrorAtt(innerName)
                     if (mirrorScalarType != null) {
                         scalarMirrorAtts.add(mirrorScalarType)
@@ -85,17 +85,14 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
             } else {
                 RecordAtts(ref)
             }
-
-            var dataNode: JsonNode = atts.getAtts().getData().asJson()
-            dataNode = schemaWriter.unescapeKeys(dataNode)
-            innerAtts = InnerAttValue(dataNode)
+            innerAtts = InnerAttValue(atts.getAtts().getData().asJson())
         }
 
         override fun getId(): RecordRef {
             return ref
         }
 
-        override fun asText(): String? {
+        override fun asText(): String {
             return ref.toString()
         }
 

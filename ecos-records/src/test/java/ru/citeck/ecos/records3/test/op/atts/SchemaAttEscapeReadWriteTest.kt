@@ -13,7 +13,7 @@ class SchemaAttEscapeReadWriteTest {
         val factory = RecordsServiceFactory()
         val writer = factory.attSchemaWriter
 
-        val gqlAtt = """.att(n:"sum(\\\"AMOUNT\\\")"){str}"""
+        val gqlAtt = """sum(\"AMOUNT\")?str"""
         val srcAtt = """sum(\"AMOUNT\")"""
 
         assertEquals(

@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.i18n.LocaleContextHolder
 import ru.citeck.ecos.records2.RecordsService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
-import ru.citeck.ecos.records2.meta.RecordsMetaService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.querylang.QueryLangService
 import ru.citeck.ecos.records2.request.rest.RestHandler
@@ -108,11 +107,6 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     @Bean
     override fun createQueryLangService(): QueryLangService {
         return super.createQueryLangService()
-    }
-
-    @Bean
-    override fun createRecordsMetaService(): RecordsMetaService {
-        return super.createRecordsMetaService()
     }
 
     @Bean

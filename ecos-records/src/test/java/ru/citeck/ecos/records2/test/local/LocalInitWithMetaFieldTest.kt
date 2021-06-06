@@ -29,8 +29,8 @@ class LocalInitWithMetaFieldTest : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
         factory.recordsService.getAttributes(RecordRef.create("test", "test"), attsToReq)
 
         val expectedAtts = hashMapOf(
-            Pair("second", ".att(n:\"second\"){_u003F_disp:disp}"),
-            Pair("second2", ".att(n:\"second2\"){_u003F_str:str}")
+            Pair("second", "second"),
+            Pair("second2", "second2?str")
         )
 
         assertEquals(mutableListOf(expectedAtts, expectedAtts), innerAttsMapList)

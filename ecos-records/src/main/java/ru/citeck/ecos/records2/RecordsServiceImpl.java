@@ -10,7 +10,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.graphql.GqlConstants;
-import ru.citeck.ecos.records2.graphql.RecordsMetaGql;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
 public class RecordsServiceImpl extends AbstractRecordsService {
 
     private final RecordsService recordsServiceV1;
-    private final RecordsMetaGql recordsMetaGql;
     private final LocalRecordsResolverV0 localRecordsResolverV0;
     private final AttSchemaReader attSchemaReader;
     private final AttSchemaWriter attSchemaWriter;
@@ -58,7 +56,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         super(serviceFactory);
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         recordsServiceV1 = serviceFactory.getRecordsServiceV1();
-        recordsMetaGql = serviceFactory.getRecordsMetaGql();
         localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
         attSchemaWriter = serviceFactory.getAttSchemaWriter();
         attSchemaReader = serviceFactory.getAttSchemaReader();
@@ -128,7 +125,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         return RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-            List<SchemaAtt> attsWithFixedAliases = fixInnerAliases(attributes);
+            List<SchemaAtt> attsWithFixedAliases = attSchemaReader.read(attributes);
 
             RecsQueryRes<RecordAtts> result = recordsServiceV1.query(
                 V1ConvUtils.recsQueryV0ToV1(query),
@@ -167,13 +164,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
             return metaResult;
         });
-    }
-
-    @NotNull
-    @Override
-    public RecordsQueryResult<RecordMeta> queryRecords(RecordsQuery query, String schema) {
-        Map<String, String> attsToLoad = convertSchemaToAtts(schema);
-        return queryRecords(query, attsToLoad, false);
     }
 
     /* ATTRIBUTES */
@@ -226,7 +216,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
         recsResult.setRecords(RequestContext.doWithCtx(serviceFactory, ctx -> {
 
-            List<SchemaAtt> attsWithFixedAliases = fixInnerAliases(attributes);
+            List<SchemaAtt> attsWithFixedAliases = attSchemaReader.read(attributes);
             List<RecordAtts> atts = recordsServiceV1.getAtts(
                 records,
                 attSchemaWriter.writeToMap(attsWithFixedAliases),
@@ -275,23 +265,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
         RecordsResult<RecordMeta> meta = getAttributes(records, attributes);
 
         return new RecordsResult<>(meta, m -> dtoSchemaReader.instantiate(metaClass, m.getAttributes()));
-    }
-
-    @NotNull
-    @Override
-    public RecordsResult<RecordMeta> getMeta(Collection<RecordRef> records, String schema) {
-        return getAttributesImpl(records, convertSchemaToAtts(schema), false);
-    }
-
-    private Map<String, String> convertSchemaToAtts(String schema) {
-
-        MetaField metaField = recordsMetaGql.getMetaFieldFromSchema(schema);
-        Map<String, String> attributes = metaField.getInnerAttributesMap(true);
-        Map<String, String> fixedAtts = new HashMap<>();
-
-        attributes.forEach((k, v) -> fixedAtts.put(k.charAt(0) == '.' ? k.substring(1) : k, v));
-
-        return fixedAtts;
     }
 
     private RecordMeta fixRawData(List<SchemaAtt> attsSchema, RecordMeta meta) {
@@ -368,78 +341,6 @@ public class RecordsServiceImpl extends AbstractRecordsService {
                 fixRawData(att, innerAtt, node.get(innerAtt.getAliasForValue()), innerAtt.getMultiple()));
         }
         return result;
-    }
-
-    private List<SchemaAtt> fixInnerAliases(Map<String, String> attributes) {
-        Map<String, String> atts = new LinkedHashMap<>();
-        attributes.forEach((k, v) -> {
-            if (v.charAt(0) != '.') {
-                atts.put(k, v.replace("\\\"", "\""));
-            } else {
-                atts.put(k, v);
-            }
-        });
-        List<SchemaAtt> schemaAtts = attSchemaReader.read(atts);
-        return fixInnerAliases(schemaAtts, true, null, null);
-    }
-
-    private List<SchemaAtt> fixInnerAliases(List<SchemaAtt> atts,
-                                            boolean root,
-                                            @Nullable SchemaAtt parent,
-                                            @Nullable SchemaAtt parentParent) {
-        if (atts.isEmpty()) {
-            return atts;
-        }
-        return atts.stream()
-            .map(a -> {
-                String newAlias;
-                if (root) {
-                    newAlias = a.getAlias();
-                } else {
-                    newAlias = fixInnerAlias(a.getAliasForValue());
-                    if (a.getAlias().isEmpty()) {
-                        if (a.getName().charAt(0) != '?') {
-                            switch (a.getName()) {
-                                case RecordConstants.ATT_AS:
-                                    newAlias = "as";
-                                    break;
-                                case RecordConstants.ATT_EDGE:
-                                    newAlias = "edge";
-                                    break;
-                                case RecordConstants.ATT_HAS:
-                                    newAlias = "has";
-                                    break;
-                                default:
-                                    if (parentParent != null
-                                            && parentParent.getName().equals(RecordConstants.ATT_EDGE)) {
-                                        newAlias = a.getName();
-                                    } else {
-                                        newAlias = a.getMultiple() ? "atts" : "att";
-                                    }
-                            }
-                        }
-                    }
-                }
-                return a.copy()
-                    .withInner(fixInnerAliases(a.getInner(), false, a, parent))
-                    .withAlias(newAlias)
-                    .build();
-            }).collect(Collectors.toList());
-    }
-
-    private String fixInnerAlias(String alias) {
-        int roundBraceIdx = alias.indexOf('(');
-        int curveBraceIdx = alias.indexOf('{');
-        int minBraceIdx;
-        if (roundBraceIdx == -1) {
-            minBraceIdx = curveBraceIdx;
-        } else if (curveBraceIdx == -1) {
-            minBraceIdx = roundBraceIdx;
-        } else {
-            minBraceIdx = Math.min(roundBraceIdx, curveBraceIdx);
-        }
-        alias = minBraceIdx == -1 ? alias : alias.substring(0, minBraceIdx);
-        return alias.charAt(0) == '?' ? alias.substring(1) : alias;
     }
 
     /* MODIFICATION */

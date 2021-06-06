@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
+import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
@@ -20,6 +21,8 @@ import java.util.stream.Collectors
 class AttSchemaReader(services: RecordsServiceFactory) {
 
     companion object {
+
+        private val log = KotlinLogging.logger {}
 
         private const val GQL_ONE_ARG_ATT = "^%s\\((n:)?['\"](.+?)['\"]\\)"
         private const val GQL_ONE_ARG_ATT_WITH_INNER = "$GQL_ONE_ARG_ATT\\s*\\{(.+)}"
@@ -47,6 +50,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
     }
 
     private val procReader = services.attProcReader
+    private val readerV2 = AttSchemaReaderV2(services)
 
     fun read(attributes: Collection<String>): List<SchemaAtt> {
         if (attributes.isEmpty()) {
@@ -90,26 +94,6 @@ class AttSchemaReader(services: RecordsServiceFactory) {
      * @throws AttReadException when attribute can't be read
      */
     fun read(attribute: String): SchemaAtt {
-
-        val firstChar = attribute[0]
-
-        if (firstChar != '.' && firstChar != '#') {
-
-            val aliasDelimIdx = AttStrUtils.indexOf(attribute, ':')
-
-            if (aliasDelimIdx > 0 && !AttStrUtils.hasCharBeforeIdx(
-                    attribute,
-                    aliasDelimIdx,
-                    setOf('.', '?', '|', '!')
-                )
-            ) {
-
-                return read(
-                    AttStrUtils.removeQuotes(attribute.substring(0, aliasDelimIdx)),
-                    attribute.substring(aliasDelimIdx + 1)
-                )
-            }
-        }
         return read("", attribute)
     }
 
@@ -122,17 +106,34 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         val fixedAtt = FIXED_ROOT_ATTS_MAPPING[attribute] ?: attribute
 
         val isDotAtt = fixedAtt[0] == '.'
+        var readErrorV2: AttSchemaException? = null
+        if (!isDotAtt) {
+            try {
+                return readerV2.read(alias, attribute)
+            } catch (error: AttSchemaException) {
+                readErrorV2 = error
+            }
+        }
+
         val innerAtt = "\"${alias.replace("\"", "\\\"")}\":" + if (isDotAtt) {
             fixedAtt.substring(1)
         } else {
             fixedAtt
         }
 
-        return readInnerRawAtt(
-            innerAtt,
-            isDotAtt,
-            false
-        ) { al, att, proc -> readInner(al, att, proc, emptyList()) }
+        try {
+            return readInnerRawAtt(
+                innerAtt,
+                isDotAtt,
+                false
+            ) { al, att, proc -> readInner(al, att, proc, emptyList()) }
+        } catch (error: AttSchemaException) {
+            if (readErrorV2 != null) {
+                log.error("AttSchemaException: " + error.message)
+                throw readErrorV2
+            }
+            throw error
+        }
     }
 
     fun readInner(
@@ -172,7 +173,25 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             attribute = AttStrUtils.removeQuotes(attribute)
             readDotAtt(alias, attribute.substring(1), processors, lastInnerAtts)
         } else {
-            readSimpleAtt(alias, attribute, processors, lastInnerAtts)
+            val innerScalarIdx = AttStrUtils.indexOf(attributeArg, '?')
+            try {
+                if (innerScalarIdx != -1) {
+                    val attWithoutScalar = attributeArg.substring(0, innerScalarIdx)
+                    val scalarStr = attributeArg.substring(innerScalarIdx)
+                    ScalarType.getBySchema(scalarStr)
+                        ?: throw AttReadException(alias, attribute, "Unknown scalar: $scalarStr")
+                    val scalarSchema = SchemaAtt.create { withName(scalarStr) }
+                    readerV2.read(alias, attWithoutScalar, listOf(scalarSchema), processors)
+                } else {
+                    readerV2.read(alias, attributeArg, lastInnerAtts, processors)
+                }
+            } catch (readErrorV2: AttSchemaException) {
+                try {
+                    readSimpleAtt(alias, attribute, processors, lastInnerAtts)
+                } catch (readError: AttSchemaException) {
+                    throw readErrorV2
+                }
+            }
         }
     }
 
@@ -580,7 +599,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             }
         }
         if (attName == null || gqlInnerAtts.isEmpty()) {
-            throw AttReadException(alias, attribute, "Incorrect att attribute")
+            throw AttReadException(alias, attribute, "Incorrect attribute")
         }
         return SchemaAtt.create()
             .withAlias(alias)

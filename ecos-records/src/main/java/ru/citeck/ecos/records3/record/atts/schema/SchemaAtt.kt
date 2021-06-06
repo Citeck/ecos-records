@@ -4,7 +4,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.exception.AttSchemaException
-import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaGqlWriter
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriterV2
 import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
@@ -36,6 +36,9 @@ data class SchemaAtt(
     }
 
     fun withAlias(alias: String): SchemaAtt {
+        if (this.alias == alias) {
+            return this
+        }
         return copy().withAlias(alias).build()
     }
 
@@ -56,10 +59,8 @@ data class SchemaAtt(
     }
 
     fun getAliasForValue(): String {
-        return if (alias.isEmpty()) {
+        return alias.ifEmpty {
             name
-        } else {
-            alias
         }
     }
 
@@ -74,7 +75,7 @@ data class SchemaAtt(
     }
 
     override fun toString(): String {
-        return AttSchemaGqlWriter.INSTANCE.write(this)
+        return AttSchemaWriterV2.INSTANCE.write(this)
     }
 
     class Builder() {
@@ -132,6 +133,10 @@ data class SchemaAtt(
 
             if (name.isBlank()) {
                 throw AttSchemaException("Attribute can't has empty name. $this")
+            }
+
+            if (alias == name) {
+                alias = ""
             }
 
             val att = SchemaAtt(alias, name, multiple, inner, processors)

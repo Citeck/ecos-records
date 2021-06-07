@@ -67,10 +67,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
 
         val schemaAtts = ArrayList<SchemaAtt>()
         val readFunc = { key: String, value: Any? ->
-            if (value !is String) {
-                throw AttReadException(key, "$value", "non-string schema is not supported yet")
+            if (value is String) {
+                schemaAtts.add(read(key, value))
+            } else {
+                schemaAtts.add(readObjAtt(key, value))
             }
-            schemaAtts.add(read(key, value))
         }
 
         val context = RequestContext.getCurrent()
@@ -88,6 +89,35 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         }
 
         return schemaAtts
+    }
+
+    private fun readObjAtt(key: String, value: Any?): SchemaAtt {
+        if (value == null) {
+            return SchemaAtt.create {
+                withName(RecordConstants.ATT_NULL)
+                withInner(SchemaAtt.create { withName(ScalarType.STR.schema) })
+            }
+        }
+        var attValue = value
+        if (attValue is Collection<*>) {
+            attValue = attValue.associateWith {
+                if (it !is String) {
+                    throw AttSchemaException("Incorrect object attribute. Collection should has only string values")
+                }
+                it
+            }
+        }
+        if (attValue is Map<*, *>) {
+            if (!attValue.keys.all { it is String }) {
+                throw AttSchemaException("Incorrect object attribute. Map should has only string keys")
+            }
+            @Suppress("UNCHECKED_CAST")
+            return readerV2.read(key, key, read(attValue as Map<String, *>), emptyList())
+        }
+        throw AttSchemaException(
+            "Incorrect object attribute. " +
+                "Expected Map or Collection but found ${value::class}"
+        )
     }
 
     /**

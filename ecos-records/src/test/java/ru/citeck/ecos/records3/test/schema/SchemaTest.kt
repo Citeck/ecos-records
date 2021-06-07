@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.RequestContext.Companion.doWithCtx
@@ -93,6 +94,140 @@ class SchemaTest {
         assertAtt(
             "cm:name{first?num,second?str,third}",
             "cm:name{first?num,second?str,third}"
+        )
+    }
+
+    @Test
+    fun attAsMapTest() {
+
+        val atts = mapOf(
+            "simple" to mapOf(
+                "firstAlias" to "cm:name?str"
+            ),
+            "inner_att.without.array" to mapOf(
+                "secondAlias" to "cm:title?str"
+            ),
+            "inner_att.with.array[]" to mapOf(
+                "thirdAlias" to "cm:number?num"
+            ),
+            "inner_att.with.array[].inner" to mapOf(
+                "fourthAlias" to "cm:number2?num"
+            )
+        )
+        val parsedAtts = reader.read(atts)
+        assertThat(parsedAtts).hasSize(atts.size)
+
+        val attsAsMap = HashMap(writer.writeToMap(parsedAtts))
+        assertThat(attsAsMap).isEqualTo(
+            hashMapOf(
+                "simple" to "simple{firstAlias:cm:name?str}",
+                "inner_att.without.array" to "inner_att.without.array{secondAlias:cm:title?str}",
+                "inner_att.with.array[]" to "inner_att.with.array[]{thirdAlias:cm:number?num}",
+                "inner_att.with.array[].inner" to "inner_att.with.array[].inner{fourthAlias:cm:number2?num}"
+            )
+        )
+
+        assertThat(parsedAtts.find { it.getAliasForValue() == "simple" }).isEqualTo(
+            SchemaAtt.create {
+                withName("simple")
+                withInner(
+                    listOf(
+                        SchemaAtt.create()
+                            .withAlias("firstAlias")
+                            .withName("cm:name")
+                            .withInner(SchemaAtt.create().withName(ScalarType.STR.schema))
+                            .build()
+                    )
+                )
+            }
+        )
+        assertThat(parsedAtts.find { it.getAliasForValue() == "inner_att.without.array" }).isEqualTo(
+            SchemaAtt.create {
+                withName("inner_att")
+                withAlias("inner_att.without.array")
+                withInner(
+                    listOf(
+                        SchemaAtt.create()
+                            .withName("without")
+                            .withInner(
+                                listOf(
+                                    SchemaAtt.create()
+                                        .withName("array")
+                                        .withInner(
+                                            SchemaAtt.create()
+                                                .withAlias("secondAlias")
+                                                .withName("cm:title")
+                                                .withInner(SchemaAtt.create().withName(ScalarType.STR.schema))
+                                                .build()
+                                        )
+                                        .build()
+                                )
+                            )
+                            .build()
+                    )
+                )
+            }
+        )
+        assertThat(parsedAtts.find { it.getAliasForValue() == "inner_att.with.array[]" }).isEqualTo(
+            SchemaAtt.create {
+                withName("inner_att")
+                withAlias("inner_att.with.array[]")
+                withInner(
+                    listOf(
+                        SchemaAtt.create()
+                            .withName("with")
+                            .withInner(
+                                listOf(
+                                    SchemaAtt.create()
+                                        .withName("array")
+                                        .withMultiple(true)
+                                        .withInner(
+                                            SchemaAtt.create()
+                                                .withAlias("thirdAlias")
+                                                .withName("cm:number")
+                                                .withInner(SchemaAtt.create().withName(ScalarType.NUM.schema))
+                                                .build()
+                                        )
+                                        .build()
+                                )
+                            )
+                            .build()
+                    )
+                )
+            }
+        )
+        assertThat(parsedAtts.find { it.getAliasForValue() == "inner_att.with.array[].inner" }).isEqualTo(
+            SchemaAtt.create {
+                withName("inner_att")
+                withAlias("inner_att.with.array[].inner")
+                withInner(
+                    listOf(
+                        SchemaAtt.create()
+                            .withName("with")
+                            .withInner(
+                                listOf(
+                                    SchemaAtt.create()
+                                        .withName("array")
+                                        .withMultiple(true)
+                                        .withInner(
+                                            SchemaAtt.create()
+                                                .withName("inner")
+                                                .withInner(
+                                                    SchemaAtt.create()
+                                                        .withAlias("fourthAlias")
+                                                        .withName("cm:number2")
+                                                        .withInner(SchemaAtt.create().withName(ScalarType.NUM.schema))
+                                                        .build()
+                                                )
+                                                .build()
+                                        )
+                                        .build()
+                                )
+                            )
+                            .build()
+                    )
+                )
+            }
         )
     }
 

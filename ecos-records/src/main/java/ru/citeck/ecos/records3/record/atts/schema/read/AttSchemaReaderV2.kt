@@ -9,7 +9,7 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 class AttSchemaReaderV2(services: RecordsServiceFactory) {
 
     companion object {
-        private val SCALAR_ATTS_LIST: Map<String, List<SchemaAtt>> = ScalarType.values().associate {
+        private val SCALAR_ATTS_LIST = ScalarType.values().associate {
             it.schema to listOf(SchemaAtt.create().withName(it.schema).build())
         }
     }
@@ -94,6 +94,7 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
             var schemaAtt = pathPartToAttBuilder(pathParts.last())
                 .withInner(innerAtts)
                 .build()
+
             for (i in (pathParts.lastIndex - 1) downTo 0) {
 
                 val nextAtt = pathPartToAttBuilder(pathParts[i])

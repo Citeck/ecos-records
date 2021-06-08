@@ -266,6 +266,32 @@ class SchemaTest {
     }
 
     @Test
+    fun attTest2() {
+
+        assertAtt(
+            "path0[].path1.INNER|proc0('arg0','arg1')|proc1('arg0','arg1')",
+            "path0[].path1{INNER}|proc0('arg0','arg1')|proc1('arg0','arg1')",
+            SchemaAtt.create()
+                .withName("path0")
+                .withMultiple(true)
+                .withProcessors(listOf(
+                    AttProcDef("proc0", listOf("arg0", "arg1").map { DataValue.createStr(it) }),
+                    AttProcDef("proc1", listOf("arg0", "arg1").map { DataValue.createStr(it) })
+                )).withInner(SchemaAtt.create()
+                    .withName("path1")
+                    .withInner(SchemaAtt.create {
+                        withName("INNER")
+                        withInner(SchemaAtt.create().withName("?disp").build())
+                    })
+                ).build()
+        )
+
+        assertAtt("name?str", "name{?str}")
+        assertAtt("name.title?str", "name{title{?str}}")
+        assertAtt("name", "name?disp")
+    }
+
+    @Test
     fun attTest() {
         assertAtt("cm:na\\.me", "cm:na\\.me")
         assertAtt("?str", "?str")

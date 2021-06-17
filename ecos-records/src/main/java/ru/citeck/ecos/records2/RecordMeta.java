@@ -101,6 +101,13 @@ public class RecordMeta extends RecordAtts {
         getAttributes().set(name, value);
     }
 
+    @NotNull
+    @Override
+    public RecordMeta withoutSensitiveData() {
+        RecordAtts recordAtts = super.withoutSensitiveData();
+        return new RecordMeta(recordAtts.getId(), recordAtts.getAtts());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

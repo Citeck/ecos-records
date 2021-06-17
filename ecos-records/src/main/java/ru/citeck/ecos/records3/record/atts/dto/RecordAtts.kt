@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.security.HasSensitiveData
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.function.BiConsumer
@@ -15,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty as JackJsonProperty
 
 @Slf4j
-open class RecordAtts() {
+open class RecordAtts() : HasSensitiveData<RecordAtts> {
 
     private var id = RecordRef.EMPTY
     private var attributes = ObjectData.create()
@@ -181,6 +182,14 @@ open class RecordAtts() {
             return
         }
         attributes.set(name, value)
+    }
+
+    override fun withoutSensitiveData(): RecordAtts {
+        val newAtts = getAtts().deepCopy()
+        newAtts.fieldNamesList().forEach { name ->
+            newAtts.set(name, "?")
+        }
+        return RecordAtts(getId(), newAtts)
     }
 
     override fun toString(): String {

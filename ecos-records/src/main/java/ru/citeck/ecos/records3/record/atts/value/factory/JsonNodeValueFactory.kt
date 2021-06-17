@@ -9,7 +9,7 @@ import java.util.ArrayList
 
 class JsonNodeValueFactory : AttValueFactory<JsonNode> {
 
-    override fun getValue(value: JsonNode): AttValue? {
+    override fun getValue(value: JsonNode): AttValue {
 
         return object : AttValue, HasListView<JsonNode> {
 
@@ -30,7 +30,7 @@ class JsonNodeValueFactory : AttValueFactory<JsonNode> {
                 }
             }
 
-            override fun asJson(): Any? {
+            override fun asJson(): Any {
                 return value
             }
 

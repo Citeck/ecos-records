@@ -274,15 +274,20 @@ class SchemaTest {
             SchemaAtt.create()
                 .withName("path0")
                 .withMultiple(true)
-                .withProcessors(listOf(
-                    AttProcDef("proc0", listOf("arg0", "arg1").map { DataValue.createStr(it) }),
-                    AttProcDef("proc1", listOf("arg0", "arg1").map { DataValue.createStr(it) })
-                )).withInner(SchemaAtt.create()
-                    .withName("path1")
-                    .withInner(SchemaAtt.create {
-                        withName("INNER")
-                        withInner(SchemaAtt.create().withName("?disp").build())
-                    })
+                .withProcessors(
+                    listOf(
+                        AttProcDef("proc0", listOf("arg0", "arg1").map { DataValue.createStr(it) }),
+                        AttProcDef("proc1", listOf("arg0", "arg1").map { DataValue.createStr(it) })
+                    )
+                ).withInner(
+                    SchemaAtt.create()
+                        .withName("path1")
+                        .withInner(
+                            SchemaAtt.create {
+                                withName("INNER")
+                                withInner(SchemaAtt.create().withName("?disp").build())
+                            }
+                        )
                 ).build()
         )
 

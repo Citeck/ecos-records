@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.request.error;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.security.HasSensitiveData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,9 @@ public class ErrorUtils {
 
         StringBuilder msg = new StringBuilder();
         if (logErrors(result, msg)) {
+            if (body instanceof HasSensitiveData<?>) {
+                body = ((HasSensitiveData<?>) body).withoutSensitiveData();
+            }
             msg.append("Req Body: ").append(body).append("\n");
             log.error(msg.toString());
             return true;

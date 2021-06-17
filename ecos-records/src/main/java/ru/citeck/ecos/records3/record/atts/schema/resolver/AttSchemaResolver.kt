@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
@@ -366,6 +367,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             } else {
                 arrayListOf(rawValue)
             }
+        } else if (rawValue is ArrayNode) {
+            rawValue.toList()
+        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
+            rawValue.toList()
         } else if (rawValue is Collection<*>) {
             ArrayList(rawValue.filterNotNull())
         } else if (rawValue.javaClass.isArray) {
@@ -408,6 +413,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     }
 
     private class ValueContext(
+        val resolveCtx: ResolveContext?,
         val parent: ValueContext?,
         val value: AttValue,
         private val valueRef: RecordRef,
@@ -418,6 +424,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         companion object {
             val EMPTY = ValueContext(
+                null,
                 null,
                 EmptyAttValue.INSTANCE,
                 RecordRef.EMPTY,
@@ -458,6 +465,22 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
         }
 
+        /**
+         * Get value id to identify it when error occurs. Should not be used in business logic.
+         */
+        private fun getValueIdentifierStrSafe(): String {
+            return if (RecordRef.isNotEmpty(valueRef)) {
+                valueRef
+            } else {
+                try {
+                    value.id
+                } catch (e: Throwable) {
+                    log.error(e) { "value.getId throws exception" }
+                    "ERROR"
+                }
+            }.toString()
+        }
+
         fun resolve(attContext: AttContext): Any? {
 
             val schemaAtt = attContext.getSchemaAtt()
@@ -467,14 +490,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 log.trace("Resolve $schemaAtt")
             }
 
-            val res: Any?
-
-            res = try {
+            val res: Any? = try {
                 resolveImpl(name)
             } catch (e: Throwable) {
                 log.error {
-                    "Attribute resolving error. Attribute: $name Value type: ${value::class.qualifiedName} " +
-                        "Message: ${e.message} RequestId: ${context?.ctxData?.requestId}"
+                    "Attribute resolving error. " +
+                        "Value ID: '${getValueIdentifierStrSafe()}' " +
+                        "Path: '${resolveCtx?.path}' " +
+                        "Attribute: '$name' " +
+                        "Value type: '${value::class.qualifiedName}' " +
+                        "Message: '${e.message}' " +
+                        "RequestId: '${context?.ctxData?.requestId}'"
                 }
                 if (context == null || !context.ctxData.omitErrors) {
                     throw e
@@ -581,6 +607,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         fun toRootValueContext(value: Any, valueRef: RecordRef): ValueContext {
             val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
+                this,
                 null,
                 attValue,
                 valueRef,
@@ -597,6 +624,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
             val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
+                this,
                 parent,
                 attValue,
                 RecordRef.EMPTY,

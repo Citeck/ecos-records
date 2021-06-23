@@ -332,7 +332,8 @@ open class RecordsServiceFactory {
             AttOrElseProcessor(),
             AttJoinProcessor(),
             AttCastProcessor(),
-            AttRegexpGroupProcessor()
+            AttRegexpGroupProcessor(),
+            AttHexProcessor()
         )
     }
 

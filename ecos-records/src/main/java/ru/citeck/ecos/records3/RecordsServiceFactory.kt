@@ -25,7 +25,6 @@ import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
-import ru.citeck.ecos.records2.source.dao.local.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
@@ -43,6 +42,7 @@ import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.InstantValueFactory
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
@@ -216,7 +216,7 @@ open class RecordsServiceFactory {
     protected open fun createDefaultRecordsDao(): List<*> {
         return listOf(
             MetaRecordsDao(this),
-            RecordsSourceRecordsDao(),
+            RecordsSourceRecordsDao(this),
             PredicateRecords(),
             RecordsGroupDao(),
             ru.citeck.ecos.records2.source.common.group.RecordsGroupDao()

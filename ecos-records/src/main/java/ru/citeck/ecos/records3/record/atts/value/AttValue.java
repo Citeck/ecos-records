@@ -6,8 +6,6 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
-import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
-import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
 
 /**
  * Attribute value. Used to get attributes by schema.

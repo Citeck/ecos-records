@@ -6,7 +6,6 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -288,11 +287,4 @@ interface RecordsService {
     fun register(sourceId: String, recordsSource: RecordsDao)
 
     fun unregister(sourceId: String)
-
-    /**
-     * Add info about RecordsDao with specified Id.
-     */
-    fun getSourceInfo(sourceId: String): RecordsDaoInfo?
-
-    fun getSourcesInfo(): List<RecordsDaoInfo>
 }

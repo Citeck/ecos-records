@@ -18,8 +18,8 @@ import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -370,12 +370,12 @@ class RemoteRecordsResolver(
         return restApi.jsonPost(appUrl, body, ObjectNode::class.java)
     }
 
-    fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
+    fun getSourceInfo(sourceId: String): RecordsSourceMeta? {
         // todo
         return null
     }
 
-    fun getSourceInfo(): List<RecordsDaoInfo> = emptyList()
+    fun getSourcesInfo(): List<RecordsSourceMeta> = emptyList()
 
     fun setDefaultAppName(defaultAppName: String) {
         this.defaultAppName = defaultAppName

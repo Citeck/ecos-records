@@ -4,8 +4,8 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 
@@ -23,9 +23,9 @@ interface LocalRecordsResolver {
 
     fun unregister(sourceId: String)
 
-    fun getSourceInfo(sourceId: String): RecordsDaoInfo?
+    fun getSourceInfo(sourceId: String): RecordsSourceMeta?
 
-    fun getSourceInfo(): List<RecordsDaoInfo>
+    fun getSourcesInfo(): List<RecordsSourceMeta>
 
     fun containsDao(id: String): Boolean
 }

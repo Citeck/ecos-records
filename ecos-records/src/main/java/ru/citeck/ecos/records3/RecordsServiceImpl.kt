@@ -8,8 +8,8 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.read.AttReadException
+import ru.citeck.ecos.records3.record.dao.HasSourceIdAliases
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -180,16 +180,15 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         }
     }
 
-    override fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
-        return recordsResolver.getSourceInfo(sourceId)
-    }
-
-    override fun getSourcesInfo(): List<RecordsDaoInfo> {
-        return recordsResolver.getSourceInfo()
-    }
-
     override fun register(recordsSource: RecordsDao) {
         register(recordsSource.getId(), recordsSource)
+        if (recordsSource is HasSourceIdAliases) {
+            recordsSource.getSourceIdAliases().forEach {
+                if (recordsResolver.getSourceInfo(it) == null) {
+                    register(it, recordsSource)
+                }
+            }
+        }
     }
 
     override fun register(sourceId: String, recordsSource: RecordsDao) {

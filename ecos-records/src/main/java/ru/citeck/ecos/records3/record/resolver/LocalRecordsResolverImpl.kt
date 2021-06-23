@@ -29,11 +29,12 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
+import ru.citeck.ecos.records3.record.dao.impl.source.client.HasClientMeta
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateCrossSrcDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
@@ -678,11 +679,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    override fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
+    override fun getSourceInfo(sourceId: String): RecordsSourceMeta? {
 
         val recordsDao = allDao[sourceId] ?: return localRecordsResolverV0.getSourceInfo(sourceId)
 
-        val recordsSourceInfo = RecordsDaoInfo()
+        val recordsSourceInfo = RecordsSourceMeta()
         recordsSourceInfo.id = sourceId
 
         if (recordsDao is SupportsQueryLanguages) {
@@ -698,13 +699,17 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         if (columnsSourceId != null && StringUtils.isNotBlank(columnsSourceId.value)) {
             recordsSourceInfo.columnsSourceId = columnsSourceId.value
         }
+        if (recordsDao is HasClientMeta) {
+            recordsSourceInfo.client = recordsDao.getClientMeta()
+        }
+
         return recordsSourceInfo
     }
 
-    override fun getSourceInfo(): List<RecordsDaoInfo> {
-        val result = ArrayList<RecordsDaoInfo>()
+    override fun getSourcesInfo(): List<RecordsSourceMeta> {
+        val result = ArrayList<RecordsSourceMeta>()
         result.addAll(allDao.keys.mapNotNull { getSourceInfo(it) })
-        result.addAll(localRecordsResolverV0.sourceInfo)
+        result.addAll(localRecordsResolverV0.sourcesInfo)
         return result
     }
 

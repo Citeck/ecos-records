@@ -9,8 +9,8 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -55,11 +55,19 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    fun getAtts(records: List<*>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    fun getAtts(rawRecords: List<*>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
-        if (records.isEmpty()) {
+        if (rawRecords.isEmpty()) {
             return emptyList()
         }
+        val records = rawRecords.map {
+            if (it is String) {
+                RecordRef.valueOf(it)
+            } else {
+                it
+            }
+        }
+
         if (remote == null) {
             return doWithSchema(attributes) { atts -> local.getAtts(records, atts, rawAtts) }
         }
@@ -97,9 +105,8 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         refsBySource.forEach { (sourceId, recs) ->
 
             val refs: List<RecordRef> = recs.map { it.value }
-            val atts: List<RecordAtts>
 
-            atts = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
+            val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
                 doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
             } else if (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull())) {
                 remote.getAtts(refs, attributes, rawAtts)
@@ -146,7 +153,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    fun getSourceInfo(sourceId: String): RecordsDaoInfo? {
+    fun getSourceInfo(sourceId: String): RecordsSourceMeta? {
         return if (isGatewayMode || isRemoteSourceId(sourceId)) {
             remote?.getSourceInfo(sourceId)
         } else {
@@ -154,9 +161,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    fun getSourceInfo(): List<RecordsDaoInfo> {
-        val result = ArrayList(local.getSourceInfo())
-        result.addAll(remote?.getSourceInfo() ?: emptyList())
+    fun getSourcesInfo(): List<RecordsSourceMeta> {
+        val result = ArrayList(local.getSourcesInfo())
+        result.addAll(remote?.getSourcesInfo() ?: emptyList())
         return result
     }
 

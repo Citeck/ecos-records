@@ -14,6 +14,8 @@ import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
+import ru.citeck.ecos.records3.record.dao.impl.source.client.ClientMeta
+import ru.citeck.ecos.records3.record.dao.impl.source.client.HasClientMeta
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -27,10 +29,12 @@ open class RecordsDaoProxy(
     RecordsQueryResDao,
     RecordsAttsDao,
     RecordsMutateDao,
-    RecordsDeleteDao {
+    RecordsDeleteDao,
+    HasClientMeta {
 
     private val attsProc = processor as? AttsProxyProcessor
     private val mutProc = processor as? MutateProxyProcessor
+    private val clientMetaProc = processor as? HasClientMeta
 
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
@@ -132,6 +136,10 @@ open class RecordsDaoProxy(
         if (processor is ServiceFactoryAware) {
             processor.setRecordsServiceFactory(serviceFactory)
         }
+    }
+
+    override fun getClientMeta(): ClientMeta? {
+        return clientMetaProc?.getClientMeta()
     }
 
     private class ProxyRecVal(

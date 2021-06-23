@@ -26,7 +26,7 @@ import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
-import ru.citeck.ecos.records3.record.dao.RecordsDaoInfo;
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 
@@ -441,14 +441,14 @@ public class LocalRecordsResolverV0 {
     }
 
     @Nullable
-    public RecordsDaoInfo getSourceInfo(@NotNull String sourceId) {
+    public RecordsSourceMeta getSourceInfo(@NotNull String sourceId) {
 
         RecordsDao recordsDao = allDao.get(sourceId);
         if (recordsDao == null) {
             return null;
         }
 
-        RecordsDaoInfo recordsSourceInfo = new RecordsDaoInfo();
+        RecordsSourceMeta recordsSourceInfo = new RecordsSourceMeta();
         recordsSourceInfo.setId(sourceId);
 
         if (recordsDao instanceof RecordsQueryBaseDao) {
@@ -473,7 +473,7 @@ public class LocalRecordsResolverV0 {
     }
 
     @NotNull
-    public List<RecordsDaoInfo> getSourceInfo() {
+    public List<RecordsSourceMeta> getSourcesInfo() {
         return allDao.keySet()
             .stream()
             .map(this::getSourceInfo)

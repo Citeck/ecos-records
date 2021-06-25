@@ -10,7 +10,8 @@ class AttValueTest {
     @Test
     fun test() {
 
-        val record = ObjectData.create("""
+        val record = ObjectData.create(
+            """
             {
             "field0": {
                 "field1": {
@@ -20,7 +21,8 @@ class AttValueTest {
                 }
             }
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         val records = RecordsServiceFactory().recordsServiceV1
 

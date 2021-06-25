@@ -21,7 +21,7 @@
 
         <jackson.version>2.3.2</jackson.version>
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
-        <ecos.commons.version>2.2.3</ecos.commons.version>
+        <ecos.commons.version>2.2.9</ecos.commons.version>
 
         <junit.version>5.4.0</junit.version>
         <slf4j.version>1.7.28</slf4j.version>

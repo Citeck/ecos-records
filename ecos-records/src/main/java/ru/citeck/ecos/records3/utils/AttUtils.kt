@@ -33,7 +33,7 @@ object AttUtils {
         try {
             id = value.id
         } catch (ignore: Exception) {
-            //do nothing
+            // do nothing
         }
         log.error("Attribute error. Value id: '$id' path: '${AttContext.getCurrentAttPath()}' ($msg)")
     }

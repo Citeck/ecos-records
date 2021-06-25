@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
+import ru.citeck.ecos.records3.utils.AttUtils;
 
 /**
  * Attribute value. Used to get attributes by schema.
@@ -40,7 +41,15 @@ public interface AttValue {
         if (text == null || StringUtils.isBlank(text)) {
             return null;
         }
-        return Double.parseDouble(text);
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            AttUtils.INSTANCE.logError(
+                this,
+                "Number format exception: " + e.getMessage()
+            );
+            return null;
+        }
     }
 
     @Nullable

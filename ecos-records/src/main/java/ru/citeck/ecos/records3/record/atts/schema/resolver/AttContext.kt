@@ -60,6 +60,11 @@ class AttContext {
         }
 
         @JvmStatic
+        fun getCurrentAttPath(): String {
+            return current.get()?.getAttPath() ?: ""
+        }
+
+        @JvmStatic
         fun <T> doWithCtx(serviceFactory: RecordsServiceFactory, action: (AttContext) -> T): T {
 
             var isOwner = false
@@ -84,7 +89,9 @@ class AttContext {
     }
 
     private lateinit var serviceFactory: RecordsServiceFactory
+
     private var schemaAtt: SchemaAtt = EMPTY
+    private var attPath: String = ""
 
     fun getSchemaAtt(): SchemaAtt {
         return schemaAtt
@@ -92,5 +99,13 @@ class AttContext {
 
     fun setSchemaAtt(schemaAtt: SchemaAtt) {
         this.schemaAtt = schemaAtt
+    }
+
+    fun getAttPath(): String {
+        return attPath
+    }
+
+    fun setAttPath(path: String) {
+        this.attPath = path
     }
 }

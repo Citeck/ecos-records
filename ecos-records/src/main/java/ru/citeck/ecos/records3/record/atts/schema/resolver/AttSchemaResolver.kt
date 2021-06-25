@@ -238,6 +238,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
             context.path = attPath
             attContext.setSchemaAtt(att)
+            attContext.setAttPath(attPath)
 
             var attValue: Any?
             var attName = att.name
@@ -332,6 +333,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
         context.path = currentValuePath
         attContext.setSchemaAtt(currentSchemaAtt)
+        attContext.setAttPath(currentValuePath)
 
         return result
     }

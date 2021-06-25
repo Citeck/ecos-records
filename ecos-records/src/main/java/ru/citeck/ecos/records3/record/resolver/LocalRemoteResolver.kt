@@ -39,6 +39,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val atts: List<SchemaAtt> = reader.read(attributes)
         return AttContext.doWithCtx(services) { attContext ->
             val schemaAttBefore = attContext.getSchemaAtt()
+            val attPathBefore = attContext.getAttPath()
             if (atts.isNotEmpty()) {
                 attContext.setSchemaAtt(
                     SchemaAtt.create()
@@ -46,11 +47,13 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
                         .withInner(atts)
                         .build()
                 )
+                attContext.setAttPath("")
             }
             try {
                 action.invoke(atts)
             } finally {
                 attContext.setSchemaAtt(schemaAttBefore)
+                attContext.setAttPath(attPathBefore)
             }
         }
     }

@@ -8,6 +8,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -74,19 +75,30 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         Pair(RecordsDeleteDao::class.java, deleteDao)
     )
 
-    private val attSchemaWriter = services.attSchemaWriter
     private val queryLangService = services.queryLangService
     private val recordsAttsService = services.recordsAttsService
     private val localRecordsResolverV0 = services.localRecordsResolverV0
+    private lateinit var recordsTemplateService: RecordsTemplateService
 
     private val converter: RecsDaoConverter = RecsDaoConverter()
 
     private val currentApp = services.properties.appName
     private val jobExecutor = services.jobExecutor
 
-    override fun query(queryArg: RecordsQuery, attributes: List<SchemaAtt>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
+    override fun query(
+        queryArg: RecordsQuery,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): RecsQueryRes<RecordAtts> {
 
         var query = queryArg
+        if (query.language == PredicateService.LANGUAGE_PREDICATE) {
+            val queryRes = recordsTemplateService.resolve(query.query, RecordRef.create("meta", ""))
+            if (!queryRes.isNull()) {
+                query = query.copy().withQuery(queryRes).build()
+            }
+        }
+
         val context: RequestContext = RequestContext.getCurrentNotNull()
         var sourceId = query.sourceId
         val appDelimIdx = sourceId.indexOf('/')
@@ -724,5 +736,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     override fun containsDao(id: String): Boolean {
         return allDao.containsKey(id)
+    }
+
+    fun setRecordsTemplateService(recordsTemplateService: RecordsTemplateService) {
+        this.recordsTemplateService = recordsTemplateService
     }
 }

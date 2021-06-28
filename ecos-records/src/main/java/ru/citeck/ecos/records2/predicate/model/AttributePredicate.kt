@@ -7,6 +7,11 @@ abstract class AttributePredicate : Predicate {
     @JsonProperty("att")
     private var attribute: String = ""
 
+    @JsonProperty("a")
+    fun setAtt(attribute: String?) {
+        setAttribute(attribute)
+    }
+
     fun setAttribute(attribute: String?) {
         this.attribute = attribute ?: ""
     }

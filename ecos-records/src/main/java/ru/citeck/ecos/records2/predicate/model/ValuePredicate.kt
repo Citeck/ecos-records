@@ -107,6 +107,11 @@ class ValuePredicate : AttributePredicate {
         this.value = if (value is DataValue) value else DataValue.create(value)
     }
 
+    @JsonProperty("v")
+    fun setVal(value: Any?) {
+        setValue(value)
+    }
+
     override fun <T : Predicate> copy(): T {
         val predicate = ValuePredicate()
         predicate.setAttribute(getAttribute())

@@ -16,6 +16,11 @@ abstract class ComposedPredicate : Predicate {
         this.predicates = ArrayList(predicates ?: emptyList())
     }
 
+    @JsonProperty("v")
+    fun setVal(predicates: List<Predicate>?) {
+        setPredicates(predicates)
+    }
+
     fun addPredicate(predicate: Predicate) {
         if (predicates == null) {
             predicates = ArrayList()

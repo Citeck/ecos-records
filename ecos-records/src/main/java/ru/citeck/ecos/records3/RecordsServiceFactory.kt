@@ -111,6 +111,7 @@ open class RecordsServiceFactory {
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
+    private var tmpLocalRecordsResolver: LocalRecordsResolver? = null
 
     private var recordTypeServiceImpl: RecordTypeService? = null
 
@@ -232,7 +233,15 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createLocalRecordsResolver(): LocalRecordsResolver {
-        return LocalRecordsResolverImpl(this)
+        val tmp = tmpLocalRecordsResolver
+        if (tmp != null) {
+            return tmp
+        }
+        val newResolver = LocalRecordsResolverImpl(this)
+        tmpLocalRecordsResolver = newResolver
+        newResolver.setRecordsTemplateService(recordsTemplateService)
+        tmpLocalRecordsResolver = null
+        return newResolver
     }
 
     protected open fun createLocalRecordsResolverV0(): LocalRecordsResolverV0 {

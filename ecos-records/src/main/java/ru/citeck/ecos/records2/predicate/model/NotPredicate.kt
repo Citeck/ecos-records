@@ -37,6 +37,11 @@ class NotPredicate : Predicate {
         this.predicate = predicate
     }
 
+    @JsonProperty("v")
+    fun setVal(predicate: Predicate) {
+        setPredicate(predicate)
+    }
+
     override fun <T : Predicate> copy(): T {
         @Suppress("UNCHECKED_CAST")
         return NotPredicate(predicate.copy()) as T

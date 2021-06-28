@@ -47,7 +47,7 @@ data class RecordsQuery(
     }
 
     fun <T : Any> getQuery(type: Class<T>): T {
-        var result = Json.mapper.convert(query, type)
+        var result = getQueryOrNull(type)
         if (result == null) {
             log.warn("Can't convert query to type $type. Query: $query")
             result = type.newInstance()

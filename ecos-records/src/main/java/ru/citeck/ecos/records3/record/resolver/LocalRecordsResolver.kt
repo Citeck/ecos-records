@@ -28,4 +28,6 @@ interface LocalRecordsResolver {
     fun getSourcesInfo(): List<RecordsSourceMeta>
 
     fun containsDao(id: String): Boolean
+
+    fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T?
 }

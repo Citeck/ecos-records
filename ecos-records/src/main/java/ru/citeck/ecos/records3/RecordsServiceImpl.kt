@@ -198,4 +198,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     override fun unregister(sourceId: String) {
         recordsResolver.unregister(sourceId)
     }
+
+    override fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
+        return recordsResolver.getRecordsDao(sourceId, type)
+    }
 }

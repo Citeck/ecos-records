@@ -116,11 +116,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         if (query.groupBy.isNotEmpty()) {
 
-            val dao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
+            val dao = getRecordsDaoPair(sourceId, RecordsQueryResDao::class.java)
 
             if (dao == null || dao.first !is RecsGroupQueryDao) {
 
-                val groupsSource = needRecordsDao(RecordsGroupDao.ID, RecordsQueryResDao::class.java)
+                val groupsSource = needRecordsDaoPair(RecordsGroupDao.ID, RecordsQueryResDao::class.java)
                 val convertedQuery = updateQueryLanguage(query, groupsSource)
 
                 if (convertedQuery == null) {
@@ -155,7 +155,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             if (DistinctQuery.LANGUAGE == query.language) {
 
-                val recsQueryDao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
+                val recsQueryDao = getRecordsDaoPair(sourceId, RecordsQueryResDao::class.java)
                 val languages = (recsQueryDao?.first as? SupportsQueryLanguages)?.getSupportedLanguages() ?: emptyList()
                 if (!languages.contains(DistinctQuery.LANGUAGE)) {
                     val distinctQuery: DistinctQuery = query.getQuery(DistinctQuery::class.java)
@@ -171,7 +171,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 }
             } else {
 
-                val dao = getRecordsDao(sourceId, RecordsQueryResDao::class.java)
+                val dao = getRecordsDaoPair(sourceId, RecordsQueryResDao::class.java)
 
                 if (dao == null) {
 
@@ -487,7 +487,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         val results = ArrayList<ValWithIdx<RecordAtts>>()
 
-        val recordsDao = getRecordsDao(sourceId, RecordsAttsDao::class.java)
+        val recordsDao = getRecordsDaoPair(sourceId, RecordsAttsDao::class.java)
 
         if (recordsDao == null) {
 
@@ -579,7 +579,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 sourceId = "$appName/$sourceId"
             }
 
-            val dao = getRecordsDao(sourceId, RecordsMutateCrossSrcDao::class.java)
+            val dao = getRecordsDaoPair(sourceId, RecordsMutateCrossSrcDao::class.java)
 
             if (dao == null) {
 
@@ -632,7 +632,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 sourceId = "$appName/$sourceId"
             }
 
-            val dao = getRecordsDao(sourceId, RecordsDeleteDao::class.java)
+            val dao = getRecordsDaoPair(sourceId, RecordsDeleteDao::class.java)
             if (dao == null) {
                 val deletion = RecordsDeletion()
                 deletion.records = listOf(record)
@@ -725,17 +725,26 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result
     }
 
-    private fun <T : RecordsDao> getRecordsDao(sourceId: String, type: Class<T>): Pair<RecordsDao, T>? {
+    private fun <T : RecordsDao> getRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T>? {
         @Suppress("UNCHECKED_CAST")
         return daoMapByType[type]?.get(sourceId) as? Pair<RecordsDao, T>?
     }
 
-    private fun <T : RecordsDao> needRecordsDao(sourceId: String, type: Class<T>): Pair<RecordsDao, T> {
-        return getRecordsDao(sourceId, type) ?: error("Records source is not found: $sourceId")
+    private fun <T : RecordsDao> needRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T> {
+        return getRecordsDaoPair(sourceId, type) ?: error("Records source is not found: $sourceId")
     }
 
     override fun containsDao(id: String): Boolean {
         return allDao.containsKey(id)
+    }
+
+    override fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
+        val dao = allDao[sourceId] ?: return null
+        return if (type.isInstance(dao)) {
+            type.cast(dao)
+        } else {
+            null
+        }
     }
 
     fun setRecordsTemplateService(recordsTemplateService: RecordsTemplateService) {

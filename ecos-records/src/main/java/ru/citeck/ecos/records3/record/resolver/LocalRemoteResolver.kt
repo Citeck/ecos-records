@@ -196,4 +196,8 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     fun unregister(sourceId: String) {
         local.unregister(sourceId)
     }
+
+    fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
+        return local.getRecordsDao(sourceId, type)
+    }
 }

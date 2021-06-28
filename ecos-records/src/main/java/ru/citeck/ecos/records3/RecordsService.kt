@@ -287,4 +287,6 @@ interface RecordsService {
     fun register(sourceId: String, recordsSource: RecordsDao)
 
     fun unregister(sourceId: String)
+
+    fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T?
 }

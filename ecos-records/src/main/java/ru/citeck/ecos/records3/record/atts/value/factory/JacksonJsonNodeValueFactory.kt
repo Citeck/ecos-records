@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.HasListView
@@ -52,6 +53,13 @@ class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
                 } else {
                     listOf(value)
                 }
+            }
+
+            override fun getAs(type: String?): Any? {
+                if (type == "mltext") {
+                    return Json.mapper.convert(value, MLText::class.java)
+                }
+                return null
             }
         }
     }

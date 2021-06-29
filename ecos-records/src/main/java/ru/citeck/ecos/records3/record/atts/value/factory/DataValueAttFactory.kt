@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.HasListView
@@ -44,6 +45,13 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
                     return value.toList()
                 }
                 return listOf(value)
+            }
+
+            override fun getAs(type: String?): Any? {
+                if (type == "mltext") {
+                    return value.getAs(MLText::class.java)
+                }
+                return null
             }
         }
     }

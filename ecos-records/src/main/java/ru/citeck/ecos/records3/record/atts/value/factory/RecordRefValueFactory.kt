@@ -58,7 +58,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                     attsMap["_type"] = "_type?id"
                 } else if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
 
-                    schemaWriter.write(inner, sb, true)
+                    schemaWriter.write(inner, sb, false)
                     val mirrorScalarType = ScalarType.getByMirrorAtt(innerName)
                     if (mirrorScalarType != null) {
                         scalarMirrorAtts.add(mirrorScalarType)

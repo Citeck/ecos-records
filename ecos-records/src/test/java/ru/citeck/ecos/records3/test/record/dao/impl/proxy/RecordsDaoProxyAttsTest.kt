@@ -16,7 +16,6 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class RecordsDaoProxyAttsTest {
 
@@ -128,7 +127,11 @@ class RecordsDaoProxyAttsTest {
                 "linkedRef?str",
                 "linkedRef.linkedValue",
                 "linkedRef.linkedValue?str",
-                "linkedRef.linkedValue?disp"
+                "linkedRef.linkedValue?disp",
+                "linkedRef.ref?id",
+                "linkedRef.ref?assoc",
+                // do not add "linkedRef.ref.ref?id"
+                "linkedRef.ref.ref?assoc"
             ),
             getAtts
         )
@@ -140,17 +143,16 @@ class RecordsDaoProxyAttsTest {
         nullable: List<String> = emptyList()
     ) {
 
-        val expected = getAtts.invoke(TARGET_ID, atts)
+        val expectedRecordsAtts = getAtts.invoke(TARGET_ID, atts)
         val actual = getAtts.invoke(PROXY_ID, atts)
 
-        assertEquals(expected, actual)
-        assertTrue {
-            expected.all { rec ->
-                atts.all {
-                    nullable.contains(it) || rec.get(it).isNotNull()
-                }
-            }
+        assertEquals(expectedRecordsAtts, actual)
+
+        val problemAtts = hashSetOf<String>()
+        expectedRecordsAtts.forEach { rec ->
+            problemAtts.addAll(atts.filter { !nullable.contains(it) && rec.get(it).isNull() })
         }
+        assertEquals(hashSetOf(), problemAtts)
     }
 
     class ValueDto {
@@ -166,6 +168,7 @@ class RecordsDaoProxyAttsTest {
     class LinkedDto {
 
         val linkedValue = "linked-str-value"
+        val ref = RecordRef.valueOf("$TARGET_ID@linked")
 
         fun getDisplayName(): String {
             return "DisplayName"

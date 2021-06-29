@@ -47,5 +47,4 @@ class GetAsMlTextTest {
             }.isEqualTo(DataValue.create(expected))
         }
     }
-
 }

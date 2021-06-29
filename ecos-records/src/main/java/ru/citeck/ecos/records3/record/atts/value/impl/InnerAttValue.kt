@@ -80,7 +80,8 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
     }
 
     override fun getId(): Any? {
-        return getScalar(value, "?id") { Json.mapper.toJava(it) }
+        val id = getScalar(value, "?id") { Json.mapper.toJava(it) }
+        return id ?: getScalar(value, "?assoc") { Json.mapper.toJava(it) }
     }
 
     override fun asDouble(): Double? {

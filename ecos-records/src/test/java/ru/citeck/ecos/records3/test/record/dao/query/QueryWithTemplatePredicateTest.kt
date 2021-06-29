@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.dao.query
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -48,20 +47,36 @@ class QueryWithTemplatePredicateTest {
         })
 
         queries.clear()
-        records.query(RecordsQuery.create {
-            withSourceId("test")
-            withQuery(Predicates.eq("att", "\${att}"))
-        })
-
-        assertThat(queries).containsExactly(Predicates.eq("att", mixinValue))
-
-        queries.clear()
-        records.query(RecordsQuery.create {
-            withSourceId("test")
-            withLanguage(PredicateService.LANGUAGE_PREDICATE)
-            withQuery("""{"t":"and","v":"${"\${pred[]?json}"}"}""")
-        })
+        records.query(
+            RecordsQuery.create {
+                withSourceId("test")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery("""{"t":"and","v":"${"\${pred[]?json}"}"}""")
+            }
+        )
 
         assertThat(queries).containsExactly(Predicates.and(predValue))
+
+        val testWithSingleAtt = { att: String, expected: DataValue ->
+            queries.clear()
+            records.query(
+                RecordsQuery.create {
+                    withSourceId("test")
+                    withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                    withQuery(Predicates.eq("att", att))
+                }
+            )
+            assertThat(queries).containsExactly(Predicates.eq("att", expected))
+        }
+
+        testWithSingleAtt("\${att}", DataValue.createStr(mixinValue))
+        testWithSingleAtt("prefix-\${att}", DataValue.create("prefix-$mixinValue"))
+        testWithSingleAtt("\${att}-postfix", DataValue.create("$mixinValue-postfix"))
+        testWithSingleAtt("prefix-\${att}-postfix", DataValue.create("prefix-$mixinValue-postfix"))
+
+        testWithSingleAtt("\${unknown}", DataValue.NULL)
+        testWithSingleAtt("\${unknown!}", DataValue.createStr(""))
+        testWithSingleAtt("\${unknown!'or-else'}", DataValue.createStr("or-else"))
+        testWithSingleAtt("\${unknown!false}", DataValue.create(false))
     }
 }

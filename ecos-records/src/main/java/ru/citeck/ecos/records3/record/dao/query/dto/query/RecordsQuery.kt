@@ -7,6 +7,8 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.request.query.SortBy
 import java.util.*
 import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
@@ -144,6 +146,9 @@ data class RecordsQuery(
         }
 
         fun withQuery(query: Any?): Builder {
+            if (language == "" && query is Predicate) {
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            }
             this.query = query as? DataValue ?: DataValue.create(query)
             return this
         }

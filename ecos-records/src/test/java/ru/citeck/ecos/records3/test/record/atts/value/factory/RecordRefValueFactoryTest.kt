@@ -14,9 +14,8 @@ class RecordRefValueFactoryTest {
     @Test
     fun test() {
 
-        val testRecord1 = TestRecord1()
-
         val test1Ref = RecordRef.valueOf("test@test1")
+        val testRecord1 = TestRecord1(test1Ref)
 
         val services = RecordsServiceFactory()
         val records = services.recordsServiceV1
@@ -34,13 +33,16 @@ class RecordRefValueFactoryTest {
         assertEquals(testRecord1.asDouble(), records.getAtt(testRef, "ref?num").asDouble())
         assertEquals(testRecord1.asBoolean(), records.getAtt(testRef, "ref?bool").asBoolean())
         assertEquals(DataValue.create(testRecord1.asJson()), records.getAtt(testRef, "ref?json"))
+
+        assertEquals(records.getAtt(testRef, "ref.ref?id"), records.getAtt(testRef, "ref.ref?assoc"))
+        assertEquals(records.getAtt(testRef, "ref.ref.ref?id"), records.getAtt(testRef, "ref.ref.ref?assoc"))
     }
 
     class TestRecord0(
         val ref: RecordRef
     )
 
-    class TestRecord1 : AttValue {
+    class TestRecord1(val ref: RecordRef) : AttValue {
 
         override fun getId(): Any? {
             return "abc"
@@ -64,6 +66,13 @@ class RecordRefValueFactoryTest {
 
         override fun getType(): RecordRef {
             return RecordRef.valueOf("abc@def")
+        }
+
+        override fun getAtt(name: String?): Any? {
+            if (name == "ref") {
+                return ref
+            }
+            return null
         }
     }
 }

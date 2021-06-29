@@ -447,9 +447,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 } else if (id is DataValue) {
                     RecordRef.create(ctxSourceId, id.asText())
                 } else if (id is String) {
-                    val sourceDelimIdx = id.indexOf(RecordRef.SOURCE_DELIMITER)
-                    val appNameDelimIdx = id.indexOf(RecordRef.APP_NAME_DELIMITER)
-                    if (sourceDelimIdx > 0 && appNameDelimIdx > 0 && appNameDelimIdx < sourceDelimIdx) {
+                    if (id.contains(RecordRef.SOURCE_DELIMITER)) {
                         RecordRef.valueOf(id)
                     } else {
                         RecordRef.create(ctxSourceId, id)

@@ -43,6 +43,8 @@ class AttProcReader {
                 } else if (orElsePart != "null" &&
                     orElsePart != "true" &&
                     orElsePart != "false" &&
+                    orElsePart[0] != '[' &&
+                    orElsePart[0] != '{' &&
                     !Character.isDigit(orElsePart[0])
                 ) {
                     orElsePart = (
@@ -100,6 +102,7 @@ class AttProcReader {
                     it == "null" -> DataValue.NULL
                     it == "true" -> DataValue.TRUE
                     it == "false" -> DataValue.FALSE
+                    it[0] == '[' || it[0] == '{' -> DataValue.create(it)
                     Character.isDigit(it[0]) -> DataValue.create(it.toDouble())
                     else -> DataValue.createStr(AttStrUtils.removeQuotes(it))
                 }

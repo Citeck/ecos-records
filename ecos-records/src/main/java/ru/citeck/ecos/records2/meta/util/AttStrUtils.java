@@ -29,9 +29,14 @@ public class AttStrUtils {
         }
         char ch = str.charAt(0);
         int lastIdx = str.length() - 1;
-        return (ch == '"' || ch == '\'')
-            && str.charAt(lastIdx) == ch
-            && indexOf(str, String.valueOf(ch), 1) == lastIdx;
+        if ((ch != '"' && ch != '\'') || str.charAt(lastIdx) != ch) {
+            return false;
+        }
+        int idx = str.indexOf(ch, 1);
+        while (idx != -1 && idx != lastIdx && isEscapedChar(str, idx)) {
+            idx = str.indexOf(ch, idx + 1);
+        }
+        return idx == lastIdx;
     }
 
     public static String removeEscaping(String str) {
@@ -223,7 +228,7 @@ public class AttStrUtils {
     }
 
     private static boolean isOpenContextChar(char ch) {
-        return ch == '\'' || ch == '"' || ch == '(' || ch == '{';
+        return ch == '\'' || ch == '"' || ch == '(' || ch == '{' || ch == '[';
     }
 
     private static boolean isCloseContextChar(char openChar, char ch) {
@@ -236,7 +241,23 @@ public class AttStrUtils {
         if (openChar == '{') {
             return ch == '}';
         }
+        if (openChar == '[') {
+            return ch == ']';
+        }
         return false;
+    }
+
+    private static boolean isEscapedChar(String value, int idx) {
+        if (idx < 0 || idx >= value.length()) {
+            return false;
+        }
+        int backSlashesCount = 0;
+        int backSlashesIdx = idx;
+        while (backSlashesIdx > 0 && value.charAt(backSlashesIdx - 1) == '\\') {
+            backSlashesCount++;
+            backSlashesIdx--;
+        }
+        return backSlashesCount % 2 == 1;
     }
 
     @Data

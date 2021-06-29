@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import java.util.concurrent.ConcurrentHashMap
@@ -15,6 +16,7 @@ class StringValueFactory : AttValueFactory<String> {
 
     init {
         converters["ref"] = { RecordRef.valueOf(it) }
+        converters["mltext"] = { MLText(it) }
     }
 
     override fun getValue(value: String): AttValue? {

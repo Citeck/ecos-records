@@ -32,7 +32,7 @@ class NewMixinWithLegacyDaoTest {
         assertEquals("", value)
 
         val mixinValue = "MIXIN_VALUE"
-        legacyDao.addAttributesMixin(object: AttMixin {
+        legacyDao.addAttributesMixin(object : AttMixin {
             override fun getAtt(path: String, value: AttValueCtx): Any? {
                 if (path == "mixinValue") {
                     return mixinValue

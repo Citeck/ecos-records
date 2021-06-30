@@ -37,7 +37,13 @@ public class JobExecutor {
         }
 
         if (executor == null) {
-            executor = Executors.newSingleThreadScheduledExecutor();
+            ScheduledExecutorService newScheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Shutdown hook triggered");
+                jobs.forEach(j -> j.setEnabled(false));
+                newScheduledExecutor.shutdown();
+            }));
+            executor = newScheduledExecutor;
         }
         this.executor = executor;
 

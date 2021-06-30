@@ -121,15 +121,28 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
     }
 
     private fun readInnerAtts(innerAttsStr: String): List<SchemaAtt> {
+
         return split(innerAttsStr, ',').map {
+
             val aliasDelimIdx = AttStrUtils.indexOf(it, ':')
             val dotIdx = AttStrUtils.indexOf(it, '.')
-            if (aliasDelimIdx == -1) {
-                read("", it)
-            } else if (dotIdx != -1 && dotIdx < aliasDelimIdx) {
+
+            if (aliasDelimIdx == -1 || dotIdx != -1 && dotIdx < aliasDelimIdx) {
+
+                val dotsMaxEscapeIdx = if (dotIdx != -1) {
+                    dotIdx
+                } else {
+                    val braceIdx = it.indexOf("{")
+                    if (braceIdx != -1) {
+                        braceIdx
+                    } else {
+                        it.length
+                    }
+                }
+
                 var escapedDotsIdx = AttStrUtils.indexOf(it, "\\:")
                 var attWithoutEscapedDots = it
-                while (escapedDotsIdx != -1 && escapedDotsIdx < dotIdx) {
+                while (escapedDotsIdx != -1 && escapedDotsIdx < dotsMaxEscapeIdx) {
                     attWithoutEscapedDots = attWithoutEscapedDots.substring(0, escapedDotsIdx) +
                         attWithoutEscapedDots.substring(escapedDotsIdx + 1)
                     escapedDotsIdx = AttStrUtils.indexOf(attWithoutEscapedDots, "\\:")

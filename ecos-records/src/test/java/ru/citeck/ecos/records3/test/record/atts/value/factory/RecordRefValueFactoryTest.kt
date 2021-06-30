@@ -36,6 +36,21 @@ class RecordRefValueFactoryTest {
 
         assertEquals(records.getAtt(testRef, "ref.ref?id"), records.getAtt(testRef, "ref.ref?assoc"))
         assertEquals(records.getAtt(testRef, "ref.ref.ref?id"), records.getAtt(testRef, "ref.ref.ref?assoc"))
+
+        val idValue = records.getAtt(testRef, "ref?id")
+
+        val res = records.getAtts(
+            testRef,
+            mapOf(
+                "first" to "ref.ref:withDots.ref:withDots?id",
+                "second" to "ref.ref:withDots.ref:withDots?id"
+            )
+        )
+        val expected = ObjectData.create()
+        expected.set("first", idValue)
+        expected.set("second", idValue)
+
+        assertEquals(expected, res.getAtts())
     }
 
     class TestRecord0(
@@ -70,6 +85,9 @@ class RecordRefValueFactoryTest {
 
         override fun getAtt(name: String?): Any? {
             if (name == "ref") {
+                return ref
+            }
+            if (name == "ref:withDots") {
                 return ref
             }
             return null

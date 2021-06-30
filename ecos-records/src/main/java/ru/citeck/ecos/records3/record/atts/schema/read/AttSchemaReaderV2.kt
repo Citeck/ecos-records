@@ -123,8 +123,18 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
     private fun readInnerAtts(innerAttsStr: String): List<SchemaAtt> {
         return split(innerAttsStr, ',').map {
             val aliasDelimIdx = AttStrUtils.indexOf(it, ':')
+            val dotIdx = AttStrUtils.indexOf(it, '.')
             if (aliasDelimIdx == -1) {
                 read("", it)
+            } else if (dotIdx != -1 && dotIdx < aliasDelimIdx) {
+                var escapedDotsIdx = AttStrUtils.indexOf(it, "\\:")
+                var attWithoutEscapedDots = it
+                while (escapedDotsIdx != -1 && escapedDotsIdx < dotIdx) {
+                    attWithoutEscapedDots = attWithoutEscapedDots.substring(0, escapedDotsIdx) +
+                        attWithoutEscapedDots.substring(escapedDotsIdx + 1)
+                    escapedDotsIdx = AttStrUtils.indexOf(attWithoutEscapedDots, "\\:")
+                }
+                read("", attWithoutEscapedDots)
             } else {
                 val alias = it.substring(0, aliasDelimIdx).trim()
                 val attribute = it.substring(aliasDelimIdx + 1).trim()

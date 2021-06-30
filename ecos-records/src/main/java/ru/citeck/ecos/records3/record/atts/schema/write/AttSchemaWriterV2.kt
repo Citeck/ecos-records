@@ -15,14 +15,14 @@ class AttSchemaWriterV2 : AttSchemaWriter {
         write(attribute, out, false)
     }
 
-    override fun write(attribute: SchemaAtt, out: StringBuilder, inBraces: Boolean) {
+    override fun write(attribute: SchemaAtt, out: StringBuilder, firstInBraces: Boolean) {
 
-        if (inBraces && attribute.alias.isNotEmpty() && attribute.alias != attribute.name) {
+        if (firstInBraces && attribute.alias.isNotEmpty() && attribute.alias != attribute.name) {
             writeAndEscape(attribute.alias, out, ":,")
             out.append(':')
             writeAndEscape(attribute.name, out, ",.")
         } else {
-            writeAndEscape(attribute.name, out, if (inBraces) { ":,." } else { ",." })
+            writeAndEscape(attribute.name, out, if (firstInBraces) { ":,." } else { ",." })
         }
         if (attribute.multiple) {
             out.append("[]")
@@ -35,7 +35,7 @@ class AttSchemaWriterV2 : AttSchemaWriter {
                 val innerAtt = attribute.inner[0]
                 if (!innerAtt.isScalar()) {
                     out.append('.')
-                    write(attribute.inner[0], out, inBraces)
+                    write(attribute.inner[0], out, false)
                 } else {
                     if (innerAtt.name != ScalarType.DISP.schema) {
                         out.append(innerAtt.name)

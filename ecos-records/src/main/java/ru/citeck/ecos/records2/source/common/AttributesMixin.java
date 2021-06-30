@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * @param <ReqMetaT> Map&lt;String, String&gt; or DTO Class
  * @param <ResMetaT> Map&lt;String, String&gt; or DTO Class or RecordMeta
  */
-@Deprecated(message = "Replace with AttMixin")
+@Deprecated(message = "Replace with AttMixin. You can use new mixins with old Records DAO!")
 public interface AttributesMixin<ReqMetaT, ResMetaT> {
 
     List<String> getAttributesList();

@@ -27,6 +27,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.mixin.MixinContext;
 
 import java.util.*;
@@ -68,6 +69,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
     private boolean addSourceId = true;
     private final Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
+    private final MixinContext mixinContext = new MixinContext();
 
     public LocalRecordsDao() {
     }
@@ -260,7 +262,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
                 .peek(v -> v.init(ctx, AttMetaField.INSTANCE))
                 .collect(Collectors.toList()));
 
-        List<RecordAtts> atts = recordAttsService.getAtts(recordsWithMixin, schema, rawAtts, new MixinContext());
+        List<RecordAtts> atts = recordAttsService.getAtts(recordsWithMixin, schema, rawAtts, mixinContext);
 
         RecordsResult<RecordAtts> result = new RecordsResult<>();
         result.setRecords(atts);
@@ -269,7 +271,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     protected void writeWarn(String msg) {
-        log.warn(toString() + ": " + msg);
+        log.warn(this + ": " + msg);
     }
 
     @Override
@@ -281,6 +283,10 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         recordsServiceV1 = serviceFactory.getRecordsServiceV1();
+    }
+
+    public void addAttributesMixin(AttMixin mixin) {
+        mixinContext.addMixin(mixin);
     }
 
     public void addAttributesMixin(AttributesMixin<?, ?> mixin) {

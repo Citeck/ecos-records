@@ -1,0 +1,84 @@
+{
+  "tests": [
+    {
+      "att": "field",
+      "exp": {
+        "name": "field",
+        "inner": [
+          {
+            "name": "?disp"
+          }
+        ]
+      }
+    },
+    {
+      "att": "document{a:field0.field1?str}",
+      "exp": {
+        "name": "document",
+        "inner": [
+          {
+            "alias": "a",
+            "name": "field0",
+            "inner": [
+              {
+                "name": "field1",
+                "inner": [
+                  {
+                    "name": "?str"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "att": "document{s:idocs:initiator.cm:userName}",
+      "exp": {
+        "name": "document",
+        "inner": [
+          {
+            "alias": "s",
+            "name": "idocs:initiator",
+            "inner": [
+              {
+                "name": "cm:userName",
+                "inner": [
+                  {
+                    "name": "?disp"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "att": "idocs:initiator{em\\:changeRequestDueDateRequestor,cm\\:userName}",
+      "exp": {
+        "name": "idocs:initiator",
+        "inner": [
+          {
+            "name": "em:changeRequestDueDateRequestor",
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ]
+          },
+          {
+            "name": "cm:userName",
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+

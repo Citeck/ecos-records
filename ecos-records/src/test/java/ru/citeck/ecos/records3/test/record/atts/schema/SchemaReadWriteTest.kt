@@ -110,10 +110,10 @@ class SchemaReadWriteTest {
 
         log.info { "Found ${testFiles.size} test files" }
 
-        testFiles.forEach {
+        testFiles.forEach { fileWithTests ->
 
-            log.info { "Test: ${it.getPath()}" }
-            val tests = Json.mapper.read(it, TestsDto::class.java) ?: error("File reading failed")
+            log.info { "Test: ${fileWithTests.getPath()}" }
+            val tests = Json.mapper.read(fileWithTests, TestsDto::class.java) ?: error("File reading failed")
             log.info { "Tests count: ${tests.tests.size}" }
 
             var idx = 0
@@ -126,6 +126,13 @@ class SchemaReadWriteTest {
                     throw e
                 }
             }
+
+            val fullAtt = SchemaAtt.create()
+                .withName("fileAll")
+                .withInner(tests.tests.map { it.exp })
+                .build()
+
+            testAtt(writer.write(fullAtt), fullAtt)
         }
     }
 

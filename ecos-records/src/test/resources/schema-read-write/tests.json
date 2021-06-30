@@ -78,6 +78,32 @@
           }
         ]
       }
+    },
+    {
+      "att": "with:dots{field0|proc('arg0',123.0)|proc2('arg1')}",
+      "exp": {
+        "name": "with:dots",
+        "inner": [
+          {
+            "name": "field0",
+            "processors": [
+              {
+                "type": "proc",
+                "arguments": ["arg0", 123.0]
+              },
+              {
+                "type": "proc2",
+                "arguments": ["arg1"]
+              }
+            ],
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

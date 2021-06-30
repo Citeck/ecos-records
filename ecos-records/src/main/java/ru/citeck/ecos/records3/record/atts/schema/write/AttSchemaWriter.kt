@@ -17,5 +17,5 @@ interface AttSchemaWriter {
         return sb.toString()
     }
 
-    fun write(attribute: SchemaAtt, out: StringBuilder, inBraces: Boolean)
+    fun write(attribute: SchemaAtt, out: StringBuilder, firstInBraces: Boolean)
 }

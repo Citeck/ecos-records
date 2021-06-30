@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 
 @Slf4j
 @SuppressFBWarnings(value = {
@@ -41,7 +42,9 @@ public class JobExecutor {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Shutdown hook triggered");
                 jobs.forEach(j -> j.setEnabled(false));
+                removeJobs(j -> true);
                 newScheduledExecutor.shutdown();
+                log.info("Shutdown hook completed");
             }));
             executor = newScheduledExecutor;
         }
@@ -87,10 +90,14 @@ public class JobExecutor {
         }
     }
 
-    public synchronized void removeJobs(String sourceId) {
+    public void removeJobs(String sourceId) {
+        removeJobs(instance -> Objects.equals(instance.sourceId, sourceId));
+    }
+
+    private synchronized void removeJobs(Predicate<JobInstance> filter) {
 
         jobs.removeIf(instance -> {
-            if (!Objects.equals(instance.sourceId, sourceId)) {
+            if (!filter.test(instance)) {
                 return false;
             }
             instance.enabled = false;
@@ -102,16 +109,22 @@ public class JobExecutor {
 
                     long waitUntilRunning = System.currentTimeMillis() + 5_000;
 
-                    log.info("Job from sourceId '" + sourceId + "' is running. Try to wait until "
+                    log.info("Job from sourceId '" + instance.sourceId + "' is running. Try to wait until "
                         + Instant.ofEpochMilli(waitUntilRunning));
 
                     while (instance.isRunning && System.currentTimeMillis() < waitUntilRunning) {
                         Thread.sleep(100);
                     }
+
+                    if (instance.isRunning) {
+                        log.warn("Job is still running and will be cancelled");
+                    } else {
+                        log.info("Job is not running");
+                    }
                 }
                 instance.future.cancel(true);
             } catch (Exception e) {
-                log.warn("Exception while job cancelling. SourceId: " + sourceId, e);
+                log.warn("Exception while job cancelling. SourceId: " + instance.sourceId, e);
             }
             return true;
         });

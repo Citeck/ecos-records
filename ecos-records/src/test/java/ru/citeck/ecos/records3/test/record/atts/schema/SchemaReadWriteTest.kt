@@ -119,7 +119,7 @@ class SchemaReadWriteTest {
             var idx = 0
             for (test in tests.tests) {
                 try {
-                    testAtt(test.att, test.exp)
+                    testAtt(test.att, test.exp, test.expAfterWrite)
                     idx++
                 } catch (e: Throwable) {
                     log.error { "$idx att: ${test.att}" }
@@ -136,7 +136,7 @@ class SchemaReadWriteTest {
         }
     }
 
-    private fun testAtt(att: String, expected: SchemaAtt?) {
+    private fun testAtt(att: String, expected: SchemaAtt?, expAfterWrite: String = "") {
 
         val parsedAtt = reader.read(att)
         if (expected != null) {
@@ -144,7 +144,12 @@ class SchemaReadWriteTest {
         }
 
         val attAfterWrite = writer.write(parsedAtt)
-        assertThat(attAfterWrite).isEqualTo(att)
+        if (expAfterWrite.isBlank()) {
+            assertThat(attAfterWrite).isEqualTo(att)
+        } else {
+            assertThat(attAfterWrite).isEqualTo(expAfterWrite)
+            testAtt(attAfterWrite, expected)
+        }
     }
 
     data class TestsDto(
@@ -153,6 +158,7 @@ class SchemaReadWriteTest {
 
     data class TestDto(
         val att: String,
-        val exp: SchemaAtt
+        val exp: SchemaAtt,
+        val expAfterWrite: String = ""
     )
 }

@@ -104,6 +104,34 @@
           }
         ]
       }
+    },
+    {
+      "att": ".edge(n:\"field\"){options{label:disp,value:str}}",
+      "expAfterWrite": "_edge.field.options[]{label:?disp,value:?str}",
+      "exp": {
+        "name": "_edge",
+        "inner": [
+          {
+            "name": "field",
+            "inner": [
+              {
+                "name": "options",
+                "multiple": true,
+                "inner": [
+                  {
+                    "alias": "label",
+                    "name": "?disp"
+                  },
+                  {
+                    "alias": "value",
+                    "name": "?str"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

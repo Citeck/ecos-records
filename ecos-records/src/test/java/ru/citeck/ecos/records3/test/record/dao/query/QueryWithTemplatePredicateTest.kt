@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -55,7 +56,7 @@ class QueryWithTemplatePredicateTest {
             }
         )
 
-        assertThat(queries).containsExactly(Predicates.and(predValue))
+        assertThat(queries).containsExactly(PredicateUtils.optimize(Predicates.and(predValue)))
 
         val testWithSingleAtt = { att: String, expected: DataValue ->
             queries.clear()

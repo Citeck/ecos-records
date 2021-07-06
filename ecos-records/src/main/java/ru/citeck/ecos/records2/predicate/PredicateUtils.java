@@ -52,19 +52,19 @@ public class PredicateUtils {
     }
 
     public static Predicate mapValuePredicates(Predicate predicate,
-                                               Function<ValuePredicate, ValuePredicate> mapFunc) {
+                                               Function<ValuePredicate, Predicate> mapFunc) {
         return mapValuePredicatesImpl(predicate, mapFunc, false);
     }
 
     public static Predicate mapValuePredicates(Predicate predicate,
-                                               Function<ValuePredicate, ValuePredicate> mapFunc,
+                                               Function<ValuePredicate, Predicate> mapFunc,
                                                boolean onlyAnd) {
 
         return mapValuePredicates(predicate, mapFunc, onlyAnd, true);
     }
 
     public static Predicate mapValuePredicates(Predicate predicate,
-                                               Function<ValuePredicate, ValuePredicate> mapFunc,
+                                               Function<ValuePredicate, Predicate> mapFunc,
                                                boolean onlyAnd, boolean optimize) {
 
         return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, optimize);
@@ -133,14 +133,14 @@ public class PredicateUtils {
     }
 
     private static Predicate mapValuePredicatesImpl(Predicate predicate,
-                                                    Function<ValuePredicate, ValuePredicate> mapFunc,
+                                                    Function<ValuePredicate, Predicate> mapFunc,
                                                     boolean onlyAnd) {
 
         return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, true);
     }
 
     private static Predicate mapValuePredicatesImpl(Predicate predicate,
-                                                    Function<ValuePredicate, ValuePredicate> mapFunc,
+                                                    Function<ValuePredicate, Predicate> mapFunc,
                                                     boolean onlyAnd, boolean optimize) {
 
         if (predicate == null) {

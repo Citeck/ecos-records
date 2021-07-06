@@ -10,8 +10,11 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.OrPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records2.querylang.QueryWithLang
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.error.ErrorUtils
@@ -60,6 +63,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         private const val DEBUG_QUERY_TIME: String = "queryTimeMs"
         private const val DEBUG_REFS_ATTS_TIME: String = "refsAttsTimeMs"
         private const val DEBUG_OBJ_ATTS_TIME: String = "objAttsTimeMs"
+
+        private const val CTX_VAR_QUERY_RAW_PREDICATE: String = "QUERY_RAW_PREDICATE"
     }
 
     private val allDao = ConcurrentHashMap<String, RecordsDao>()
@@ -91,15 +96,45 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         rawAtts: Boolean
     ): RecsQueryRes<RecordAtts> {
 
+        val context: RequestContext = RequestContext.getCurrentNotNull()
+
         var query = queryArg
         if (query.language == PredicateService.LANGUAGE_PREDICATE) {
-            val queryRes = recordsTemplateService.resolve(query.query, RecordRef.create("meta", ""))
-            if (!queryRes.isNull()) {
-                query = query.copy().withQuery(queryRes).build()
+
+            context.putVar(CTX_VAR_QUERY_RAW_PREDICATE, query.query)
+
+            var queryRes = recordsTemplateService.resolve(query.query, RecordRef.create("meta", ""))
+            if (queryRes.isNull()) {
+                queryRes = query.query
             }
+
+            val predicate = Json.mapper.convert(queryRes, Predicate::class.java)
+            queryRes = DataValue.create(
+                PredicateUtils.mapValuePredicates(predicate) { pred ->
+
+                    val type = pred.getType()
+                    if (pred.getValue().isArray() &&
+                        (
+                            type == ValuePredicate.Type.EQ ||
+                                type == ValuePredicate.Type.CONTAINS ||
+                                type == ValuePredicate.Type.LIKE
+                            )
+                    ) {
+
+                        val orPredicates = mutableListOf<Predicate>()
+                        pred.getValue().forEach { elem ->
+                            orPredicates.add(ValuePredicate(pred.getAttribute(), pred.getType(), elem))
+                        }
+
+                        OrPredicate.of(orPredicates)
+                    } else {
+                        pred
+                    }
+                }
+            )
+            query = query.copy().withQuery(queryRes).build()
         }
 
-        val context: RequestContext = RequestContext.getCurrentNotNull()
         var sourceId = query.sourceId
         val appDelimIdx = sourceId.indexOf('/')
 

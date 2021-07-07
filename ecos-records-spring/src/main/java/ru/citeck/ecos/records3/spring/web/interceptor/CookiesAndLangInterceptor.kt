@@ -24,10 +24,21 @@ class CookiesAndLangInterceptor : ClientHttpRequestInterceptor {
         val newHeaders = newRequest.headers
         val request = thisRequest
         if (request != null) {
+
             newHeaders["Cookie"] = request.getHeader("Cookie")
             newHeaders["Accept-Language"] = request.getHeader("Accept-Language")
             newHeaders["X-Alfresco-Remote-User"] = request.getHeader("X-Alfresco-Remote-User")
-            newHeaders["X-ECOS-User"] = request.getHeader("X-ECOS-User")
+
+            val headerNames = request.headerNames
+            while (headerNames.hasMoreElements()) {
+                val name = headerNames.nextElement()
+                if (name.toUpperCase().startsWith("X-ECOS-")) {
+                    val value = request.getHeader(name)
+                    if (value != null) {
+                        newHeaders[name] = value
+                    }
+                }
+            }
         }
         return clientHttpRequestExecution.execute(newRequest, bytes)
     }

@@ -1,8 +1,10 @@
 package ru.citeck.ecos.records2.rest;
 
+import ru.citeck.ecos.records3.record.request.context.SystemContextUtil;
+
 public class RemoteRecordsUtils {
 
-    private static ThreadLocal<Boolean> isSystem = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> isSystem = new ThreadLocal<>();
 
     public static <T> T runAsSystem(Action<T> action) {
         isSystem.set(true);
@@ -14,7 +16,7 @@ public class RemoteRecordsUtils {
     }
 
     public static boolean isSystemContext() {
-        return Boolean.TRUE.equals(isSystem.get());
+        return Boolean.TRUE.equals(isSystem.get()) || SystemContextUtil.isSystemContext();
     }
 
     public interface Action<T> {

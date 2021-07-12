@@ -62,7 +62,7 @@ object SystemContextUtil {
 
     @JvmStatic
     @JvmOverloads
-    fun isSystemContext(context: RequestContext = RequestContext.getCurrentNotNull()): Boolean {
-        return context.getVar<Boolean>(SYSTEM_CONTEXT_KEY) == true
+    fun isSystemContext(context: RequestContext? = RequestContext.getCurrent()): Boolean {
+        return context?.getVar<Boolean>(SYSTEM_CONTEXT_KEY) == true
     }
 }

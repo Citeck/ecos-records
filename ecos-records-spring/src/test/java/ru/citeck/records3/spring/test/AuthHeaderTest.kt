@@ -33,7 +33,10 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.context.SystemContextUtil
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.spring.web.interceptor.AuthHeaderProvider
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
@@ -46,6 +49,8 @@ open class AuthHeaderTest {
 
     @Autowired
     lateinit var recordsService: RecordsService
+    @Autowired
+    lateinit var recordsServiceFactory: RecordsServiceFactory
 
     @Autowired
     @Qualifier("recordsRestTemplate")
@@ -127,6 +132,12 @@ open class AuthHeaderTest {
         RemoteRecordsUtils.runAsSystem {
             testAuthHeader("system-system", "test-app")
             testAuthHeader("system-customSystemUser", "appWithCustomSystemUser")
+        }
+        RequestContext.doWithCtx(recordsServiceFactory) {
+            SystemContextUtil.doAsSystem({
+                testAuthHeader("system-system", "test-app")
+                testAuthHeader("system-customSystemUser", "appWithCustomSystemUser")
+            })
         }
     }
 

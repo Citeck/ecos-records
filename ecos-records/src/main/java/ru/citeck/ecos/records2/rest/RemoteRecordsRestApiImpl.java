@@ -125,17 +125,14 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
 
     private RecordsProperties.App getAppProps(String id) {
         Map<String, RecordsProperties.App> apps = properties.getApps();
-        return apps != null ? apps.get(id) : null;
+        return apps.get(id);
     }
 
     private String convertUrl(String url) {
 
         if (!url.startsWith("http")) {
-            String schema = "http:/";
             RecordsProperties.RestProps microRest = properties.getRest();
-            if (microRest != null) {
-                schema = Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
-            }
+            String schema = Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
             url = schema + url;
         }
 
@@ -150,7 +147,8 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
         try {
             appInfo = remoteAppInfoProvider.getAppInfo(appName);
         } catch (Exception e) {
-            log.error("App info can't be resolved for '" + appName + "'. Exception msg: '" + e.getMessage() + "'");
+            log.error("App info can't be resolved for '" + appName + "'. " +
+                "Exception type: '" + e.getClass() + "' msg: '" + e.getMessage() + "'");
         }
         if (appInfo == null) {
             appInfo = new RemoteAppInfo();

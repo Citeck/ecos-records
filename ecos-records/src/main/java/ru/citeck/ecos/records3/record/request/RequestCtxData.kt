@@ -14,7 +14,8 @@ data class RequestCtxData(
     val ctxAtts: Map<String, Any?>,
     val computedAttsDisabled: Boolean,
     val msgLevel: MsgLevel,
-    val omitErrors: Boolean
+    val omitErrors: Boolean,
+    val readOnly: Boolean
 ) {
 
     companion object {
@@ -51,6 +52,7 @@ data class RequestCtxData(
         var computedAttsDisabled = false
         var msgLevel: MsgLevel = MsgLevel.WARN
         var omitErrors: Boolean = false
+        var readOnly: Boolean = false
 
         constructor(base: RequestCtxData) : this() {
             requestId = base.requestId
@@ -60,6 +62,7 @@ data class RequestCtxData(
             computedAttsDisabled = base.computedAttsDisabled
             msgLevel = base.msgLevel
             omitErrors = base.omitErrors
+            readOnly = base.readOnly
         }
 
         fun withOmitErrors(omitErrors: Boolean): Builder {
@@ -97,6 +100,11 @@ data class RequestCtxData(
             return this
         }
 
+        fun withReadOnly(readOnly: Boolean?): Builder {
+            this.readOnly = readOnly ?: false
+            return this
+        }
+
         fun build(): RequestCtxData {
 
             if (requestId.isBlank()) {
@@ -110,7 +118,8 @@ data class RequestCtxData(
                 ctxAtts,
                 computedAttsDisabled,
                 msgLevel,
-                omitErrors
+                omitErrors,
+                readOnly
             )
         }
     }

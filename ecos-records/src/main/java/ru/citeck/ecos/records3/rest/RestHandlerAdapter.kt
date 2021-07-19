@@ -79,7 +79,10 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         val jsonBody: ObjectNode = mapper.convert(body, ObjectNode::class.java)
             ?: error("Incorrect request body. Expected JSON Object, but found: $body")
 
-        val version = jsonBody.path("version")
+        var version = jsonBody.path("v")
+        if (!version.isNumber) {
+            version = jsonBody.path("version")
+        }
         if (version.isNumber) {
             return BodyWithVersion(jsonBody, version.asInt())
         }

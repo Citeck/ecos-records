@@ -52,7 +52,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* ATTRIBUTES */
     override fun getAtts(records: Collection<*>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
-        return RequestContext.doWithCtx(services) { ctx ->
+        return RequestContext.doWithCtx(services, { ctx -> ctx.withReadOnly(true) }) { ctx ->
             try {
                 recordsResolver.getAtts(ArrayList(records), attributes, rawAtts)
             } catch (e: Throwable) {
@@ -166,7 +166,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* OTHER */
     private fun <T : Any> handleRecordsQuery(supplier: () -> RecsQueryRes<T>): RecsQueryRes<T> {
-        return RequestContext.doWithCtx(services) { ctx ->
+        return RequestContext.doWithCtx(services, { ctx -> ctx.withReadOnly(true) }) { ctx ->
             try {
                 supplier.invoke()
             } catch (e: Throwable) {

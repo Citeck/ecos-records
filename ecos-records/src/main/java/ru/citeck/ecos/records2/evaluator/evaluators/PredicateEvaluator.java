@@ -32,6 +32,8 @@ public class PredicateEvaluator implements RecordEvaluator<List<String>, RecordA
         Predicate predicate = Json.getMapper().convert(config.predicate, Predicate.class);
         if (predicate != null) {
             predicate = PredicateUtils.resolvePredicateWithAttributes(predicate, meta.getAtts());
+        } else {
+            return false;
         }
         return predicateService.isMatch(new RecordElement(new RecordMeta(meta)), predicate);
     }

@@ -11,9 +11,10 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.rest.v1.RequestBody
 import java.util.*
+import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+@JackJsonInclude(JackJsonInclude.Include.NON_NULL)
 class QueryBody : RequestBody() {
 
     private var records: MutableList<RecordRef>? = null
@@ -22,10 +23,7 @@ class QueryBody : RequestBody() {
     var rawAtts = false
 
     fun setRecord(record: RecordRef) {
-        if (records == null) {
-            records = ArrayList<RecordRef>()
-        }
-        records!!.add(record)
+        records = (records ?: ArrayList()).apply { add(record) }
     }
 
     fun getRecords(): List<RecordRef>? {
@@ -33,16 +31,12 @@ class QueryBody : RequestBody() {
     }
 
     fun setRecords(records: List<RecordRef>?) {
-        this.records = if (records == null) {
-            null
-        } else {
-            ArrayList(records)
-        }
+        this.records = records?.let { ArrayList(it) }
     }
 
     fun setAttribute(attribute: String) {
         val objNode: ObjectNode = Json.mapper.newObjectNode()
-        objNode.set<JsonNode?>(attribute, TextNode.valueOf(attribute))
+        objNode.set<JsonNode>(attribute, TextNode.valueOf(attribute))
         attributes = DataValue.create(objNode)
     }
 

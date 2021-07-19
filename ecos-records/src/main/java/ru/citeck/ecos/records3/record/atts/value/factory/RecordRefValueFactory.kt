@@ -6,11 +6,12 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
-import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
-import java.util.*
+import ru.citeck.ecos.records3.record.request.RequestContext
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 
 class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
@@ -19,6 +20,8 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         private const val ATT_LOCAL_ID: String = "?localId"
         private const val ATT_ASSOC: String = "?assoc"
         private const val ATT_STR: String = "?str"
+
+        private val ATTS_CACHE_KEY = this::class.java.simpleName + "-cache"
 
         val ATTS_WITHOUT_LOADING = setOf(
             ATT_ID,
@@ -42,8 +45,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         private val innerAtts: InnerAttValue
 
         init {
-            val schemaAtt: SchemaAtt = AttContext.getCurrentSchemaAtt()
-            val innerSchema = schemaAtt.inner
+            val innerSchema = AttContext.getCurrentSchemaAtt().inner
 
             val scalarMirrorAtts = mutableListOf<ScalarType>()
             val attsMap: MutableMap<String, String> = LinkedHashMap()
@@ -68,7 +70,13 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                 }
             }
             val atts = if (attsMap.isNotEmpty()) {
-                val atts = recordsService.getAtts(setOf(ref), attsMap, true)[0]
+
+                val atts = if (RequestContext.getCurrentNotNull().ctxData.readOnly) {
+                    loadWithCache(attsMap) { loadRawAtts(it) }
+                } else {
+                    loadRawAtts(attsMap)
+                }
+
                 scalarMirrorAtts.forEach {
                     var scalarValue = atts.getAtt(it.mirrorAtt)
                     while (scalarValue.isObject()) {
@@ -85,6 +93,52 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                 RecordAtts(ref)
             }
             innerAtts = InnerAttValue(atts.getAtts().getData().asJson())
+        }
+
+        private fun loadRawAtts(attsMap: Map<String, String>): RecordAtts {
+            return recordsService.getAtts(setOf(ref), attsMap, true)[0]
+        }
+
+        private inline fun loadWithCache(
+            attsMap: Map<String, String>,
+            action: (Map<String, String>) -> RecordAtts
+        ): RecordAtts {
+
+            val cache: MutableMap<RecordRef, MutableMap<String, DataValue>> =
+                RequestContext.getCurrentNotNull().getMap(ATTS_CACHE_KEY)
+            val refCache = cache.computeIfAbsent(ref) { HashMap() }
+
+            val attsToLoad = LinkedHashMap<String, String>()
+            val attsFromCache = LinkedHashMap<String, DataValue>()
+
+            if (refCache.isEmpty()) {
+                attsToLoad.putAll(attsMap)
+            } else {
+                attsMap.forEach { (k, v) ->
+                    val valueFromCache = refCache[v]
+                    if (valueFromCache != null) {
+                        attsFromCache[k] = valueFromCache
+                    } else {
+                        attsToLoad[k] = v
+                    }
+                }
+            }
+
+            val atts = if (attsToLoad.isNotEmpty()) {
+                val loadedAtts = RecordAtts(action(attsToLoad))
+                attsToLoad.forEach { (k, v) ->
+                    refCache[v] = loadedAtts.getAtt(k)
+                }
+                loadedAtts
+            } else {
+                RecordAtts(ref)
+            }
+
+            attsFromCache.forEach { (k, v) ->
+                atts.setAtt(k, v)
+            }
+
+            return atts
         }
 
         override fun getId(): RecordRef {

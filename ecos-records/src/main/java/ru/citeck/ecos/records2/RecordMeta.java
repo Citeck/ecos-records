@@ -81,7 +81,7 @@ public class RecordMeta {
     }
 
     public void forEach(BiConsumer<String, DataValue> consumer) {
-        attributes.forEach(consumer);
+        attributes.forEachJ(consumer);
     }
 
     @NotNull

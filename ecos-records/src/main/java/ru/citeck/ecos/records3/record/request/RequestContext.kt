@@ -3,8 +3,10 @@ package ru.citeck.ecos.records3.record.request
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
@@ -25,6 +27,9 @@ class RequestContext {
 
         private var defaultServices: RecordsServiceFactory? = null
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
+
+        private val strCtxAtt = AttFuncValue { it }
+        private val refCtxAtt = AttFuncValue { RecordRef.valueOf(it) }
 
         fun setDefaultServicesIfNotSet(defaultServices: RecordsServiceFactory) {
             if (this.defaultServices == null) {
@@ -132,6 +137,8 @@ class RequestContext {
 
                 val contextAtts = HashMap(notNullServices.defaultCtxAttsProvider.getContextAttributes())
                 contextAtts["now"] = Date()
+                contextAtts["str"] = strCtxAtt
+                contextAtts["ref"] = refCtxAtt
 
                 current.ctxData = builder.withCtxAtts(contextAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
@@ -178,8 +185,8 @@ class RequestContext {
         }
     }
 
-    private val msgTypeByClass: MutableMap<Class<*>, String> = ConcurrentHashMap<Class<*>, String>()
-    private val ctxVars: MutableMap<String, Any> = ConcurrentHashMap<String, Any>()
+    private val msgTypeByClass: MutableMap<Class<*>, String> = ConcurrentHashMap()
+    private val ctxVars: MutableMap<String, Any> = ConcurrentHashMap()
 
     lateinit var ctxData: RequestCtxData
 

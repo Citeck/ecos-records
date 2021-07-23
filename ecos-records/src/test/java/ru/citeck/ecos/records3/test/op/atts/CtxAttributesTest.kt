@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.op.atts
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
@@ -69,5 +70,19 @@ class CtxAttributesTest {
                 RecordRef.valueOf("test@record"), "inner.\$now|fmt('MM')"
             ).isNull()
         )
+    }
+
+    @Test
+    fun strTest() {
+        val records = RecordsServiceFactory().recordsServiceV1
+        val value = records.getAtt(RecordRef.create("meta", ""), "\$str.some-constant")
+        assertThat(value.asText()).isEqualTo("some-constant")
+    }
+
+    @Test
+    fun recTest() {
+        val records = RecordsServiceFactory().recordsServiceV1
+        val value = records.getAtt(RecordRef.create("meta", ""), "\$ref.meta@.time")
+        assertThat(value.asText()).isNotBlank()
     }
 }

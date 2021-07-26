@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.resolver
 
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.utils.RecordsUtils
@@ -16,8 +17,14 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
+import kotlin.collections.HashMap
 
 class LocalRemoteResolver(private val services: RecordsServiceFactory) {
+
+    companion object {
+        private val REFS_CACHE_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-raw"
+        private val REFS_CACHE_NOT_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache"
+    }
 
     private val local = services.localRecordsResolver
     private val remote = services.remoteRecordsResolver
@@ -71,9 +78,6 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
             }
         }
 
-        if (remote == null) {
-            return doWithSchema(attributes) { atts -> local.getAtts(records, atts, rawAtts) }
-        }
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val recordObjs = ArrayList<ValWithIdx<Any?>>()
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
@@ -106,32 +110,119 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val refsBySource = RecordsUtils.groupRefBySourceWithIdx(recordRefs)
 
         refsBySource.forEach { (sourceId, recs) ->
-
-            val refs: List<RecordRef> = recs.map { it.value }
-
-            val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
-                doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
-            } else if (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull())) {
-                remote.getAtts(refs, attributes, rawAtts)
-            } else {
-                doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
-            }
-            if (atts.size != refs.size) {
-                context.addMsg(MsgLevel.ERROR) {
-                    "Results count doesn't match with " +
-                        "requested. Atts: " + atts + " refs: " + refs
-                }
-                for (record in recs) {
-                    results.add(ValWithIdx(RecordAtts(record.value), record.idx))
-                }
-            } else {
-                for (i in refs.indices) {
-                    results.add(ValWithIdx(atts[i], recs[i].idx))
-                }
-            }
+            results.addAll(loadAttsForRefsWithCache(context, sourceId, recs, attributes, rawAtts))
         }
         results.sortBy { it.idx }
         return results.map { it.value }
+    }
+
+    private fun loadAttsForRefsWithCache(
+        context: RequestContext,
+        sourceId: String,
+        recs: List<ValWithIdx<RecordRef>>,
+        attributes: Map<String, *>,
+        rawAtts: Boolean
+    ): List<ValWithIdx<RecordAtts>> {
+        if (!context.ctxData.readOnly) {
+            return loadAttsForRefs(context, sourceId, recs, attributes, rawAtts)
+        }
+
+        val cacheKey = if (rawAtts) {
+            REFS_CACHE_RAW_KEY
+        } else {
+            REFS_CACHE_NOT_RAW_KEY
+        }
+        val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getMap(cacheKey)
+        val cachedAttsWithAliases: MutableMap<String, String> = HashMap(
+            attributes.entries.mapNotNull {
+                val value = it.value
+                if (value !is String) {
+                    null
+                } else {
+                    it.key to value
+                }
+            }.toMap()
+        )
+
+        if (cachedAttsWithAliases.isEmpty()) {
+            return loadAttsForRefs(context, sourceId, recs, attributes, rawAtts)
+        }
+
+        val cacheByRecord = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
+        val cachedAttValues = recs.map { HashMap<String, DataValue>() }
+        val notCachedAtts = hashSetOf<String>()
+
+        for ((idx, cache) in cacheByRecord.withIndex()) {
+            val cachedRecordAttValues = cachedAttValues[idx]
+            notCachedAtts.clear()
+            cachedAttsWithAliases.forEach { (alias, attribute) ->
+                val valueFromCache = if (!attribute.startsWith("$")) {
+                    cache[attribute]
+                } else {
+                    null
+                }
+                if (valueFromCache == null) {
+                    notCachedAtts.add(alias)
+                } else {
+                    cachedRecordAttValues[alias] = valueFromCache
+                }
+            }
+            notCachedAtts.forEach { cachedAttsWithAliases.remove(it) }
+            if (cachedAttsWithAliases.isNotEmpty()) {
+                break
+            }
+        }
+
+        val attsToLoad = if (cachedAttsWithAliases.isEmpty()) {
+            attributes
+        } else {
+            attributes.filter { cachedAttsWithAliases[it.key] == null }.toMap()
+        }
+
+        val loadedAtts = loadAttsForRefs(context, sourceId, recs, attsToLoad, rawAtts)
+        loadedAtts.forEachIndexed { idx, recordAttsWithIdx ->
+
+            val recAtts = recordAttsWithIdx.value
+            val recCache = cacheByRecord[idx]
+
+            recAtts.getAtts().forEach { key, value ->
+                recCache[key] = value
+            }
+
+            val cachedRecordAttValues = cachedAttValues[idx]
+            cachedRecordAttValues.forEach { (alias, value) ->
+                recAtts.setAtt(alias, value)
+            }
+        }
+        return loadedAtts
+    }
+
+    private fun loadAttsForRefs(
+        context: RequestContext,
+        sourceId: String,
+        recs: List<ValWithIdx<RecordRef>>,
+        attributes: Map<String, *>,
+        rawAtts: Boolean
+    ): List<ValWithIdx<RecordAtts>> {
+
+        val refs: List<RecordRef> = recs.map { it.value }
+
+        val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
+            doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
+        } else if (remote != null && (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull()))) {
+            remote.getAtts(refs, attributes, rawAtts)
+        } else {
+            doWithSchema(attributes) { schema -> local.getAtts(refs, schema, rawAtts) }
+        }
+        return if (atts.size != refs.size) {
+            context.addMsg(MsgLevel.ERROR) {
+                "Results count doesn't match with " +
+                    "requested. Atts: " + atts + " refs: " + refs
+            }
+            recs.map { record -> ValWithIdx(RecordAtts(record.value), record.idx) }
+        } else {
+            refs.indices.map { idx -> ValWithIdx(atts[idx], recs[idx].idx) }
+        }
     }
 
     fun mutate(records: List<RecordAtts>): List<RecordRef> {

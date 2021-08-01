@@ -70,6 +70,13 @@ class RecordsRestApi @Autowired constructor(private val services: RecordsService
         return encodeResponse(deletedRecords)
     }
 
+    @PostMapping(value = ["/txn"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
+    fun txnAction(@ApiParam(value = "txn action") @RequestBody body: ByteArray): ByteArray? {
+        val txnBody = convertRequest(body, ObjectData::class.java)
+        val txnResp = restHandlerAdapter.txnAction(txnBody)
+        return encodeResponse(txnResp)
+    }
+
     private fun <T : Any> convertRequest(body: ByteArray, valueType: Class<T>): T {
         return try {
             Json.mapper.read(body, valueType)!!

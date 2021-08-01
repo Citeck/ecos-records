@@ -10,7 +10,7 @@ import java.util.*
 @Setter
 class MutateResp : RequestResp() {
 
-    var records: MutableList<RecordAtts> = ArrayList<RecordAtts>()
+    var records: MutableList<RecordAtts> = ArrayList()
         private set
 
     fun setRecords(records: List<RecordAtts>?) {

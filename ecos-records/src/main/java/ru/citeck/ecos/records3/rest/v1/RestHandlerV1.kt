@@ -17,6 +17,8 @@ import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
+import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
+import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import java.util.*
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.MutableList
@@ -32,12 +34,12 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     private val recordsService = services.recordsServiceV1
     private val properties = services.properties
     private val recordsTxnService = services.recordsTxnService
+    private val recordsResolver = services.localRecordsResolver
 
     private val currentAppId: String
-    private val currentAppName: String
+    private val currentAppName: String = properties.appName
 
     init {
-        currentAppName = properties.appName
         var currentAppId = if (StringUtils.isBlank(properties.appInstanceId)) {
             properties.appName
         } else {
@@ -146,7 +148,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                     }
                 )
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
             resp.setRecords(body.getRecords().map { RecordAtts(it.getId()) })
             context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
@@ -168,7 +170,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             recordsTxnService.doInTransaction(false) {
                 resp.setStatuses(recordsService.delete(body.records))
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             log.error("Records deletion completed with error. DeleteBody: $body", e)
             resp.setStatuses(body.records.map { DelStatus.ERROR })
             context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
@@ -177,10 +179,34 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         return resp
     }
 
+    fun txnAction(body: TxnBody): TxnResp {
+        return doWithContext(body, false) { context ->
+            val txnResp = TxnResp()
+            try {
+                recordsTxnService.doInTransaction(false) {
+                    when (body.action) {
+                        TxnBody.TxnAction.COMMIT -> recordsResolver.commit(body.records)
+                        TxnBody.TxnAction.ROLLBACK -> recordsResolver.rollback(body.records)
+                    }
+                }
+            } catch (e: Throwable) {
+                log.error("Records txn action completed with error. TxnBody: $body", e)
+                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+            }
+            txnResp.setMessages(context.getMessages())
+            txnResp
+        }
+    }
+
     private fun <T> doWithContext(body: RequestBody, readOnly: Boolean, action: (RequestContext) -> T): T {
+        var txnId = body.txnId
+        if (txnId == null && !readOnly) {
+            txnId = UUID.randomUUID()
+        }
         return RequestContext.doWithCtx(
             services,
             { ctxData ->
+                ctxData.withTxnId(txnId)
                 ctxData.withReadOnly(readOnly)
                 ctxData.withOmitErrors(false)
                 ctxData.withRequestId(body.requestId)

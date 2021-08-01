@@ -6,7 +6,7 @@ import java.util.*
 
 abstract class RequestResp {
 
-    var messages: MutableList<ReqMsg> = ArrayList<ReqMsg>()
+    var messages: MutableList<ReqMsg> = ArrayList()
         private set
 
     fun setMessages(messages: List<ReqMsg>?) {

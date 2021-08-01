@@ -45,6 +45,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.records3.record.dao.txn.RecordsTxnDao
 import ru.citeck.ecos.records3.record.mixin.AttMixinsHolder
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -72,12 +73,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val queryDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsQueryResDao>>()
     private val mutateDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsMutateCrossSrcDao>>()
     private val deleteDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsDeleteDao>>()
+    private val txnDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsTxnDao>>()
 
     private val daoMapByType = mapOf<Class<*>, Map<String, Pair<RecordsDao, RecordsDao>>>(
         Pair(RecordsAttsDao::class.java, attsDao),
         Pair(RecordsQueryResDao::class.java, queryDao),
         Pair(RecordsMutateCrossSrcDao::class.java, mutateDao),
-        Pair(RecordsDeleteDao::class.java, deleteDao)
+        Pair(RecordsDeleteDao::class.java, deleteDao),
+        Pair(RecordsTxnDao::class.java, txnDao)
     )
 
     private val queryLangService = services.queryLangService
@@ -681,6 +684,20 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return daoResult
     }
 
+    override fun commit(recordRefs: List<RecordRef>) {
+        val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
+        RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, recordRefs) ->
+            txnDao[sourceId]?.second?.commit(txnId, recordRefs.map { it.value.id })
+        }
+    }
+
+    override fun rollback(recordRefs: List<RecordRef>) {
+        val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
+        RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, recordRefs) ->
+            txnDao[sourceId]?.second?.rollback(txnId, recordRefs.map { it.value.id })
+        }
+    }
+
     override fun register(sourceId: String, recordsDao: RecordsDao) {
 
         allDao[sourceId] = recordsDao
@@ -688,6 +705,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         register(sourceId, queryDao, RecordsQueryResDao::class.java, recordsDao)
         register(sourceId, mutateDao, RecordsMutateCrossSrcDao::class.java, recordsDao)
         register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
+        register(sourceId, txnDao, RecordsTxnDao::class.java, recordsDao)
 
         if (recordsDao is ServiceFactoryAware) {
             (recordsDao as ServiceFactoryAware).setRecordsServiceFactory(services)
@@ -707,6 +725,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         queryDao.remove(sourceId)
         mutateDao.remove(sourceId)
         deleteDao.remove(sourceId)
+        txnDao.remove(sourceId)
 
         jobExecutor.removeJobs(sourceId)
     }
@@ -740,6 +759,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         recordsSourceInfo.features.mutate = mutateDao[sourceId] != null
         recordsSourceInfo.features.delete = deleteDao[sourceId] != null
         recordsSourceInfo.features.getAtts = attsDao[sourceId] != null
+        recordsSourceInfo.features.transactional = txnDao[sourceId] != null
 
         val columnsSourceId = recordsDao.javaClass.getAnnotation(ColumnsSourceId::class.java)
 

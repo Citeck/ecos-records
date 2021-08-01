@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.request
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -18,10 +19,13 @@ import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashMap
 
 class RequestContext {
 
     companion object {
+
+        private const val TXN_MUT_RECORDS_KEY = "__txn_mut_records_key__"
 
         private val log = KotlinLogging.logger {}
 
@@ -69,13 +73,36 @@ class RequestContext {
         }
 
         @JvmStatic
-        fun <T> doWithAttsJ(atts: Map<String, Any?>, action: Supplier<T>): T {
+        fun <T> doWithAttsJ(atts: Map<String, Any?>, action: UncheckedSupplier<T>): T {
             return doWithCtx(null, { it.withCtxAtts(atts) }) { action.get() }
         }
 
         @JvmStatic
-        fun <T> doWithAttsJ(atts: Map<String, Any?>, action: Runnable) {
+        fun doWithAttsJ(atts: Map<String, Any?>, action: Runnable) {
             return doWithCtx(null, { it.withCtxAtts(atts) }) { action.run() }
+        }
+
+        @JvmStatic
+        fun <T> doWithTxnJ(readOnly: Boolean, requiresNew: Boolean, action: UncheckedSupplier<T>): T {
+            return doWithTxn(readOnly, requiresNew) { action.get() }
+        }
+
+        @JvmStatic
+        fun doWithTxnJ(readOnly: Boolean, requiresNew: Boolean, action: Runnable) {
+            doWithTxn(readOnly, requiresNew) { action.run() }
+        }
+
+        @JvmStatic
+        fun <T> doWithTxn(readOnly: Boolean, requiresNew: Boolean, action: () -> T): T {
+            return doWithCtx(
+                null,
+                {
+                    if (requiresNew || it.txnId == null) {
+                        it.withTxnId(UUID.randomUUID())
+                    }
+                    it.withReadOnly(readOnly)
+                }
+            ) { action.invoke() }
         }
 
         @JvmStatic
@@ -128,6 +155,7 @@ class RequestContext {
                 ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false
+            var ownedTxnId: UUID? = null
 
             if (current == null) {
 
@@ -143,6 +171,9 @@ class RequestContext {
                 current.ctxData = builder.withCtxAtts(contextAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
                     .build()
+
+                ownedTxnId = current.ctxData.txnId
+
                 current.serviceFactory = notNullServices
 
                 RequestContext.current.set(current)
@@ -160,13 +191,26 @@ class RequestContext {
                 builder.ctxAtts = ctxAtts
 
                 current.ctxData = builder.build()
+
+                if (current.ctxData.txnId != prevCtxData.txnId) {
+                    ownedTxnId = current.ctxData.txnId
+                }
             }
 
             val currentMessages: MutableList<ReqMsg> = current.messages
             current.messages = ArrayList()
 
             return try {
-                action.invoke(current)
+                val res = action.invoke(current)
+                if (ownedTxnId != null) {
+                    current.completeTxn(ownedTxnId, true)
+                }
+                res
+            } catch (e: Throwable) {
+                if (ownedTxnId != null) {
+                    current.completeTxn(ownedTxnId, false)
+                }
+                throw e
             } finally {
                 currentMessages.addAll(current.messages)
                 current.messages = currentMessages
@@ -193,6 +237,24 @@ class RequestContext {
     private lateinit var serviceFactory: RecordsServiceFactory
 
     private var messages: MutableList<ReqMsg> = ArrayList()
+
+    private fun completeTxn(txnId: UUID, success: Boolean) {
+        val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
+        val txnRecords = mutRecords[txnId] ?: emptySet()
+        if (txnRecords.isNotEmpty()) {
+            if (success) {
+                serviceFactory.recordsResolver.commit(txnRecords.toList())
+            } else {
+                serviceFactory.recordsResolver.rollback(txnRecords.toList())
+            }
+        }
+        mutRecords.remove(txnId)
+    }
+
+    fun getTxnChangedRecords(): MutableSet<RecordRef>? {
+        val txnId = ctxData.txnId ?: return null
+        return getMap<UUID, MutableSet<RecordRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
+    }
 
     fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T?): T? {
         val prevValue = getVar<Any>(key)

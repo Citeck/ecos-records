@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.exception.RecordsException
 import ru.citeck.ecos.records2.exception.RemoteRecordsException
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.error.RecordsError
@@ -16,8 +17,10 @@ import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -32,8 +35,13 @@ import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
+import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
+import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.utils.V1ConvUtils
+import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
 
 class RemoteRecordsResolver(
@@ -48,10 +56,16 @@ class RemoteRecordsResolver(
         const val QUERY_URL: String = BASE_URL + "query"
         const val MUTATE_URL: String = BASE_URL + "mutate"
         const val DELETE_URL: String = BASE_URL + "delete"
+        const val TXN_URL: String = BASE_URL + "txn"
+
+        private val META_CACHE_TIMEOUT = TimeUnit.MINUTES.toMillis(1)
     }
 
     private var defaultAppName: String = ""
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private lateinit var recordsService: RecordsService
+
+    private val sourceIdMeta: MutableMap<String, RecSrcMeta> = ConcurrentHashMap()
 
     fun query(
         query: RecordsQuery,
@@ -259,7 +273,7 @@ class RemoteRecordsResolver(
     fun delete(records: List<RecordRef>): List<DelStatus> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<DelStatus>> = ArrayList<ValWithIdx<DelStatus>>()
+        val result: MutableList<ValWithIdx<DelStatus>> = ArrayList()
         val attsByApp: Map<String, MutableList<ValWithIdx<RecordRef>>> = RecordsUtils.groupByApp(records)
 
         attsByApp.forEach { (appArg, refs) ->
@@ -293,6 +307,59 @@ class RemoteRecordsResolver(
         }
         result.sortBy { it.idx }
         return result.map { it.value }
+    }
+
+    fun commit(recordRefs: List<RecordRef>) {
+        completeTransaction(recordRefs, TxnBody.TxnAction.COMMIT)
+    }
+
+    fun rollback(recordRefs: List<RecordRef>) {
+        completeTransaction(recordRefs, TxnBody.TxnAction.ROLLBACK)
+    }
+
+    private fun completeTransaction(recordRefs: List<RecordRef>, action: TxnBody.TxnAction) {
+
+        if (recordRefs.isEmpty()) {
+            return
+        }
+
+        val context = RequestContext.getCurrentNotNull()
+
+        RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, refs) ->
+
+            val appName = sourceId.substringBefore("/", "")
+
+            if (appName.isNotBlank() && getSourceIdMeta(sourceId).isTransactional) {
+
+                val body = TxnBody()
+                body.setRecords(refs.map { it.value })
+                body.setAction(action)
+                setContextProps(body, context)
+
+                val throwError = {
+                    throw RecordsException("$action failed for sourceId '$sourceId' and records: $refs")
+                }
+                val respObj = postRecords(sourceId, TXN_URL, body) ?: throwError()
+                val resp = Json.mapper.convert(respObj, TxnResp::class.java) ?: throwError()
+
+                resp.messages.forEach { msg -> context.addMsg(msg) }
+                throwErrorIfRequired(resp.messages, context)
+            }
+        }
+    }
+
+    private fun getSourceIdMeta(sourceId: String): RecSrcMeta {
+        val meta = sourceIdMeta.computeIfAbsent(sourceId) { evalSourceIdMeta(it) }
+        if (System.currentTimeMillis() - meta.time.toEpochMilli() > META_CACHE_TIMEOUT) {
+            sourceIdMeta.remove(sourceId)
+        }
+        return sourceIdMeta.computeIfAbsent(sourceId) { evalSourceIdMeta(it) }
+    }
+
+    private fun evalSourceIdMeta(sourceId: String): RecSrcMeta {
+        val time = Instant.now()
+        val atts = recordsService.getAtts(RecordRef.valueOf("$sourceId@src"), RecSrcMetaAtts::class.java)
+        return RecSrcMeta(time, atts.isTransactional ?: false)
     }
 
     private fun toDeleteResp(data: ObjectNode?, context: RequestContext): DeleteResp? {
@@ -344,6 +411,7 @@ class RemoteRecordsResolver(
         val ctxData = ctx.ctxData
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
+        body.txnId = ctxData.txnId
         body.setRequestTrace(ctxData.requestTrace)
     }
 
@@ -380,4 +448,18 @@ class RemoteRecordsResolver(
     fun setDefaultAppName(defaultAppName: String) {
         this.defaultAppName = defaultAppName
     }
+
+    fun setRecordsService(recordsService: RecordsService) {
+        this.recordsService = recordsService
+    }
+
+    private data class RecSrcMeta(
+        val time: Instant,
+        val isTransactional: Boolean
+    )
+
+    data class RecSrcMetaAtts(
+        @AttName("features.transactional")
+        val isTransactional: Boolean?
+    )
 }

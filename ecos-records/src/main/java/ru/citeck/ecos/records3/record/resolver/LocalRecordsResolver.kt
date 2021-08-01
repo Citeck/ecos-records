@@ -19,6 +19,10 @@ interface LocalRecordsResolver {
 
     fun delete(records: List<RecordRef>): List<DelStatus>
 
+    fun commit(recordRefs: List<RecordRef>)
+
+    fun rollback(recordRefs: List<RecordRef>)
+
     fun register(sourceId: String, recordsDao: RecordsDao)
 
     fun unregister(sourceId: String)

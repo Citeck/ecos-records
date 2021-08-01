@@ -9,6 +9,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
+import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -34,6 +35,11 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 error("Unknown body version. Body: $bodyWithVersion")
             }
         }
+    }
+
+    fun txnAction(body: Any): Any {
+        val txnBody = mapper.convert(body, TxnBody::class.java) ?: TxnBody()
+        return restHandlerV1.txnAction(txnBody)
     }
 
     fun deleteRecords(body: Any): Any {

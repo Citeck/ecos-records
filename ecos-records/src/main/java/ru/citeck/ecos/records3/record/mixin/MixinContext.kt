@@ -1,9 +1,14 @@
 package ru.citeck.ecos.records3.record.mixin
 
+import mu.KotlinLogging
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.utils.AttUtils
 
 class MixinContext() {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     private lateinit var exactMixins: Map<String, MixinAttContext>
     private lateinit var endsWithMixins: Map<String, MixinAttContext>
@@ -83,6 +88,8 @@ class MixinContext() {
                             }
                         }
                     }
+                } else {
+                    log.warn { "Incorrect computed att: '$att'" }
                 }
             }
         }

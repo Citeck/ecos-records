@@ -8,6 +8,7 @@ abstract class RequestBody() {
 
     var requestId = ""
     var msgLevel: MsgLevel = MsgLevel.WARN
+    var txnId: UUID? = null
 
     private var requestTrace: List<String> = emptyList()
 
@@ -15,6 +16,7 @@ abstract class RequestBody() {
         this.requestId = other.requestId
         this.msgLevel = other.msgLevel
         this.requestTrace = other.requestTrace
+        this.txnId = other.txnId
     }
 
     fun getRequestTrace(): List<String> {

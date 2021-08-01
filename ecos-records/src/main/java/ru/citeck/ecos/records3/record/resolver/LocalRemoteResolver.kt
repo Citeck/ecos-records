@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -16,7 +17,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
-import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class LocalRemoteResolver(private val services: RecordsServiceFactory) {
@@ -226,7 +227,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     }
 
     fun mutate(records: List<RecordAtts>): List<RecordRef> {
-        if (remote == null || records.isEmpty()) {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+        if (remote == null) {
             return local.mutate(records)
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
@@ -237,13 +241,62 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     }
 
     fun delete(records: List<RecordRef>): List<DelStatus> {
-        if (remote == null || records.isEmpty()) {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+        if (remote == null) {
             return local.delete(records)
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
             remote.delete(records)
         } else {
             local.delete(records)
+        }
+    }
+
+    fun commit(recordRefs: List<RecordRef>) {
+        doWithGroupOfRemoteOrLocal(recordRefs) { refs, isRemote ->
+            if (isRemote) {
+                remote?.commit(refs)
+            } else {
+                local.commit(refs)
+            }
+        }
+    }
+
+    fun rollback(recordRefs: List<RecordRef>) {
+        doWithGroupOfRemoteOrLocal(recordRefs) { refs, isRemote ->
+            if (isRemote) {
+                remote?.rollback(refs)
+            } else {
+                local.rollback(refs)
+            }
+        }
+    }
+
+    private fun doWithGroupOfRemoteOrLocal(recordRefs: List<RecordRef>, action: (List<RecordRef>, Boolean) -> Unit) {
+        if (recordRefs.isEmpty()) {
+            return
+        }
+        if (remote == null) {
+            action.invoke(recordRefs, false)
+            return
+        }
+        var idx = 1
+        var isRemote = isRemoteRef(recordRefs[0])
+        val refs = ArrayList<RecordRef>()
+        while (idx < recordRefs.size) {
+            val nextRef = recordRefs[idx++]
+            val isNextRefRemote = isRemoteRef(nextRef)
+            if (isNextRefRemote != isRemote) {
+                action.invoke(refs, isRemote)
+                refs.clear()
+                refs.add(nextRef)
+                isRemote = isNextRefRemote
+            }
+        }
+        if (refs.isNotEmpty()) {
+            action.invoke(refs, isRemote)
         }
     }
 
@@ -290,5 +343,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
         return local.getRecordsDao(sourceId, type)
+    }
+
+    fun setRecordsService(serviceFactory: RecordsService) {
+        remote?.setRecordsService(serviceFactory)
     }
 }

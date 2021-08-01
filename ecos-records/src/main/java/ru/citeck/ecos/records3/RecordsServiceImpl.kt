@@ -28,6 +28,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val attSchemaReader = services.attSchemaReader
     private val dtoSchemaReader = services.dtoSchemaReader
     private val attSchemaWriter = services.attSchemaWriter
+    private val isGatewayMode = services.properties.gatewayMode
+
+    init {
+        recordsResolver.setRecordsService(this)
+    }
 
     /* QUERY */
     override fun query(query: RecordsQuery): RecsQueryRes<RecordRef> {
@@ -101,8 +106,14 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private fun mutateImpl(records: List<RecordAtts>): List<RecordRef> {
 
+        if (isGatewayMode) {
+            return recordsResolver.mutate(records)
+        }
+
         val aliasToRecordRef = HashMap<String, RecordRef>()
-        val result: MutableList<RecordRef> = ArrayList<RecordRef>()
+        val result = Array(records.size) { RecordRef.EMPTY }
+
+        val txnMutRecords = RequestContext.getCurrentNotNull().getTxnChangedRecords()
 
         for (i in records.indices.reversed()) {
 
@@ -127,9 +138,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)
             val recordMutResult = recordsResolver.mutate(sourceMut)
-            if (i == 0) {
-                result.add(recordMutResult[recordMutResult.size - 1])
-            }
+
+            txnMutRecords?.add(record.getId())
+
+            result[i] = recordMutResult.last()
+
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")
                 if (ru.citeck.ecos.commons.utils.StringUtils.isNotBlank(alias)) {
@@ -137,7 +150,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 }
             }
         }
-        return result
+        return result.toList()
     }
 
     private fun convertAssocValue(value: DataValue, mapping: Map<String, RecordRef>): DataValue {
@@ -147,7 +160,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 return DataValue.create(mapping[textValue].toString())
             }
         } else if (value.isArray()) {
-            val convertedValue: MutableList<DataValue?> = ArrayList<DataValue?>()
+            val convertedValue: MutableList<DataValue?> = ArrayList()
             for (node in value) {
                 convertedValue.add(convertAssocValue(node, mapping))
             }
@@ -161,7 +174,9 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     private fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
-        return recordsResolver.delete(records)
+        val status = recordsResolver.delete(records)
+        RequestContext.getCurrentNotNull().getTxnChangedRecords()?.addAll(records)
+        return status
     }
 
     /* OTHER */

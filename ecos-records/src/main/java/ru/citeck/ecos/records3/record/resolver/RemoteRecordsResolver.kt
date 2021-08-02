@@ -4,16 +4,10 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.exception.RecordsException
 import ru.citeck.ecos.records2.exception.RemoteRecordsException
-import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.error.RecordsError
-import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
-import ru.citeck.ecos.records2.request.query.typed.RecordsMetaQueryResult
-import ru.citeck.ecos.records2.request.rest.DeletionBody
-import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
@@ -29,6 +23,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
 import ru.citeck.ecos.records3.rest.v1.RequestBody
+import ru.citeck.ecos.records3.rest.v1.RequestResp
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
@@ -37,12 +32,12 @@ import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
-import ru.citeck.ecos.records3.utils.V1ConvUtils
+import ru.citeck.ecos.records3.security.HasSensitiveData
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import ru.citeck.ecos.records2.request.rest.QueryBody as QueryBodyV0
+import kotlin.reflect.KClass
 
 class RemoteRecordsResolver(
     val services: RecordsServiceFactory,
@@ -95,66 +90,14 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp: QueryResp = execQuery(appName, queryBody, context)
+        val queryResp: QueryResp = exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
         val result = RecsQueryRes<RecordAtts>()
 
         result.setRecords(queryResp.records)
         result.setTotalCount(queryResp.totalCount)
         result.setHasMore(queryResp.hasMore)
+
         return RecordsUtils.attsWithDefaultApp(result, appName)
-    }
-
-    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext): QueryResp {
-
-        val v0Body = toV0QueryBody(queryBody, context)
-        val appResultObj = postRecords(appName, QUERY_URL, v0Body)
-        var result: QueryResp? = toQueryAttsRes(appResultObj, context)
-        if (result == null) {
-            result = QueryResp()
-        } else {
-            throwErrorIfRequired(result.messages, context)
-            context.addAllMsgs(result.messages)
-        }
-        return result
-    }
-
-    private fun toQueryAttsRes(body: ObjectNode?, context: RequestContext): QueryResp? {
-
-        if (body == null || body.isEmpty) {
-            return null
-        }
-        if (body.path("version").asInt(0) == 1) {
-            return Json.mapper.convert(body, QueryResp::class.java)
-        }
-        val v0Result: RecordsMetaQueryResult =
-            Json.mapper.convert(body, RecordsMetaQueryResult::class.java) ?: return null
-
-        V1ConvUtils.addErrorMessages(v0Result.errors, context)
-        V1ConvUtils.addDebugMessage(v0Result, context)
-
-        val resp = QueryResp()
-        resp.setRecords(
-            v0Result.records.map { RecordAtts(it) }
-        )
-        resp.hasMore = v0Result.hasMore
-        resp.totalCount = v0Result.totalCount
-        return resp
-    }
-
-    private fun toV0QueryBody(body: QueryBody, context: RequestContext): QueryBodyV0 {
-
-        val v0Body = QueryBodyV0()
-
-        v0Body.setAttributes(body.attributes.asJson())
-        v0Body.records = body.getRecords()
-        v0Body.v1Body = body
-
-        val query = body.query
-        if (query != null) {
-            v0Body.query = V1ConvUtils.recsQueryV1ToV0(query, context)
-        }
-
-        return v0Body
     }
 
     fun getAtts(records: List<RecordRef>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
@@ -177,13 +120,14 @@ class RemoteRecordsResolver(
             queryBody.rawAtts = rawAtts
             setContextProps(queryBody, context)
 
-            val queryResp = execQuery(app, queryBody, context)
+            val queryResp = exchangeRemoteRequest(app, QUERY_URL, queryBody, QueryResp::class, context)
 
             if (queryResp.records.size != refs.size) {
-                log.error("Incorrect response: $queryBody\n query: $queryBody")
-                for (ref in refs) {
-                    result.add(ValWithIdx(RecordAtts(ref.value), ref.idx))
-                }
+                throw RecordsException(
+                    "Incorrect " +
+                        "response: ${formatObjForLog(queryResp)} " +
+                        "query: ${formatObjForLog(queryBody)}"
+                )
             } else {
                 val recsAtts: List<RecordAtts> = queryResp.records
                 for (i in refs.indices) {
@@ -215,30 +159,20 @@ class RemoteRecordsResolver(
             mutateBody.setRecords(atts.map { it.value.withoutAppName() })
 
             setContextProps(mutateBody, context)
-            val v0Body = MutationBody()
-            if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                v0Body.isDebug = true
-            }
-            v0Body.records = (
-                Json.mapper.convert(
-                    mutateBody.getRecords(),
-                    Json.mapper.getListType(RecordMeta::class.java)
-                )
-                )
-            v0Body.v1Body = mutateBody
 
-            val mutRespObj = postRecords(appName, MUTATE_URL, v0Body)
-            val mutateResp: MutateResp? = toMutateResp(mutRespObj, context)
-
-            if (mutateResp?.messages != null) {
-                throwErrorIfRequired(mutateResp.messages, context)
-                mutateResp.messages.forEach { context.addMsg(it) }
-            }
-            if (mutateResp?.records == null || mutateResp.records.size != atts.size) {
-                context.addMsg(MsgLevel.ERROR) { "Incorrect response: $mutateResp\n query: $mutateBody" }
-                for (att in atts) {
-                    result.add(ValWithIdx(att.value.getId(), att.idx))
-                }
+            val mutateResp: MutateResp = exchangeRemoteRequest(
+                appName,
+                MUTATE_URL,
+                mutateBody,
+                MutateResp::class,
+                context
+            )
+            if (mutateResp.records.size != atts.size) {
+                throw RecordsException(
+                    "Incorrect " +
+                        "response: ${formatObjForLog(mutateResp)} " +
+                        "query: ${formatObjForLog(mutateBody)}"
+                )
             } else {
                 val recsAtts = mutateResp.records
                 for (i in atts.indices) {
@@ -250,25 +184,6 @@ class RemoteRecordsResolver(
         }
         result.sortBy { it.idx }
         return result.map { it.value }
-    }
-
-    private fun toMutateResp(body: ObjectNode?, context: RequestContext): MutateResp? {
-
-        if (body == null || body.isEmpty) {
-            return null
-        }
-        if (body.path("version").asInt(0) == 1) {
-            return Json.mapper.convert(body, MutateResp::class.java)
-        }
-        val v0Result = Json.mapper.convert(body, RecordsMutResult::class.java) ?: return null
-
-        V1ConvUtils.addErrorMessages(v0Result.errors, context)
-        V1ConvUtils.addDebugMessage(v0Result, context)
-
-        val resp = MutateResp()
-
-        resp.setRecords(v0Result.records.map { RecordAtts(it) })
-        return resp
     }
 
     fun delete(records: List<RecordRef>): List<DelStatus> {
@@ -289,21 +204,19 @@ class RemoteRecordsResolver(
             deleteBody.setRecords(refs.map { it.value.removeAppName() })
             setContextProps(deleteBody, context)
 
-            val v0Body = DeletionBody()
-            v0Body.records = deleteBody.records
-            if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                v0Body.isDebug = true
-            }
-            v0Body.v1Body = deleteBody
-            val delRespObj = postRecords(app, DELETE_URL, v0Body)
-            val resp: DeleteResp? = toDeleteResp(delRespObj, context)
+            val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_URL, deleteBody, DeleteResp::class, context)
 
-            resp?.messages?.forEach { msg -> context.addMsg(msg) }
-            val statues = toDelStatuses(refs.size, resp, context)
+            val statuses = resp.statuses
+            if (statuses.size != deleteBody.records.size) {
+                throw RecordsException(
+                    "Result statues doesn't match request. " +
+                        "Expected size: " + deleteBody.records.size +
+                        ". Actual response: " + formatObjForLog(resp)
+                )
+            }
             for (i in refs.indices) {
                 val refAtts: ValWithIdx<RecordRef> = refs[i]
-                val status: DelStatus = statues[i]
-                result.add(ValWithIdx(status, refAtts.idx))
+                result.add(ValWithIdx(statuses[i], refAtts.idx))
             }
         }
         result.sortBy { it.idx }
@@ -348,14 +261,7 @@ class RemoteRecordsResolver(
                 body.setAction(action)
                 setContextProps(body, context)
 
-                val throwError = {
-                    throw RecordsException("$action failed for sourceId '$sourceId' and records: $refs")
-                }
-                val respObj = postRecords(appName, TXN_URL, body) ?: throwError()
-                val resp = Json.mapper.convert(respObj, TxnResp::class.java) ?: throwError()
-
-                resp.messages.forEach { msg -> context.addMsg(msg) }
-                throwErrorIfRequired(resp.messages, context)
+                exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
             }
         }
     }
@@ -374,57 +280,51 @@ class RemoteRecordsResolver(
         return RecSrcMeta(time, atts.isTransactional ?: false)
     }
 
-    private fun toDeleteResp(data: ObjectNode?, context: RequestContext): DeleteResp? {
-
-        if (data == null || data.size() == 0) {
-            return DeleteResp()
-        }
-        if (data.path("version").asInt(0) == 1) {
-            return Json.mapper.convert(data, DeleteResp::class.java)
-        }
-
-        val v0Resp = Json.mapper.convert(data, RecordsDelResult::class.java) ?: return DeleteResp()
-        val records = v0Resp.records
-        val resp = DeleteResp()
-
-        resp.setStatuses(records.map { DelStatus.OK })
-        V1ConvUtils.addErrorMessages(v0Resp.errors, context)
-        V1ConvUtils.addDebugMessage(v0Resp, context)
-
-        throwErrorIfRequired(resp.messages, context)
-
-        return resp
-    }
-
-    private fun toDelStatuses(
-        expectedSize: Int,
-        resp: DeleteResp?,
-        context: RequestContext
-    ): List<DelStatus> {
-        if (resp == null) {
-            return getDelStatuses(expectedSize, DelStatus.ERROR)
-        }
-        if (resp.statuses.size == expectedSize) {
-            return resp.statuses
-        }
-        context.addMsg(MsgLevel.ERROR) {
-            "Result statues doesn't match request. " +
-                "Expected size: " + expectedSize +
-                ". Actual response: " + resp
-        }
-        return getDelStatuses(expectedSize, DelStatus.ERROR)
-    }
-
-    private fun getDelStatuses(size: Int, status: DelStatus): List<DelStatus> {
-        return generateSequence { status }.take(size).toList()
-    }
-
     private fun setContextProps(body: RequestBody, ctx: RequestContext) {
         val ctxData = ctx.ctxData
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
         body.txnId = ctxData.txnId
         body.setRequestTrace(ctxData.requestTrace)
+    }
+
+    private fun <T : RequestResp> exchangeRemoteRequest(
+        appName: String,
+        url: String,
+        body: RequestBody,
+        respType: KClass<T>,
+        context: RequestContext
+    ): T {
+
+        val respBody = postRecords(appName, url, body)
+
+        if (respBody == null || respBody.isEmpty) {
+            throw RecordsException(
+                "Expected ${respType.simpleName} but received empty body. " +
+                    "app: $appName " +
+                    "url: $url " +
+                    "body: ${formatObjForLog(body)}"
+            )
+        }
+        val result = Json.mapper.convert(respBody, respType.java) ?: throw RecordsException(
+            "Response body can't be converted to ${respType.simpleName}. " +
+                "app: $appName " +
+                "url: $url " +
+                "body: ${formatObjForLog(respBody)}"
+        )
+        throwErrorIfRequired(result.messages, context)
+        context.addAllMsgs(result.messages)
+        return result
+    }
+
+    private fun formatObjForLog(obj: Any): String {
+        return Json.mapper.toString(
+            if (obj is HasSensitiveData<*>) {
+                obj.withoutSensitiveData()
+            } else {
+                obj
+            }
+        ) ?: "null"
     }
 
     private fun throwErrorIfRequired(messages: List<ReqMsg>, context: RequestContext) {

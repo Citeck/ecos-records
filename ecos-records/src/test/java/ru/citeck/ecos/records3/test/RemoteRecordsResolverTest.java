@@ -11,13 +11,16 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
 import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.request.rest.DeletionBody;
-import ru.citeck.ecos.records2.request.rest.MutationBody;
-import ru.citeck.ecos.records2.request.rest.QueryBody;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records3.RecordsProperties;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody;
+import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
+import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
+import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -107,20 +110,20 @@ class RemoteRecordsResolverTest {
             } else {
                 throw new IllegalStateException("Incorrect query: " + request);
             }
-        } else if (request instanceof MutationBody) {
+        } else if (request instanceof MutateBody) {
 
-            MutationBody body = (MutationBody) request;
+            MutateBody body = (MutateBody) request;
 
-            RecordsMutResult result = new RecordsMutResult();
+            MutateResp result = new MutateResp();
             result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r.getId())).collect(Collectors.toList()));
             return Json.getMapper().convert(result, resultType);
 
-        } else if (request instanceof DeletionBody) {
+        } else if (request instanceof DeleteBody) {
 
-            DeletionBody body = (DeletionBody) request;
+            DeleteBody body = (DeleteBody) request;
 
-            RecordsMutResult result = new RecordsMutResult();
-            result.setRecords(body.getRecords().stream().map(metaByRef::get).collect(Collectors.toList()));
+            DeleteResp result = new DeleteResp();
+            result.setStatuses(body.getRecords().stream().map((v) -> DelStatus.OK).collect(Collectors.toList()));
             return Json.getMapper().convert(result, resultType);
 
         } else {
@@ -141,7 +144,7 @@ class RemoteRecordsResolverTest {
 
         RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
         assertEquals(refs.stream()
-                .map(r -> RecordRef.valueOf(appId + "/" + r.removeAppName().toString()))
+                .map(r -> RecordRef.valueOf(appId + "/" + r.removeAppName()))
                 .collect(Collectors.toList()),
             result.getRecords());
 

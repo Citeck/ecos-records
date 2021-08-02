@@ -6,7 +6,7 @@ import java.util.*
 
 class QueryResp : RequestResp() {
 
-    var records: MutableList<RecordAtts> = ArrayList<RecordAtts>()
+    var records: MutableList<RecordAtts> = ArrayList()
         private set
 
     var hasMore = false

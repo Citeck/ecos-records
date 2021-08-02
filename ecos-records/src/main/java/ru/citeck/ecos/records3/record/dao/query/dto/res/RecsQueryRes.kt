@@ -87,16 +87,18 @@ open class RecsQueryRes<T : Any>() {
     override fun toString(): String {
         val result = StringBuilder()
         result.append("{\"records\":[")
-        for (record in records) {
-            try {
-                result.append(record)
-            } catch (e: Exception) {
-                result.append("\"toString error: ${e.message?.replace("\"", "\\\"")}\"")
-                log.error { "Record toString error. Record: ${record::class.java.simpleName}. Message: ${e.message}" }
+        if (records.isNotEmpty()) {
+            for (record in records) {
+                try {
+                    result.append(record)
+                } catch (e: Exception) {
+                    result.append("\"toString error: ${e.message?.replace("\"", "\\\"")}\"")
+                    log.error { "Record toString error. Record: ${record::class.java.simpleName}. Message: ${e.message}" }
+                }
+                result.append(",")
             }
-            result.append(",")
+            result.setLength(result.length - 1)
         }
-        result.setLength(result.length - 1)
         result.append("],\"hasMore\":$hasMore,")
         result.append("\"totalCount\":$totalCount}")
         return result.toString()

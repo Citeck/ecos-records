@@ -113,7 +113,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         val aliasToRecordRef = HashMap<String, RecordRef>()
         val result = Array(records.size) { RecordRef.EMPTY }
 
-        val txnMutRecords = RequestContext.getCurrentNotNull().getTxnChangedRecords()
+        val context = RequestContext.getCurrentNotNull()
+        if (context.ctxData.readOnly) {
+            error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+        }
+        val txnMutRecords = context.getTxnChangedRecords()
 
         for (i in records.indices.reversed()) {
 
@@ -139,9 +143,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)
             val recordMutResult = recordsResolver.mutate(sourceMut)
 
-            txnMutRecords?.add(record.getId())
-
-            result[i] = recordMutResult.last()
+            val resultRef = recordMutResult.last()
+            result[i] = resultRef
+            if (RecordRef.isNotEmpty(resultRef)) {
+                txnMutRecords?.add(resultRef)
+            }
 
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")
@@ -174,8 +180,12 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     private fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
+        val context = RequestContext.getCurrentNotNull()
+        if (context.ctxData.readOnly) {
+            error("Deletion is not allowed in read-only mode. Records: $records")
+        }
         val status = recordsResolver.delete(records)
-        RequestContext.getCurrentNotNull().getTxnChangedRecords()?.addAll(records)
+        context.getTxnChangedRecords()?.addAll(records)
         return status
     }
 

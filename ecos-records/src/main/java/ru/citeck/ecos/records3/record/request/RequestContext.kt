@@ -88,21 +88,37 @@ class RequestContext {
         }
 
         @JvmStatic
-        fun doWithTxnJ(readOnly: Boolean, requiresNew: Boolean, action: Runnable) {
+        @JvmOverloads
+        fun doWithTxnJ(readOnly: Boolean = false, requiresNew: Boolean = false, action: Runnable) {
             doWithTxn(readOnly, requiresNew) { action.run() }
         }
 
         @JvmStatic
-        fun <T> doWithTxn(readOnly: Boolean, requiresNew: Boolean, action: () -> T): T {
+        fun <T> doWithTxn(readOnly: Boolean = false, requiresNew: Boolean = false, action: () -> T): T {
+            var isTxnOwner = false
             return doWithCtx(
                 null,
                 {
                     if (requiresNew || it.txnId == null) {
+                        isTxnOwner = true
                         it.withTxnId(UUID.randomUUID())
                     }
                     it.withReadOnly(readOnly)
                 }
-            ) { action.invoke() }
+            ) {
+                if (isTxnOwner && !readOnly) {
+                    try {
+                        val res = action.invoke()
+                        it.completeTxn(true)
+                        res
+                    } catch (e: Throwable) {
+                        it.completeTxn(false)
+                        throw e
+                    }
+                } else {
+                    action.invoke()
+                }
+            }
         }
 
         @JvmStatic
@@ -155,7 +171,6 @@ class RequestContext {
                 ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false
-            var ownedTxnId: UUID? = null
 
             if (current == null) {
 
@@ -171,8 +186,6 @@ class RequestContext {
                 current.ctxData = builder.withCtxAtts(contextAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
                     .build()
-
-                ownedTxnId = current.ctxData.txnId
 
                 current.serviceFactory = notNullServices
 
@@ -191,25 +204,14 @@ class RequestContext {
                 builder.ctxAtts = ctxAtts
 
                 current.ctxData = builder.build()
-
-                if (current.ctxData.txnId != prevCtxData.txnId) {
-                    ownedTxnId = current.ctxData.txnId
-                }
             }
 
             val currentMessages: MutableList<ReqMsg> = current.messages
             current.messages = ArrayList()
 
             return try {
-                val res = action.invoke(current)
-                if (ownedTxnId != null) {
-                    current.completeTxn(ownedTxnId, true)
-                }
-                res
+                action.invoke(current)
             } catch (e: Throwable) {
-                if (ownedTxnId != null) {
-                    current.completeTxn(ownedTxnId, false)
-                }
                 throw e
             } finally {
                 currentMessages.addAll(current.messages)
@@ -238,7 +240,11 @@ class RequestContext {
 
     private var messages: MutableList<ReqMsg> = ArrayList()
 
-    private fun completeTxn(txnId: UUID, success: Boolean) {
+    private fun completeTxn(success: Boolean) {
+        val txnId = ctxData.txnId
+        if (txnId == null || ctxData.readOnly) {
+            return
+        }
         val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
         val txnRecords = mutRecords[txnId] ?: emptySet()
         if (txnRecords.isNotEmpty()) {

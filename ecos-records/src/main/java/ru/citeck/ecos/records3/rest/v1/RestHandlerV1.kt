@@ -199,14 +199,17 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     private fun <T> doWithContext(body: RequestBody, readOnly: Boolean, action: (RequestContext) -> T): T {
-        var txnId = body.txnId
-        if (txnId == null && !readOnly) {
-            txnId = UUID.randomUUID()
+        val actionImpl: (RequestContext) -> T = if (body.txnId == null && !readOnly) {
+            {
+                RequestContext.doWithTxn(readOnly) { action.invoke(it) }
+            }
+        } else {
+            action
         }
         return RequestContext.doWithCtx(
             services,
             { ctxData ->
-                ctxData.withTxnId(txnId)
+                ctxData.withTxnId(body.txnId)
                 ctxData.withReadOnly(readOnly)
                 ctxData.withOmitErrors(false)
                 ctxData.withRequestId(body.requestId)
@@ -215,7 +218,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 trace.add(currentAppId)
                 ctxData.withRequestTrace(trace)
             },
-            action
+            actionImpl
         )
     }
 }

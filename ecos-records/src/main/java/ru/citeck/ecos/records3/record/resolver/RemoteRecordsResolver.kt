@@ -95,7 +95,7 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp: QueryResp = execQuery(appName, queryBody, context, rawAtts)
+        val queryResp: QueryResp = execQuery(appName, queryBody, context)
         val result = RecsQueryRes<RecordAtts>()
 
         result.setRecords(queryResp.records)
@@ -104,7 +104,7 @@ class RemoteRecordsResolver(
         return RecordsUtils.attsWithDefaultApp(result, appName)
     }
 
-    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext, rawAtts: Boolean): QueryResp {
+    private fun execQuery(appName: String, queryBody: QueryBody, context: RequestContext): QueryResp {
 
         val v0Body = toV0QueryBody(queryBody, context)
         val appResultObj = postRecords(appName, QUERY_URL, v0Body)
@@ -173,10 +173,11 @@ class RemoteRecordsResolver(
 
             val queryBody = QueryBody()
             queryBody.setRecords(refs.map { it.value.removeAppName() })
-
             queryBody.setAttributes(attributes)
             queryBody.rawAtts = rawAtts
-            val queryResp = execQuery(app, queryBody, context, rawAtts)
+            setContextProps(queryBody, context)
+
+            val queryResp = execQuery(app, queryBody, context)
 
             if (queryResp.records.size != refs.size) {
                 log.error("Incorrect response: $queryBody\n query: $queryBody")
@@ -328,18 +329,19 @@ class RemoteRecordsResolver(
         RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, refs) ->
 
             val appName = sourceId.substringBefore("/", "")
+            val sourceMetaId = appName + "/src@" + sourceId.substringAfter("/", "")
 
-            if (appName.isNotBlank() && getSourceIdMeta(sourceId).isTransactional) {
+            if (appName.isNotBlank() && getSourceIdMeta(sourceMetaId).isTransactional) {
 
                 val body = TxnBody()
-                body.setRecords(refs.map { it.value })
+                body.setRecords(refs.map { it.value.removeAppName() })
                 body.setAction(action)
                 setContextProps(body, context)
 
                 val throwError = {
                     throw RecordsException("$action failed for sourceId '$sourceId' and records: $refs")
                 }
-                val respObj = postRecords(sourceId, TXN_URL, body) ?: throwError()
+                val respObj = postRecords(appName, TXN_URL, body) ?: throwError()
                 val resp = Json.mapper.convert(respObj, TxnResp::class.java) ?: throwError()
 
                 resp.messages.forEach { msg -> context.addMsg(msg) }
@@ -348,17 +350,17 @@ class RemoteRecordsResolver(
         }
     }
 
-    private fun getSourceIdMeta(sourceId: String): RecSrcMeta {
-        val meta = sourceIdMeta.computeIfAbsent(sourceId) { evalSourceIdMeta(it) }
+    private fun getSourceIdMeta(sourceMetaId: String): RecSrcMeta {
+        val meta = sourceIdMeta.computeIfAbsent(sourceMetaId) { evalSourceIdMeta(it) }
         if (System.currentTimeMillis() - meta.time.toEpochMilli() > META_CACHE_TIMEOUT) {
-            sourceIdMeta.remove(sourceId)
+            sourceIdMeta.remove(sourceMetaId)
         }
-        return sourceIdMeta.computeIfAbsent(sourceId) { evalSourceIdMeta(it) }
+        return sourceIdMeta.computeIfAbsent(sourceMetaId) { evalSourceIdMeta(it) }
     }
 
-    private fun evalSourceIdMeta(sourceId: String): RecSrcMeta {
+    private fun evalSourceIdMeta(sourceMetaId: String): RecSrcMeta {
         val time = Instant.now()
-        val atts = recordsService.getAtts(RecordRef.valueOf("$sourceId@src"), RecSrcMetaAtts::class.java)
+        val atts = recordsService.getAtts(RecordRef.valueOf(sourceMetaId), RecSrcMetaAtts::class.java)
         return RecSrcMeta(time, atts.isTransactional ?: false)
     }
 

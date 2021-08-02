@@ -285,6 +285,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         var idx = 1
         var isRemote = isRemoteRef(recordRefs[0])
         val refs = ArrayList<RecordRef>()
+        refs.add(recordRefs[0])
         while (idx < recordRefs.size) {
             val nextRef = recordRefs[idx++]
             val isNextRefRemote = isRemoteRef(nextRef)

@@ -1,6 +1,24 @@
 {
   "tests": [
     {
+      "att": "children[]{label:.disp,value:.id}",
+      "expAfterWrite": "children[]{label:?disp,value:?id}",
+      "exp": {
+        "name": "children",
+        "multiple": true,
+        "inner": [
+          {
+            "alias": "label",
+            "name": "?disp"
+          },
+          {
+            "alias": "value",
+            "name": "?id"
+          }
+        ]
+      }
+    },
+    {
       "att": "field",
       "exp": {
         "name": "field",

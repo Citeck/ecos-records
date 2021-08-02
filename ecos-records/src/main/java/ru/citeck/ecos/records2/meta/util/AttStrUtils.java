@@ -149,7 +149,7 @@ public class AttStrUtils {
 
     public static int indexOf(String str, String subString, int fromIdx) {
 
-        if (subString.length() > 1 && hasOpenContextChar(subString)) {
+        if (subString.length() > 1 && hasOpenContextChar(subString) && !subString.equals("[]")) {
             return -1;
         }
 

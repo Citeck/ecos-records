@@ -19,6 +19,8 @@ interface LocalRecordsResolver {
 
     fun delete(records: List<RecordRef>): List<DelStatus>
 
+    fun isSourceTransactional(sourceId: String): Boolean
+
     fun commit(recordRefs: List<RecordRef>)
 
     fun rollback(recordRefs: List<RecordRef>)

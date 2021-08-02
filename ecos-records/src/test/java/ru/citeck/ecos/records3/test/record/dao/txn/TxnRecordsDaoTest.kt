@@ -12,6 +12,7 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
+import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -33,6 +34,11 @@ class TxnRecordsDaoTest {
         records.register(TxnDao())
 
         testImpl(records, TxnDao.ID)
+
+        records.register(TxnDao())
+        records.register(RecordsDaoProxy("proxy-id", TxnDao.ID))
+
+        testImpl(records, "proxy-id")
     }
 
     @Test
@@ -49,7 +55,7 @@ class TxnRecordsDaoTest {
         remoteServices.recordsServiceV1.register(TxnDao())
 
         val localServices = object : RecordsServiceFactory() {
-            override fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
+            override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
                 return RemoteRecordsResolver(
                     this,
                     object : RemoteRecordsRestApi {
@@ -76,6 +82,13 @@ class TxnRecordsDaoTest {
         }
         RequestContext.setDefaultServices(localServices)
         testImpl(localServices.recordsServiceV1, remoteAppName + "/" + TxnDao.ID)
+
+        remoteServices.recordsServiceV1.register(TxnDao())
+
+        localServices.recordsServiceV1.register(
+            RecordsDaoProxy("proxy-id", remoteAppName + "/" + TxnDao.ID)
+        )
+        testImpl(localServices.recordsServiceV1, "proxy-id")
     }
 
     private fun testImpl(records: RecordsService, sourceId: String) {

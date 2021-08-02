@@ -8,4 +8,6 @@ interface TxnRecordsDao : RecordsDao {
     fun commit(txnId: UUID, recordsId: List<String>)
 
     fun rollback(txnId: UUID, recordsId: List<String>)
+
+    fun isTransactional(): Boolean = true
 }

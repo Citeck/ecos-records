@@ -318,6 +318,17 @@ class RemoteRecordsResolver(
         completeTransaction(recordRefs, TxnBody.TxnAction.ROLLBACK)
     }
 
+    fun isSourceTransactional(sourceId: String): Boolean {
+
+        if (!sourceId.contains("/")) {
+            return false
+        }
+        val appNameAndSourceId = sourceId.split('/', limit = 2)
+        val sourceMetaId = appNameAndSourceId[0] + "/src@" + appNameAndSourceId[1]
+
+        return getSourceIdMeta(sourceMetaId).isTransactional
+    }
+
     private fun completeTransaction(recordRefs: List<RecordRef>, action: TxnBody.TxnAction) {
 
         if (recordRefs.isEmpty()) {
@@ -329,9 +340,8 @@ class RemoteRecordsResolver(
         RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, refs) ->
 
             val appName = sourceId.substringBefore("/", "")
-            val sourceMetaId = appName + "/src@" + sourceId.substringAfter("/", "")
 
-            if (appName.isNotBlank() && getSourceIdMeta(sourceMetaId).isTransactional) {
+            if (appName.isNotBlank() && isSourceTransactional(sourceId)) {
 
                 val body = TxnBody()
                 body.setRecords(refs.map { it.value.removeAppName() })

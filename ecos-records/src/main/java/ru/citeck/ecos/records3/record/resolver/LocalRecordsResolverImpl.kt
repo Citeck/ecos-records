@@ -684,17 +684,27 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return daoResult
     }
 
+    override fun isSourceTransactional(sourceId: String): Boolean {
+        return txnDao[sourceId]?.second?.isTransactional() == true
+    }
+
     override fun commit(recordRefs: List<RecordRef>) {
         val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
         RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, recordRefs) ->
-            txnDao[sourceId]?.second?.commit(txnId, recordRefs.map { it.value.id })
+            val dao = txnDao[sourceId]
+            if (dao != null && dao.second.isTransactional()) {
+                dao.second.commit(txnId, recordRefs.map { it.value.id })
+            }
         }
     }
 
     override fun rollback(recordRefs: List<RecordRef>) {
         val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
         RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, recordRefs) ->
-            txnDao[sourceId]?.second?.rollback(txnId, recordRefs.map { it.value.id })
+            val dao = txnDao[sourceId]
+            if (dao != null && dao.second.isTransactional()) {
+                dao.second.rollback(txnId, recordRefs.map { it.value.id })
+            }
         }
     }
 
@@ -759,7 +769,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         recordsSourceInfo.features.mutate = mutateDao[sourceId] != null
         recordsSourceInfo.features.delete = deleteDao[sourceId] != null
         recordsSourceInfo.features.getAtts = attsDao[sourceId] != null
-        recordsSourceInfo.features.transactional = txnDao[sourceId] != null
+        recordsSourceInfo.features.transactional = txnDao[sourceId]?.second?.isTransactional() == true
 
         val columnsSourceId = recordsDao.javaClass.getAnnotation(ColumnsSourceId::class.java)
 

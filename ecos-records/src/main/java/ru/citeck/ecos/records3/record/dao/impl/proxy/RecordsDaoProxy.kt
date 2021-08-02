@@ -20,6 +20,10 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
+import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
+import java.util.*
+import kotlin.collections.LinkedHashMap
 
 open class RecordsDaoProxy(
     private val id: String,
@@ -30,11 +34,13 @@ open class RecordsDaoProxy(
     RecordsAttsDao,
     RecordsMutateDao,
     RecordsDeleteDao,
-    HasClientMeta {
+    HasClientMeta,
+    TxnRecordsDao {
 
     private val attsProc = processor as? AttsProxyProcessor
     private val mutProc = processor as? MutateProxyProcessor
     private val clientMetaProc = processor as? HasClientMeta
+    private lateinit var recordsResolver: LocalRemoteResolver
 
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
@@ -136,10 +142,23 @@ open class RecordsDaoProxy(
         if (processor is ServiceFactoryAware) {
             processor.setRecordsServiceFactory(serviceFactory)
         }
+        recordsResolver = serviceFactory.recordsResolver
     }
 
     override fun getClientMeta(): ClientMeta? {
         return clientMetaProc?.getClientMeta()
+    }
+
+    override fun commit(txnId: UUID, recordsId: List<String>) {
+        recordsResolver.commit(recordsId.map { toTargetRef(it) })
+    }
+
+    override fun rollback(txnId: UUID, recordsId: List<String>) {
+        recordsResolver.rollback(recordsId.map { toTargetRef(it) })
+    }
+
+    override fun isTransactional(): Boolean {
+        return recordsResolver.isSourceTransactional(targetId)
     }
 
     private class ProxyRecVal(

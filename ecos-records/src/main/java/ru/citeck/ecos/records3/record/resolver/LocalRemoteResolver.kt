@@ -254,6 +254,13 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
+    fun isSourceTransactional(sourceId: String): Boolean {
+        if (isRemoteSourceId(sourceId) && remote != null) {
+            return remote.isSourceTransactional(sourceId)
+        }
+        return local.isSourceTransactional(sourceId)
+    }
+
     fun commit(recordRefs: List<RecordRef>) {
         doWithGroupOfRemoteOrLocal(recordRefs) { refs, isRemote ->
             if (isRemote) {

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AttStrUtilsTest {
@@ -48,6 +49,11 @@ public class AttStrUtilsTest {
         assertEquals(new AttStrUtils.SplitPair("a{b|}cde", "fg)"), AttStrUtils.splitByFirst("a{b|}cde|fg)", "|"));
 
         assertEquals(new AttStrUtils.SplitPair("abc", "'def'"), AttStrUtils.splitByFirst("abc|'def'", "|"));
+    }
+
+    @Test
+    void indexOfTest() {
+        assertThat(AttStrUtils.indexOf("some[]att", "[]")).isEqualTo(4);
     }
 
     @Test

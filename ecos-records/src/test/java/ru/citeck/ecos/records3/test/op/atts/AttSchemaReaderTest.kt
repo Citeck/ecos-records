@@ -30,9 +30,11 @@ class AttSchemaReaderTest {
     fun partiallyIncorrectSchemaTest() {
 
         val records = RecordsServiceFactory().recordsServiceV1
-        records.register(RecordsDaoBuilder.create("test")
-            .addRecord("test", mapOf("att" to "value"))
-            .build())
+        records.register(
+            RecordsDaoBuilder.create("test")
+                .addRecord("test", mapOf("att" to "value"))
+                .build()
+        )
 
         val check = { atts: RecordAtts ->
             assertThat(atts.getAtt("correct").asText()).isEqualTo("value")
@@ -40,14 +42,19 @@ class AttSchemaReaderTest {
         }
 
         val ref = RecordRef.valueOf("test@test")
-        val attsToReq =  mapOf(
+        val attsToReq = mapOf(
             "correct" to "att",
             "incorrect" to "att{"
         )
         check(records.getAtts(ref, attsToReq))
-        check(records.query(RecordsQuery.create {
-            withSourceId("test")
-            withQuery(Predicates.eq("att", "value"))
-        }, attsToReq).getRecords()[0])
+        check(
+            records.query(
+                RecordsQuery.create {
+                    withSourceId("test")
+                    withQuery(Predicates.eq("att", "value"))
+                },
+                attsToReq
+            ).getRecords()[0]
+        )
     }
 }

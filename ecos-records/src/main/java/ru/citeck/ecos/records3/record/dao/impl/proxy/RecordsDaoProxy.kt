@@ -44,16 +44,17 @@ open class RecordsDaoProxy(
 
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
-        val contextAtts = getContextAtts()
+        val procContext = ProxyProcContext()
+        val contextAtts = getContextAtts(procContext)
         val attsFromTarget = recordsService.getAtts(toTargetRefs(recordsId), contextAtts, true)
 
-        return postProcessAtts(attsFromTarget)
+        return postProcessAtts(attsFromTarget, procContext)
     }
 
-    private fun postProcessAtts(attsFromTarget: List<RecordAtts>): List<AttValue> {
+    private fun postProcessAtts(attsFromTarget: List<RecordAtts>, procContext: ProxyProcContext): List<AttValue> {
 
         val proxyTargetAtts = attsFromTarget.map { ProxyRecordAtts(it) }
-        val postProcAtts = attsProc?.attsPostProcess(proxyTargetAtts) ?: proxyTargetAtts
+        val postProcAtts = attsProc?.attsPostProcess(proxyTargetAtts, procContext) ?: proxyTargetAtts
 
         if (postProcAtts.size != attsFromTarget.size) {
             error(
@@ -71,7 +72,8 @@ open class RecordsDaoProxy(
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
 
-        val contextAtts = getContextAtts()
+        val procContext = ProxyProcContext()
+        val contextAtts = getContextAtts(procContext)
 
         val targetQuery = recsQuery.copy().withSourceId(targetId).build()
 
@@ -88,7 +90,7 @@ open class RecordsDaoProxy(
             val queryResWithAtts = RecsQueryRes<Any>()
             queryResWithAtts.setHasMore(queryRes.getHasMore())
             queryResWithAtts.setTotalCount(queryRes.getTotalCount())
-            queryResWithAtts.setRecords(postProcessAtts(queryRes.getRecords()))
+            queryResWithAtts.setRecords(postProcessAtts(queryRes.getRecords(), procContext))
             queryResWithAtts
         }
     }
@@ -99,7 +101,8 @@ open class RecordsDaoProxy(
 
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
 
-        val recsToMutate = mutProc?.mutatePreProcess(records) ?: records
+        val procContext = ProxyProcContext()
+        val recsToMutate = mutProc?.mutatePreProcess(records, procContext) ?: records
 
         val resultRefs = recordsService.mutate(
             recsToMutate.map {
@@ -107,7 +110,7 @@ open class RecordsDaoProxy(
             }
         )
 
-        val processedRefs = mutProc?.mutatePostProcess(resultRefs) ?: resultRefs
+        val processedRefs = mutProc?.mutatePostProcess(resultRefs, procContext) ?: resultRefs
         if (processedRefs.size != resultRefs.size) {
             error("RecordRefs size was changed by processor: ${mutProc?.javaClass}")
         }
@@ -122,10 +125,10 @@ open class RecordsDaoProxy(
         return RecordRef.valueOf("$targetId@$recordId")
     }
 
-    private fun getContextAtts(): Map<String, String> {
+    private fun getContextAtts(procContext: ProxyProcContext): Map<String, String> {
 
         var schemaAtts = AttSchemaUtils.simplifySchema(AttContext.getCurrentSchemaAtt().inner)
-        schemaAtts = attsProc?.attsPreProcess(schemaAtts) ?: schemaAtts
+        schemaAtts = attsProc?.attsPreProcess(schemaAtts, procContext) ?: schemaAtts
 
         val writer = serviceFactory.attSchemaWriter
         val result = LinkedHashMap<String, String>()

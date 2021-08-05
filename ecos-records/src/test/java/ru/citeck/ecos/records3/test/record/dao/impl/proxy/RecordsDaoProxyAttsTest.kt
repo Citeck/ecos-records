@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.impl.proxy.AttsProxyProcessor
+import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -81,8 +82,8 @@ class RecordsDaoProxyAttsTest {
         val proxyWithProc = RecordsDaoProxy(
             PROXY_ID, TARGET_ID,
             object : AttsProxyProcessor {
-                override fun attsPreProcess(schemaAtts: List<SchemaAtt>) = schemaAtts
-                override fun attsPostProcess(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts> {
+                override fun attsPreProcess(schemaAtts: List<SchemaAtt>, context: ProxyProcContext) = schemaAtts
+                override fun attsPostProcess(atts: List<ProxyRecordAtts>, context: ProxyProcContext): List<ProxyRecordAtts> {
                     return atts.map { ProxyRecordAtts(it.atts, mapOf("proc-att" to "proc-value")) }
                 }
             }

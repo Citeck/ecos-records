@@ -5,7 +5,7 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 
 interface MutateProxyProcessor : ProxyProcessor {
 
-    fun mutatePreProcess(atts: List<LocalRecordAtts>): List<LocalRecordAtts>
+    fun mutatePreProcess(atts: List<LocalRecordAtts>, context: ProxyProcContext): List<LocalRecordAtts>
 
-    fun mutatePostProcess(records: List<RecordRef>): List<RecordRef>
+    fun mutatePostProcess(records: List<RecordRef>, context: ProxyProcContext): List<RecordRef>
 }

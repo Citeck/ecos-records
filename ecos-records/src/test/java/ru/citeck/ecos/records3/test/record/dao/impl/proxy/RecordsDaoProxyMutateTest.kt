@@ -9,6 +9,7 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.dao.impl.proxy.MutateProxyProcessor
+import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 
@@ -62,7 +63,10 @@ class RecordsDaoProxyMutateTest {
             RecordsDaoProxy(
                 PROXY_ID, TARGET_ID,
                 object : MutateProxyProcessor {
-                    override fun mutatePreProcess(atts: List<LocalRecordAtts>): List<LocalRecordAtts> {
+                    override fun mutatePreProcess(
+                        atts: List<LocalRecordAtts>,
+                        context: ProxyProcContext
+                    ): List<LocalRecordAtts> {
                         return atts.map {
                             val copyAtts = it.attributes.deepCopy()
                             copyAtts.set("field0", null)
@@ -70,7 +74,10 @@ class RecordsDaoProxyMutateTest {
                             LocalRecordAtts(it.id, copyAtts)
                         }
                     }
-                    override fun mutatePostProcess(records: List<RecordRef>): List<RecordRef> {
+                    override fun mutatePostProcess(
+                        records: List<RecordRef>,
+                        context: ProxyProcContext
+                    ): List<RecordRef> {
                         return records
                     }
                 }

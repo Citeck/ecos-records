@@ -4,7 +4,7 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 
 interface AttsProxyProcessor : ProxyProcessor {
 
-    fun prepareAttsSchema(schemaAtts: List<SchemaAtt>): List<SchemaAtt>
+    fun attsPreProcess(schemaAtts: List<SchemaAtt>): List<SchemaAtt>
 
-    fun postProcessAtts(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts>
+    fun attsPostProcess(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts>
 }

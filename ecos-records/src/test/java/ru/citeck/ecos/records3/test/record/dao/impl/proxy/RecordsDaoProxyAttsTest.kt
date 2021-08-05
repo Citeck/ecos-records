@@ -81,8 +81,8 @@ class RecordsDaoProxyAttsTest {
         val proxyWithProc = RecordsDaoProxy(
             PROXY_ID, TARGET_ID,
             object : AttsProxyProcessor {
-                override fun prepareAttsSchema(schemaAtts: List<SchemaAtt>) = schemaAtts
-                override fun postProcessAtts(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts> {
+                override fun attsPreProcess(schemaAtts: List<SchemaAtt>) = schemaAtts
+                override fun attsPostProcess(atts: List<ProxyRecordAtts>): List<ProxyRecordAtts> {
                     return atts.map { ProxyRecordAtts(it.atts, mapOf("proc-att" to "proc-value")) }
                 }
             }

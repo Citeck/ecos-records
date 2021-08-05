@@ -62,13 +62,16 @@ class RecordsDaoProxyMutateTest {
             RecordsDaoProxy(
                 PROXY_ID, TARGET_ID,
                 object : MutateProxyProcessor {
-                    override fun prepareMutation(atts: List<LocalRecordAtts>): List<LocalRecordAtts> {
+                    override fun mutatePreProcess(atts: List<LocalRecordAtts>): List<LocalRecordAtts> {
                         return atts.map {
                             val copyAtts = it.attributes.deepCopy()
                             copyAtts.set("field0", null)
                             copyAtts.set(procAtt, procAttValue)
                             LocalRecordAtts(it.id, copyAtts)
                         }
+                    }
+                    override fun mutatePostProcess(records: List<RecordRef>): List<RecordRef> {
+                        return records
                     }
                 }
             )

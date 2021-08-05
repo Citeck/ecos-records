@@ -26,6 +26,7 @@ class RequestContext {
     companion object {
 
         private const val TXN_MUT_RECORDS_KEY = "__txn_mut_records_key__"
+        private const val TXN_OWNED_KEY = "__txn_owned__"
 
         private val log = KotlinLogging.logger {}
 
@@ -107,6 +108,7 @@ class RequestContext {
                 }
             ) {
                 if (isTxnOwner && !readOnly) {
+                    it.putVar(TXN_OWNED_KEY, true)
                     try {
                         val res = action.invoke()
                         it.completeTxn(true)
@@ -114,6 +116,8 @@ class RequestContext {
                     } catch (e: Throwable) {
                         it.completeTxn(false)
                         throw e
+                    } finally {
+                        it.removeVar<Any>(TXN_OWNED_KEY)
                     }
                 } else {
                     action.invoke()
@@ -259,6 +263,9 @@ class RequestContext {
 
     fun getTxnChangedRecords(): MutableSet<RecordRef>? {
         val txnId = ctxData.txnId ?: return null
+        if (getVar<Boolean>(TXN_OWNED_KEY) != true) {
+            return null
+        }
         return getMap<UUID, MutableSet<RecordRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
     }
 

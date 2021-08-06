@@ -5,6 +5,7 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.HasListView
 import java.util.*
@@ -16,7 +17,12 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
         private fun <T> getScalar(node: JsonNode, name: String, mapper: (JsonNode) -> T): T? {
             val scalar = node.path(name)
             return if (scalar.isNull || scalar.isMissingNode) {
-                null
+                val type = ScalarType.getBySchema(name)
+                if (type != null && node.has(type.mirrorAtt)) {
+                    getScalar(node.path(type.mirrorAtt), name, mapper)
+                } else {
+                    null
+                }
             } else {
                 mapper.invoke(scalar)
             }

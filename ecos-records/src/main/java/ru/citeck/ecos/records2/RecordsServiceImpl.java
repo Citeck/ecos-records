@@ -86,7 +86,7 @@ public class RecordsServiceImpl extends AbstractRecordsService {
             setDebugToResult(result, context);
 
             return result;
-        });
+        }, () -> "Query: " + query);
     }
 
     private void setDebugToResult(DebugResult result, RequestContext context) {
@@ -393,18 +393,25 @@ public class RecordsServiceImpl extends AbstractRecordsService {
 
     /* OTHER */
 
-    private <T> RecordsQueryResult<T> handleRecordsQuery(Supplier<RecordsQueryResult<T>> supplier) {
-        return handleRecordsRead(supplier, RecordsQueryResult::new);
+    private <T> RecordsQueryResult<T> handleRecordsQuery(Supplier<RecordsQueryResult<T>> supplier,
+                                                         Supplier<String> logInfo) {
+        return handleRecordsRead(supplier, RecordsQueryResult::new, logInfo);
     }
 
-    private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl, Supplier<T> orElse) {
+    private <T extends RecordsResult> T handleRecordsRead(Supplier<T> impl,
+                                                          Supplier<T> orElse,
+                                                          Supplier<String> logInfo) {
 
         T result;
 
         try {
             result = QueryContext.withContext(serviceFactory, impl);
         } catch (Throwable e) {
-            log.error("Records resolving error", e);
+            String logMsg = "Records resolving error.";
+            if (logInfo != null) {
+                logMsg += " " + logInfo.get();
+            }
+            log.error(logMsg, e);
             result = orElse.get();
             result.addError(ErrorUtils.convertException(e));
         }

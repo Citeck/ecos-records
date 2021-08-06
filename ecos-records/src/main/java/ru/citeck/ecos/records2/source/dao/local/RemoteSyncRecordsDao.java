@@ -35,6 +35,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
                                      implements JobsProvider {
 
     private static final String MODIFIED_ATT_KEY = "__sync_modified_att";
+    private static final long FULL_RESET_TIME = TimeUnit.MINUTES.toMillis(5);
 
     private final Class<T> model;
 
@@ -45,7 +46,8 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
 
     private Function<RecordsQuery, RecsQueryRes<RecordAtts>> queryImpl;
 
-    private Instant currentSyncDate = Instant.ofEpochMilli(0);
+    private Instant currentSyncDate = Instant.EPOCH;
+    private long lastUpdateTimeMs = 0;
 
     public RemoteSyncRecordsDao(String sourceId, Class<T> model) {
         super(sourceId);
@@ -140,11 +142,17 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             }
         }
 
-        this.currentSyncDate = lastModified;
+        if (lastModified.isAfter(this.currentSyncDate)) {
+            lastUpdateTimeMs = System.currentTimeMillis();
+            this.currentSyncDate = lastModified;
+        }
 
         if (result.getRecords().isEmpty()) {
             if (!firstSyncFuture.isDone()) {
                 firstSyncFuture.complete(true);
+            }
+            if (System.currentTimeMillis() - lastUpdateTimeMs > FULL_RESET_TIME) {
+                currentSyncDate = Instant.EPOCH;
             }
             return false;
         }

@@ -44,6 +44,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         val log = KotlinLogging.logger {}
 
         const val CTX_SOURCE_ID_KEY: String = "ctx-source-id"
+
+        private val ID_SCALARS = setOf(ScalarType.LOCAL_ID, ScalarType.ID, ScalarType.ASSOC)
+        private val ID_SCALARS_SCHEMA = ID_SCALARS.map { it.schema }.toSet()
     }
 
     private val attValuesConverter = factory.attValuesConverter
@@ -314,7 +317,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             val attValues = toList(attValue)
             val alias = att.getAliasForValue()
             if (att.multiple) {
-                val values: List<ValueContext> = attValues.stream()
+                var valuesStream = attValues.stream()
+                if (att.inner.size == 1) {
+                    val scalar = ScalarType.getBySchema(att.inner[0].name)
+                    if (scalar != null && ID_SCALARS.contains(scalar)) {
+                        valuesStream = valuesStream.filter { !isEmpty(it) }
+                    }
+                }
+                val values: List<ValueContext> = valuesStream
                     .map { v: Any? -> context.toValueContext(value, v) }
                     .collect(Collectors.toList())
                 result[alias] = resolve(values, att.inner, context)
@@ -395,6 +405,30 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
     }
 
+    private fun isEmpty(rawValue: Any?): Boolean {
+        if (isNull(rawValue)) {
+            return true
+        }
+        if (rawValue is String) {
+            return rawValue.isEmpty()
+        }
+        if (rawValue is DataValue) {
+            return rawValue.isTextual() && rawValue.asText().isEmpty() ||
+                rawValue.isArray() && rawValue.size() == 0
+        }
+        if (rawValue is JsonNode) {
+            return rawValue.isTextual && rawValue.asText().isEmpty() ||
+                rawValue.isArray && rawValue.size() == 0
+        }
+        if (LibsUtils.isJacksonPresent()) {
+            if (rawValue is com.fasterxml.jackson.databind.JsonNode) {
+                return rawValue.isTextual && rawValue.asText().isEmpty() ||
+                    rawValue.isArray && rawValue.size() == 0
+            }
+        }
+        return false
+    }
+
     private fun isNull(rawValue: Any?): Boolean {
 
         if (rawValue == null || rawValue is RecordRef && RecordRef.isEmpty(rawValue) ||
@@ -440,8 +474,12 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 valueRef
             } else {
                 val id = value.id
-                var computedRef = if (id == null || id is String && StringUtils.isBlank(id)) {
-                    RecordRef.create(ctxSourceId, UUID.randomUUID().toString())
+                var computedRef: RecordRef = if (id == null || id is String && StringUtils.isBlank(id)) {
+                    if (resolveCtx != null && ID_SCALARS_SCHEMA.contains(resolveCtx.path)) {
+                        RecordRef.create(ctxSourceId, UUID.randomUUID().toString())
+                    } else {
+                        RecordRef.EMPTY
+                    }
                 } else if (id is RecordRef) {
                     id
                 } else if (id is DataValue) {
@@ -457,7 +495,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
                 if (ctxSourceId.isNotEmpty() &&
                     computedRef.appName.isEmpty() &&
-                    computedRef.sourceId.isEmpty()
+                    computedRef.sourceId.isEmpty() &&
+                    computedRef.id.isNotEmpty()
                 ) {
                     computedRef = RecordRef.create(ctxSourceId, computedRef.id)
                 }

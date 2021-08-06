@@ -19,19 +19,19 @@ class StringValueFactory : AttValueFactory<String> {
         converters["mltext"] = { MLText(it) }
     }
 
-    override fun getValue(value: String): AttValue? {
+    override fun getValue(value: String): AttValue {
 
         return object : AttValue {
 
-            override fun getId(): Any? {
+            override fun getId(): Any {
                 return value
             }
 
-            override fun asText(): String? {
+            override fun asText(): String {
                 return value
             }
 
-            override fun asDouble(): Double? {
+            override fun asDouble(): Double {
                 return value.toDouble()
             }
 

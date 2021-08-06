@@ -11,6 +11,7 @@ import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.impl.proxy.AttsProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
@@ -103,6 +104,10 @@ class RecordsDaoProxyAttsTest {
 
     private fun checkFull(getAtts: (sourceId: String, atts: List<String>) -> List<ObjectData>) {
 
+        compareAtts(listOf("_disp"), getAtts)
+        compareAtts(listOf("_num?num"), getAtts)
+        compareAtts(listOf("_str?str"), getAtts)
+        compareAtts(listOf("_bool?bool"), getAtts)
         compareAtts(listOf("_type?id"), getAtts)
         compareAtts(listOf("_etype?id"), getAtts)
         // compareAtts(listOf("_type?disp"), getAtts)
@@ -163,6 +168,25 @@ class RecordsDaoProxyAttsTest {
 
         fun getEcosType(): String {
             return "test-type"
+        }
+
+        fun getDisplayName(): String {
+            return "displayName"
+        }
+
+        @AttName("?num")
+        fun getNum(): Double {
+            return 123.123
+        }
+
+        @AttName("?str")
+        fun getStr(): String {
+            return "str-value"
+        }
+
+        @AttName("?bool")
+        fun getBool(): Boolean {
+            return true
         }
     }
 

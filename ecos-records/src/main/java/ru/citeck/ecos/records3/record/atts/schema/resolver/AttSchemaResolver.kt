@@ -34,6 +34,7 @@ import ru.citeck.ecos.records3.utils.AttUtils
 import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
@@ -72,11 +73,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         var schemaAttsToLoad: List<SchemaAtt> = args.attributes
 
         if (!args.rawAtts) {
-            val processorsAtts: List<SchemaAtt> = attProcService.getProcessorsAtts(schemaAttsToLoad)
-            if (processorsAtts.isNotEmpty()) {
-                schemaAttsToLoad = ArrayList(schemaAttsToLoad)
-                schemaAttsToLoad.addAll(processorsAtts)
-            }
+            schemaAttsToLoad = expandAttsWithProcAtts(schemaAttsToLoad)
         }
         val schemaAtts = schemaAttsToLoad
         val context = ResolveContext(attValuesConverter, args.mixinCtx, recordTypeService)
@@ -92,6 +89,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
         val result = resolveRoot(attValues, simpleAtts, context)
         return resolveResultsWithAliases(result, schemaAtts, args.rawAtts)
+    }
+
+    private fun expandAttsWithProcAtts(atts: List<SchemaAtt>): List<SchemaAtt> {
+        if (atts.isEmpty()) {
+            return atts
+        }
+        val expandedAtts = atts.mapTo(ArrayList()) {
+            it.withInner(expandAttsWithProcAtts(it.inner))
+        }
+        expandedAtts.addAll(attProcService.getProcessorsAtts(atts))
+        return expandedAtts
     }
 
     private fun resolveResultsWithAliases(

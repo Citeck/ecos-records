@@ -42,6 +42,13 @@ data class SchemaAtt(
         return copy().withAlias(alias).build()
     }
 
+    fun withInner(inner: List<SchemaAtt>): SchemaAtt {
+        if (this.inner == inner) {
+            return this
+        }
+        return copy().withInner(inner).build()
+    }
+
     fun getScalarName(): String? {
         return if (isScalar()) {
             name

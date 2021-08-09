@@ -113,9 +113,14 @@ class RequestContext {
                         val res = action.invoke()
                         it.completeTxn(true)
                         res
-                    } catch (e: Throwable) {
-                        it.completeTxn(false)
-                        throw e
+                    } catch (originalEx: Throwable) {
+                        try {
+                            it.completeTxn(false)
+                        } catch (e: Throwable) {
+                            log.error("Transaction rollback completed with error", e)
+                            originalEx.addSuppressed(e)
+                        }
+                        throw originalEx
                     } finally {
                         it.removeVar<Any>(TXN_OWNED_KEY)
                     }

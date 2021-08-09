@@ -26,6 +26,36 @@ import kotlin.concurrent.thread
 class TxnRecordsDaoTest {
 
     @Test
+    fun deleteTest() {
+
+        val services = RecordsServiceFactory()
+        RequestContext.setDefaultServices(services)
+        val records = services.recordsServiceV1
+
+        val recs = mutableMapOf(
+            "first" to mapOf("key" to "value"),
+            "second" to mapOf("key" to "value2")
+        )
+        records.register(object : RecordAttsDao, RecordDeleteDao {
+            override fun getId() = "test"
+            override fun getRecordAtts(recordId: String): Any? {
+                return recs[recordId]
+            }
+            override fun delete(recordId: String): DelStatus {
+                recs.remove(recordId)
+                return DelStatus.OK
+            }
+        })
+
+        val ref = RecordRef.valueOf("test@first")
+        RequestContext.doWithTxn(readOnly = false) {
+            assertThat(records.getAtt(ref, "key").asText()).isEqualTo("value")
+            records.delete(ref)
+            assertThat(records.getAtt(ref, "key").asText()).isEqualTo("")
+        }
+    }
+
+    @Test
     fun localTest() {
 
         val services = RecordsServiceFactory()

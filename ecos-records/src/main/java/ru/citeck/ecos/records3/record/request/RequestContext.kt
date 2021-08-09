@@ -17,11 +17,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 class RequestContext {
 
     companion object {
+
+        private const val READ_ONLY_CACHE_KEY = "__read_only_cache__"
 
         private val log = KotlinLogging.logger {}
 
@@ -170,7 +173,12 @@ class RequestContext {
             } finally {
                 currentMessages.addAll(current.messages)
                 current.messages = currentMessages
+                if (current.ctxData.readOnly && !prevCtxData.readOnly) {
+                    current.getSet<String>(READ_ONLY_CACHE_KEY).forEach { current.removeVar<Any>(it) }
+                    current.removeVar<Any>(READ_ONLY_CACHE_KEY)
+                }
                 current.ctxData = prevCtxData
+
                 if (isContextOwner) {
                     current.messages.forEach { msg ->
                         when (msg.level) {
@@ -255,6 +263,16 @@ class RequestContext {
         return value as T
     }
 
+    fun <K, V> getReadOnlyCache(key: String): MutableMap<K, V> {
+        if (!ctxData.readOnly) {
+            return HashMap()
+        }
+        return getOrPutVar(key, MutableMap::class.java) {
+            getSet<String>(READ_ONLY_CACHE_KEY).add(key)
+            LinkedHashMap()
+        }
+    }
+
     fun <K, V> getMap(key: String): MutableMap<K, V> {
         return getOrPutVar(key, MutableMap::class.java) { LinkedHashMap() }
     }
@@ -263,7 +281,7 @@ class RequestContext {
         return getOrPutVar(key, MutableList::class.java) { ArrayList() }
     }
 
-    fun <T> getSet(key: String): MutableSet<T>? {
+    fun <T> getSet(key: String): MutableSet<T> {
         return getOrPutVar(key, MutableSet::class.java) { HashSet() }
     }
 

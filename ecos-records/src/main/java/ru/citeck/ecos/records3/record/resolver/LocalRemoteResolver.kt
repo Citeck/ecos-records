@@ -132,7 +132,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         } else {
             REFS_CACHE_NOT_RAW_KEY
         }
-        val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getMap(cacheKey)
+        val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
         val cachedAttsWithAliases: MutableMap<String, String> = HashMap(
             attributes.entries.mapNotNull {
                 val value = it.value

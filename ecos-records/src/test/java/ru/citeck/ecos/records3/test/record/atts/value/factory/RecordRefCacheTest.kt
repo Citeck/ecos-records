@@ -55,7 +55,7 @@ class RecordRefCacheTest {
         assertThat(getAttsCounters["ref10"]!!.get()).isEqualTo(1)
         assertThat(recordsById["ref10"]!!.attCounters["?disp"]!!.get()).isEqualTo(1)
 
-        RequestContext.doWithCtx {
+        RequestContext.doWithCtx({ d -> d.withReadOnly(true) }) {
 
             // get atts test
 

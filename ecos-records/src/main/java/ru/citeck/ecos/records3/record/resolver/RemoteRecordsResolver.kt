@@ -144,7 +144,7 @@ class RemoteRecordsResolver(
     fun mutate(records: List<RecordAtts>): List<RecordRef> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<RecordRef>> = ArrayList<ValWithIdx<RecordRef>>()
+        val result: MutableList<ValWithIdx<RecordRef>> = ArrayList()
         val attsByApp: Map<String, MutableList<ValWithIdx<RecordAtts>>> = RecordsUtils.groupAttsByApp(records)
 
         attsByApp.forEach { (appArg, atts) ->
@@ -261,7 +261,34 @@ class RemoteRecordsResolver(
                 body.setAction(action)
                 setContextProps(body, context)
 
-                exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
+                var exception: Exception? = null
+                for (i in 1..4) {
+                    try {
+                        exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
+                        if (exception != null) {
+                            log.info {
+                                "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
+                                    "was completed successfully after ${i - 1} retry"
+                            }
+                            exception = null
+                        }
+                    } catch (e: Exception) {
+                        exception = e
+                        if (i == 4) {
+                            break
+                        }
+                        val sleepTime = i * 1000L
+                        log.warn {
+                            "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
+                                "failed with exception ${e::class.simpleName} " +
+                                "msg: ${e.message}. Retry sleep: ${sleepTime}ms"
+                        }
+                        Thread.sleep(sleepTime)
+                    }
+                }
+                if (exception != null) {
+                    throw exception
+                }
             }
         }
     }

@@ -141,7 +141,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
         val resp = MutateResp()
         try {
-            recordsTxnService.doInTransaction(false) {
+            doInWriteTxn(body.txnId) {
                 resp.setRecords(
                     recordsService.mutate(body.getRecords()).map {
                         RecordAtts(it.withDefaultAppName(currentAppName))
@@ -167,7 +167,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
         val resp = DeleteResp()
         try {
-            recordsTxnService.doInTransaction(false) {
+            doInWriteTxn(body.txnId) {
                 resp.setStatuses(recordsService.delete(body.records))
             }
         } catch (e: Throwable) {
@@ -199,13 +199,6 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     private fun <T> doWithContext(body: RequestBody, readOnly: Boolean, action: (RequestContext) -> T): T {
-        val actionImpl: (RequestContext) -> T = if (body.txnId == null && !readOnly) {
-            {
-                RequestContext.doWithTxn(readOnly) { action.invoke(it) }
-            }
-        } else {
-            action
-        }
         return RequestContext.doWithCtx(
             services,
             { ctxData ->
@@ -218,7 +211,19 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 trace.add(currentAppId)
                 ctxData.withRequestTrace(trace)
             },
-            actionImpl
+            action
         )
+    }
+
+    private inline fun <T> doInWriteTxn(txnId: UUID?, crossinline action: () -> T): T {
+        val actionImpl = {
+            recordsTxnService.doInTransaction(false) {
+                action.invoke()
+            }
+        }
+        if (txnId == null) {
+            return RequestContext.doWithTxn(false) { actionImpl.invoke() }
+        }
+        return actionImpl.invoke()
     }
 }

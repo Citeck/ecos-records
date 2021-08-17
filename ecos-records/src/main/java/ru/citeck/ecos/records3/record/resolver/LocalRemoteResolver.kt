@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.context.SystemContextUtil
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -25,6 +26,8 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     companion object {
         private val REFS_CACHE_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-raw"
         private val REFS_CACHE_NOT_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache"
+        private val REFS_CACHE_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-system-raw"
+        private val REFS_CACHE_NOT_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-system-cache"
     }
 
     private val local = services.localRecordsResolver
@@ -129,9 +132,17 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
 
         val cacheKey = if (rawAtts) {
-            REFS_CACHE_RAW_KEY
+            if (SystemContextUtil.isSystemContext(context)) {
+                REFS_CACHE_RAW_SYSTEM_KEY
+            } else {
+                REFS_CACHE_RAW_KEY
+            }
         } else {
-            REFS_CACHE_NOT_RAW_KEY
+            if (SystemContextUtil.isSystemContext(context)) {
+                REFS_CACHE_NOT_RAW_SYSTEM_KEY
+            } else {
+                REFS_CACHE_NOT_RAW_KEY
+            }
         }
         val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
         val cachedAttsWithAliases: MutableMap<String, String> = HashMap(

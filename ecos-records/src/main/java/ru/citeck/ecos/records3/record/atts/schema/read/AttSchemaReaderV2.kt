@@ -51,8 +51,15 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
         }
         if (attPathEndIdx == 0) {
             if (innerAtts.size == 1) {
-                return if (alias.isNotBlank()) {
-                    innerAtts[0].withAlias(alias)
+                return if (alias.isNotBlank() || attWithProc.processors.isNotEmpty()) {
+                    val attCopy = innerAtts[0].copy()
+                    if (alias.isNotBlank()) {
+                        attCopy.withAlias(alias)
+                    }
+                    if (attWithProc.processors.isNotEmpty()) {
+                        attCopy.withProcessors(attWithProc.processors)
+                    }
+                    attCopy.build()
                 } else {
                     innerAtts[0]
                 }

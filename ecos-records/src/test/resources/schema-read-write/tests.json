@@ -1,6 +1,48 @@
 {
   "tests": [
     {
+      "att": "appName{alias:?str|presuf('app/')}",
+      "exp": {
+        "name": "appName",
+        "multiple": false,
+        "inner": [
+          {
+            "alias": "alias",
+            "name": "?str",
+            "processors": [
+              {
+                "type": "presuf",
+                "arguments": ["app/"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "att": "appName{_str|presuf('app/')}",
+      "exp": {
+        "name": "appName",
+        "multiple": false,
+        "inner": [
+          {
+            "name": "_str",
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ],
+            "processors": [
+              {
+                "type": "presuf",
+                "arguments": ["app/"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "att": "children[]{label:.disp,value:.id}",
       "expAfterWrite": "children[]{label:?disp,value:?id}",
       "exp": {

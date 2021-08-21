@@ -3,9 +3,11 @@ package ru.citeck.ecos.records3.test.record.atts.schema
 import mu.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.io.file.std.EcosStdFile
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import java.io.File
 
@@ -136,11 +138,43 @@ class SchemaReadWriteTest {
         }
     }
 
+    @Test
+    fun testScalarWithProc() {
+
+        val def = SchemaAtt.create()
+            .withName("field")
+            .withInner(
+                listOf(
+                    SchemaAtt.create()
+                        .withName("?str")
+                        .withProcessors(listOf(AttProcDef("presuf", listOf(DataValue.createStr("arg")))))
+                        .build()
+                )
+            ).build()
+
+        assertThat(writer.write(def)).isEqualTo("field{?str|presuf('arg')}")
+
+        val outerDef = SchemaAtt.create()
+            .withName("outerField")
+            .withInner(def)
+            .build()
+
+        assertThat(writer.write(outerDef)).isEqualTo("outerField.field{?str|presuf('arg')}")
+
+        val outerDefWithMultipleInnerAtts = SchemaAtt.create()
+            .withName("outerField")
+            .withInner(listOf(def, def.copy { withName("field1") }))
+            .build()
+
+        assertThat(writer.write(outerDefWithMultipleInnerAtts))
+            .isEqualTo("outerField{field{?str|presuf('arg')},field1{?str|presuf('arg')}}")
+    }
+
     private fun testAtt(att: String, expected: SchemaAtt?, expAfterWrite: String = "") {
 
         val parsedAtt = reader.read(att)
         if (expected != null) {
-            assertThat(parsedAtt).isEqualTo(expected)
+            assertThat(parsedAtt).describedAs(att).isEqualTo(expected)
         }
 
         val attAfterWrite = writer.write(parsedAtt)

@@ -194,6 +194,10 @@ class RequestContext {
                 contextAtts["str"] = strCtxAtt
                 contextAtts["ref"] = refCtxAtt
 
+                val props = notNullServices.properties
+                contextAtts["appName"] = props.appName
+                contextAtts["appInstanceId"] = props.appInstanceId
+
                 current.ctxData = builder.withCtxAtts(contextAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
                     .build()

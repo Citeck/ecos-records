@@ -108,7 +108,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         rawAtts: Boolean
     ): List<Map<String, Any?>> {
         if (atts.isEmpty()) {
-            return values.map { emptyMap<String, Any?>() }
+            return values.map { emptyMap() }
         }
         val currentAtt: SchemaAtt = SchemaAtt.create()
             .withName("root")
@@ -185,7 +185,12 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     processors[att.getAliasForValue()] = att.processors
                 }
             }
-            attProcService.applyProcessors(result, processors)
+            val processedAtts = attProcService.applyProcessors(result, processors)
+            if (!root && !rawAtts && atts.size == 1) {
+                processedAtts[atts[0].getAliasForValue()]
+            } else {
+                processedAtts
+            }
         } else {
             throw IllegalStateException("Unknown value: $value. Atts: $atts")
         }

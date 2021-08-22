@@ -6,7 +6,12 @@ import ru.citeck.ecos.commons.data.ObjectData
 class AttPrefixSuffixProcessor : AbstractAttProcessor<AttPrefixSuffixProcessor.Args>() {
 
     override fun processOne(attributes: ObjectData, value: DataValue, args: Args): Any? {
-        return args.prefix + value.asText() + args.suffix
+        val text = value.asText()
+        return if (text.isEmpty()) {
+            value
+        } else {
+            args.prefix + value.asText() + args.suffix
+        }
     }
 
     override fun parseArgs(args: List<DataValue>): Args {

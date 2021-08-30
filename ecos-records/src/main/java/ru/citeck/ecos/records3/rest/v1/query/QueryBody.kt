@@ -10,6 +10,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.rest.v1.RequestBody
+import ru.citeck.ecos.records3.rest.v1.RestUtils
 import java.util.*
 import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 
@@ -43,14 +44,7 @@ class QueryBody : RequestBody() {
     @JsonSetter
     @com.fasterxml.jackson.annotation.JsonSetter
     fun setAttributes(attributes: Any?) {
-        val node: JsonNode = Json.mapper.toJson(attributes)
-        if (node.isArray) {
-            val objNode: ObjectNode = Json.mapper.newObjectNode()
-            node.forEach { n -> objNode.set<ObjectNode>(n.asText(), n) }
-            this.attributes = DataValue.create(objNode)
-        } else {
-            this.attributes = DataValue.create(node)
-        }
+        this.attributes = RestUtils.prepareReqAtts(attributes)
     }
 
     override fun equals(other: Any?): Boolean {

@@ -1,13 +1,17 @@
 package ru.citeck.ecos.records3.rest.v1.mutate
 
+import ecos.com.fasterxml.jackson210.annotation.JsonSetter
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.rest.v1.RequestBody
+import ru.citeck.ecos.records3.rest.v1.RestUtils
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import java.util.*
 
 class MutateBody : RequestBody, HasSensitiveData<MutateBody> {
 
     private var records: MutableList<RecordAtts> = ArrayList()
+    var attributes: Map<String, Any?> = emptyMap()
+    var rawAtts = false
 
     constructor() : super()
 
@@ -33,6 +37,12 @@ class MutateBody : RequestBody, HasSensitiveData<MutateBody> {
 
     fun addRecord(meta: RecordAtts) {
         records.add(meta)
+    }
+
+    @JsonSetter
+    @com.fasterxml.jackson.annotation.JsonSetter
+    fun setAttributes(attributes: Any?) {
+        this.attributes = RestUtils.prepareReqAttsAsMap(attributes)
     }
 
     override fun withoutSensitiveData(): MutateBody {

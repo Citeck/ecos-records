@@ -31,6 +31,8 @@ interface RecordAttsService {
 
     fun getAtts(values: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean, mixins: MixinContext): List<RecordAtts>
 
+    fun getId(value: Any?, defaultRef: RecordRef): RecordRef
+
     fun getAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,

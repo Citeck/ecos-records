@@ -7,10 +7,11 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.mixin.AttMixin
 import ru.citeck.ecos.records3.record.mixin.AttMixinsHolder
 import ru.citeck.ecos.records3.record.mixin.MixinContext
+import ru.citeck.ecos.records3.record.mixin.MixinContextImpl
 
 abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryAware {
 
-    private val mixinContext: MixinContext = MixinContext()
+    private val mixinContext = MixinContextImpl()
 
     protected lateinit var serviceFactory: RecordsServiceFactory
     protected lateinit var predicateService: PredicateService

@@ -7,6 +7,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
+import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import java.util.*
 import java.util.function.Consumer
@@ -22,6 +23,10 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
 
     companion object {
         private const val REF_ATT_ALIAS: String = "___ref___"
+        private val REF_ATT = SchemaAtt.create()
+            .withAlias(REF_ATT_ALIAS)
+            .withName("?id")
+            .build()
     }
 
     private val schemaReader = services.attSchemaReader
@@ -30,6 +35,27 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
 
     override fun <T : Any> getAtts(value: Any?, attributes: Class<T>): T {
         return getAtts(listOf(value), attributes)[0]
+    }
+
+    override fun getId(value: Any?, defaultRef: RecordRef): RecordRef {
+
+        value ?: return defaultRef
+
+        return when (value) {
+            is RecordRef -> value
+            is RecordAtts -> value.getId()
+            is String -> RecordRef.valueOf(value)
+            else -> {
+                val atts = getAtts(listOf(value), listOf(REF_ATT), false, EmptyMixinContext, emptyList())
+                val strId = atts[0].getStringOrNull(REF_ATT_ALIAS) ?: return defaultRef
+                val result = RecordRef.valueOf(strId)
+                if (RecordRef.isEmpty(result)) {
+                    defaultRef
+                } else {
+                    result
+                }
+            }
+        }
     }
 
     override fun getAtts(value: Any?, attributes: Map<String, String>): RecordAtts {
@@ -62,13 +88,16 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
     }
 
     override fun <T : Any> getAtts(values: List<*>, attributes: Class<T>): List<T> {
-        val attsMap = dtoSchemaReader.read(attributes)
-        return getAtts(values, attsMap, false, MixinContext())
-            .map { dtoSchemaReader.instantiate(attributes, it.getAtts()) ?: attributes.newInstance() }
+        val schema = dtoSchemaReader.read(attributes)
+        return getAtts(values, schema, false, EmptyMixinContext)
+            .map {
+                dtoSchemaReader.instantiate(attributes, it.getAtts())
+                    ?: error("Attributes class can't be instantiated. Class: $attributes Schema: $schema")
+            }
     }
 
     override fun getAtts(values: List<*>, attributes: Map<String, String>, rawAtts: Boolean): List<RecordAtts> {
-        return getAtts(values, attributes, rawAtts, MixinContext())
+        return getAtts(values, attributes, rawAtts, EmptyMixinContext)
     }
 
     override fun getAtts(
@@ -93,12 +122,7 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         rootAtts = ArrayList(rootAtts)
 
         if (!valueRefsProvided) {
-            rootAtts.add(
-                SchemaAtt.create()
-                    .withAlias(REF_ATT_ALIAS)
-                    .withName("?id")
-                    .build()
-            )
+            rootAtts.add(REF_ATT)
         }
 
         val data: List<Map<String, Any?>> = schemaResolver.resolve(

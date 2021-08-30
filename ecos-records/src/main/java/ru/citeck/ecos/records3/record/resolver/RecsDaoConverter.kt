@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -15,10 +16,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
-import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
-import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
-import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateCrossSrcDao
-import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
+import ru.citeck.ecos.records3.record.dao.mutate.*
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -35,6 +33,10 @@ class RecsDaoConverter {
 
     fun convert(dao: RecordsDao, targetType: Class<*>): RecordsDao {
 
+        if (targetType.isInstance(dao)) {
+            return dao
+        }
+
         if (dao is RecordsQueryDao && targetType == RecordsQueryResDao::class.java) {
             return mapToRecordsQueryResDao(dao)
         }
@@ -44,26 +46,74 @@ class RecsDaoConverter {
         if (dao is RecordDeleteDao && targetType == RecordsDeleteDao::class.java) {
             return mapToMultiDao(dao)
         }
-        if (targetType == RecordsMutateCrossSrcDao::class.java) {
-            if (dao is RecordMutateDao) {
-                return mapToMultiDao(dao)
-            }
-            if (dao is RecordsMutateDao) {
-                return mapToMultiDao(dao)
-            }
-            if (dao is RecordMutateDtoDao<*>) {
-                @Suppress("UNCHECKED_CAST")
-                return mapToMutateCrossSrc(dao as RecordMutateDtoDao<Any>)
+        if (targetType == RecordsMutateWithAnyResDao::class.java) {
+            when (dao) {
+                is RecordMutateDao -> {
+                    return mapToMutateWithAnyResDao(mapToMultiDao(dao))
+                }
+                is RecordsMutateDao -> {
+                    return mapToMutateWithAnyResDao(mapToMultiDao(dao))
+                }
+                is RecordMutateDtoDao<*> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    return mapToMutateWithAnyResDao(mapToMutateCrossSrc(dao as RecordMutateDtoDao<Any>))
+                }
+                is RecordsMutateCrossSrcDao -> {
+                    return mapToMutateWithAnyResDao(dao)
+                }
+                is ValueMutateDao<*> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    return mapValueMutateDaoToAnyResDao(dao as ValueMutateDao<Any>)
+                }
             }
         }
         return dao
     }
 
+    private fun mapValueMutateDaoToAnyResDao(dao: ValueMutateDao<Any>): RecordsMutateWithAnyResDao {
+
+        val valueType = ReflectUtils.getGenericArg(dao::class.java, ValueMutateDao::class.java)
+            ?: error("Generic type <T> is not found for class ${dao::class.java}")
+
+        val convert: (LocalRecordAtts) -> Any = when (valueType) {
+            RecordRef::class.java -> { { it.id } }
+            LocalRecordAtts::class.java -> { { it } }
+            ObjectData::class.java -> { { it.attributes } }
+            DataValue::class.java -> { { it.attributes.getData() } }
+            else -> {
+                {
+                    it.attributes.getAs(valueType)
+                        ?: error("Attributes conversion failed. Type: $valueType DAO: ${dao::class.java}")
+                }
+            }
+        }
+
+        return object : RecordsMutateWithAnyResDao {
+            override fun getId() = dao.getId()
+            override fun mutate(records: List<LocalRecordAtts>): List<Any> {
+                if (records.isEmpty()) {
+                    return emptyList()
+                }
+                val arg = convert.invoke(records[0])
+                return listOf(dao.mutate(arg) ?: EmptyAttValue.INSTANCE)
+            }
+        }
+    }
+
+    private fun mapToMutateWithAnyResDao(dao: RecordsMutateCrossSrcDao): RecordsMutateWithAnyResDao {
+        return object : RecordsMutateWithAnyResDao {
+            override fun getId() = dao.getId()
+            override fun mutate(records: List<LocalRecordAtts>): List<Any> {
+                return dao.mutate(records)
+            }
+        }
+    }
+
     private fun mapToRecordsQueryResDao(dao: RecordsQueryDao): RecordsQueryResDao {
         return object : RecordsQueryResDao {
 
-            override fun queryRecords(query: RecordsQuery): RecsQueryRes<*>? {
-                var records = dao.queryRecords(query) ?: return null
+            override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
+                var records = dao.queryRecords(recsQuery) ?: return null
                 if (records is RecsQueryRes<*>) {
                     return records
                 }
@@ -96,9 +146,9 @@ class RecsDaoConverter {
 
         return object : RecordsAttsDao {
 
-            override fun getRecordsAtts(records: List<String>): List<*> {
+            override fun getRecordsAtts(recordsId: List<String>): List<*> {
                 return mapElements(
-                    records,
+                    recordsId,
                     { dao.getRecordAtts(it) },
                     { EmptyAttValue.INSTANCE },
                     { _, _ -> ObjectData.create() }
@@ -108,13 +158,13 @@ class RecsDaoConverter {
         }
     }
 
-    fun mapToMultiDao(dao: RecordDeleteDao): RecordsDeleteDao {
+    private fun mapToMultiDao(dao: RecordDeleteDao): RecordsDeleteDao {
 
         return object : RecordsDeleteDao {
 
-            override fun delete(records: List<String>): List<DelStatus> {
+            override fun delete(recordsId: List<String>): List<DelStatus> {
                 return mapElements(
-                    records,
+                    recordsId,
                     { dao.delete(it) },
                     { DelStatus.OK },
                     { _, e -> throw e }

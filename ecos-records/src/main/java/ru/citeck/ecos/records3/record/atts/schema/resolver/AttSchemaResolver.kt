@@ -739,7 +739,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         override fun <T : Any> getAtts(attributes: Class<T>): T {
             val schema = dtoSchemaReader.read(attributes)
-            return dtoSchemaReader.instantiate(attributes, getAttsBySchema(schema)) ?: attributes.newInstance()
+            return dtoSchemaReader.instantiate(attributes, getAttsBySchema(schema))
+                ?: error("Attributes class can't be instantiated. Class: $attributes Schema: $schema")
         }
 
         override fun getAtts(attributes: Collection<String>): ObjectData {

@@ -143,8 +143,8 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         try {
             doInWriteTxn(body.txnId) {
                 resp.setRecords(
-                    recordsService.mutate(body.getRecords()).map {
-                        RecordAtts(it.withDefaultAppName(currentAppName))
+                    recordsService.mutate(body.getRecords(), body.attributes, body.rawAtts).map {
+                        it.withDefaultAppName(currentAppName)
                     }
                 )
             }

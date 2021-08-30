@@ -141,10 +141,10 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    fun mutate(records: List<RecordAtts>): List<RecordRef> {
+    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
-        val result: MutableList<ValWithIdx<RecordRef>> = ArrayList()
+        val result: MutableList<ValWithIdx<RecordAtts>> = ArrayList()
         val attsByApp: Map<String, MutableList<ValWithIdx<RecordAtts>>> = RecordsUtils.groupAttsByApp(records)
 
         attsByApp.forEach { (appArg, atts) ->
@@ -157,6 +157,8 @@ class RemoteRecordsResolver(
 
             val mutateBody = MutateBody()
             mutateBody.setRecords(atts.map { it.value.withoutAppName() })
+            mutateBody.setAttributes(attsToLoad)
+            mutateBody.rawAtts = rawAtts
 
             setContextProps(mutateBody, context)
 
@@ -177,8 +179,8 @@ class RemoteRecordsResolver(
                 val recsAtts = mutateResp.records
                 for (i in atts.indices) {
                     val refAtts = atts[i]
-                    val newAttsId = recsAtts[i].getId().withDefaultAppName(appName)
-                    result.add(ValWithIdx(newAttsId, refAtts.idx))
+                    val newAtts = recsAtts[i].withDefaultAppName(appName)
+                    result.add(ValWithIdx(newAtts, refAtts.idx))
                 }
             }
         }

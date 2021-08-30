@@ -15,7 +15,7 @@ interface LocalRecordsResolver {
 
     fun getAtts(records: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts>
 
-    fun mutate(records: List<RecordAtts>): List<RecordRef>
+    fun mutate(records: List<RecordAtts>, attsToLoad: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts>
 
     fun delete(records: List<RecordRef>): List<DelStatus>
 

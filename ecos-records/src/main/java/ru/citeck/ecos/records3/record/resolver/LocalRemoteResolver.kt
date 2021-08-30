@@ -237,17 +237,17 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    fun mutate(records: List<RecordAtts>): List<RecordRef> {
+    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
         if (records.isEmpty()) {
             return emptyList()
         }
         if (remote == null) {
-            return local.mutate(records)
+            return doWithSchema(attsToLoad) { schema -> local.mutate(records, schema, rawAtts) }
         }
         return if (isGatewayMode || isRemoteRef(records[0])) {
-            remote.mutate(records)
+            remote.mutate(records, attsToLoad, rawAtts)
         } else {
-            local.mutate(records)
+            return doWithSchema(attsToLoad) { schema -> local.mutate(records, schema, rawAtts) }
         }
     }
 

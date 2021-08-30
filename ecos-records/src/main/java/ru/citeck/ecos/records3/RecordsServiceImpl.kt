@@ -35,6 +35,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     /* QUERY */
+
     override fun query(query: RecordsQuery): RecsQueryRes<RecordRef> {
         return handleRecordsQuery {
             val metaResult = recordsResolver.query(query, emptyMap<String, Any>(), true)
@@ -56,6 +57,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     /* ATTRIBUTES */
+
     override fun getAtts(records: Collection<*>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
         return RequestContext.doWithCtx(services, { ctx -> ctx.withReadOnly(true) }) { ctx ->
             try {
@@ -95,23 +97,39 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         }
         val attsValues = getAtts(records, attSchemaWriter.writeToMap(schema))
         return attsValues.map {
-            dtoSchemaReader.instantiate(attributes, it.getAtts()) ?: attributes.newInstance()
+            dtoSchemaReader.instantiate(attributes, it.getAtts())
+                ?: error("Attributes class can't be instantiated. Class: $attributes Schema: $schema")
         }
     }
 
     /* MUTATE */
-    override fun mutate(records: List<RecordAtts>): List<RecordRef> {
-        return RequestContext.doWithCtx(services) { mutateImpl(records) }
+
+    override fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+        return RequestContext.doWithCtx(services) {
+            mutateImpl(records, attsToLoad, rawAtts)
+        }
     }
 
-    private fun mutateImpl(records: List<RecordAtts>): List<RecordRef> {
+    override fun <T : Any> mutate(record: Any, attributes: Any, attsToLoad: Class<T>): T {
+        val schema = dtoSchemaReader.read(attsToLoad)
+        require(schema.isNotEmpty()) {
+            "Attributes class doesn't have any fields with setter. Class: $attributes"
+        }
+        val meta = mutate(record, attributes, attSchemaWriter.writeToMap(schema))
+        return dtoSchemaReader.instantiate(attsToLoad, meta.getAtts())
+            ?: error("Attributes class can't be instantiated. Class: $attsToLoad Schema: $schema")
+    }
+
+    private fun mutateImpl(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
         if (isGatewayMode) {
-            return recordsResolver.mutate(records)
+            return recordsResolver.mutate(records, attsToLoad, rawAtts)
         }
 
         val aliasToRecordRef = HashMap<String, RecordRef>()
-        val result = Array(records.size) { RecordRef.EMPTY }
+
+        val emptyRecAtts = RecordAtts()
+        val result = Array(records.size) { emptyRecAtts }
 
         val context = RequestContext.getCurrentNotNull()
         if (context.ctxData.readOnly) {
@@ -122,7 +140,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         for (i in records.indices.reversed()) {
 
             val record: RecordAtts = records[i]
-            val attributes = ObjectData.create()
+            val recAtts = ObjectData.create()
 
             record.forEach { name, valueArg ->
                 try {
@@ -133,26 +151,26 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                     } else {
                         valueArg
                     }
-                    attributes.set(parsedAtt.name, value)
+                    recAtts.set(parsedAtt.name, value)
                 } catch (e: AttReadException) {
                     log.error("Attribute read failed", e)
                 }
             }
-            record.setAtts(attributes)
+            record.setAtts(recAtts)
 
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)
-            val recordMutResult = recordsResolver.mutate(sourceMut)
+            val recordMutResult = recordsResolver.mutate(sourceMut, attsToLoad, rawAtts)
 
-            val resultRef = recordMutResult.last()
-            result[i] = resultRef
-            if (RecordRef.isNotEmpty(resultRef)) {
-                txnMutRecords?.add(resultRef)
+            val resultAtts = recordMutResult.last()
+            result[i] = resultAtts
+            if (RecordRef.isNotEmpty(resultAtts.getId())) {
+                txnMutRecords?.add(resultAtts.getId())
             }
 
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")
                 if (ru.citeck.ecos.commons.utils.StringUtils.isNotBlank(alias)) {
-                    aliasToRecordRef[alias] = resultMeta
+                    aliasToRecordRef[alias] = resultMeta.getId()
                 }
             }
         }
@@ -190,6 +208,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     /* OTHER */
+
     private fun <T : Any> handleRecordsQuery(supplier: () -> RecsQueryRes<T>): RecsQueryRes<T> {
         return RequestContext.doWithCtx(services, { ctx -> ctx.withReadOnly(true) }) { ctx ->
             try {

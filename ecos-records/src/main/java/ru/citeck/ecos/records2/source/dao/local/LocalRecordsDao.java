@@ -28,7 +28,7 @@ import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
-import ru.citeck.ecos.records3.record.mixin.MixinContext;
+import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,7 +69,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
     private boolean addSourceId = true;
     private final Map<String, ParameterizedAttsMixin> mixins = new ConcurrentHashMap<>();
-    private final MixinContext mixinContext = new MixinContext();
+    private final MixinContextImpl mixinContext = new MixinContextImpl();
 
     public LocalRecordsDao() {
     }

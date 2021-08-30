@@ -14,6 +14,7 @@ import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs;
 import ru.citeck.ecos.records3.record.mixin.MixinContext;
+import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
@@ -161,7 +162,7 @@ public class ResolverTest {
             Object result = resolver.resolve(ResolveArgs.create()
                 .withValues(Collections.singletonList(value))
                 .withAttribute(parsedAtt)
-                .withMixinContext(new MixinContext(mixins))
+                .withMixinContext(new MixinContextImpl(mixins))
                 .build()).get(0).get(parsedAtt.getAliasForValue());
 
             if (!(result instanceof DataValue)) {

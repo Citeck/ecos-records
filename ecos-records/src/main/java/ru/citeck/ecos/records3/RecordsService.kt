@@ -239,11 +239,24 @@ interface RecordsService {
     fun create(sourceId: String, attributes: Any): RecordRef
 
     /**
-     * Create or change records.
+     * Create or change record.
      */
     fun mutate(record: RecordAtts): RecordRef
 
+    /**
+     * Create or change record and load attributes from result
+     */
+    fun mutate(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts
+
+    /**
+     * Create or change records.
+     */
     fun mutate(records: List<RecordAtts>): List<RecordRef>
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts>
 
     /**
      * Create or change record.
@@ -251,9 +264,29 @@ interface RecordsService {
     fun mutate(record: Any, attributes: ObjectData): RecordRef
 
     /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutate(record: Any, attributes: ObjectData, attsToLoad: Map<String, *>): RecordAtts
+
+    /**
      * Create or change record.
      */
     fun mutate(record: Any, attributes: Any): RecordRef
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutate(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutate(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun <T : Any> mutate(record: Any, attributes: Any, attsToLoad: Class<T>): T
 
     /**
      * Create or change records.

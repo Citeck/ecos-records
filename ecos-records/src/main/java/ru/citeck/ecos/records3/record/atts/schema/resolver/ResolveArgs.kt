@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.atts.schema.resolver
 
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 
 data class ResolveArgs(
@@ -44,7 +45,7 @@ data class ResolveArgs(
         var sourceId: String = ""
         var valueRefs: List<RecordRef> = emptyList()
         var attributes: List<SchemaAtt> = emptyList()
-        var mixinCtx: MixinContext = MixinContext()
+        var mixinCtx: MixinContext = EmptyMixinContext
         var rawAtts = false
 
         constructor(base: ResolveArgs) : this() {

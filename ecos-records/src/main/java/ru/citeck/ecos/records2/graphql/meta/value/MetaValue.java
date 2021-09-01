@@ -80,6 +80,10 @@ public interface MetaValue {
         return getString();
     }
 
+    default Object getRaw() {
+        return getString();
+    }
+
     default Object getAs(@NotNull String type, @NotNull MetaField field) {
         return getAs(type);
     }

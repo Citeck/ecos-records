@@ -41,7 +41,16 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
     /**
      * JSON Object value.
      */
-    JSON("?json", true);
+    JSON("?json", true),
+
+    /**
+     * Value as-is without transformations.
+     * number: 123
+     * string: "123"
+     * bool: true
+     * object: {}
+     */
+    RAW("?raw", true);
 
     val mirrorAtt = schema.replaceFirst('?', '_')
 
@@ -61,6 +70,7 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
                 LOCAL_ID.schema -> LOCAL_ID
                 BOOL.schema -> BOOL
                 JSON.schema -> JSON
+                RAW.schema -> RAW
                 else -> null
             }
         }
@@ -79,6 +89,7 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
                 LOCAL_ID.mirrorAtt -> LOCAL_ID
                 BOOL.mirrorAtt -> BOOL
                 JSON.mirrorAtt -> JSON
+                RAW.mirrorAtt -> RAW
                 else -> null
             }
         }

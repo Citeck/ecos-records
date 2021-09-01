@@ -14,16 +14,12 @@ import kotlin.collections.LinkedHashMap
 class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
     companion object {
-        private const val ATT_ID: String = "?id"
-        private const val ATT_LOCAL_ID: String = "?localId"
-        private const val ATT_ASSOC: String = "?assoc"
-        private const val ATT_STR: String = "?str"
-
         val ATTS_WITHOUT_LOADING = setOf(
-            ATT_ID,
-            ATT_LOCAL_ID,
-            ATT_ASSOC,
-            ATT_STR
+            ScalarType.ID.schema,
+            ScalarType.LOCAL_ID.schema,
+            ScalarType.ASSOC.schema,
+            ScalarType.STR.schema,
+            ScalarType.RAW.schema
         )
     }
 
@@ -129,6 +125,10 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
         override fun getType(): RecordRef {
             return innerAtts.type
+        }
+
+        override fun asRaw(): Any {
+            return ref.toString()
         }
     }
 }

@@ -69,7 +69,7 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
         if (node.isBoolean) {
             return node.asBoolean()
         }
-        node = node.path("?bool")
+        node = node.path(ScalarType.BOOL.schema)
         return if (node.isMissingNode || node.isNull) {
             false
         } else {
@@ -78,28 +78,32 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
     }
 
     override fun getDisplayName(): Any? {
-        return getScalar(value, "?disp") { it.asText() }
+        return getScalar(value, ScalarType.DISP.schema) { it.asText() }
     }
 
     override fun asText(): String? {
-        return getScalar(value, "?str") { it.asText() }
+        return getScalar(value, ScalarType.STR.schema) { it.asText() }
     }
 
     override fun getId(): Any? {
-        val id = getScalar(value, "?id") { Json.mapper.toJava(it) }
-        return id ?: getScalar(value, "?assoc") { Json.mapper.toJava(it) }
+        val id = getScalar(value, ScalarType.ID.schema) { Json.mapper.toJava(it) }
+        return id ?: getScalar(value, ScalarType.ASSOC.schema) { Json.mapper.toJava(it) }
     }
 
     override fun asDouble(): Double? {
-        return getScalar(value, "?num") { it.asDouble() }
+        return getScalar(value, ScalarType.NUM.schema) { it.asDouble() }
     }
 
     override fun asBoolean(): Boolean? {
-        return getScalar(value, "?bool") { it.asBoolean() }
+        return getScalar(value, ScalarType.BOOL.schema) { it.asBoolean() }
     }
 
     override fun asJson(): Any? {
-        return getScalar(value, "?json") { it }
+        return getScalar(value, ScalarType.JSON.schema) { it }
+    }
+
+    override fun asRaw(): Any? {
+        return getScalar(value, ScalarType.RAW.schema) { it }
     }
 
     override fun getType(): RecordRef {
@@ -108,7 +112,7 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
         } else {
             value.path("_etype")
         }
-        val res = type.path("?id")
+        val res = type.path(ScalarType.ID.schema)
         if (res.isNull || res.isMissingNode) {
             return RecordRef.EMPTY
         }

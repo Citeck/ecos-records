@@ -12,7 +12,7 @@ class DoubleValueFactory : AttValueFactory<Double> {
         format.maximumFractionDigits = 340
     }
 
-    override fun getValue(value: Double): AttValue? {
+    override fun getValue(value: Double): AttValue {
 
         return object : AttValue {
 
@@ -20,12 +20,16 @@ class DoubleValueFactory : AttValueFactory<Double> {
                 return format.format(value)
             }
 
-            override fun asDouble(): Double? {
+            override fun asDouble(): Double {
                 return value
             }
 
-            override fun asBoolean(): Boolean? {
+            override fun asBoolean(): Boolean {
                 return value != 0.0
+            }
+
+            override fun asRaw(): Any {
+                return value
             }
         }
     }

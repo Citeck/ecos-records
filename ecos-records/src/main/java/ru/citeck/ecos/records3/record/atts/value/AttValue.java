@@ -68,6 +68,11 @@ public interface AttValue {
         return Json.getMapper().read(asText());
     }
 
+    @Nullable
+    default Object asRaw() throws Exception {
+        return asText();
+    }
+
     default boolean has(String name) throws Exception {
         return false;
     }

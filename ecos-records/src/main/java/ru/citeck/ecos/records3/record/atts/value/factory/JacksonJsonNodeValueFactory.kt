@@ -10,7 +10,7 @@ import java.util.ArrayList
 
 class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
 
-    override fun getValue(value: JsonNode): AttValue? {
+    override fun getValue(value: JsonNode): AttValue {
 
         return object : AttValue, HasListView<JsonNode> {
 
@@ -43,7 +43,7 @@ class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
                 return node
             }
 
-            override fun asJson(): Any? {
+            override fun asJson(): Any {
                 return value
             }
 
@@ -60,6 +60,10 @@ class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
                     return Json.mapper.convert(value, MLText::class.java)
                 }
                 return null
+            }
+
+            override fun asRaw(): Any {
+                return value
             }
         }
     }

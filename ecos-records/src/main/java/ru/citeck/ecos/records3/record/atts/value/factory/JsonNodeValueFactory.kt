@@ -60,6 +60,10 @@ class JsonNodeValueFactory : AttValueFactory<JsonNode> {
                 }
                 return null
             }
+
+            override fun asRaw(): Any {
+                return value
+            }
         }
     }
 

@@ -7,7 +7,7 @@ import java.util.*
 
 class DateValueFactory : AttValueFactory<Date> {
 
-    override fun getValue(value: Date): AttValue? {
+    override fun getValue(value: Date): AttValue {
         return DateValue(value)
     }
 
@@ -19,7 +19,7 @@ class DateValueFactory : AttValueFactory<Date> {
             return Instant.ofEpochMilli(date.time).toString()
         }
 
-        override fun asDouble(): Double? {
+        override fun asDouble(): Double {
             return date.time.toDouble()
         }
     }

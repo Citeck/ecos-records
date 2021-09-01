@@ -74,6 +74,11 @@ public class MetaValueDelegate implements MetaValue {
     }
 
     @Override
+    public Object getRaw() {
+        return impl.getRaw();
+    }
+
+    @Override
     public Object getAs(String type) {
         return impl.getAs(type);
     }

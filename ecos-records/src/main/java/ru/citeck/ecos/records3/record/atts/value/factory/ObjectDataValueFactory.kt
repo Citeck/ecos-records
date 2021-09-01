@@ -7,7 +7,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class ObjectDataValueFactory : AttValueFactory<ObjectData> {
 
-    override fun getValue(value: ObjectData): AttValue? {
+    override fun getValue(value: ObjectData): AttValue {
 
         return object : AttValue {
 
@@ -15,11 +15,11 @@ class ObjectDataValueFactory : AttValueFactory<ObjectData> {
                 return Json.mapper.toString(value)
             }
 
-            override fun getAtt(name: String): Any? {
+            override fun getAtt(name: String): Any {
                 return value.get(name)
             }
 
-            override fun asJson(): Any? {
+            override fun asJson(): Any {
                 return value
             }
 
@@ -28,6 +28,10 @@ class ObjectDataValueFactory : AttValueFactory<ObjectData> {
                     return value.getAs(MLText::class.java)
                 }
                 return null
+            }
+
+            override fun asRaw(): Any {
+                return value
             }
         }
     }

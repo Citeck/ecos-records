@@ -113,6 +113,11 @@ public class InnerMetaValue implements MetaValue, HasListView<InnerMetaValue> {
         return getScalarNode(value, "json");
     }
 
+    @Override
+    public Object getRaw() {
+        return getScalar(value, "raw", it -> it);
+    }
+
     private static <T> T getScalar(JsonNode node, String name, Function<JsonNode, T> mapper) {
         JsonNode scalar = getScalarNode(node, name);
         if (scalar.isNull() || scalar.isMissingNode()) {

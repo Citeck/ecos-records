@@ -13,11 +13,11 @@ class MLTextValueFactory : AttValueFactory<MLText> {
 
     internal class Value(val value: MLText, private val closest: Boolean) : AttValue {
 
-        override fun asText(): String? {
+        override fun asText(): String {
             return value.getClosestValue(RequestContext.getLocale())
         }
 
-        override fun getAtt(name: String): Any? {
+        override fun getAtt(name: String): Any {
             if (name == "closest") {
                 return Value(value, true)
             }
@@ -37,7 +37,7 @@ class MLTextValueFactory : AttValueFactory<MLText> {
             }
         }
 
-        override fun asJson(): Any? {
+        override fun asJson(): Any {
             return value.getValues()
         }
 
@@ -50,6 +50,10 @@ class MLTextValueFactory : AttValueFactory<MLText> {
                 return this
             }
             return null
+        }
+
+        override fun asRaw(): Any {
+            return value
         }
     }
 

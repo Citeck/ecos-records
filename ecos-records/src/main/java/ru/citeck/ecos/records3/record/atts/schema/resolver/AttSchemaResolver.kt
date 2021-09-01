@@ -598,7 +598,6 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         fun getLocalId() = getRef().id
 
-        @Throws(Exception::class)
         private fun getScalar(scalar: ScalarType): Any? {
             return when (scalar) {
                 ScalarType.STR -> value.asText()
@@ -631,6 +630,13 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         Json.mapper.toJson(json)
                     }
                     json
+                }
+                ScalarType.RAW -> {
+                    when (val raw = value.asRaw()) {
+                        is DataValue -> raw
+                        is String -> DataValue.createStr(raw)
+                        else -> DataValue.create(raw)
+                    }
                 }
             }
         }

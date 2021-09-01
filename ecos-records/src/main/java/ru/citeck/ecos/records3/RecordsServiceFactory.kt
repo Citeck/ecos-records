@@ -41,6 +41,7 @@ import ru.citeck.ecos.records3.record.atts.value.factory.*
 import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.InstantValueFactory
+import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValueFactory
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
@@ -275,6 +276,7 @@ open class RecordsServiceFactory {
         metaValueFactories.add(BooleanValueFactory())
         metaValueFactories.add(DateValueFactory())
         metaValueFactories.add(InstantValueFactory())
+        metaValueFactories.add(OffsetDateTimeValueFactory())
         metaValueFactories.add(DoubleValueFactory())
         metaValueFactories.add(IntegerValueFactory())
         metaValueFactories.add(JsonNodeValueFactory())

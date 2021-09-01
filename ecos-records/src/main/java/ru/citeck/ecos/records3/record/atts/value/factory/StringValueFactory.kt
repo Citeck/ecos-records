@@ -38,6 +38,10 @@ class StringValueFactory : AttValueFactory<String> {
             override fun getAs(type: String): Any? {
                 return converters[type]?.invoke(value)
             }
+
+            override fun asRaw(): Any {
+                return value
+            }
         }
     }
 

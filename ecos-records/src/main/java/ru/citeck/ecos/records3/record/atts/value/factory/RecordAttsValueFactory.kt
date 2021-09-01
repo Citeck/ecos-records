@@ -6,7 +6,7 @@ import ru.citeck.ecos.records3.record.atts.value.impl.RecordAttValue
 
 class RecordAttsValueFactory : AttValueFactory<RecordAtts> {
 
-    override fun getValue(value: RecordAtts): AttValue? {
+    override fun getValue(value: RecordAtts): AttValue {
         return RecordAttValue(value)
     }
 

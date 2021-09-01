@@ -67,7 +67,7 @@ class TxnTest {
                     }
                     override fun mutatePostProcess(records: List<RecordRef>, context: ProxyProcContext): List<RecordRef> {
                         if (throwError) {
-                            error("Post process error")
+                            error("Expected error: Post process error")
                         } else {
                             return records
                         }

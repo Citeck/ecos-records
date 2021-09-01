@@ -53,6 +53,10 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
                 }
                 return null
             }
+
+            override fun asRaw(): Any {
+                return value
+            }
         }
     }
 

@@ -8,11 +8,15 @@ class BooleanValueFactory : AttValueFactory<Boolean> {
 
         return object : AttValue {
 
-            override fun asText(): String? {
+            override fun asText(): String {
                 return value.toString()
             }
 
-            override fun asBoolean(): Boolean? {
+            override fun asBoolean(): Boolean {
+                return value
+            }
+
+            override fun asRaw(): Any {
                 return value
             }
         }

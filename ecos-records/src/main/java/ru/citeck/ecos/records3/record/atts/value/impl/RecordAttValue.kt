@@ -5,15 +5,19 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class RecordAttValue(val atts: RecordAtts) : AttValue {
 
-    override fun getId(): String? {
+    override fun getId(): String {
         return atts.getId().toString()
     }
 
-    override fun asText(): String? {
+    override fun asText(): String {
         return atts.getId().toString()
     }
 
-    override fun getAtt(name: String): Any? {
+    override fun getAtt(name: String): Any {
         return atts.getAtt(name)
+    }
+
+    override fun asRaw(): Any {
+        return atts.getAtts()
     }
 }

@@ -8,8 +8,9 @@ import java.util.*
 
 class ByteArrayValueFactory : AttValueFactory<ByteArray> {
 
-    override fun getValue(value: ByteArray): AttValue? {
+    override fun getValue(value: ByteArray): AttValue {
         return object : AttValue {
+
             override fun asText(): String? {
                 return Base64.getEncoder().encodeToString(value)
             }

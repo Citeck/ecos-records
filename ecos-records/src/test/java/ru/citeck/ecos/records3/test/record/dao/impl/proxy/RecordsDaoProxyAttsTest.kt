@@ -104,6 +104,7 @@ class RecordsDaoProxyAttsTest {
 
     private fun checkFull(getAtts: (sourceId: String, atts: List<String>) -> List<ObjectData>) {
 
+        compareAtts(listOf("_raw?raw"), getAtts)
         compareAtts(listOf("_disp"), getAtts)
         compareAtts(listOf("_num?num"), getAtts)
         compareAtts(listOf("_str?str"), getAtts)
@@ -187,6 +188,11 @@ class RecordsDaoProxyAttsTest {
         @AttName("?bool")
         fun getBool(): Boolean {
             return true
+        }
+
+        @AttName("?raw")
+        fun getRaw(): String {
+            return "raw-value-dto"
         }
     }
 

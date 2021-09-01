@@ -97,6 +97,13 @@ class BeanValueFactory : AttValueFactory<Any> {
             return Json.mapper.toJson(bean)
         }
 
+        override fun asRaw(): Any? {
+            if (typeCtx.hasProperty("?raw")) {
+                return getAttWithType("?raw", Any::class.java)
+            }
+            return Json.mapper.toJson(bean)
+        }
+
         override fun getEdge(name: String): AttEdge? {
             return BeanEdge(name, this)
         }

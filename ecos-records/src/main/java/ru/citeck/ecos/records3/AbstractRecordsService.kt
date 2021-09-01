@@ -90,7 +90,7 @@ abstract class AbstractRecordsService : RecordsService {
         return mutate(RecordRef.valueOf(sourceId + RecordRef.SOURCE_DELIMITER), attributes)
     }
 
-    override fun mutate(record: Any, attribute: String, value: Any?): RecordRef {
+    override fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef {
         return mutate(record, Collections.singletonMap(attribute, value))
     }
 

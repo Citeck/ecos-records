@@ -294,9 +294,9 @@ interface RecordsService {
     fun mutate(record: Any, attributes: Map<String, *>): RecordRef
 
     /**
-     * Create or change records.
+     * Create or change record with single attribute
      */
-    fun mutate(record: Any, attribute: String, value: Any?): RecordRef
+    fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef
 
     /* DELETE */
 

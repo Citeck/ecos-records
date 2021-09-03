@@ -20,11 +20,14 @@ public class PredicateUtils {
 
         List<String> result = new ArrayList<>();
 
-        mapValuePredicatesImpl(predicate, v -> {
+        mapAttributePredicatesImpl(predicate, v -> {
             result.add(v.getAttribute());
-            DataValue value = v.getValue();
-            if (value.isTextual()) {
-                result.addAll(TmplUtils.getAtts(value.asText()));
+            if (v instanceof ValuePredicate) {
+                ValuePredicate valPred = (ValuePredicate) v;
+                DataValue value = valPred.getValue();
+                if (value.isTextual()) {
+                    result.addAll(TmplUtils.getAtts(value.asText()));
+                }
             }
             return v;
         }, false);
@@ -51,9 +54,21 @@ public class PredicateUtils {
         return Optional.ofNullable(res);
     }
 
+    public static Optional<Predicate> filterAttributePredicates(Predicate predicate,
+                                                                Function<AttributePredicate, Boolean> filter) {
+
+        Predicate res = mapAttributePredicatesImpl(predicate, pred -> filter.apply(pred) ? pred : null, false);
+        return Optional.ofNullable(res);
+    }
+
     public static Predicate mapValuePredicates(Predicate predicate,
                                                Function<ValuePredicate, Predicate> mapFunc) {
         return mapValuePredicatesImpl(predicate, mapFunc, false);
+    }
+
+    public static Predicate mapAttributePredicates(Predicate predicate,
+                                                   Function<AttributePredicate, Predicate> mapFunc) {
+        return mapAttributePredicatesImpl(predicate, mapFunc, false);
     }
 
     public static Predicate mapValuePredicates(Predicate predicate,
@@ -63,11 +78,25 @@ public class PredicateUtils {
         return mapValuePredicates(predicate, mapFunc, onlyAnd, true);
     }
 
+    public static Predicate mapAttributePredicates(Predicate predicate,
+                                                   Function<AttributePredicate, Predicate> mapFunc,
+                                                   boolean onlyAnd) {
+
+        return mapAttributePredicates(predicate, mapFunc, onlyAnd, true);
+    }
+
     public static Predicate mapValuePredicates(Predicate predicate,
                                                Function<ValuePredicate, Predicate> mapFunc,
                                                boolean onlyAnd, boolean optimize) {
 
         return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, optimize);
+    }
+
+    public static Predicate mapAttributePredicates(Predicate predicate,
+                                                   Function<AttributePredicate, Predicate> mapFunc,
+                                                   boolean onlyAnd, boolean optimize) {
+
+        return mapAttributePredicatesImpl(predicate, mapFunc, onlyAnd, optimize);
     }
 
     public static <T> T convertToDto(Predicate predicate, Class<T> type) {
@@ -139,17 +168,36 @@ public class PredicateUtils {
         return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, true);
     }
 
+    private static Predicate mapAttributePredicatesImpl(Predicate predicate,
+                                                        Function<AttributePredicate, Predicate> mapFunc,
+                                                        boolean onlyAnd) {
+
+        return mapAttributePredicatesImpl(predicate, mapFunc, onlyAnd, true);
+    }
+
     private static Predicate mapValuePredicatesImpl(Predicate predicate,
                                                     Function<ValuePredicate, Predicate> mapFunc,
                                                     boolean onlyAnd, boolean optimize) {
+
+        return mapAttributePredicatesImpl(predicate, pred -> {
+            if (pred instanceof ValuePredicate) {
+                return mapFunc.apply((ValuePredicate) pred);
+            }
+            return pred;
+        }, onlyAnd, optimize);
+    }
+
+    private static Predicate mapAttributePredicatesImpl(Predicate predicate,
+                                                        Function<AttributePredicate, Predicate> mapFunc,
+                                                        boolean onlyAnd, boolean optimize) {
 
         if (predicate == null) {
             return null;
         }
 
-        if (predicate instanceof ValuePredicate) {
+        if (predicate instanceof AttributePredicate) {
 
-            return mapFunc.apply((ValuePredicate) predicate);
+            return mapFunc.apply((AttributePredicate) predicate);
 
         } else if (predicate instanceof ComposedPredicate) {
 
@@ -161,7 +209,7 @@ public class PredicateUtils {
             List<Predicate> mappedPredicates = new ArrayList<>();
 
             for (Predicate pred : composed.getPredicates()) {
-                Predicate mappedPred = mapValuePredicatesImpl(pred, mapFunc, onlyAnd, optimize);
+                Predicate mappedPred = mapAttributePredicatesImpl(pred, mapFunc, onlyAnd, optimize);
                 if (mappedPred != null) {
                     mappedPredicates.add(mappedPred);
                 }
@@ -184,7 +232,7 @@ public class PredicateUtils {
         } else if (predicate instanceof NotPredicate) {
 
             NotPredicate notPred = (NotPredicate) predicate;
-            Predicate mapped = mapValuePredicatesImpl(notPred.getPredicate(), mapFunc, onlyAnd, optimize);
+            Predicate mapped = mapAttributePredicatesImpl(notPred.getPredicate(), mapFunc, onlyAnd, optimize);
             if (mapped != null) {
                 if (optimize && mapped instanceof NotPredicate) {
                     return ((NotPredicate) mapped).getPredicate();

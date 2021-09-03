@@ -6,6 +6,10 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -23,6 +27,7 @@ class PredicateUtilsTest {
 
         String otherField = "OtherField";
         String otherValue = "OtherValue";
+        String emptyValue = "";
 
         Predicate pred = Predicates.and(
             Predicates.eq("field0", field0Value),
@@ -60,6 +65,33 @@ class PredicateUtilsTest {
 
         dto = PredicateUtils.convertToDto(pred, PredDto.class, true);
         assertNull(dto.field3);
+    }
+
+    @Test
+    void getAttsTest() {
+
+        Predicate predicate = Predicates.and(
+            Predicates.empty("emptyField0"),
+            Predicates.and(
+                Predicates.eq("field0", "value"),
+                Predicates.le("field1", 123),
+                Predicates.lt("field2", 123),
+                Predicates.ge("field3", 123),
+                Predicates.gt("field4", 123),
+                Predicates.empty("emptyField1")
+            )
+        );
+
+        List<String> atts = PredicateUtils.getAllPredicateAttributes(predicate);
+        assertThat(atts).containsExactlyInAnyOrder(
+            "emptyField0",
+            "emptyField1",
+            "field0",
+            "field1",
+            "field2",
+            "field3",
+            "field4"
+        );
     }
 
     @Data

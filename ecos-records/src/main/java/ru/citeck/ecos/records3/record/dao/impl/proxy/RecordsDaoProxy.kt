@@ -171,7 +171,7 @@ open class RecordsDaoProxy(
     private class ProxyRecVal(
         private val id: RecordRef,
         base: AttValue,
-        val postProcAtts: Map<String, Any>
+        val postProcAtts: Map<String, Any?>
     ) : AttValueDelegate(base) {
 
         override fun getId(): Any {

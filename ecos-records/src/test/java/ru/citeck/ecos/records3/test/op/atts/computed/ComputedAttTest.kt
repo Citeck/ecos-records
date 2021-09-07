@@ -87,7 +87,7 @@ class ComputedAttTest {
                     type = ComputedAttType.SCRIPT
                     config = ObjectData.create(
                         mapOf(
-                            Pair("fn", "return value.load('attForScript').asText() + '-postfix';")
+                            Pair("fn", "return value.load('attForScript') + '-postfix';")
                         )
                     )
                 }
@@ -147,7 +147,7 @@ class ComputedAttTest {
             services.recordsServiceV1.getAtt(type0Ref, "attScript2?json")
         )
         assertEquals(
-            '"' + type0Record.attForScript + '"' + "-postfix",
+            type0Record.attForScript + "-postfix",
             services.recordsServiceV1.getAtt(type0Ref, "attScript3").asText()
         )
         assertEquals(
@@ -171,34 +171,48 @@ class ComputedAttTest {
 
         val computedAttDef0 = ComputedAttDef.create()
             .withType(ComputedAttType.SCRIPT)
-            .withConfig(ObjectData.create("""
+            .withConfig(
+                ObjectData.create(
+                    """
                 {
                     "fn": "return 'abc-' + value.load('prop');"
                 }
-            """.trimIndent()))
+                    """.trimIndent()
+                )
+            )
             .build()
 
         val computedAttDef1 = ComputedAttDef.create()
             .withType(ComputedAttType.SCRIPT)
-            .withConfig(ObjectData.create("""
+            .withConfig(
+                ObjectData.create(
+                    """
                 {
                     "fn": "return 'abc-' + value.load({alias: 'prop'}).alias;"
                 }
-            """.trimIndent()))
+                    """.trimIndent()
+                )
+            )
             .build()
 
         val computedAttDef2 = ComputedAttDef.create()
             .withType(ComputedAttType.SCRIPT)
-            .withConfig(ObjectData.create("""
+            .withConfig(
+                ObjectData.create(
+                    """
                 {
                     "fn": "return 'abc-' + value.load(['prop']).prop;"
                 }
-            """.trimIndent()))
+                    """.trimIndent()
+                )
+            )
             .build()
 
-        val recordData = ObjectData.create("""
+        val recordData = ObjectData.create(
+            """
             {"prop": "prop-value"}
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         listOf(computedAttDef0, computedAttDef1, computedAttDef2).forEach { compAtt ->
             val result = RequestContext.doWithAtts(mapOf("comp" to compAtt)) { _ ->

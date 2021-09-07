@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.rest;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 import ru.citeck.ecos.records3.RecordsProperties;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
@@ -159,7 +160,7 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
         String baseUrl = app != null ? app.getRecBaseUrl() : null;
         String userBaseUrl = app != null ? app.getRecUserBaseUrl() : null;
 
-        if (RemoteRecordsUtils.isSystemContext()) {
+        if (AuthContext.isRunAsSystem()) {
             if (baseUrl != null) {
                 baseUrlReplacement = baseUrl;
             } else {

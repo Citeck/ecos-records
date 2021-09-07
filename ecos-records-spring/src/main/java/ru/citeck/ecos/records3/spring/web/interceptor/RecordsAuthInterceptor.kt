@@ -10,7 +10,7 @@ import org.springframework.http.client.support.BasicAuthorizationInterceptor
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsProperties
 import java.io.IOException
 import javax.servlet.http.HttpServletRequest
@@ -60,7 +60,7 @@ class RecordsAuthInterceptor @Autowired constructor(
             request.headers.set(AUTH_HEADER, currentRequest.getHeader(AUTH_HEADER))
         }
 
-        if (!RemoteRecordsUtils.isSystemContext()) {
+        if (!AuthContext.isRunAsSystem()) {
             setAuthHeader(currentRequest?.getHeader(ECOS_USER_HEADER), false, request)
             return userRequestInterceptor.intercept(request, body, execution)
         }

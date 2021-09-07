@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.resolver
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
@@ -16,7 +17,6 @@ import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.request.context.SystemContextUtil
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -132,13 +132,13 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
 
         val cacheKey = if (rawAtts) {
-            if (SystemContextUtil.isSystemContext(context)) {
+            if (AuthContext.isRunAsSystem()) {
                 REFS_CACHE_RAW_SYSTEM_KEY
             } else {
                 REFS_CACHE_RAW_KEY
             }
         } else {
-            if (SystemContextUtil.isSystemContext(context)) {
+            if (AuthContext.isRunAsSystem()) {
                 REFS_CACHE_NOT_RAW_SYSTEM_KEY
             } else {
                 REFS_CACHE_NOT_RAW_KEY

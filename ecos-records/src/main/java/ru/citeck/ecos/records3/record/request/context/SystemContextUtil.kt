@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.record.request.context
 
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.function.Supplier
 
+@Deprecated("Use AuthContext instead")
 object SystemContextUtil {
-
-    private const val SYSTEM_CONTEXT_KEY = "is-system-context"
 
     @JvmStatic
     @JvmOverloads
@@ -32,14 +32,14 @@ object SystemContextUtil {
         action: () -> T?,
         context: RequestContext = RequestContext.getCurrentNotNull()
     ): T? {
-        return context.doWithVar(SYSTEM_CONTEXT_KEY, true, action)
+        return AuthContext.runAsSystem(action)
     }
 
     fun <T : Any> doAsSystemNotNull(
         action: () -> T,
         context: RequestContext = RequestContext.getCurrentNotNull()
     ): T {
-        return context.doWithVarNotNull(SYSTEM_CONTEXT_KEY, true, action)
+        return AuthContext.runAsSystem(action)
     }
 
     @JvmStatic
@@ -63,6 +63,6 @@ object SystemContextUtil {
     @JvmStatic
     @JvmOverloads
     fun isSystemContext(context: RequestContext? = RequestContext.getCurrent()): Boolean {
-        return context?.getVar<Boolean>(SYSTEM_CONTEXT_KEY) == true
+        return AuthContext.isRunAsSystem()
     }
 }

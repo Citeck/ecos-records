@@ -1,22 +1,19 @@
 package ru.citeck.ecos.records2.rest;
 
-import ru.citeck.ecos.records3.record.request.context.SystemContextUtil;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 
+/**
+ * Use AuthContext instead
+ */
+@Deprecated
 public class RemoteRecordsUtils {
 
-    private static final ThreadLocal<Boolean> isSystem = new ThreadLocal<>();
-
     public static <T> T runAsSystem(Action<T> action) {
-        isSystem.set(true);
-        try {
-            return action.execute();
-        } finally {
-            isSystem.remove();
-        }
+        return AuthContext.runAsSystem(action::execute);
     }
 
     public static boolean isSystemContext() {
-        return Boolean.TRUE.equals(isSystem.get()) || SystemContextUtil.isSystemContext();
+        return AuthContext.isRunAsSystem();
     }
 
     public interface Action<T> {

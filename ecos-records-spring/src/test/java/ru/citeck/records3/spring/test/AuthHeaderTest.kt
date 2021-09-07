@@ -29,14 +29,13 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.request.context.SystemContextUtil
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.spring.web.interceptor.AuthHeaderProvider
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
@@ -129,15 +128,15 @@ open class AuthHeaderTest {
         RequestContextHolder.setRequestAttributes(ServletRequestAttributes(request))
 
         testAuthHeader("user-someUser", "test-app")
-        RemoteRecordsUtils.runAsSystem {
+        AuthContext.runAsSystem {
             testAuthHeader("system-system", "test-app")
             testAuthHeader("system-customSystemUser", "appWithCustomSystemUser")
         }
         RequestContext.doWithCtx(recordsServiceFactory) {
-            SystemContextUtil.doAsSystem({
+            AuthContext.runAsSystem {
                 testAuthHeader("system-system", "test-app")
                 testAuthHeader("system-customSystemUser", "appWithCustomSystemUser")
-            })
+            }
         }
     }
 

@@ -4,5 +4,5 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 
 data class ProxyRecordAtts(
     val atts: RecordAtts,
-    val additionalAtts: Map<String, Any> = emptyMap()
+    val additionalAtts: Map<String, Any?> = emptyMap()
 )

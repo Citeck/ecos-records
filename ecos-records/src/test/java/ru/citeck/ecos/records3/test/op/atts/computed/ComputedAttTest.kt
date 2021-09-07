@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.op.atts.computed
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
@@ -10,6 +11,7 @@ import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAttType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import kotlin.test.assertEquals
 
@@ -160,6 +162,50 @@ class ComputedAttTest {
             DataValue.create("[\"${type0Record.attForScript}\",\"def\"]"),
             services.recordsServiceV1.getAtt(type0Ref, "attScript5[]")
         )
+    }
+
+    @Test
+    fun contextComputedAttTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        val computedAttDef0 = ComputedAttDef.create()
+            .withType(ComputedAttType.SCRIPT)
+            .withConfig(ObjectData.create("""
+                {
+                    "fn": "return 'abc-' + value.load('prop');"
+                }
+            """.trimIndent()))
+            .build()
+
+        val computedAttDef1 = ComputedAttDef.create()
+            .withType(ComputedAttType.SCRIPT)
+            .withConfig(ObjectData.create("""
+                {
+                    "fn": "return 'abc-' + value.load({alias: 'prop'}).alias;"
+                }
+            """.trimIndent()))
+            .build()
+
+        val computedAttDef2 = ComputedAttDef.create()
+            .withType(ComputedAttType.SCRIPT)
+            .withConfig(ObjectData.create("""
+                {
+                    "fn": "return 'abc-' + value.load(['prop']).prop;"
+                }
+            """.trimIndent()))
+            .build()
+
+        val recordData = ObjectData.create("""
+            {"prop": "prop-value"}
+        """.trimIndent())
+
+        listOf(computedAttDef0, computedAttDef1, computedAttDef2).forEach { compAtt ->
+            val result = RequestContext.doWithAtts(mapOf("comp" to compAtt)) { _ ->
+                records.getAtt(recordData, "\$comp").asText()
+            }
+            assertThat(result).isEqualTo("abc-prop-value")
+        }
     }
 
     data class RecordValue(

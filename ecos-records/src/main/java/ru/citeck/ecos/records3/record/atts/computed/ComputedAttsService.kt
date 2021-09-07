@@ -15,7 +15,7 @@ class ComputedAttsService(services: RecordsServiceFactory) {
         val log = KotlinLogging.logger {}
     }
 
-    private val recordsScriptService by lazy { RecordsScriptService(services) }
+    val recordsScriptService by lazy { RecordsScriptService(services) }
 
     fun compute(context: AttValueCtx, att: ComputedAtt): Any? {
 
@@ -24,19 +24,27 @@ class ComputedAttsService(services: RecordsServiceFactory) {
         }
         if (att.def.storingType == StoringType.ON_EMPTY) {
             val currentValue = context.getAtt(att.id)
-            if (!currentValue.isNull() && (!currentValue.isTextual() || !currentValue.asText().isBlank())) {
+            if (!currentValue.isNull() && (!currentValue.isTextual() || currentValue.asText().isNotBlank())) {
                 return currentValue.asJavaObj()
             }
         }
+        return compute(context, att.def) { context.getAtt(att.id) }
+    }
 
-        return when (att.def.type) {
+    fun compute(context: AttValueCtx, def: ComputedAttDef): Any? {
+        return compute(context, def) { null }
+    }
+
+    inline fun compute(context: AttValueCtx, def: ComputedAttDef, orElse: () -> Any?): Any? {
+
+        return when (def.type) {
 
             ComputedAttType.SCRIPT -> {
 
-                val script = att.def.config.get("fn").asText()
+                val script = def.config.get("fn").asText()
 
                 if (StringUtils.isBlank(script)) {
-                    log.warn("Script is blank. Att: $att")
+                    log.warn("Script is blank. Def: $def")
                     return null
                 }
 
@@ -45,15 +53,15 @@ class ComputedAttsService(services: RecordsServiceFactory) {
                     Pair("Records", recordsScriptService)
                 )
 
-                return ScriptUtils.eval(script, scriptModel)
+                ScriptUtils.eval(script, scriptModel)
             }
             ComputedAttType.ATTRIBUTE -> {
 
-                context.getAtt(att.def.config.get("attribute").asText())
+                context.getAtt(def.config.get("attribute").asText())
             }
             ComputedAttType.VALUE -> {
 
-                val value = att.def.config.get("value")
+                val value = def.config.get("value")
                 if (value.isTextual()) {
                     val text = value.asText()
                     val lowerText = text.toLowerCase()
@@ -75,14 +83,14 @@ class ComputedAttsService(services: RecordsServiceFactory) {
             }
             ComputedAttType.TEMPLATE -> {
 
-                val value = att.def.config.get("template").asText()
+                val value = def.config.get("template").asText()
                 val atts = context.getAtts(TmplUtils.getAtts(value))
 
-                return TmplUtils.applyAtts(value, atts)
+                TmplUtils.applyAtts(value, atts)
             }
             ComputedAttType.COUNTER, ComputedAttType.NONE -> {
 
-                return context.getAtt(att.id)
+                orElse.invoke()
             }
         }
     }

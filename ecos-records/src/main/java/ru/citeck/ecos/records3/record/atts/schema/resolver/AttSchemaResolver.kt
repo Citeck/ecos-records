@@ -16,6 +16,7 @@ import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -259,9 +260,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             var attValue: Any?
             var attName = att.name
 
-            if (currentValuePath.isEmpty() && att.name.startsWith("$")) {
+            if (currentValuePath.isEmpty() && attName.startsWith("$")) {
 
-                val contextAttName = att.name.substring(1)
+                val contextAttName = attName.substring(1)
                 attValue = context.reqContext.ctxData.ctxAtts[contextAttName]
             } else {
 
@@ -327,6 +328,18 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     }
                 }
             }
+
+            if (attValue is ComputedAttDef) {
+                attValue = computedAttsService.compute(
+                    AttValueResolveCtx(
+                        currentValuePath,
+                        context,
+                        value
+                    ),
+                    attValue
+                )
+            }
+
             val attValues = toList(attValue)
             val alias = att.getAliasForValue()
             if (att.multiple) {

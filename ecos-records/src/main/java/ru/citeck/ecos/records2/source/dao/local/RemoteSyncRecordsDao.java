@@ -74,6 +74,12 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         return super.getRecord(recordRef);
     }
 
+    @Override
+    public Map<String, T> getRecords() {
+        waitUntilSyncCompleted();
+        return super.getRecords();
+    }
+
     private void waitUntilSyncCompleted() {
         try {
             if (!firstSyncFuture.isDone()) {

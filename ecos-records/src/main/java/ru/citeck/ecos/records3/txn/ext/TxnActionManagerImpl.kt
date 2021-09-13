@@ -28,9 +28,10 @@ class TxnActionManagerImpl : TxnActionManager {
 
     override fun executeRaw(actions: List<RawTxnAction>) {
 
-        val context = RequestContext.getCurrentNotNull()
-        val txnId = context.ctxData.txnId
-        if (txnId == null || context.ctxData.txnOwner) {
+        val context = RequestContext.getCurrent()
+        val txnId = context?.ctxData?.txnId
+
+        if (context == null || txnId == null || context.ctxData.txnOwner) {
             for (action in actions) {
                 executeActionByHandler(action.type, action.data)
             }
@@ -50,7 +51,7 @@ class TxnActionManagerImpl : TxnActionManager {
     }
 
     override fun getTxnActions(): List<TxnAction> {
-        return RequestContext.getCurrentNotNull().getList(TXN_ACTIONS_KEY)
+        return RequestContext.getCurrent()?.getList(TXN_ACTIONS_KEY) ?: emptyList()
     }
 
     private fun executeActionByHandler(type: String, entity: Any) {

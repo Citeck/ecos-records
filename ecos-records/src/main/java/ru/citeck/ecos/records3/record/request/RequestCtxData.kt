@@ -16,7 +16,8 @@ data class RequestCtxData(
     val msgLevel: MsgLevel,
     val omitErrors: Boolean,
     val readOnly: Boolean,
-    val txnId: UUID?
+    val txnId: UUID?,
+    val txnOwner: Boolean
 ) {
 
     companion object {
@@ -55,6 +56,7 @@ data class RequestCtxData(
         var omitErrors: Boolean = false
         var readOnly: Boolean = false
         var txnId: UUID? = null
+        var txnOwner: Boolean = false
 
         constructor(base: RequestCtxData) : this() {
             requestId = base.requestId
@@ -66,6 +68,7 @@ data class RequestCtxData(
             omitErrors = base.omitErrors
             readOnly = base.readOnly
             txnId = base.txnId
+            txnOwner = base.txnOwner
         }
 
         fun withOmitErrors(omitErrors: Boolean): Builder {
@@ -113,6 +116,11 @@ data class RequestCtxData(
             return this
         }
 
+        fun withTxnOwner(txnOwner: Boolean?): Builder {
+            this.txnOwner = txnOwner ?: false
+            return this
+        }
+
         fun build(): RequestCtxData {
 
             if (requestId.isBlank()) {
@@ -128,7 +136,8 @@ data class RequestCtxData(
                 msgLevel,
                 omitErrors,
                 readOnly,
-                txnId
+                txnId,
+                txnOwner
             )
         }
     }

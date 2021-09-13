@@ -59,6 +59,7 @@ class RemoteRecordsResolver(
     private var defaultAppName: String = ""
     private val sourceIdMapping = services.properties.sourceIdMapping
     private lateinit var recordsService: RecordsService
+    private val txnActionManager = services.txnActionManager
 
     private val sourceIdMeta: MutableMap<String, RecSrcMeta> = ConcurrentHashMap()
 
@@ -343,6 +344,8 @@ class RemoteRecordsResolver(
         )
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)
+        txnActionManager.execute(result.txnActions)
+
         return result
     }
 

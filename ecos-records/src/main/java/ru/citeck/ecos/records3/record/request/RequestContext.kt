@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
+import ru.citeck.ecos.context.lib.func.UncheckedRunnable
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -29,6 +30,7 @@ class RequestContext {
         private const val TXN_MUT_RECORDS_KEY = "__txn_mut_records_key__"
         private const val TXN_OWNED_KEY = "__txn_owned__"
         private const val READ_ONLY_CACHE_KEY = "__read_only_cache__"
+        private const val AFTER_COMMIT_ACTIONS_KEY = "__after_commit_actions__"
 
         private val log = KotlinLogging.logger {}
 
@@ -97,6 +99,21 @@ class RequestContext {
         }
 
         @JvmStatic
+        fun <T> doWithReadOnly(action: () -> T): T {
+            return doWithCtx(null, { it.withReadOnly(true) }) { action.invoke() }
+        }
+
+        @JvmStatic
+        fun <T> doWithReadOnlyJ(action: UncheckedSupplier<T>): T {
+            return doWithReadOnly { action.get() }
+        }
+
+        @JvmStatic
+        fun doWithReadOnlyJ(action: UncheckedRunnable) {
+            return doWithReadOnly { action.invoke() }
+        }
+
+        @JvmStatic
         fun <T> doWithTxn(readOnly: Boolean = false, requiresNew: Boolean = false, action: () -> T): T {
             var isTxnOwner = false
             return doWithCtx(
@@ -105,6 +122,7 @@ class RequestContext {
                     if (requiresNew || it.txnId == null) {
                         isTxnOwner = true
                         it.withTxnId(UUID.randomUUID())
+                        it.withTxnOwner(true)
                     }
                     it.withReadOnly(readOnly)
                 }
@@ -129,6 +147,16 @@ class RequestContext {
                 } else {
                     action.invoke()
                 }
+            }
+        }
+
+        fun doAfterCommit(action: () -> Unit) {
+            val context = getCurrentNotNull()
+            val txnId = context.ctxData.txnId
+            if (txnId == null) {
+                action.invoke()
+            } else {
+                context.getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY).add(action)
             }
         }
 
@@ -267,9 +295,15 @@ class RequestContext {
         }
         val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
         val txnRecords = mutRecords[txnId] ?: emptySet()
+
         if (txnRecords.isNotEmpty()) {
             if (success) {
                 serviceFactory.recordsResolver.commit(txnRecords.toList())
+                val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
+                for (action in afterCommitActions) {
+                    action.invoke()
+                }
+                afterCommitActions.clear()
             } else {
                 serviceFactory.recordsResolver.rollback(txnRecords.toList())
             }

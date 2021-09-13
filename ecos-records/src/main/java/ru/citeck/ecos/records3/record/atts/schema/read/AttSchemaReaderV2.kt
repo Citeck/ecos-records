@@ -12,6 +12,7 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
         private val SCALAR_ATTS_LIST = ScalarType.values().associate {
             it.schema to listOf(SchemaAtt.create().withName(it.schema).build())
         }
+        private val ID_SCALAR_ATT = SCALAR_ATTS_LIST[ScalarType.ID.schema]!!.first()
     }
 
     private val procReader = services.attProcReader
@@ -20,6 +21,10 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
 
         if (attToRead.isBlank()) {
             throw AttReadException(alias, attToRead, "Attribute is blank")
+        }
+
+        if (attToRead == ScalarType.ID.schema && alias == ScalarType.ID.schema) {
+            return ID_SCALAR_ATT
         }
 
         val attWithProc = procReader.read(attToRead.trim())

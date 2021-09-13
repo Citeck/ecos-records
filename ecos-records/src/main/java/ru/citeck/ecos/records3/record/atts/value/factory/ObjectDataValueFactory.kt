@@ -11,6 +11,13 @@ class ObjectDataValueFactory : AttValueFactory<ObjectData> {
 
         return object : AttValue {
 
+            override fun getId(): Any? {
+                if (value.has("id")) {
+                    return value.get("id").asText().ifEmpty { null }
+                }
+                return null
+            }
+
             override fun asText(): String? {
                 return Json.mapper.toString(value)
             }

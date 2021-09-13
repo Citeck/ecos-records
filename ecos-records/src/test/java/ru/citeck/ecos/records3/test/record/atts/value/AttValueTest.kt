@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
 
 class AttValueTest {
 
@@ -47,5 +48,28 @@ class AttValueTest {
         assertThat(allAttsValue.getAtt("second").asDouble()).isEqualTo(1234.0)
         assertThat(allAttsValue.getAtt("third").isNull()).isTrue()
         assertThat(allAttsValue.getAtt("third").asDouble()).isEqualTo(0.0)
+    }
+
+    @Test
+    fun recordAttValueCtxTest() {
+
+        val record = ObjectData.create(
+            """
+            {
+                "id": "app/source-id@test-id",
+                "key": "value"
+            }
+            """.trimIndent()
+        )
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        val attValue = RecordAttValueCtx(record, records)
+
+        assertThat(attValue.getAtt("key").asText()).isEqualTo("value")
+        assertThat(attValue.getAtt("?id").asText()).isEqualTo("app/source-id@test-id")
+        assertThat(attValue.getAtt("id").asText()).isEqualTo("app/source-id@test-id")
+        assertThat(attValue.getAtt("?localId").asText()).isEqualTo("test-id")
+
+        assertThat(attValue.getAtts(mapOf("key" to "key")).get("key").asText()).isEqualTo("value")
     }
 }

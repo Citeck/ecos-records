@@ -496,7 +496,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
 
         private val computedRef: RecordRef by lazy {
-            if (RecordRef.isNotEmpty(valueRef)) {
+            val result = if (RecordRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
                 val id = value.id
@@ -527,6 +527,12 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     computedRef = RecordRef.create(ctxSourceId, computedRef.id)
                 }
                 computedRef
+            }
+            val appName = context?.getServices()?.properties?.appName
+            if (appName.isNullOrBlank()) {
+                result
+            } else {
+                result.withDefaultAppName(appName)
             }
         }
 

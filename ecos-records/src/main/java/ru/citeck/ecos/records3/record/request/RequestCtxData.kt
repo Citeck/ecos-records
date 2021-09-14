@@ -17,7 +17,8 @@ data class RequestCtxData(
     val omitErrors: Boolean,
     val readOnly: Boolean,
     val txnId: UUID?,
-    val txnOwner: Boolean
+    val txnOwner: Boolean,
+    val sourceIdMapping: Map<String, String>
 ) {
 
     companion object {
@@ -57,6 +58,7 @@ data class RequestCtxData(
         var readOnly: Boolean = false
         var txnId: UUID? = null
         var txnOwner: Boolean = false
+        var sourceIdMapping: Map<String, String> = emptyMap()
 
         constructor(base: RequestCtxData) : this() {
             requestId = base.requestId
@@ -69,6 +71,7 @@ data class RequestCtxData(
             readOnly = base.readOnly
             txnId = base.txnId
             txnOwner = base.txnOwner
+            sourceIdMapping = base.sourceIdMapping
         }
 
         fun withOmitErrors(omitErrors: Boolean): Builder {
@@ -121,6 +124,11 @@ data class RequestCtxData(
             return this
         }
 
+        fun withSourceIdMapping(sourceIdMapping: Map<String, String>?): Builder {
+            this.sourceIdMapping = sourceIdMapping ?: emptyMap()
+            return this
+        }
+
         fun build(): RequestCtxData {
 
             if (requestId.isBlank()) {
@@ -137,7 +145,8 @@ data class RequestCtxData(
                 omitErrors,
                 readOnly,
                 txnId,
-                txnOwner
+                txnOwner,
+                sourceIdMapping
             )
         }
     }

@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -142,6 +143,38 @@ class RecordsDaoProxyAttsTest {
             ),
             getAtts
         )
+
+        val idAttFromProxy = getAtts(PROXY_ID, listOf("?id"))
+        for (atts in idAttFromProxy) {
+            val ref = RecordRef.valueOf(atts.get("?id").asText())
+            assertThat(ref.sourceId).isEqualTo(PROXY_ID)
+        }
+    }
+
+    private fun replaceIdAttsSourceIdToProxySourceId(value: DataValue): DataValue {
+        if (value.isArray()) {
+            val newValue = DataValue.createArr()
+            value.forEach {
+                newValue.add(replaceIdAttsSourceIdToProxySourceId(it))
+            }
+            return newValue
+        }
+        if (value.isObject()) {
+            val newValue = DataValue.createObj()
+            value.forEach { key, objValue ->
+                if (key.contains("?id") || key.contains("?assoc")) {
+                    newValue.set(key, replaceIdAttsSourceIdToProxySourceId(objValue))
+                } else {
+                    newValue.set(key, objValue)
+                }
+            }
+            return newValue
+        }
+        if (value.isTextual()) {
+            val txt = value.asText()
+            return DataValue.createStr(txt.replace("$TARGET_ID@", "$PROXY_ID@"))
+        }
+        return value
     }
 
     private fun compareAtts(
@@ -150,7 +183,9 @@ class RecordsDaoProxyAttsTest {
         nullable: List<String> = emptyList()
     ) {
 
-        val expectedRecordsAtts = getAtts.invoke(TARGET_ID, atts)
+        val expectedRecordsAtts = getAtts.invoke(TARGET_ID, atts).map {
+            ObjectData.create(replaceIdAttsSourceIdToProxySourceId(it.getData()))
+        }
         val actual = getAtts.invoke(PROXY_ID, atts)
 
         assertEquals(expectedRecordsAtts, actual)

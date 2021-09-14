@@ -21,6 +21,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -42,11 +43,15 @@ open class RecordsDaoProxy(
     private val clientMetaProc = processor as? HasClientMeta
     private lateinit var recordsResolver: LocalRemoteResolver
 
+    private val sourceIdMapping = mapOf(targetId to id)
+
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
         val procContext = ProxyProcContext()
         val contextAtts = getContextAtts(procContext)
-        val attsFromTarget = recordsService.getAtts(toTargetRefs(recordsId), contextAtts, true)
+        val attsFromTarget = withSourceIdMapping {
+            recordsService.getAtts(toTargetRefs(recordsId), contextAtts, true)
+        }
 
         return postProcessAtts(attsFromTarget, procContext)
     }
@@ -78,7 +83,9 @@ open class RecordsDaoProxy(
         val targetQuery = recsQuery.copy().withSourceId(targetId).build()
 
         return if (contextAtts.isEmpty()) {
-            val result = recordsService.query(targetQuery)
+            val result = withSourceIdMapping {
+                recordsService.query(targetQuery)
+            }
             result.setRecords(
                 result.getRecords().map {
                     RecordRef.create(id, it.id)
@@ -86,7 +93,9 @@ open class RecordsDaoProxy(
             )
             result
         } else {
-            val queryRes = recordsService.query(targetQuery, contextAtts, true)
+            val queryRes = withSourceIdMapping {
+                recordsService.query(targetQuery, contextAtts, true)
+            }
             val queryResWithAtts = RecsQueryRes<Any>()
             queryResWithAtts.setHasMore(queryRes.getHasMore())
             queryResWithAtts.setTotalCount(queryRes.getTotalCount())
@@ -95,8 +104,18 @@ open class RecordsDaoProxy(
         }
     }
 
+    private inline fun <T> withSourceIdMapping(crossinline action: () -> T): T {
+        return RequestContext.doWithCtx({
+            it.withSourceIdMapping(sourceIdMapping)
+        }) {
+            action.invoke()
+        }
+    }
+
     override fun delete(recordsId: List<String>): List<DelStatus> {
-        return recordsService.delete(toTargetRefs(recordsId))
+        return withSourceIdMapping {
+            recordsService.delete(toTargetRefs(recordsId))
+        }
     }
 
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
@@ -104,11 +123,13 @@ open class RecordsDaoProxy(
         val procContext = ProxyProcContext()
         val recsToMutate = mutProc?.mutatePreProcess(records, procContext) ?: records
 
-        val resultRefs = recordsService.mutate(
-            recsToMutate.map {
-                RecordAtts(toTargetRef(it.id), it.attributes)
-            }
-        )
+        val resultRefs = withSourceIdMapping {
+            recordsService.mutate(
+                recsToMutate.map {
+                    RecordAtts(toTargetRef(it.id), it.attributes)
+                }
+            )
+        }
 
         val processedRefs = mutProc?.mutatePostProcess(resultRefs, procContext) ?: resultRefs
         if (processedRefs.size != resultRefs.size) {

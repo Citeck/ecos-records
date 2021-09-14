@@ -14,21 +14,20 @@ class TxnActionManagerImpl : TxnActionManager {
 
     private val executors: MutableMap<String, ExecutorData> = ConcurrentHashMap()
 
-    override fun execute(action: TxnAction) {
-        execute(listOf(action))
+    override fun execute(action: TxnAction, context: RequestContext?) {
+        execute(listOf(action), context)
     }
 
-    override fun execute(entities: List<TxnAction>) {
-        executeRaw(entities.map { RawTxnAction(it.type, it.data) })
+    override fun execute(entities: List<TxnAction>, context: RequestContext?) {
+        executeRaw(entities.map { RawTxnAction(it.type, it.data) }, context)
     }
 
-    override fun execute(type: String, data: Any) {
-        executeRaw(listOf(RawTxnAction(type, data)))
+    override fun execute(type: String, data: Any, context: RequestContext?) {
+        executeRaw(listOf(RawTxnAction(type, data)), context)
     }
 
-    override fun executeRaw(actions: List<RawTxnAction>) {
+    override fun executeRaw(actions: List<RawTxnAction>, context: RequestContext?) {
 
-        val context = RequestContext.getCurrent()
         val txnId = context?.ctxData?.txnId
 
         if (context == null || txnId == null || context.ctxData.txnOwner) {

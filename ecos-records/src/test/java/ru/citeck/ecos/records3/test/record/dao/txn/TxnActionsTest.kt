@@ -53,7 +53,7 @@ class TxnActionsTest {
         val actionData = TxnActionData("abc")
         val recordsDaoWithAction = object : RecordMutateDao {
             override fun mutate(record: LocalRecordAtts): String {
-                services0.txnActionManager.execute(ACTION_TYPE, actionData)
+                services0.txnActionManager.execute(ACTION_TYPE, actionData, RequestContext.getCurrent())
                 return record.id
             }
             override fun getId() = "mut-dao"

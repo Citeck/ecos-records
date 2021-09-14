@@ -21,18 +21,18 @@ class TxnActionManagerTest {
         })
 
         val action = TxnAction("test-action-data")
-        services.txnActionManager.execute("test", action)
+        services.txnActionManager.execute("test", action, RequestContext.getCurrent())
         assertThat(executedActions).containsExactly(action)
         executedActions.clear()
 
         RequestContext.doWithTxn {
-            services.txnActionManager.execute("test", action)
+            services.txnActionManager.execute("test", action, RequestContext.getCurrent())
             assertThat(executedActions).containsExactly(action)
             executedActions.clear()
         }
 
         val otherAction = OtherTxnActionWithSameData("abc")
-        services.txnActionManager.execute("test", otherAction)
+        services.txnActionManager.execute("test", otherAction, RequestContext.getCurrent())
         assertThat(executedActions).containsExactly(TxnAction(otherAction.field))
     }
 

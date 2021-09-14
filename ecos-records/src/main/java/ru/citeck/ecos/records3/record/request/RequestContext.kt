@@ -154,13 +154,7 @@ class RequestContext {
         }
 
         fun doAfterCommit(action: () -> Unit) {
-            val context = getCurrentNotNull()
-            val txnId = context.ctxData.txnId
-            if (txnId == null) {
-                action.invoke()
-            } else {
-                context.getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY).add(action)
-            }
+            getCurrentNotNull().doAfterCommit(action)
         }
 
         @JvmStatic
@@ -315,16 +309,26 @@ class RequestContext {
         if (txnRecords.isNotEmpty()) {
             if (success) {
                 serviceFactory.recordsResolver.commit(txnRecords.toList())
-                val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
-                for (action in afterCommitActions) {
-                    action.invoke()
-                }
-                afterCommitActions.clear()
             } else {
                 serviceFactory.recordsResolver.rollback(txnRecords.toList())
             }
         }
+        val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
+        for (action in afterCommitActions) {
+            action.invoke()
+        }
+        afterCommitActions.clear()
+
         mutRecords.remove(txnId)
+    }
+
+    fun doAfterCommit(action: () -> Unit) {
+        val txnId = ctxData.txnId
+        if (txnId == null) {
+            action.invoke()
+        } else {
+            getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY).add(action)
+        }
     }
 
     fun getTxnChangedRecords(): MutableSet<RecordRef>? {

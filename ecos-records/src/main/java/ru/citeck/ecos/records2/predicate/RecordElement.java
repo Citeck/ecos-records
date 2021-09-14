@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Use RecordAttsElement instead
+ */
+@Deprecated
 public class RecordElement implements Element {
 
     private final RecordRef recordRef;

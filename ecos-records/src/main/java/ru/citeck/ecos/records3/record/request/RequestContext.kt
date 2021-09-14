@@ -314,10 +314,17 @@ class RequestContext {
             }
         }
         val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
-        for (action in afterCommitActions) {
-            action.invoke()
+        var iterations = 5
+        while (--iterations > 0 && afterCommitActions.isNotEmpty()) {
+            val actionsToExecute = ArrayList(afterCommitActions)
+            afterCommitActions.clear()
+            for (action in actionsToExecute) {
+                action.invoke()
+            }
         }
-        afterCommitActions.clear()
+        if (iterations == 0) {
+            log.warn { "After commit actions iterations == 0. It may be cyclic dependency." }
+        }
 
         mutRecords.remove(txnId)
     }

@@ -277,14 +277,16 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     attValue = try {
                         val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
                         if (valueCtx != null) {
-                            computedAttsService.compute(
-                                AttValueResolveCtx(
-                                    currentValuePath,
-                                    context,
-                                    valueCtx
-                                ),
-                                computedAtt
-                            )
+                            withoutSourceIdMapping(context) {
+                                computedAttsService.compute(
+                                    AttValueResolveCtx(
+                                        currentValuePath,
+                                        context,
+                                        valueCtx
+                                    ),
+                                    computedAtt
+                                )
+                            }
                         } else {
                             log.debug { "Value context is not found for attribute $computedAtt" }
                         }
@@ -306,14 +308,16 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                             if (mixinValueCtx == null) {
                                 null
                             } else {
-                                mixinAttCtx.mixin.getAtt(
-                                    mixinAttCtx.path,
-                                    AttValueResolveCtx(
-                                        currentValuePath,
-                                        context,
-                                        mixinValueCtx
+                                withoutSourceIdMapping(context) {
+                                    mixinAttCtx.mixin.getAtt(
+                                        mixinAttCtx.path,
+                                        AttValueResolveCtx(
+                                            currentValuePath,
+                                            context,
+                                            mixinValueCtx
+                                        )
                                     )
-                                )
+                                }
                             }
                         } catch (e: Exception) {
                             val msg = "Resolving error. Path: $attPath"
@@ -330,14 +334,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
 
             if (attValue is ComputedAttDef) {
-                attValue = computedAttsService.compute(
-                    AttValueResolveCtx(
-                        currentValuePath,
-                        context,
-                        value
-                    ),
-                    attValue
-                )
+                val notNullAttValue = attValue
+                attValue = withoutSourceIdMapping(context) {
+                    computedAttsService.compute(
+                        AttValueResolveCtx(
+                            currentValuePath,
+                            context,
+                            value
+                        ),
+                        notNullAttValue
+                    )
+                }
             }
 
             val attValues = toList(attValue)
@@ -372,6 +379,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         attContext.setAttPath(currentValuePath)
 
         return result
+    }
+
+    private inline fun <T> withoutSourceIdMapping(context: ResolveContext, crossinline action: () -> T): T {
+        val sourceIdMapping = context.reqContext.ctxData.sourceIdMapping
+        return if (sourceIdMapping.isNotEmpty()) {
+            RequestContext.doWithCtx({ it.withSourceIdMapping(emptyMap()) }) {
+                action.invoke()
+            }
+        } else {
+            action.invoke()
+        }
     }
 
     private fun getContextForDynamicAtt(value: ValueContext?, path: String): ValueContext? {

@@ -123,19 +123,23 @@ open class RecordsDaoProxy(
         val procContext = ProxyProcContext()
         val recsToMutate = mutProc?.mutatePreProcess(records, procContext) ?: records
 
-        val resultRefs = withSourceIdMapping {
-            recordsService.mutate(
-                recsToMutate.map {
-                    RecordAtts(toTargetRef(it.id), it.attributes)
-                }
-            )
-        }
+        val resultRefs = mutateWithoutProcessing(recsToMutate)
 
         val processedRefs = mutProc?.mutatePostProcess(resultRefs, procContext) ?: resultRefs
         if (processedRefs.size != resultRefs.size) {
             error("RecordRefs size was changed by processor: ${mutProc?.javaClass}")
         }
         return processedRefs.map { it.id }
+    }
+
+    fun mutateWithoutProcessing(records: List<LocalRecordAtts>): List<RecordRef> {
+        return withSourceIdMapping {
+            recordsService.mutate(
+                records.map {
+                    RecordAtts(toTargetRef(it.id), it.attributes)
+                }
+            )
+        }
     }
 
     private fun toTargetRefs(recordsId: List<String>): List<RecordRef> {
@@ -171,6 +175,7 @@ open class RecordsDaoProxy(
             processor.setRecordsServiceFactory(serviceFactory)
         }
         recordsResolver = serviceFactory.recordsResolver
+        processor?.init(this)
     }
 
     override fun getClientMeta(): ClientMeta? {

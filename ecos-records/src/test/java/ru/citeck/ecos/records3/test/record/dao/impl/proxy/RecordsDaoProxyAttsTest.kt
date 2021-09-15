@@ -13,11 +13,13 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.impl.proxy.AttsProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.mixin.AttMixin
 import kotlin.test.assertEquals
 
 class RecordsDaoProxyAttsTest {
@@ -37,6 +39,19 @@ class RecordsDaoProxyAttsTest {
             .addRecord("test", ValueDto())
             .addRecord("linked", LinkedDto())
             .build() as InMemRecordsDao<*>
+
+        targetRecordsDao.addAttributesMixin(object : AttMixin {
+            override fun getAtt(path: String, value: AttValueCtx): Any? {
+                return if (path == "mixin-ref") {
+                    value.getRef().toString()
+                } else {
+                    null
+                }
+            }
+            override fun getProvidedAtts(): Collection<String> {
+                return listOf("mixin-ref")
+            }
+        })
 
         records.register(targetRecordsDao)
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
@@ -117,6 +132,7 @@ class RecordsDaoProxyAttsTest {
         compareAtts(listOf("strField", "unknownField"), getAtts, listOf("unknownField"))
         compareAtts(listOf("unknownField"), getAtts, listOf("unknownField"))
         compareAtts(listOf("linkedDto"), getAtts)
+        compareAtts(listOf("mixin-ref"), getAtts)
 
         compareAtts(
             listOf(

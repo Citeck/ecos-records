@@ -546,37 +546,41 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
                 computedRef
             }
-            val currentAppName = context?.getServices()?.properties?.appName ?: ""
-            if (result.appName.isBlank() && currentAppName.isNotBlank()) {
-                result = result.withDefaultAppName(currentAppName)
-            }
-            val sourceIdMapping = context?.ctxData?.sourceIdMapping ?: emptyMap()
-            if (sourceIdMapping.isNotEmpty()) {
-                var targetId = ""
-                if (result.appName.isNotBlank()) {
-                    targetId = sourceIdMapping[result.appName + "/" + result.sourceId] ?: ""
+            if (RecordRef.isEmpty(result)) {
+                result
+            } else {
+                val currentAppName = context?.getServices()?.properties?.appName ?: ""
+                if (result.appName.isBlank() && currentAppName.isNotBlank()) {
+                    result = result.withDefaultAppName(currentAppName)
                 }
-                if (targetId.isBlank() && result.appName == currentAppName) {
-                    targetId = sourceIdMapping[result.sourceId] ?: ""
-                }
-                if (targetId.isNotBlank()) {
-                    val appDelimIdx = targetId.indexOf('/')
-                    result = if (appDelimIdx >= 0 && appDelimIdx < targetId.length - 1) {
-                        RecordRef.create(
-                            targetId.substring(0, appDelimIdx),
-                            targetId.substring(appDelimIdx + 1),
-                            result.id
-                        )
-                    } else {
-                        RecordRef.create(
-                            result.appName,
-                            targetId,
-                            result.id
-                        )
+                val sourceIdMapping = context?.ctxData?.sourceIdMapping ?: emptyMap()
+                if (sourceIdMapping.isNotEmpty()) {
+                    var targetId = ""
+                    if (result.appName.isNotBlank()) {
+                        targetId = sourceIdMapping[result.appName + "/" + result.sourceId] ?: ""
+                    }
+                    if (targetId.isBlank() && result.appName == currentAppName) {
+                        targetId = sourceIdMapping[result.sourceId] ?: ""
+                    }
+                    if (targetId.isNotBlank()) {
+                        val appDelimIdx = targetId.indexOf('/')
+                        result = if (appDelimIdx >= 0 && appDelimIdx < targetId.length - 1) {
+                            RecordRef.create(
+                                targetId.substring(0, appDelimIdx),
+                                targetId.substring(appDelimIdx + 1),
+                                result.id
+                            )
+                        } else {
+                            RecordRef.create(
+                                result.appName,
+                                targetId,
+                                result.id
+                            )
+                        }
                     }
                 }
+                result
             }
-            result
         }
 
         /**

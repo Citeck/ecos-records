@@ -125,7 +125,7 @@ open class RecordsServiceFactory {
         Json.context.addDeserializer(predicateJsonDeserializer)
         Json.context.addSerializer(PredicateJsonSerializer())
 
-        RequestContext.setDefaultServicesIfNotSet(this)
+        RequestContext.setLastCreatedServices(this)
     }
 
     protected open fun createJobExecutor(): JobExecutor {

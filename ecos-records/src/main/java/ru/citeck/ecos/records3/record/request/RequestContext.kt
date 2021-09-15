@@ -36,6 +36,7 @@ class RequestContext {
 
         private val log = KotlinLogging.logger {}
 
+        private var lastCreatedServices: RecordsServiceFactory? = null
         private var defaultServices: RecordsServiceFactory? = null
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
 
@@ -43,14 +44,12 @@ class RequestContext {
         private val refCtxAtt = AttFuncValue { RecordRef.valueOf(it) }
         private val authCtxAtt = AuthContextValue()
 
-        fun setDefaultServicesIfNotSet(defaultServices: RecordsServiceFactory) {
-            if (this.defaultServices == null) {
-                this.defaultServices = defaultServices
-            }
+        fun setDefaultServices(defaultServices: RecordsServiceFactory?) {
+            this.defaultServices = defaultServices
         }
 
-        fun setDefaultServices(defaultServices: RecordsServiceFactory) {
-            this.defaultServices = defaultServices
+        fun setLastCreatedServices(lastCreatedServices: RecordsServiceFactory?) {
+            this.lastCreatedServices = lastCreatedServices
         }
 
         @JvmStatic
@@ -203,7 +202,7 @@ class RequestContext {
         ): T {
 
             var current = getCurrent()
-            val notNullServices = factory ?: current?.serviceFactory ?: defaultServices
+            val notNullServices = factory ?: current?.serviceFactory ?: defaultServices ?: lastCreatedServices
                 ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false

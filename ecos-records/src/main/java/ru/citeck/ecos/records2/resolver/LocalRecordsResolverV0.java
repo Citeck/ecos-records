@@ -91,7 +91,7 @@ public class LocalRecordsResolverV0 {
         }
 
         RecordsQueryResult<RecordAtts> recordsResult = queryRecordsImpl(query, schema, rawAtts);
-        return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp);
+        return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp, query.getSourceId());
     }
 
     private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDao dao) {

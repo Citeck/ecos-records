@@ -137,7 +137,7 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
             props.appName = appName
         }
         if (appInstanceId.isNotEmpty() && props.appInstanceId.isEmpty()) {
-            props.appInstanceId = appInstanceId;
+            props.appInstanceId = appInstanceId
         }
     }
 }

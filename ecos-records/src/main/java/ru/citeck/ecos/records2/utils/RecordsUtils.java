@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class RecordsUtils {
@@ -37,26 +38,46 @@ public class RecordsUtils {
     }
 
     public static RecordsQueryResult<RecordAtts> attsWithDefaultApp(RecordsQueryResult<RecordAtts> queryResult,
-                                                                    String appName) {
+                                                                    String appName, String sourceId) {
 
-        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName));
+        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName, sourceId));
         return queryResult;
     }
 
-    public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult,
-                                                              String appName) {
+    public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult, String appName) {
+        return attsWithDefaultApp(queryResult, appName, "");
+    }
 
-        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName));
+    public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult,
+                                                              String appName, String sourceId) {
+
+        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName, sourceId));
         return queryResult;
     }
 
     public static List<RecordAtts> attsWithDefaultApp(List<RecordAtts> records, String appName) {
-        if (StringUtils.isBlank(appName)) {
+        return attsWithDefaultApp(records, appName, "");
+    }
+
+    public static List<RecordAtts> attsWithDefaultApp(List<RecordAtts> records, String appName, String sourceId) {
+        if (StringUtils.isBlank(appName) && StringUtils.isBlank(sourceId)) {
             return records;
         }
-        return records.stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList());
+        Stream<RecordAtts> recordsStream = records.stream();
+        if (StringUtils.isNotBlank(sourceId)) {
+            recordsStream = recordsStream.map(meta -> {
+                RecordRef ref = meta.getId();
+                if (StringUtils.isBlank(ref.getSourceId())) {
+                    ref = RecordRef.create(ref.getAppName(), sourceId, ref.getId());
+                    return new RecordAtts(ref, meta.getAtts());
+                }
+                return meta;
+            });
+        }
+        if (StringUtils.isNotBlank(appName)) {
+            recordsStream = recordsStream.map(meta -> meta.withDefaultAppName(appName));
+        }
+        return recordsStream.collect(Collectors.toList());
     }
 
     public static RecordsQueryResult<RecordMeta> metaWithDefaultApp(RecordsQueryResult<RecordMeta> queryResult,
@@ -114,7 +135,13 @@ public class RecordsUtils {
             return records;
         }
         return records.stream()
-                      .map(n -> new RecordAtts(RecordRef.valueOf(sourceId + "@" + n.getId()), n.getAtts()))
+                      .map(rec -> {
+                          RecordRef ref = rec.getId();
+                          if (ref.getAppName().isEmpty() && ref.getSourceId().isEmpty()) {
+                              new RecordAtts(RecordRef.valueOf(sourceId + "@" + ref), rec.getAtts());
+                          }
+                          return rec;
+                      })
                       .collect(Collectors.toList());
     }
 

@@ -10,6 +10,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAttType
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAttValue
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -169,7 +170,7 @@ class ComputedAttTest {
 
         val records = RecordsServiceFactory().recordsServiceV1
 
-        val computedAttDef0 = ComputedAttDef.create()
+        val computedAttDef0 = ComputedAttValue.create()
             .withType(ComputedAttType.SCRIPT)
             .withConfig(
                 ObjectData.create(
@@ -182,7 +183,7 @@ class ComputedAttTest {
             )
             .build()
 
-        val computedAttDef1 = ComputedAttDef.create()
+        val computedAttDef1 = ComputedAttValue.create()
             .withType(ComputedAttType.SCRIPT)
             .withConfig(
                 ObjectData.create(
@@ -195,7 +196,7 @@ class ComputedAttTest {
             )
             .build()
 
-        val computedAttDef2 = ComputedAttDef.create()
+        val computedAttDef2 = ComputedAttValue.create()
             .withType(ComputedAttType.SCRIPT)
             .withConfig(
                 ObjectData.create(

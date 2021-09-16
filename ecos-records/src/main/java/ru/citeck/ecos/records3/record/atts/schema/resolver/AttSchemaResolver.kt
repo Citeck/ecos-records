@@ -16,7 +16,7 @@ import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -333,7 +333,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            if (attValue is ComputedAttDef) {
+            if (attValue is ComputedAttValue) {
                 val notNullAttValue = attValue
                 attValue = withoutSourceIdMapping(context) {
                     computedAttsService.compute(

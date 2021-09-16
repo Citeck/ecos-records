@@ -31,6 +31,10 @@ class ComputedAttsService(services: RecordsServiceFactory) {
         return compute(context, att.def) { context.getAtt(att.id) }
     }
 
+    fun compute(context: AttValueCtx, def: ComputedAttValue): Any? {
+        return compute(context, ComputedAttDef(def.type, def.config, StoringType.NONE)) { null }
+    }
+
     fun compute(context: AttValueCtx, def: ComputedAttDef): Any? {
         return compute(context, def) { null }
     }

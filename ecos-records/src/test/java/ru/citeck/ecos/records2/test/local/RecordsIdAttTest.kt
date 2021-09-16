@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
+import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao
 import ru.citeck.ecos.records3.RecordsProperties
@@ -77,14 +78,14 @@ class RecordsIdAttTest {
         // withoutAddSourceIdWithMetaSourceId
 
         val withoutAddSourceIdWithMetaSourceId = "withoutAddSourceIdWithMetaSourceId"
-        val daoWithoutAddSourceIdWithMetaSourceId = object : LocalRecordsDao(false), LocalRecordsQueryWithMetaDao<TestDao> {
+        val daoWithoutAddSourceIdWithMetaSourceId = object : LocalRecordsDao(false), LocalRecordsQueryWithMetaDao<TestDto> {
             init { id = withoutAddSourceIdWithMetaSourceId }
 
             override fun queryLocalRecords(
                 recordsQuery: ru.citeck.ecos.records2.request.query.RecordsQuery,
                 field: MetaField
-            ): RecordsQueryResult<TestDao> {
-                return RecordsQueryResult.of(*(results.map { TestDao(it) }).toTypedArray())
+            ): RecordsQueryResult<TestDto> {
+                return RecordsQueryResult.of(*(results.map { TestDto(it) }).toTypedArray())
             }
         }
         services.recordsService.register(daoWithoutAddSourceIdWithMetaSourceId)
@@ -111,14 +112,14 @@ class RecordsIdAttTest {
         // withAddSourceIdWithMetaSourceId
 
         val withAddSourceIdWithMetaSourceId = "withAddSourceIdWithMetaSourceId"
-        val daoWithAddSourceIdWithMetaSourceId = object : LocalRecordsDao(true), LocalRecordsQueryWithMetaDao<TestDao> {
+        val daoWithAddSourceIdWithMetaSourceId = object : LocalRecordsDao(true), LocalRecordsQueryWithMetaDao<TestDto> {
             init { id = withAddSourceIdWithMetaSourceId }
 
             override fun queryLocalRecords(
                 recordsQuery: ru.citeck.ecos.records2.request.query.RecordsQuery,
                 field: MetaField
-            ): RecordsQueryResult<TestDao> {
-                return RecordsQueryResult.of(*(results.map { TestDao(it) }).toTypedArray())
+            ): RecordsQueryResult<TestDto> {
+                return RecordsQueryResult.of(*(results.map { TestDto(it) }).toTypedArray())
             }
         }
         services.recordsService.register(daoWithAddSourceIdWithMetaSourceId)
@@ -141,7 +142,47 @@ class RecordsIdAttTest {
                 RecordRef.create(props.appName, withAddSourceIdWithMetaSourceId, it).toString()
             }
         )
+
+        // getAtt without add source id
+
+        val getAttWithoutAddSourceId = "getAttWithoutAddSourceId"
+        val getAttWithoutAddSourceIdDao = object : LocalRecordsDao(false), LocalRecordsMetaDao<TestDto> {
+            init { id = getAttWithoutAddSourceId }
+
+            override fun getLocalRecordsMeta(
+                records: MutableList<RecordRef>,
+                metaField: MetaField
+            ): MutableList<TestDto> {
+                return records.map { TestDto(it.id) }.toMutableList()
+            }
+        }
+        services.recordsService.register(getAttWithoutAddSourceIdDao)
+
+        val getAttWithoutAddSourceIdRes = records.getAtt(RecordRef.create(getAttWithoutAddSourceId, "localId"), "?id")
+        assertThat(getAttWithoutAddSourceIdRes.asText()).isEqualTo(
+            RecordRef.create(props.appName, getAttWithoutAddSourceId, "localId").toString()
+        )
+
+        // getAtt with add source id
+
+        val getAttWithAddSourceId = "getAttWithAddSourceId"
+        val getAttWithAddSourceIdDao = object : LocalRecordsDao(true), LocalRecordsMetaDao<TestDto> {
+            init { id = getAttWithAddSourceId }
+
+            override fun getLocalRecordsMeta(
+                records: MutableList<RecordRef>,
+                metaField: MetaField
+            ): MutableList<TestDto> {
+                return records.map { TestDto(it.id) }.toMutableList()
+            }
+        }
+        services.recordsService.register(getAttWithAddSourceIdDao)
+
+        val getAttWithAddSourceIdRes = records.getAtt(RecordRef.create(getAttWithAddSourceId, "localId"), "?id")
+        assertThat(getAttWithAddSourceIdRes.asText()).isEqualTo(
+            RecordRef.create(props.appName, getAttWithAddSourceId, "localId").toString()
+        )
     }
 
-    class TestDao(val id: String)
+    class TestDto(val id: String)
 }

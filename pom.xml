@@ -7,7 +7,7 @@
 
     <groupId>ru.citeck.ecos.records</groupId>
     <artifactId>ecos-records-project</artifactId>
-    <version>3.36.11</version>
+    <version>3.36.12</version>
     <packaging>pom</packaging>
 
     <properties>

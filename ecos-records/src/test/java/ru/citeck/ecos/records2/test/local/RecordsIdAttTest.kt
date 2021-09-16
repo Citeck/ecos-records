@@ -92,11 +92,19 @@ class RecordsIdAttTest {
         val withoutAddSourceIdWithMetaSourceIdResult = records.query(
             RecordsQuery.create {
                 withSourceId(withoutAddSourceIdWithMetaSourceId)
-            }
+            },
+            mapOf(
+                "idAtt" to "?id"
+            )
         )
-        assertThat(withoutAddSourceIdWithMetaSourceIdResult.getRecords()).containsExactlyElementsOf(
+        assertThat(withoutAddSourceIdWithMetaSourceIdResult.getRecords().map { it.getId() }).containsExactlyElementsOf(
             results.map {
                 RecordRef.create(props.appName, withoutAddSourceIdWithMetaSourceId, it)
+            }
+        )
+        assertThat(withoutAddSourceIdWithMetaSourceIdResult.getRecords().map { it.getAtts().get("idAtt").asText() }).containsExactlyElementsOf(
+            results.map {
+                RecordRef.create(props.appName, withoutAddSourceIdWithMetaSourceId, it).toString()
             }
         )
 
@@ -118,11 +126,19 @@ class RecordsIdAttTest {
         val withAddSourceIdWithMetaSourceIdResult = records.query(
             RecordsQuery.create {
                 withSourceId(withAddSourceIdWithMetaSourceId)
-            }
+            },
+            mapOf(
+                "idAtt" to "?id"
+            )
         )
-        assertThat(withAddSourceIdWithMetaSourceIdResult.getRecords()).containsExactlyElementsOf(
+        assertThat(withAddSourceIdWithMetaSourceIdResult.getRecords().map { it.getId() }).containsExactlyElementsOf(
             results.map {
                 RecordRef.create(props.appName, withAddSourceIdWithMetaSourceId, it)
+            }
+        )
+        assertThat(withAddSourceIdWithMetaSourceIdResult.getRecords().map { it.getAtts().get("idAtt").asText() }).containsExactlyElementsOf(
+            results.map {
+                RecordRef.create(props.appName, withAddSourceIdWithMetaSourceId, it).toString()
             }
         )
     }

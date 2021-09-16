@@ -34,7 +34,9 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     private lateinit var props: RecordsProperties
 
     @Value("\${spring.application.name:}")
-    private lateinit var springAppName: String
+    private lateinit var appName: String
+    @Value("\${eureka.instance.instanceId:}")
+    private lateinit var appInstanceId: String
 
     var customDefaultCtxAttsProvider: ContextAttsProvider? = null
 
@@ -131,8 +133,11 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     @Autowired
     fun setProperties(props: RecordsProperties) {
         this.props = props
-        if (springAppName.isNotEmpty() && props.appName.isEmpty()) {
-            props.appName = springAppName
+        if (appName.isNotEmpty() && props.appName.isEmpty()) {
+            props.appName = appName
+        }
+        if (appInstanceId.isNotEmpty() && props.appInstanceId.isEmpty()) {
+            props.appInstanceId = appInstanceId;
         }
     }
 }

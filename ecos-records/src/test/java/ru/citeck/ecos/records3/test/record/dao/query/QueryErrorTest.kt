@@ -23,7 +23,6 @@ class QueryErrorTest {
     fun testAttError() {
 
         val services = RecordsServiceFactory()
-        RequestContext.setDefaultServices(services)
         val records = services.recordsServiceV1
 
         records.register(
@@ -64,7 +63,6 @@ class QueryErrorTest {
     fun queryErrorTest() {
 
         val services = RecordsServiceFactory()
-        RequestContext.setDefaultServices(services)
         val records = services.recordsServiceV1
 
         records.register(object : RecordsQueryDao {

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -39,5 +40,10 @@ class DefaultRequestContextTest {
         RequestContext.doWithCtx { ctx ->
             assertThat(ctx.getServices()).isSameAs(services0)
         }
+    }
+
+    @AfterEach
+    fun doAfterEach() {
+        RequestContext.setDefaultServices(null)
     }
 }

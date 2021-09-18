@@ -153,6 +153,27 @@ class RecordRef : Serializable {
         return appName.isNotEmpty()
     }
 
+    fun withSourceId(sourceId: String): RecordRef {
+        if (this.sourceId == sourceId) {
+            return this
+        }
+        return create(appName, sourceId, id)
+    }
+
+    fun withAppName(appName: String): RecordRef {
+        if (this.appName == appName) {
+            return this
+        }
+        return create(appName, sourceId, id)
+    }
+
+    fun withId(id: String): RecordRef {
+        if (this.id == id) {
+            return this
+        }
+        return create(appName, sourceId, id)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true

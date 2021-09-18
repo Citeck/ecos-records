@@ -15,6 +15,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.utils.RecordRefUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -29,6 +30,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val dtoSchemaReader = services.dtoSchemaReader
     private val attSchemaWriter = services.attSchemaWriter
     private val isGatewayMode = services.properties.gatewayMode
+
+    private val currentAppName = services.properties.appName
 
     init {
         recordsResolver.setRecordsService(this)
@@ -136,6 +139,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
         }
         val txnMutRecords = context.getTxnChangedRecords()
+        val sourceIdMapping = context.ctxData.sourceIdMapping
 
         for (i in records.indices.reversed()) {
 
@@ -163,8 +167,14 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
             val resultAtts = recordMutResult.last()
             result[i] = resultAtts
-            if (RecordRef.isNotEmpty(resultAtts.getId())) {
-                txnMutRecords?.add(resultAtts.getId())
+            if (txnMutRecords != null && RecordRef.isNotEmpty(resultAtts.getId())) {
+                txnMutRecords.add(
+                    RecordRefUtils.mapAppIdAndSourceId(
+                        resultAtts.getId(),
+                        currentAppName,
+                        sourceIdMapping
+                    )
+                )
             }
 
             for (resultMeta in recordMutResult) {

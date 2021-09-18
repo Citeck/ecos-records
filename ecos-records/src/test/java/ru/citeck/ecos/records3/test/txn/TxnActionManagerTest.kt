@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.txn.ext.TxnActionExecutor
+import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 
 class TxnActionManagerTest {
 
@@ -13,7 +13,10 @@ class TxnActionManagerTest {
 
         val services = RecordsServiceFactory()
         val executedActions = mutableListOf<TxnAction>()
-        services.txnActionManager.register(object : TxnActionExecutor<TxnAction> {
+        services.txnActionManager.register(object : TxnActionComponent<TxnAction> {
+            override fun preProcess(actions: List<TxnAction>, fromRemote: Boolean): List<TxnAction> {
+                return actions
+            }
             override fun execute(action: TxnAction) {
                 executedActions.add(action)
             }

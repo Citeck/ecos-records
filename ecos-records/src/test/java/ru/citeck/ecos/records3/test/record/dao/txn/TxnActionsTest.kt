@@ -11,10 +11,11 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.txn.ext.TxnActionExecutor
+import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
@@ -36,8 +37,8 @@ class TxnActionsTest {
     @Test
     fun test() {
 
-        val (services0, actions0) = createServices("app0")
-        val (services1, actions1) = createServices("app1")
+        val (services0, actions0, preProcessed0) = createServices("app0")
+        val (services1, actions1, preProcessed1) = createServices("app1")
 
         val testRecordsDao = RecordsDaoBuilder.create("test")
             .addRecord("rec0", ObjectData.create("""{"key":"value"}"""))
@@ -62,12 +63,15 @@ class TxnActionsTest {
 
         // mutate without transaction. Action should be executed immediately
 
-        val ref1 = RecordRef.create("app0", "mut-dao", "rec0")
-        services1.recordsServiceV1.mutate(ref1, mapOf("abc" to "def"))
+        val ref1App0 = RecordRef.create("app0", "mut-dao", "rec1")
+        val ref2App0 = RecordRef.create("app0", "mut-dao", "rec2")
+        services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
 
         assertThat(actions0).hasSize(1)
         assertThat(actions1).hasSize(0)
         assertThat(actions0[0]).isEqualTo(actionData)
+        assertThat(preProcessed0).isEmpty()
+        assertThat(preProcessed1).isEmpty()
 
         actions0.clear()
         actions1.clear()
@@ -75,32 +79,51 @@ class TxnActionsTest {
         // mutate in transaction. Action should be executed in app1
 
         RequestContext.doWithTxn(false) {
-            services1.recordsServiceV1.mutate(ref1, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
         }
 
         assertThat(actions0).hasSize(0)
         assertThat(actions1).hasSize(1)
         assertThat(actions1[0]).isEqualTo(actionData)
+        assertThat(preProcessed0).containsExactly(listOf(actionData))
+        assertThat(preProcessed1).containsExactly(listOf(actionData))
 
         actions0.clear()
         actions1.clear()
+        preProcessed0.clear()
+        preProcessed1.clear()
 
         // Multiple mutations in transaction. Action should be executed in app1
 
         RequestContext.doWithTxn(false) {
-            services1.recordsServiceV1.mutate(ref1, mapOf("abc" to "def"))
-            services1.recordsServiceV1.mutate(ref1, mapOf("abc" to "def"))
-            services1.recordsServiceV1.mutate(ref1, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(
+                listOf(ref1App0, ref2App0).map {
+                    RecordAtts(it, ObjectData.create(mapOf("abc" to "def")))
+                }
+            )
         }
 
         assertThat(actions0).hasSize(0)
-        assertThat(actions1).hasSize(3)
+        assertThat(actions1).hasSize(5)
         actions1.forEach {
             assertThat(it).isEqualTo(actionData)
         }
+        val expectedPreProcess = listOf(
+            listOf(actionData),
+            listOf(actionData),
+            listOf(actionData),
+            listOf(actionData, actionData)
+        )
+        assertThat(preProcessed0.toList()).containsExactlyElementsOf(expectedPreProcess)
+        assertThat(preProcessed1.toList()).containsExactlyElementsOf(expectedPreProcess)
 
         actions0.clear()
         actions1.clear()
+        preProcessed0.clear()
+        preProcessed1.clear()
     }
 
     private fun createServices(appId: String): AppData {
@@ -140,8 +163,13 @@ class TxnActionsTest {
             }
         }
 
+        val preProcessedActions = mutableListOf<List<TxnActionData>>()
         val actionsReceivedInExecutor = mutableListOf<TxnActionData>()
-        val actionExecutor = object : TxnActionExecutor<TxnActionData> {
+        val actionExecutor = object : TxnActionComponent<TxnActionData> {
+            override fun preProcess(actions: List<TxnActionData>, fromRemote: Boolean): List<TxnActionData> {
+                preProcessedActions.add(actions)
+                return actions
+            }
             override fun execute(action: TxnActionData) {
                 actionsReceivedInExecutor.add(action)
             }
@@ -151,12 +179,13 @@ class TxnActionsTest {
         services.txnActionManager.register(actionExecutor)
 
         this.services[appId] = services
-        return AppData(services, actionsReceivedInExecutor)
+        return AppData(services, actionsReceivedInExecutor, preProcessedActions)
     }
 
     data class AppData(
         val services: RecordsServiceFactory,
-        val actionsReceivedInExecutor: MutableList<TxnActionData>
+        val actionsReceivedInExecutor: MutableList<TxnActionData>,
+        val preProcessedActions: MutableList<List<TxnActionData>>
     )
 
     data class TxnActionData(

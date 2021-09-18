@@ -6,6 +6,12 @@ import ru.citeck.ecos.records2.RecordRef
 
 interface AttValueCtx {
 
+    /**
+     * Get internal raw value from this context.
+     * Returned value should be ready to call recordsService.getAtts(value, atts)
+     */
+    fun getValue(): Any
+
     fun getRef(): RecordRef
 
     fun getLocalId(): String

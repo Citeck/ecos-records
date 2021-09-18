@@ -777,6 +777,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         val valueCtx: ValueContext
     ) : AttValueCtx {
 
+        override fun getValue(): Any {
+            return valueCtx.value
+        }
+
         override fun getRef(): RecordRef {
             return valueCtx.getRef()
         }

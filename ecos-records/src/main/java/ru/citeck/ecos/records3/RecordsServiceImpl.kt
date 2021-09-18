@@ -29,8 +29,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val attSchemaReader = services.attSchemaReader
     private val dtoSchemaReader = services.dtoSchemaReader
     private val attSchemaWriter = services.attSchemaWriter
-    private val isGatewayMode = services.properties.gatewayMode
 
+    private val isGatewayMode = services.properties.gatewayMode
     private val currentAppName = services.properties.appName
 
     init {
@@ -127,6 +127,15 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
         if (isGatewayMode) {
             return recordsResolver.mutate(records, attsToLoad, rawAtts)
+        }
+        if (currentAppName.isNotEmpty()) {
+            if (records.all {
+                val appName = it.getId().appName
+                appName.isNotEmpty() && appName != currentAppName
+            }
+            ) {
+                return recordsResolver.mutate(records, attsToLoad, rawAtts)
+            }
         }
 
         val aliasToRecordRef = HashMap<String, RecordRef>()

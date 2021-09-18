@@ -57,6 +57,10 @@ class RecordsScriptService(services: RecordsServiceFactory) {
 
     private inner class Record(val recordRef: RecordRef) : AttValueCtx {
 
+        override fun getValue(): Any {
+            return recordRef
+        }
+
         override fun getRef(): RecordRef {
             return recordRef
         }

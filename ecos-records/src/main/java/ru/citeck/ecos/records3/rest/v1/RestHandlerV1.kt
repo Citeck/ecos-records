@@ -193,7 +193,6 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                         TxnBody.TxnAction.COMMIT -> recordsResolver.commit(body.records)
                         TxnBody.TxnAction.ROLLBACK -> recordsResolver.rollback(body.records)
                     }
-                    txnResp.setTxnActions(getTxnActions(context))
                 }
             } catch (e: Throwable) {
                 log.error("Records txn action completed with error. TxnBody: $body", e)

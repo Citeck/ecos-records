@@ -15,7 +15,7 @@ timestamps {
           userRemoteConfigs: [[credentialsId: 'awx.integrations',url: 'git@bitbucket.org:citeck/ecos-records.git']]
         ])
       }
-      def project_version = readMavenPom().getVersion().toLowerCase()
+      def project_version = readMavenPom().getProperties().getProperty("revision")
       if ((env.BRANCH_NAME != "master") && (!project_version.contains('snapshot')))  {
         echo "Assembly of release artifacts is allowed only from the master branch!"
         currentBuild.result = 'SUCCESS'

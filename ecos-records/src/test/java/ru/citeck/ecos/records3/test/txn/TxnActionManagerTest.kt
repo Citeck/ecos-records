@@ -14,11 +14,8 @@ class TxnActionManagerTest {
         val services = RecordsServiceFactory()
         val executedActions = mutableListOf<TxnAction>()
         services.txnActionManager.register(object : TxnActionComponent<TxnAction> {
-            override fun preProcess(actions: List<TxnAction>, fromRemote: Boolean): List<TxnAction> {
-                return actions
-            }
-            override fun execute(action: TxnAction) {
-                executedActions.add(action)
+            override fun execute(actions: List<TxnAction>) {
+                executedActions.addAll(actions)
             }
             override fun getType() = "test"
         })

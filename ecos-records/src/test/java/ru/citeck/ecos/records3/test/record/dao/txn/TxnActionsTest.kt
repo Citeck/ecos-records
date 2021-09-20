@@ -37,8 +37,8 @@ class TxnActionsTest {
     @Test
     fun test() {
 
-        val (services0, actions0, preProcessed0) = createServices("app0")
-        val (services1, actions1, preProcessed1) = createServices("app1")
+        val (services0, actions0) = createServices("app0")
+        val (services1, actions1) = createServices("app1")
 
         val testRecordsDao = RecordsDaoBuilder.create("test")
             .addRecord("rec0", ObjectData.create("""{"key":"value"}"""))
@@ -69,9 +69,7 @@ class TxnActionsTest {
 
         assertThat(actions0).hasSize(1)
         assertThat(actions1).hasSize(0)
-        assertThat(actions0[0]).isEqualTo(actionData)
-        assertThat(preProcessed0).isEmpty()
-        assertThat(preProcessed1).isEmpty()
+        assertThat(actions0[0]).isEqualTo(listOf(actionData))
 
         actions0.clear()
         actions1.clear()
@@ -84,14 +82,10 @@ class TxnActionsTest {
 
         assertThat(actions0).hasSize(0)
         assertThat(actions1).hasSize(1)
-        assertThat(actions1[0]).isEqualTo(actionData)
-        assertThat(preProcessed0).containsExactly(listOf(actionData))
-        assertThat(preProcessed1).containsExactly(listOf(actionData))
+        assertThat(actions1[0]).isEqualTo(listOf(actionData))
 
         actions0.clear()
         actions1.clear()
-        preProcessed0.clear()
-        preProcessed1.clear()
 
         // Multiple mutations in transaction. Action should be executed in app1
 
@@ -107,23 +101,17 @@ class TxnActionsTest {
         }
 
         assertThat(actions0).hasSize(0)
-        assertThat(actions1).hasSize(5)
-        actions1.forEach {
-            assertThat(it).isEqualTo(actionData)
-        }
-        val expectedPreProcess = listOf(
+        assertThat(actions1).hasSize(4)
+        val expectedActions = listOf(
             listOf(actionData),
             listOf(actionData),
             listOf(actionData),
             listOf(actionData, actionData)
         )
-        assertThat(preProcessed0.toList()).containsExactlyElementsOf(expectedPreProcess)
-        assertThat(preProcessed1.toList()).containsExactlyElementsOf(expectedPreProcess)
+        assertThat(actions1).containsExactlyElementsOf(expectedActions)
 
         actions0.clear()
         actions1.clear()
-        preProcessed0.clear()
-        preProcessed1.clear()
     }
 
     private fun createServices(appId: String): AppData {
@@ -163,15 +151,10 @@ class TxnActionsTest {
             }
         }
 
-        val preProcessedActions = mutableListOf<List<TxnActionData>>()
-        val actionsReceivedInExecutor = mutableListOf<TxnActionData>()
+        val actionsReceivedInExecutor = mutableListOf<List<TxnActionData>>()
         val actionExecutor = object : TxnActionComponent<TxnActionData> {
-            override fun preProcess(actions: List<TxnActionData>, fromRemote: Boolean): List<TxnActionData> {
-                preProcessedActions.add(actions)
-                return actions
-            }
-            override fun execute(action: TxnActionData) {
-                actionsReceivedInExecutor.add(action)
+            override fun execute(actions: List<TxnActionData>) {
+                actionsReceivedInExecutor.add(actions)
             }
             override fun getType() = ACTION_TYPE
         }
@@ -179,13 +162,12 @@ class TxnActionsTest {
         services.txnActionManager.register(actionExecutor)
 
         this.services[appId] = services
-        return AppData(services, actionsReceivedInExecutor, preProcessedActions)
+        return AppData(services, actionsReceivedInExecutor)
     }
 
     data class AppData(
         val services: RecordsServiceFactory,
-        val actionsReceivedInExecutor: MutableList<TxnActionData>,
-        val preProcessedActions: MutableList<List<TxnActionData>>
+        val actionsReceivedInExecutor: MutableList<List<TxnActionData>>
     )
 
     data class TxnActionData(

@@ -19,7 +19,6 @@ import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
-import ru.citeck.ecos.records3.txn.ext.TxnAction
 import java.util.*
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.MutableList
@@ -130,7 +129,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
         resp.setMessages(context.getMessages())
         resp.setRecords(resp.records.map { it.withDefaultAppName(currentAppName) })
-        resp.setTxnActions(getTxnActions(context))
+        resp.setTxnActions(txnActionManager.getTxnActions(context))
         return resp
     }
 
@@ -150,7 +149,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                         it.withDefaultAppName(currentAppName)
                     }
                 )
-                resp.setTxnActions(getTxnActions(context))
+                resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
             log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
@@ -173,7 +172,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         try {
             doInWriteTxn(body.txnId) {
                 resp.setStatuses(recordsService.delete(body.records))
-                resp.setTxnActions(getTxnActions(context))
+                resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
             log.error("Records deletion completed with error. DeleteBody: $body", e)
@@ -218,10 +217,6 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             },
             action
         )
-    }
-
-    private fun getTxnActions(context: RequestContext): List<TxnAction> {
-        return txnActionManager.preProcess(txnActionManager.getTxnActions(context), false)
     }
 
     private inline fun <T> doInWriteTxn(txnId: UUID?, crossinline action: () -> T): T {

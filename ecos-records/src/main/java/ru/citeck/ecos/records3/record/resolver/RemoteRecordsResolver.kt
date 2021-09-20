@@ -344,7 +344,7 @@ class RemoteRecordsResolver(
         )
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)
-        txnActionManager.execute(txnActionManager.preProcess(result.txnActions, true), context)
+        txnActionManager.execute(result.txnActions, context)
 
         return result
     }

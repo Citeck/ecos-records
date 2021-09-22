@@ -49,8 +49,15 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
     private Instant currentSyncDate = Instant.EPOCH;
     private long lastUpdateTimeMs = 0;
 
+    private final String querySourceId;
+
     public RemoteSyncRecordsDao(String sourceId, Class<T> model) {
+        this(sourceId, sourceId, model);
+    }
+
+    public RemoteSyncRecordsDao(String sourceId, String querySourceId, Class<T> model) {
         super(sourceId);
+        this.querySourceId = querySourceId;
         this.model = model;
     }
 
@@ -107,7 +114,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
         Predicate predicate = Predicates.gt(RecordConstants.ATT_MODIFIED, currentSyncDate);
 
         RecordsQuery query = RecordsQuery.create()
-            .withSourceId(getId())
+            .withSourceId(querySourceId)
             .withQuery(predicate)
             .withSortBy(new SortBy(RecordConstants.ATT_MODIFIED, true))
             .withMaxItems(50)

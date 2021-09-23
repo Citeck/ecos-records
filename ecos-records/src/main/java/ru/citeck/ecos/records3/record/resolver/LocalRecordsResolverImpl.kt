@@ -51,9 +51,11 @@ import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.resolver.interceptor.*
 import ru.citeck.ecos.records3.utils.V1ConvUtils
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.ArrayList
 import kotlin.math.max
 
 open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) : LocalRecordsResolver {
@@ -94,7 +96,21 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val currentApp = services.properties.appName
     private val jobExecutor = services.jobExecutor
 
+    private var interceptors: List<LocalRecordsInterceptor> = emptyList()
+
     override fun query(
+        queryArg: RecordsQuery,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): RecsQueryRes<RecordAtts> {
+        return if (interceptors.isEmpty()) {
+            queryImpl(queryArg, attributes, rawAtts)
+        } else {
+            QueryInterceptorsChain(this, interceptors.iterator()).invoke(queryArg, attributes, rawAtts)
+        }
+    }
+
+    internal fun queryImpl(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -412,6 +428,21 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts> {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+        return if (interceptors.isEmpty()) {
+            getAttsImpl(records, attributes, rawAtts)
+        } else {
+            GetAttsInterceptorsChain(this, interceptors.iterator()).invoke(records, attributes, rawAtts)
+        }
+    }
+
+    internal fun getAttsImpl(
+        records: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
 
         return getAtts(records, attributes, rawAtts, EmptyMixinContext)
     }
@@ -445,7 +476,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val result = ArrayList<ValWithIdx<RecordAtts>>()
 
         val refsStartMs = System.currentTimeMillis()
-        val refsAtts: List<RecordAtts> = getAttsImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
+        val refsAtts: List<RecordAtts> = getRefsAttsImpl(recordRefs.map { obj -> obj.value }, attributes, rawAtts)
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             context.addMsg(
                 MsgLevel.DEBUG,
@@ -494,7 +525,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result.map { it.value }
     }
 
-    private fun getAttsImpl(
+    private fun getRefsAttsImpl(
         records: Collection<RecordRef>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -600,6 +631,17 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     override fun mutate(records: List<RecordAtts>, attsToLoad: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts> {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+        return if (interceptors.isEmpty()) {
+            mutateImpl(records, attsToLoad, rawAtts)
+        } else {
+            MutateInterceptorsChain(this, interceptors.iterator()).invoke(records, attsToLoad, rawAtts)
+        }
+    }
+
+    internal fun mutateImpl(records: List<RecordAtts>, attsToLoad: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts> {
 
         val daoResult = ArrayList<RecordAtts>()
         val refsMapping = HashMap<RecordRef, RecordRef>()
@@ -674,6 +716,17 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     override fun delete(records: List<RecordRef>): List<DelStatus> {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+        return if (interceptors.isEmpty()) {
+            deleteImpl(records)
+        } else {
+            DeleteInterceptorsChain(this, interceptors.iterator()).invoke(records)
+        }
+    }
+
+    internal fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
 
         val daoResult = ArrayList<DelStatus>()
 
@@ -829,6 +882,24 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         } else {
             null
         }
+    }
+
+    override fun getInterceptors(): List<LocalRecordsInterceptor> {
+        return ArrayList(this.interceptors)
+    }
+
+    override fun addInterceptor(interceptor: LocalRecordsInterceptor) {
+        addInterceptors(listOf(interceptor))
+    }
+
+    override fun addInterceptors(interceptors: List<LocalRecordsInterceptor>) {
+        val newInterceptors = ArrayList(this.interceptors)
+        newInterceptors.addAll(interceptors)
+        setInterceptors(newInterceptors)
+    }
+
+    override fun setInterceptors(interceptors: List<LocalRecordsInterceptor>) {
+        this.interceptors = interceptors
     }
 
     fun setRecordsTemplateService(recordsTemplateService: RecordsTemplateService) {

@@ -1,7 +1,5 @@
 package ru.citeck.ecos.records2.source.dao.local;
 
-import ru.citeck.ecos.records3.record.dao.RecordsDao;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +30,7 @@ public class RecordsDaoBuilder {
         return this;
     }
 
-    public RecordsDao build() {
+    public InMemRecordsDao<Object> build() {
         if (id == null) {
             throw new IllegalStateException("Id is a mandatory parameter");
         }

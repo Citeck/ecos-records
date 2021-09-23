@@ -305,6 +305,8 @@ interface RecordsService {
      */
     fun delete(records: List<RecordRef>): List<DelStatus>
 
+    fun delete(record: String): DelStatus
+
     fun delete(record: RecordRef): DelStatus
 
     /* OTHER */

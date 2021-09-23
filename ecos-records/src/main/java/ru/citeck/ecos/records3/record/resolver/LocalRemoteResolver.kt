@@ -273,7 +273,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     }
 
     fun commit(recordRefs: List<RecordRef>) {
-        doWithGroupOfRemoteOrLocal(recordRefs) { refs, isRemote ->
+        doWithGroupOfRemoteOrLocalInAnyOrder(recordRefs) { refs, isRemote ->
             if (isRemote) {
                 remote?.commit(refs)
             } else {
@@ -283,7 +283,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     }
 
     fun rollback(recordRefs: List<RecordRef>) {
-        doWithGroupOfRemoteOrLocal(recordRefs) { refs, isRemote ->
+        doWithGroupOfRemoteOrLocalInAnyOrder(recordRefs) { refs, isRemote ->
             if (isRemote) {
                 remote?.rollback(refs)
             } else {
@@ -292,7 +292,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
     }
 
-    private fun doWithGroupOfRemoteOrLocal(recordRefs: List<RecordRef>, action: (List<RecordRef>, Boolean) -> Unit) {
+    private fun doWithGroupOfRemoteOrLocalInAnyOrder(
+        recordRefs: List<RecordRef>,
+        action: (List<RecordRef>, Boolean) -> Unit
+    ) {
         if (recordRefs.isEmpty()) {
             return
         }
@@ -300,22 +303,20 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
             action.invoke(recordRefs, false)
             return
         }
-        var idx = 1
-        var isRemote = isRemoteRef(recordRefs[0])
-        val refs = ArrayList<RecordRef>()
-        refs.add(recordRefs[0])
-        while (idx < recordRefs.size) {
-            val nextRef = recordRefs[idx++]
-            val isNextRefRemote = isRemoteRef(nextRef)
-            if (isNextRefRemote != isRemote) {
-                action.invoke(refs, isRemote)
-                refs.clear()
-                refs.add(nextRef)
-                isRemote = isNextRefRemote
+        val remoteRecs = mutableListOf<RecordRef>()
+        val localRecs = mutableListOf<RecordRef>()
+        recordRefs.forEach {
+            if (isRemoteRef(it)) {
+                remoteRecs.add(it)
+            } else {
+                localRecs.add(it)
             }
         }
-        if (refs.isNotEmpty()) {
-            action.invoke(refs, isRemote)
+        if (localRecs.isNotEmpty()) {
+            action.invoke(localRecs, false)
+        }
+        if (remoteRecs.isNotEmpty()) {
+            action.invoke(remoteRecs, true)
         }
     }
 

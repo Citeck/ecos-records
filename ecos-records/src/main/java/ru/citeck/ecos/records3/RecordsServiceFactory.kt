@@ -54,6 +54,8 @@ import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
 import ru.citeck.ecos.records3.txn.RecordsTxnService
+import ru.citeck.ecos.records3.txn.ext.TxnActionManager
+import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
 import java.util.*
 import java.util.concurrent.ScheduledExecutorService
 import java.util.function.Consumer
@@ -93,6 +95,7 @@ open class RecordsServiceFactory {
     val defaultCtxAttsProvider: ContextAttsProvider by lazy { createDefaultCtxAttsProvider() }
     val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
     val jobExecutor: JobExecutor by lazy { createJobExecutor() }
+    val txnActionManager: TxnActionManager by lazy { createTxnActionManager() }
 
     @Deprecated("")
     val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
@@ -122,7 +125,7 @@ open class RecordsServiceFactory {
         Json.context.addDeserializer(predicateJsonDeserializer)
         Json.context.addSerializer(PredicateJsonSerializer())
 
-        RequestContext.setDefaultServicesIfNotSet(this)
+        RequestContext.setLastCreatedServices(this)
     }
 
     protected open fun createJobExecutor(): JobExecutor {
@@ -346,6 +349,10 @@ open class RecordsServiceFactory {
             AttRegexpGroupProcessor(),
             AttHexProcessor()
         )
+    }
+
+    protected open fun createTxnActionManager(): TxnActionManager {
+        return TxnActionManagerImpl()
     }
 
     protected open fun createAttProcService(): AttProcService {

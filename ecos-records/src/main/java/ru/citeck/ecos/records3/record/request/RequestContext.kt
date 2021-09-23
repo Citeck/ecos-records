@@ -4,10 +4,13 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.func.UncheckedRunnable
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
+import ru.citeck.ecos.records3.record.atts.value.impl.auth.AuthContextValue
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
@@ -29,23 +32,24 @@ class RequestContext {
         private const val TXN_MUT_RECORDS_KEY = "__txn_mut_records_key__"
         private const val TXN_OWNED_KEY = "__txn_owned__"
         private const val READ_ONLY_CACHE_KEY = "__read_only_cache__"
+        private const val AFTER_COMMIT_ACTIONS_KEY = "__after_commit_actions__"
 
         private val log = KotlinLogging.logger {}
 
+        private var lastCreatedServices: RecordsServiceFactory? = null
         private var defaultServices: RecordsServiceFactory? = null
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
 
         private val strCtxAtt = AttFuncValue { it }
         private val refCtxAtt = AttFuncValue { RecordRef.valueOf(it) }
+        private val authCtxAtt = AuthContextValue()
 
-        fun setDefaultServicesIfNotSet(defaultServices: RecordsServiceFactory) {
-            if (this.defaultServices == null) {
-                this.defaultServices = defaultServices
-            }
+        fun setDefaultServices(defaultServices: RecordsServiceFactory?) {
+            this.defaultServices = defaultServices
         }
 
-        fun setDefaultServices(defaultServices: RecordsServiceFactory) {
-            this.defaultServices = defaultServices
+        fun setLastCreatedServices(lastCreatedServices: RecordsServiceFactory?) {
+            this.lastCreatedServices = lastCreatedServices
         }
 
         @JvmStatic
@@ -97,6 +101,21 @@ class RequestContext {
         }
 
         @JvmStatic
+        fun <T> doWithReadOnly(action: () -> T): T {
+            return doWithCtx(null, { it.withReadOnly(true) }) { action.invoke() }
+        }
+
+        @JvmStatic
+        fun <T> doWithReadOnlyJ(action: UncheckedSupplier<T>): T {
+            return doWithReadOnly { action.get() }
+        }
+
+        @JvmStatic
+        fun doWithReadOnlyJ(action: UncheckedRunnable) {
+            return doWithReadOnly { action.invoke() }
+        }
+
+        @JvmStatic
         fun <T> doWithTxn(readOnly: Boolean = false, requiresNew: Boolean = false, action: () -> T): T {
             var isTxnOwner = false
             return doWithCtx(
@@ -105,6 +124,7 @@ class RequestContext {
                     if (requiresNew || it.txnId == null) {
                         isTxnOwner = true
                         it.withTxnId(UUID.randomUUID())
+                        it.withTxnOwner(true)
                     }
                     it.withReadOnly(readOnly)
                 }
@@ -130,6 +150,10 @@ class RequestContext {
                     action.invoke()
                 }
             }
+        }
+
+        fun doAfterCommit(action: () -> Unit) {
+            getCurrentNotNull().doAfterCommit(action)
         }
 
         @JvmStatic
@@ -178,7 +202,7 @@ class RequestContext {
         ): T {
 
             var current = getCurrent()
-            val notNullServices = factory ?: current?.serviceFactory ?: defaultServices
+            val notNullServices = factory ?: current?.serviceFactory ?: defaultServices ?: lastCreatedServices
                 ?: error("RecordsServiceFactory is not found in context!")
 
             var isContextOwner = false
@@ -193,10 +217,15 @@ class RequestContext {
                 contextAtts["now"] = Date()
                 contextAtts["str"] = strCtxAtt
                 contextAtts["ref"] = refCtxAtt
+                contextAtts["auth"] = authCtxAtt
 
                 val props = notNullServices.properties
                 contextAtts["appName"] = props.appName
                 contextAtts["appInstanceId"] = props.appInstanceId
+
+                if (props.peopleSourceId.isNotBlank()) {
+                    contextAtts["user"] = getCurrentUserRef(props.peopleSourceId)
+                }
 
                 current.ctxData = builder.withCtxAtts(contextAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
@@ -249,6 +278,14 @@ class RequestContext {
                 }
             }
         }
+
+        private fun getCurrentUserRef(peopleSourceId: String): RecordRef {
+            val currentUser = AuthContext.getCurrentUser()
+            if (currentUser.isEmpty() || peopleSourceId.isBlank()) {
+                return RecordRef.EMPTY
+            }
+            return RecordRef.valueOf(peopleSourceId + RecordRef.SOURCE_DELIMITER + currentUser)
+        }
     }
 
     private val msgTypeByClass: MutableMap<Class<*>, String> = ConcurrentHashMap()
@@ -267,6 +304,7 @@ class RequestContext {
         }
         val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
         val txnRecords = mutRecords[txnId] ?: emptySet()
+
         if (txnRecords.isNotEmpty()) {
             if (success) {
                 serviceFactory.recordsResolver.commit(txnRecords.toList())
@@ -274,7 +312,29 @@ class RequestContext {
                 serviceFactory.recordsResolver.rollback(txnRecords.toList())
             }
         }
+        val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
+        var iterations = 5
+        while (--iterations > 0 && afterCommitActions.isNotEmpty()) {
+            val actionsToExecute = ArrayList(afterCommitActions)
+            afterCommitActions.clear()
+            for (action in actionsToExecute) {
+                action.invoke()
+            }
+        }
+        if (iterations == 0) {
+            log.warn { "After commit actions iterations == 0. It may be cyclic dependency." }
+        }
+
         mutRecords.remove(txnId)
+    }
+
+    fun doAfterCommit(action: () -> Unit) {
+        val txnId = ctxData.txnId
+        if (txnId == null) {
+            action.invoke()
+        } else {
+            getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY).add(action)
+        }
     }
 
     fun getTxnChangedRecords(): MutableSet<RecordRef>? {

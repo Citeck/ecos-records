@@ -15,6 +15,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.utils.RecordRefUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -28,7 +29,9 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val attSchemaReader = services.attSchemaReader
     private val dtoSchemaReader = services.dtoSchemaReader
     private val attSchemaWriter = services.attSchemaWriter
+
     private val isGatewayMode = services.properties.gatewayMode
+    private val currentAppName = services.properties.appName
 
     init {
         recordsResolver.setRecordsService(this)
@@ -120,22 +123,57 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             ?: error("Attributes class can't be instantiated. Class: $attsToLoad Schema: $schema")
     }
 
+    private fun addTxnMutatedRecord(
+        txnChangedRecords: MutableSet<RecordRef>?,
+        sourceIdMapping: Map<String, String>,
+        recordRef: RecordRef?
+    ) {
+
+        if (txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
+            return
+        }
+        txnChangedRecords.add(
+            RecordRefUtils.mapAppIdAndSourceId(
+                recordRef,
+                currentAppName,
+                sourceIdMapping
+            )
+        )
+    }
+
     private fun mutateImpl(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
         if (isGatewayMode) {
             return recordsResolver.mutate(records, attsToLoad, rawAtts)
         }
 
+        val context = RequestContext.getCurrentNotNull()
+
+        if (context.ctxData.readOnly) {
+            error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+        }
+
+        val txnChangedRecords = context.getTxnChangedRecords()
+        val sourceIdMapping = context.ctxData.sourceIdMapping
+
+        if (currentAppName.isNotEmpty()) {
+            if (records.all {
+                val appName = it.getId().appName
+                appName.isNotEmpty() && appName != currentAppName
+            }
+            ) {
+                val result = recordsResolver.mutate(records, attsToLoad, rawAtts)
+                result.forEach {
+                    addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, it.getId())
+                }
+                return result
+            }
+        }
+
         val aliasToRecordRef = HashMap<String, RecordRef>()
 
         val emptyRecAtts = RecordAtts()
         val result = Array(records.size) { emptyRecAtts }
-
-        val context = RequestContext.getCurrentNotNull()
-        if (context.ctxData.readOnly) {
-            error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
-        }
-        val txnMutRecords = context.getTxnChangedRecords()
 
         for (i in records.indices.reversed()) {
 
@@ -163,9 +201,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
             val resultAtts = recordMutResult.last()
             result[i] = resultAtts
-            if (RecordRef.isNotEmpty(resultAtts.getId())) {
-                txnMutRecords?.add(resultAtts.getId())
-            }
+            addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, resultAtts.getId())
 
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")

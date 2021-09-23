@@ -15,6 +15,10 @@ class RecordAttValueCtx(
         RecordRef.valueOf(service.getAtt(record, ScalarType.ID.schema).asText())
     }
 
+    override fun getValue(): Any {
+        return record
+    }
+
     override fun getRef(): RecordRef {
         return recordRef
     }

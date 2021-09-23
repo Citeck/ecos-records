@@ -16,7 +16,7 @@ import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
+import ru.citeck.ecos.records3.record.atts.computed.ComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -32,6 +32,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.AttUtils
+import ru.citeck.ecos.records3.utils.RecordRefUtils
 import java.lang.reflect.Array
 import java.util.*
 import java.util.stream.Collectors
@@ -277,14 +278,16 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     attValue = try {
                         val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
                         if (valueCtx != null) {
-                            computedAttsService.compute(
-                                AttValueResolveCtx(
-                                    currentValuePath,
-                                    context,
-                                    valueCtx
-                                ),
-                                computedAtt
-                            )
+                            withoutSourceIdMapping(context) {
+                                computedAttsService.compute(
+                                    AttValueResolveCtx(
+                                        currentValuePath,
+                                        context,
+                                        valueCtx
+                                    ),
+                                    computedAtt
+                                )
+                            }
                         } else {
                             log.debug { "Value context is not found for attribute $computedAtt" }
                         }
@@ -306,14 +309,16 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                             if (mixinValueCtx == null) {
                                 null
                             } else {
-                                mixinAttCtx.mixin.getAtt(
-                                    mixinAttCtx.path,
-                                    AttValueResolveCtx(
-                                        currentValuePath,
-                                        context,
-                                        mixinValueCtx
+                                withoutSourceIdMapping(context) {
+                                    mixinAttCtx.mixin.getAtt(
+                                        mixinAttCtx.path,
+                                        AttValueResolveCtx(
+                                            currentValuePath,
+                                            context,
+                                            mixinValueCtx
+                                        )
                                     )
-                                )
+                                }
                             }
                         } catch (e: Exception) {
                             val msg = "Resolving error. Path: $attPath"
@@ -329,15 +334,18 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            if (attValue is ComputedAttDef) {
-                attValue = computedAttsService.compute(
-                    AttValueResolveCtx(
-                        currentValuePath,
-                        context,
-                        value
-                    ),
-                    attValue
-                )
+            if (attValue is ComputedAttValue) {
+                val notNullAttValue = attValue
+                attValue = withoutSourceIdMapping(context) {
+                    computedAttsService.compute(
+                        AttValueResolveCtx(
+                            currentValuePath,
+                            context,
+                            value
+                        ),
+                        notNullAttValue
+                    )
+                }
             }
 
             val attValues = toList(attValue)
@@ -372,6 +380,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         attContext.setAttPath(currentValuePath)
 
         return result
+    }
+
+    private inline fun <T> withoutSourceIdMapping(context: ResolveContext, crossinline action: () -> T): T {
+        val sourceIdMapping = context.reqContext.ctxData.sourceIdMapping
+        return if (sourceIdMapping.isNotEmpty()) {
+            RequestContext.doWithCtx({ it.withSourceIdMapping(emptyMap()) }) {
+                action.invoke()
+            }
+        } else {
+            action.invoke()
+        }
     }
 
     private fun getContextForDynamicAtt(value: ValueContext?, path: String): ValueContext? {
@@ -496,7 +515,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
 
         private val computedRef: RecordRef by lazy {
-            val result = if (RecordRef.isNotEmpty(valueRef)) {
+            var result = if (RecordRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
                 val id = value.id
@@ -528,11 +547,19 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
                 computedRef
             }
-            val appName = context?.getServices()?.properties?.appName
-            if (appName.isNullOrBlank()) {
+            if (RecordRef.isEmpty(result)) {
                 result
             } else {
-                result.withDefaultAppName(appName)
+                val currentAppName = context?.getServices()?.properties?.appName ?: ""
+                if (result.appName.isBlank() && currentAppName.isNotBlank()) {
+                    result = result.withDefaultAppName(currentAppName)
+                }
+                result = RecordRefUtils.mapAppIdAndSourceId(
+                    result,
+                    currentAppName,
+                    context?.ctxData?.sourceIdMapping
+                )
+                result
             }
         }
 
@@ -749,6 +776,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         val resolveCtx: ResolveContext,
         val valueCtx: ValueContext
     ) : AttValueCtx {
+
+        override fun getValue(): Any {
+            return valueCtx.value
+        }
 
         override fun getRef(): RecordRef {
             return valueCtx.getRef()

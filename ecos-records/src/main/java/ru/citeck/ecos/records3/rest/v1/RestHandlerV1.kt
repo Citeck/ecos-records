@@ -35,9 +35,11 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     private val properties = services.properties
     private val recordsTxnService = services.recordsTxnService
     private val recordsResolver = services.localRecordsResolver
+    private val txnActionManager = services.txnActionManager
 
     private val currentAppId: String
     private val currentAppName: String = properties.appName
+    private val isGateway = properties.gatewayMode
 
     init {
         var currentAppId = if (StringUtils.isBlank(properties.appInstanceId)) {
@@ -126,8 +128,8 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             }
         }
         resp.setMessages(context.getMessages())
-
         resp.setRecords(resp.records.map { it.withDefaultAppName(currentAppName) })
+        resp.setTxnActions(txnActionManager.getTxnActions(context))
         return resp
     }
 
@@ -147,6 +149,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                         it.withDefaultAppName(currentAppName)
                     }
                 )
+                resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
             log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
@@ -169,6 +172,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         try {
             doInWriteTxn(body.txnId) {
                 resp.setStatuses(recordsService.delete(body.records))
+                resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
             log.error("Records deletion completed with error. DeleteBody: $body", e)
@@ -221,7 +225,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 action.invoke()
             }
         }
-        if (txnId == null) {
+        if (txnId == null && !isGateway) {
             return RequestContext.doWithTxn(false) { actionImpl.invoke() }
         }
         return actionImpl.invoke()

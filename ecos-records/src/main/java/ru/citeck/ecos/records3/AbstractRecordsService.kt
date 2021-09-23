@@ -142,6 +142,10 @@ abstract class AbstractRecordsService : RecordsService {
 
     /* DELETE */
 
+    override fun delete(record: String): DelStatus {
+        return delete(RecordRef.valueOf(record))
+    }
+
     override fun delete(record: RecordRef): DelStatus {
         val result: List<DelStatus> = delete(listOf(record))
         if (result.size != 1) {

@@ -26,12 +26,15 @@ import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -90,8 +93,20 @@ public class LocalRecordsResolverV0 {
             }
         }
 
-        RecordsQueryResult<RecordAtts> recordsResult = queryRecordsImpl(query, schema, rawAtts);
-        return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp);
+        RecordsQuery finalQuery = query;
+        RecordsQueryResult<RecordAtts> recordsResult = doWithCtxSourceIdKey(
+            finalQuery.getSourceId(),
+            () -> queryRecordsImpl(finalQuery, schema, rawAtts)
+        );
+        return RecordsUtils.attsWithDefaultApp(recordsResult, currentApp, query.getSourceId());
+    }
+
+    private <T> T doWithCtxSourceIdKey(String sourceId, Supplier<T> queryImpl) {
+        return RequestContext.getCurrentNotNull().doWithVarNotNull(
+            AttSchemaResolver.CTX_SOURCE_ID_KEY,
+            sourceId,
+            queryImpl::get
+        );
     }
 
     private RecordsQuery updateQueryLanguage(RecordsQuery recordsQuery, RecordsQueryBaseDao dao) {
@@ -281,7 +296,10 @@ public class LocalRecordsResolverV0 {
 
             if (recordsDao.isPresent()) {
 
-                meta = recordsDao.get().getMeta(new ArrayList<>(records), schema, rawAtts);
+                String recsDaoId = recordsDao.get().getId();
+                meta = doWithCtxSourceIdKey(recsDaoId, () ->
+                    recordsDao.get().getMeta(new ArrayList<>(records), schema, rawAtts)
+                );
 
             } else {
 

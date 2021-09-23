@@ -50,7 +50,7 @@ class QueryInterceptorsChain(
         return if (interceptors.hasNext()) {
             interceptors.next().query(queryArg, attributes, rawAtts, this)
         } else {
-            return resolver.queryImpl(queryArg, attributes, rawAtts)
+            resolver.queryImpl(queryArg, attributes, rawAtts)
         }
     }
 }
@@ -68,7 +68,7 @@ class GetAttsInterceptorsChain(
         return if (interceptors.hasNext()) {
             interceptors.next().getAtts(records, attributes, rawAtts, this)
         } else {
-            return resolver.getAttsImpl(records, attributes, rawAtts)
+            resolver.getAttsImpl(records, attributes, rawAtts)
         }
     }
 }
@@ -86,7 +86,7 @@ class MutateInterceptorsChain(
         return if (interceptors.hasNext()) {
             interceptors.next().mutate(records, attsToLoad, rawAtts, this)
         } else {
-            return resolver.mutateImpl(records, attsToLoad, rawAtts)
+            resolver.mutateImpl(records, attsToLoad, rawAtts)
         }
     }
 }

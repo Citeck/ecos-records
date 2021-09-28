@@ -10,6 +10,7 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
@@ -18,7 +19,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,8 +52,8 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
     private RecordsService recordsService;
 
-    private final List<ComputedAtt> computedAttributesType0 = new ArrayList<>();
-    private final List<ComputedAtt> computedAttributesType1 = new ArrayList<>();
+    private final List<RecordComputedAtt> computedAttributesType0 = new ArrayList<>();
+    private final List<RecordComputedAtt> computedAttributesType1 = new ArrayList<>();
 
     private final MLText name0 = DataValue.create("{" +
         "\"ru\": \"Русский0-${idfield}\", " +

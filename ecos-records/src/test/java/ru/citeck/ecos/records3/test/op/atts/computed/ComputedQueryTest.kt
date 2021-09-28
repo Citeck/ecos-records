@@ -6,9 +6,8 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttType
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import kotlin.test.assertEquals
@@ -23,97 +22,89 @@ class ComputedQueryTest {
     fun test() {
 
         val type0Atts = listOf(
-            ComputedAtt(
+            RecordComputedAtt(
                 "attScript0",
-                ComputedAttDef.create {
-                    type = ComputedAttType.SCRIPT
-                    config = ObjectData.create(
-                        mapOf(
-                            Pair(
-                                "fn",
-                                """
-                                    var queryRes = Records.query({
-                                        sourceId: 'test',
-                                        query: {
-                                            t: 'eq',
-                                            att: 'attAttributeValue',
-                                            val: 'first'
-                                        },
-                                        language: 'predicate'
-                                    }, {
-                                        'att': 'attForScript'
-                                    });
-                                    return queryRes.records[0];
-                                """.trimIndent()
-                            )
+                type = RecordComputedAttType.SCRIPT,
+                config = ObjectData.create(
+                    mapOf(
+                        Pair(
+                            "fn",
+                            """
+                                var queryRes = Records.query({
+                                    sourceId: 'test',
+                                    query: {
+                                        t: 'eq',
+                                        att: 'attAttributeValue',
+                                        val: 'first'
+                                    },
+                                    language: 'predicate'
+                                }, {
+                                    'att': 'attForScript'
+                                });
+                                return queryRes.records[0];
+                            """.trimIndent()
                         )
                     )
-                }
+                )
             ),
-            ComputedAtt(
+            RecordComputedAtt(
                 "attScript01",
-                ComputedAttDef.create {
-                    type = ComputedAttType.SCRIPT
-                    config = ObjectData.create(
-                        mapOf(
-                            Pair(
-                                "fn",
-                                """
-                                    var queryRes = Records.query({
-                                        sourceId: 'test',
-                                        query: {
-                                            t: 'eq',
-                                            att: 'attAttributeValue',
-                                            val: 'first'
-                                        },
-                                        language: 'predicate'
-                                    }, {
-                                        'att': 'attForScript'
-                                    });
-                                    return queryRes.records.map(function(rec) { return rec.att; });
-                                """.trimIndent()
-                            )
+                type = RecordComputedAttType.SCRIPT,
+                config = ObjectData.create(
+                    mapOf(
+                        Pair(
+                            "fn",
+                            """
+                                var queryRes = Records.query({
+                                    sourceId: 'test',
+                                    query: {
+                                        t: 'eq',
+                                        att: 'attAttributeValue',
+                                        val: 'first'
+                                    },
+                                    language: 'predicate'
+                                }, {
+                                    'att': 'attForScript'
+                                });
+                                return queryRes.records.map(function(rec) { return rec.att; });
+                            """.trimIndent()
                         )
                     )
-                }
+                )
             ),
-            ComputedAtt(
+            RecordComputedAtt(
                 "attScript1",
-                ComputedAttDef.create {
-                    type = ComputedAttType.SCRIPT
-                    config = ObjectData.create(
-                        mapOf(
-                            Pair(
-                                "fn",
-                                """
-                                    return Records.get('test@type0Record').load('attAttributeValue');
-                                """.trimIndent()
-                            )
+                type = RecordComputedAttType.SCRIPT,
+                config = ObjectData.create(
+                    mapOf(
+                        Pair(
+                            "fn",
+                            """
+                                return Records.get('test@type0Record').load('attAttributeValue');
+                            """.trimIndent()
                         )
                     )
-                }
+                )
             ),
-            ComputedAtt(
+            RecordComputedAtt(
                 "attScript2",
-                ComputedAttDef.create {
-                    type = ComputedAttType.SCRIPT
-                    config = ObjectData.create(
-                        mapOf(
-                            Pair(
-                                "fn",
-                                """
-                                    return Records.get('test@type0Record').load(['attAttributeValue']);
-                                """.trimIndent()
-                            )
+                type = RecordComputedAttType.SCRIPT,
+                config = ObjectData.create(
+                    mapOf(
+                        Pair(
+                            "fn",
+                            """
+                                return Records.get('test@type0Record').load(['attAttributeValue']);
+                            """.trimIndent()
                         )
                     )
-                }
+                )
             )
         )
 
         val services = RecordsServiceFactory()
         services.setRecordTypeService(object : RecordTypeService {
-            override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
+            override fun getComputedAtts(typeRef: RecordRef): List<RecordComputedAtt> {
                 return if (typeRef == type0) {
                     type0Atts
                 } else {

@@ -15,8 +15,8 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttValue
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -56,7 +56,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     private val attProcService = factory.attProcService
     private val attSchemaReader = factory.attSchemaReader
     private val dtoSchemaReader = factory.dtoSchemaReader
-    private val computedAttsService = factory.computedAttsService
+    private val computedAttsService = factory.recordComputedAttsService
 
     private val recordTypeService by lazy { factory.recordTypeService }
 
@@ -271,8 +271,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     attName = attName.substring(1)
                 }
 
-                val computedAtts: Map<String, ComputedAtt> = value.computedAtts
-                val computedAtt: ComputedAtt? = computedAtts[attName]
+                val computedAtts: Map<String, RecordComputedAtt> = value.computedAtts
+                val computedAtt: RecordComputedAtt? = computedAtts[attName]
 
                 if (computedAtt != null && disabledComputedPaths.add(attPath)) {
                     attValue = try {
@@ -334,7 +334,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            if (attValue is ComputedAttValue) {
+            if (attValue is RecordComputedAttValue) {
                 val notNullAttValue = attValue
                 attValue = withoutSourceIdMapping(context) {
                     computedAttsService.compute(
@@ -500,7 +500,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         private val valueRef: RecordRef,
         val ctxSourceId: String,
         val context: RequestContext?,
-        val computedAtts: Map<String, ComputedAtt>
+        val computedAtts: Map<String, RecordComputedAtt>
     ) {
 
         companion object {
@@ -739,8 +739,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             )
         }
 
-        private fun getComputedAtts(parent: ValueContext?, value: AttValue?): Map<String, ComputedAtt> {
-            val computedAtts = HashMap<String, ComputedAtt>()
+        private fun getComputedAtts(parent: ValueContext?, value: AttValue?): Map<String, RecordComputedAtt> {
+            val computedAtts = HashMap<String, RecordComputedAtt>()
             parent?.computedAtts?.forEach { (id, att) ->
                 val dotIdx: Int = AttStrUtils.indexOf(id, ".")
                 if (dotIdx > 0 && dotIdx < id.length + 1) {

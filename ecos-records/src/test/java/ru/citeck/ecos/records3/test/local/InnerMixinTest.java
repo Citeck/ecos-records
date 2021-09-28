@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.test.local;
 
-import kotlin.Unit;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,15 +10,14 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttType;
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttDef;
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt;
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttType;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -51,23 +49,17 @@ public class InnerMixinTest extends AbstractRecordsDao
         RecordsServiceFactory factory = new RecordsServiceFactory();
         factory.setRecordTypeService(type -> {
             if (type.equals(TEST_TYPE0)) {
-                ComputedAtt att = new ComputedAtt(
+                RecordComputedAtt att = new RecordComputedAtt(
                     "computed",
-                    ComputedAttDef.create(builder -> {
-                        builder.withType(ComputedAttType.ATTRIBUTE);
-                        builder.withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"));
-                        return Unit.INSTANCE;
-                    })
+                    RecordComputedAttType.ATTRIBUTE,
+                    ObjectData.create("{\"attribute\":\"computedAtt0\"}")
                 );
                 return Collections.singletonList(att);
             } else if (type.equals(TEST_TYPE1)) {
-                ComputedAtt att = new ComputedAtt(
+                RecordComputedAtt att = new RecordComputedAtt(
                     "computed",
-                    ComputedAttDef.create(builder -> {
-                        builder.withType(ComputedAttType.ATTRIBUTE);
-                        builder.withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"));
-                        return Unit.INSTANCE;
-                    })
+                    RecordComputedAttType.ATTRIBUTE,
+                    ObjectData.create("{\"attribute\":\"computedAtt1\"}")
                 );
                 return Collections.singletonList(att);
             }

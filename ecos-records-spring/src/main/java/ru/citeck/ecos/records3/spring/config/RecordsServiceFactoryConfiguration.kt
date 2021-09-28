@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.i18n.LocaleContextHolder
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -17,11 +16,9 @@ import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.record.type.RecordTypeService
 import java.util.*
 import javax.annotation.PostConstruct
 
@@ -35,8 +32,6 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
 
     private var restApi: RemoteRecordsRestApi? = null
     private lateinit var props: RecordsProperties
-
-    private var customRecordTypeService: RecordTypeService? = null
 
     @Value("\${spring.application.name:}")
     private lateinit var appName: String
@@ -130,14 +125,6 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
         return this.props
     }
 
-    override fun createRecordTypeService(): RecordTypeService {
-        return object : RecordTypeService {
-            override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
-                return customRecordTypeService?.getComputedAtts(typeRef) ?: emptyList()
-            }
-        }
-    }
-
     @Autowired(required = false)
     fun setConnection(restApi: RemoteRecordsRestApi?) {
         this.restApi = restApi
@@ -152,9 +139,5 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
         if (appInstanceId.isNotEmpty() && props.appInstanceId.isEmpty()) {
             props.appInstanceId = appInstanceId
         }
-    }
-
-    fun setCustomRecordTypeService(recordTypeService: RecordTypeService) {
-        this.customRecordTypeService = recordTypeService
     }
 }

@@ -30,9 +30,15 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         if (value is MetaValue) {
             return AttMetaValue(value)
         }
-        val factory: AttValueFactory<Any> = valueFactories[value.javaClass]
-            ?: (valueFactories[Any::class.java] ?: error("Factory can't be resolved for value: $value"))
+        val valueToConvert = if (value is AttValueCtx) {
+            value.getValue()
+        } else {
+            value
+        }
 
-        return factory.getValue(value)
+        val factory: AttValueFactory<Any> = valueFactories[valueToConvert.javaClass]
+            ?: (valueFactories[Any::class.java] ?: error("Factory can't be resolved for value: $valueToConvert"))
+
+        return factory.getValue(valueToConvert)
     }
 }

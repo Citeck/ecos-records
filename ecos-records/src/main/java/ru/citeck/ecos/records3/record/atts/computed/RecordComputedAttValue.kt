@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 /**
  * This value will be evaluated as computed attribute in AttSchemaResolver
  */
-@JsonDeserialize(builder = ComputedAttValue.Builder::class)
-@JackJsonDeserialize(builder = ComputedAttValue.Builder::class)
-class ComputedAttValue(
-    val type: ComputedAttType,
+@JsonDeserialize(builder = RecordComputedAttValue.Builder::class)
+@JackJsonDeserialize(builder = RecordComputedAttValue.Builder::class)
+data class RecordComputedAttValue(
+    val type: RecordComputedAttType,
     val config: ObjectData
 ) {
     companion object {
@@ -24,7 +24,7 @@ class ComputedAttValue(
         }
 
         @JvmStatic
-        fun create(builder: Builder.() -> Unit): ComputedAttValue {
+        fun create(builder: Builder.() -> Unit): RecordComputedAttValue {
             val builderObj = Builder()
             builder.invoke(builderObj)
             return builderObj.build()
@@ -35,7 +35,7 @@ class ComputedAttValue(
         return Builder(this)
     }
 
-    fun copy(builder: Builder.() -> Unit): ComputedAttValue {
+    fun copy(builder: Builder.() -> Unit): RecordComputedAttValue {
         val builderObj = Builder(this)
         builder.invoke(builderObj)
         return builderObj.build()
@@ -43,15 +43,15 @@ class ComputedAttValue(
 
     class Builder() {
 
-        var type: ComputedAttType = ComputedAttType.NONE
+        var type: RecordComputedAttType = RecordComputedAttType.NONE
         var config: ObjectData = ObjectData.create()
 
-        constructor(base: ComputedAttValue) : this() {
+        constructor(base: RecordComputedAttValue) : this() {
             this.type = base.type
             this.config = base.config.deepCopy()
         }
 
-        fun withType(type: ComputedAttType): Builder {
+        fun withType(type: RecordComputedAttType): Builder {
             this.type = type
             return this
         }
@@ -61,8 +61,8 @@ class ComputedAttValue(
             return this
         }
 
-        fun build(): ComputedAttValue {
-            return ComputedAttValue(type, config)
+        fun build(): RecordComputedAttValue {
+            return RecordComputedAttValue(type, config)
         }
     }
 }

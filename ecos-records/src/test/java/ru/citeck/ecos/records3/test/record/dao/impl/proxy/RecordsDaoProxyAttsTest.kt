@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -13,6 +14,8 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.AttEdge
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.impl.proxy.AttsProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
@@ -27,6 +30,30 @@ class RecordsDaoProxyAttsTest {
     companion object {
         const val PROXY_ID = "proxy-id"
         const val TARGET_ID = "target-id"
+    }
+
+    @Test
+    fun edgeAttTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        val targetRecordsDao = RecordsDaoBuilder.create(TARGET_ID)
+            .addRecord("att-value-rec", AttValueRec())
+            .build() as InMemRecordsDao<*>
+
+        records.register(targetRecordsDao)
+        records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
+
+        val targetRef = RecordRef.create(TARGET_ID, "att-value-rec")
+        val proxyRef = targetRef.withSourceId(PROXY_ID)
+
+        val att = "_edge._status.title.en"
+        val targetValue = records.getAtt(targetRef, att).asText()
+        val proxyValue = records.getAtt(proxyRef, att).asText()
+
+        assertThat(proxyValue)
+            .isEqualTo(targetValue)
+            .isEqualTo("status-title")
     }
 
     @Test
@@ -126,6 +153,7 @@ class RecordsDaoProxyAttsTest {
         compareAtts(listOf("_str?str"), getAtts)
         compareAtts(listOf("_bool?bool"), getAtts)
         compareAtts(listOf("_type?id"), getAtts)
+        compareAtts(listOf("_type._str?id"), getAtts)
         compareAtts(listOf("_etype?id"), getAtts)
         // compareAtts(listOf("_type?disp"), getAtts)
 
@@ -214,6 +242,7 @@ class RecordsDaoProxyAttsTest {
     }
 
     class ValueDto {
+
         val strField = "str-value"
         val linkedRef = RecordRef.valueOf("$TARGET_ID@linked")
         val linkedDto = LinkedDto()
@@ -254,6 +283,20 @@ class RecordsDaoProxyAttsTest {
 
         fun getDisplayName(): String {
             return "DisplayName"
+        }
+    }
+
+    class AttValueRec : AttValue {
+
+        override fun getEdge(name: String?): AttEdge? {
+            if (name == "_status") {
+                return object : AttEdge {
+                    override fun getTitle(): MLText {
+                        return MLText("status-title")
+                    }
+                }
+            }
+            return null
         }
     }
 }

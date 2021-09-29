@@ -20,10 +20,7 @@ import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.atts.value.AttValue
-import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
-import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
-import ru.citeck.ecos.records3.record.atts.value.HasListView
+import ru.citeck.ecos.records3.record.atts.value.*
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
@@ -617,6 +614,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }
+            if (!attribute.startsWith('?') && value is AttValueProxy) {
+                return value.getAtt(attribute)
+            }
             val scalarType = ScalarType.getBySchemaOrMirrorAtt(attribute)
             return if (scalarType != null) {
                 getScalar(scalarType)
@@ -740,6 +740,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
 
         private fun getComputedAtts(parent: ValueContext?, value: AttValue?): Map<String, RecordComputedAtt> {
+            if (value is AttValueProxy) {
+                return emptyMap()
+            }
             val computedAtts = HashMap<String, RecordComputedAtt>()
             parent?.computedAtts?.forEach { (id, att) ->
                 val dotIdx: Int = AttStrUtils.indexOf(id, ".")

@@ -8,6 +8,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.AttValueDelegate
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -198,7 +199,7 @@ open class RecordsDaoProxy(
         private val id: RecordRef,
         base: AttValue,
         val postProcAtts: Map<String, Any?>
-    ) : AttValueDelegate(base) {
+    ) : AttValueDelegate(base), AttValueProxy {
 
         override fun getId(): Any {
             return id

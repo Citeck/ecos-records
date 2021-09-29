@@ -217,6 +217,13 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         rawAtts: Boolean
     ): List<ValWithIdx<RecordAtts>> {
 
+        if (recs.isEmpty()) {
+            return emptyList()
+        }
+        if (attributes.isEmpty()) {
+            return recs.map { ValWithIdx(RecordAtts(it.value), it.idx) }
+        }
+
         val refs: List<RecordRef> = recs.map { it.value }
 
         val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {

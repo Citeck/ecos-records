@@ -313,18 +313,20 @@ class RequestContext {
             }
         }
         val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
-        var iterations = 5
-        while (--iterations > 0 && afterCommitActions.isNotEmpty()) {
-            val actionsToExecute = ArrayList(afterCommitActions)
-            afterCommitActions.clear()
-            for (action in actionsToExecute) {
-                action.invoke()
+        if (success) {
+            var iterations = 5
+            while (--iterations > 0 && afterCommitActions.isNotEmpty()) {
+                val actionsToExecute = ArrayList(afterCommitActions)
+                afterCommitActions.clear()
+                for (action in actionsToExecute) {
+                    action.invoke()
+                }
+            }
+            if (iterations == 0) {
+                log.warn { "After commit actions iterations == 0. It may be cyclic dependency." }
             }
         }
-        if (iterations == 0) {
-            log.warn { "After commit actions iterations == 0. It may be cyclic dependency." }
-        }
-
+        afterCommitActions.clear()
         mutRecords.remove(txnId)
     }
 

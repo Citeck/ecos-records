@@ -25,6 +25,7 @@ class TxnActionsTest {
 
     companion object {
         const val ACTION_TYPE = "action-type"
+        const val MUT_DAO_SOURCE_ID = "mut-dao"
     }
 
     private var services: MutableMap<String, RecordsServiceFactory> = HashMap()
@@ -32,6 +33,47 @@ class TxnActionsTest {
     @BeforeEach
     fun beforeEach() {
         services.clear()
+    }
+
+    @Test
+    fun testWithRollback() {
+
+        val (services0, actions0) = createServices("app0")
+        val (services1, actions1) = createServices("app1")
+
+        val actionData = TxnActionData("abc")
+
+        val mutate = { source: RecordsServiceFactory, target: RecordsServiceFactory, nonErrorRecords: Int, error: Boolean ->
+            val records = mutableListOf<RecordRef>()
+            repeat(nonErrorRecords) {
+                records.add(RecordRef.create(target.properties.appName, MUT_DAO_SOURCE_ID, "123"))
+            }
+            if (error) {
+                records.add(RecordRef.create(target.properties.appName, MUT_DAO_SOURCE_ID, "error"))
+            }
+            source.recordsServiceV1.mutate(records.map { RecordAtts(it, ObjectData.create(actionData)) })
+        }
+
+        RequestContext.doWithTxn {
+            mutate(services0, services1, 1, false)
+        }
+
+        assertThat(actions0).containsExactly(listOf(actionData))
+        assertThat(actions1).isEmpty()
+
+        actions0.clear()
+        actions1.clear()
+
+        try {
+            RequestContext.doWithTxn {
+                mutate(services0, services1, 1, true)
+            }
+        } catch (e: Exception) {
+            // expected error
+        }
+
+        assertThat(actions0).isEmpty()
+        assertThat(actions1).isEmpty()
     }
 
     @Test
@@ -52,20 +94,12 @@ class TxnActionsTest {
         assertThat(testAtt.asText()).isEqualTo("value")
 
         val actionData = TxnActionData("abc")
-        val recordsDaoWithAction = object : RecordMutateDao {
-            override fun mutate(record: LocalRecordAtts): String {
-                services0.txnActionManager.execute(ACTION_TYPE, actionData, RequestContext.getCurrent())
-                return record.id
-            }
-            override fun getId() = "mut-dao"
-        }
-        services0.recordsServiceV1.register(recordsDaoWithAction)
 
         // mutate without transaction. Action should be executed immediately
 
-        val ref1App0 = RecordRef.create("app0", "mut-dao", "rec1")
-        val ref2App0 = RecordRef.create("app0", "mut-dao", "rec2")
-        services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+        val ref1App0 = RecordRef.create("app0", MUT_DAO_SOURCE_ID, "rec1")
+        val ref2App0 = RecordRef.create("app0", MUT_DAO_SOURCE_ID, "rec2")
+        services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
 
         assertThat(actions0).hasSize(1)
         assertThat(actions1).hasSize(0)
@@ -77,7 +111,7 @@ class TxnActionsTest {
         // mutate in transaction. Action should be executed in app1
 
         RequestContext.doWithTxn(false) {
-            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
         }
 
         assertThat(actions0).hasSize(0)
@@ -90,12 +124,12 @@ class TxnActionsTest {
         // Multiple mutations in transaction. Action should be executed in app1
 
         RequestContext.doWithTxn(false) {
-            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
-            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
-            services1.recordsServiceV1.mutate(ref1App0, mapOf("abc" to "def"))
+            services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
+            services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
+            services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
             services1.recordsServiceV1.mutate(
                 listOf(ref1App0, ref2App0).map {
-                    RecordAtts(it, ObjectData.create(mapOf("abc" to "def")))
+                    RecordAtts(it, ObjectData.create(actionData))
                 }
             )
         }
@@ -123,6 +157,7 @@ class TxnActionsTest {
                 props.appInstanceId = appId + ":" + UUID.randomUUID()
                 return props
             }
+
             override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
                 return RemoteRecordsResolver(
                     this,
@@ -137,8 +172,12 @@ class TxnActionsTest {
                                 result.set(
                                     when (url) {
                                         urlPrefix + RemoteRecordsResolver.QUERY_URL -> restHandler.queryRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.MUTATE_URL -> restHandler.mutateRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.DELETE_URL -> restHandler.deleteRecords(request)
+                                        urlPrefix + RemoteRecordsResolver.MUTATE_URL -> restHandler.mutateRecords(
+                                            request
+                                        )
+                                        urlPrefix + RemoteRecordsResolver.DELETE_URL -> restHandler.deleteRecords(
+                                            request
+                                        )
                                         urlPrefix + RemoteRecordsResolver.TXN_URL -> restHandler.txnAction(request)
                                         else -> error("Unknown url: '$url'")
                                     }
@@ -158,8 +197,21 @@ class TxnActionsTest {
             }
             override fun getType() = ACTION_TYPE
         }
-
         services.txnActionManager.register(actionExecutor)
+
+        val recordsDaoWithAction = object : RecordMutateDao {
+            override fun mutate(record: LocalRecordAtts): String {
+                val data = record.attributes.getAs(TxnActionData::class.java)!!
+                services.txnActionManager.execute(ACTION_TYPE, data, RequestContext.getCurrent())
+                if (record.id == "error") {
+                    error("Expected error")
+                }
+                return record.id
+            }
+
+            override fun getId() = MUT_DAO_SOURCE_ID
+        }
+        services.recordsServiceV1.register(recordsDaoWithAction)
 
         this.services[appId] = services
         return AppData(services, actionsReceivedInExecutor)

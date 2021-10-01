@@ -21,6 +21,7 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.spring.web.rest.RecordsRestApi
 import java.util.*
@@ -96,6 +97,25 @@ class TxnTest {
 
         assertThat(recordsDao.txnRecordsMap).isEmpty()
         assertThat(recordsDao.recordsMap).isEmpty()
+
+        val checkActionAfterCommit = { error: Boolean ->
+            throwError = error
+            val elementsAfterCommit = mutableListOf<String>()
+            RequestContext.doWithTxn {
+                RequestContext.doAfterCommit {
+                    elementsAfterCommit.add("element")
+                }
+                restApi.recordsMutate(Json.mapper.toBytes(body)!!)
+            }
+            if (error) {
+                assertThat(elementsAfterCommit).isEmpty()
+            } else {
+                assertThat(elementsAfterCommit).containsExactly("element")
+            }
+        }
+
+        checkActionAfterCommit(true)
+        checkActionAfterCommit(false)
     }
 
     @Configuration

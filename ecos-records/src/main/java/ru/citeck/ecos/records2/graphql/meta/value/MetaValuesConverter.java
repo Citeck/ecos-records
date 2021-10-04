@@ -68,7 +68,7 @@ public class MetaValuesConverter {
 
             result = new ArrayList<>((Collection<?>) rawValue);
 
-        } else if (rawValue instanceof DataValue) {
+        } else if (rawValue instanceof DataValue && ((DataValue) rawValue).isArray()) {
 
             result = toObjList((DataValue) rawValue);
 

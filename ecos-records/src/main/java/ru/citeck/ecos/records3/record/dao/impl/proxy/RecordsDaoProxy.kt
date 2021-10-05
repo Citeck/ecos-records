@@ -41,6 +41,7 @@ open class RecordsDaoProxy(
 
     private val attsProc = processor as? AttsProxyProcessor
     private val mutProc = processor as? MutateProxyProcessor
+    private val delProc = processor as? DeleteProxyProcessor
     private val clientMetaProc = processor as? HasClientMeta
     private lateinit var recordsResolver: LocalRemoteResolver
 
@@ -114,9 +115,17 @@ open class RecordsDaoProxy(
     }
 
     override fun delete(recordsId: List<String>): List<DelStatus> {
-        return withSourceIdMapping {
+
+        val procContext = ProxyProcContext()
+        delProc?.deletePreProcess(recordsId, procContext)
+
+        val statuses = withSourceIdMapping {
             recordsService.delete(toTargetRefs(recordsId))
         }
+
+        delProc?.deletePostProcess(recordsId, statuses, procContext)
+
+        return statuses
     }
 
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
@@ -164,6 +173,10 @@ open class RecordsDaoProxy(
         }
 
         return result
+    }
+
+    fun getProcessor(): ProxyProcessor? {
+        return processor
     }
 
     override fun getId(): String {

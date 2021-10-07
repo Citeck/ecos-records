@@ -8,11 +8,11 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
-import ru.citeck.ecos.records2.request.query.SortBy
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -107,7 +107,7 @@ class IterableRecords(
             if (!lastValue.isNull()) {
                 pagePredicate = Predicates.and(
                     pagePredicate,
-                    if (pageSort.isAscending) {
+                    if (pageSort.ascending) {
                         ValuePredicate(pageSort.attribute, ValuePredicate.Type.GE, lastValue)
                     } else {
                         ValuePredicate(pageSort.attribute, ValuePredicate.Type.LE, lastValue)

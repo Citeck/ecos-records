@@ -12,14 +12,14 @@ timestamps {
           doGenerateSubmoduleConfigurations: false,
           extensions: [],
           submoduleCfg: [],
-          userRemoteConfigs: [[credentialsId: 'awx.integrations',url: 'git@bitbucket.org:citeck/ecos-records.git']]
+          userRemoteConfigs: [[credentialsId: 'awx.integrations', url: 'git@bitbucket.org:citeck/ecos-records.git']]
         ])
       }
       def project_version = readMavenPom().getProperties().getProperty("revision")
       if ((env.BRANCH_NAME != "master") && (!project_version.contains('snapshot')))  {
         echo "Assembly of release artifacts is allowed only from the master branch!"
-        currentBuild.result = 'SUCCESS'
-        return
+        //currentBuild.result = 'SUCCESS'
+        //return
       }
       stage('Assembling and publishing project artifacts') {
         withMaven(mavenLocalRepo: '/opt/jenkins/.m2/repository', tempBinDir: '') {

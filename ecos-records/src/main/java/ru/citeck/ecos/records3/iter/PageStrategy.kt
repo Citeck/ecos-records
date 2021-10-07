@@ -3,10 +3,9 @@ package ru.citeck.ecos.records3.iter
 enum class PageStrategy {
 
     /**
-     * Iterate by sortBy property in RecordsQuery page.
-     * If sortBy not defined then '_created' attribute will be used.
+     * Iterate by _created attribute.
      */
-    SORT_BY,
+    CREATED,
 
     /**
      * Iterate by RecordRef's

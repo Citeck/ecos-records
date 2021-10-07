@@ -41,7 +41,7 @@ data class IterableRecordsConfig(
     class Builder() {
 
         var pageSize: Int = 100
-        var pageStrategy: PageStrategy = PageStrategy.SORT_BY
+        var pageStrategy: PageStrategy = PageStrategy.CREATED
         var attsToLoad: Map<String, *> = emptyMap<String, Any>()
 
         constructor(base: IterableRecordsConfig) : this() {

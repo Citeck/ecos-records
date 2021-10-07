@@ -8,11 +8,11 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
+import ru.citeck.ecos.records2.request.query.SortBy
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
-import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -31,16 +31,19 @@ class IterableRecords(
     private val baseQuery: RecordsQuery = query.copy().build()
 
     init {
-        if (config.pageStrategy == PageStrategy.SORT_BY) {
+        if (config.pageStrategy == PageStrategy.CREATED) {
             if (query.language != PredicateService.LANGUAGE_PREDICATE) {
-                error("SORT_BY strategy can be used only with '${PredicateService.LANGUAGE_PREDICATE}' language")
+                error(
+                    "${PageStrategy.CREATED} strategy can be used " +
+                        "only with '${PredicateService.LANGUAGE_PREDICATE}' language"
+                )
             }
         }
     }
 
     override fun iterator(): RecordsIterator<RecordAtts> {
         return when (config.pageStrategy) {
-            PageStrategy.SORT_BY -> SortByRecordsIterator()
+            PageStrategy.CREATED -> SortByRecordsIterator(RecordConstants.ATT_CREATED)
             PageStrategy.AFTER_ID -> AfterIdRecordsIterator()
         }
     }
@@ -70,7 +73,7 @@ class IterableRecords(
         }
     }
 
-    private inner class SortByRecordsIterator : AbstractIterator() {
+    private inner class SortByRecordsIterator(attribute: String) : AbstractIterator() {
 
         private val pageSort: SortBy
         private var skipCount = 0
@@ -83,16 +86,18 @@ class IterableRecords(
         private val attsToLoad: Map<String, *>
 
         init {
-            pageSort = if (baseQuery.sortBy.isEmpty()) {
-                val sort = SortBy(RecordConstants.ATT_CREATED, false)
-                query = baseQuery.copy().withSortBy(sort).build()
-                sort
-            } else {
-                query = baseQuery
-                baseQuery.sortBy[0]
-            }
+
+            pageSort = baseQuery.sortBy.firstOrNull {
+                it.attribute == attribute
+            } ?: SortBy(attribute, false)
+
+            query = baseQuery.copy()
+                .withSortBy(pageSort)
+                .withMaxItems(config.pageSize)
+                .build()
+
             val attsToLoad = HashMap(config.attsToLoad)
-            attsToLoad[SORT_BY_ATT_ALIAS] = pageSort.attribute + ScalarType.RAW.schema
+            attsToLoad[SORT_BY_ATT_ALIAS] = pageSort.attribute + ScalarType.STR.schema
             this.attsToLoad = attsToLoad
         }
 
@@ -102,7 +107,7 @@ class IterableRecords(
             if (!lastValue.isNull()) {
                 pagePredicate = Predicates.and(
                     pagePredicate,
-                    if (pageSort.ascending) {
+                    if (pageSort.isAscending) {
                         ValuePredicate(pageSort.attribute, ValuePredicate.Type.GE, lastValue)
                     } else {
                         ValuePredicate(pageSort.attribute, ValuePredicate.Type.LE, lastValue)
@@ -110,9 +115,8 @@ class IterableRecords(
                 )
             }
 
-            val query = baseQuery.copy()
+            val query = query.copy()
                 .withQuery(pagePredicate)
-                .withMaxItems(config.pageSize)
                 .withSkipCount(skipCount)
                 .build()
 
@@ -148,8 +152,10 @@ class IterableRecords(
                     skipCount = 1
                     for (idx in records.lastIndex - 1 downTo 0) {
                         val record = records[idx]
-                        while (record.getAtt(SORT_BY_ATT_ALIAS) == lastValue) {
+                        if (record.getAtt(SORT_BY_ATT_ALIAS) == lastValue) {
                             skipCount++
+                        } else {
+                            break
                         }
                     }
                 }

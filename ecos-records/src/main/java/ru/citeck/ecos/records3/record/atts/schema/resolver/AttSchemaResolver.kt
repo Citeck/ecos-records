@@ -619,7 +619,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             }
             val scalarType = ScalarType.getBySchemaOrMirrorAtt(attribute)
             return if (scalarType != null) {
-                getScalar(scalarType)
+                getScalar(scalarType, attribute)
             } else {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
@@ -644,7 +644,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         fun getLocalId() = getRef().id
 
-        private fun getScalar(scalar: ScalarType): Any? {
+        private fun getScalar(scalar: ScalarType, attribute: String): Any? {
             return when (scalar) {
                 ScalarType.STR -> value.asText()
                 ScalarType.DISP -> {
@@ -658,7 +658,13 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         when (disp) {
                             is NullNode -> null
                             is String -> disp
-                            is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
+                            is MLText -> {
+                                if (attribute.startsWith('?')) {
+                                    MLText.getClosestValue(disp, RequestContext.getLocale())
+                                } else {
+                                    disp
+                                }
+                            }
                             else -> disp.toString()
                         }
                     }

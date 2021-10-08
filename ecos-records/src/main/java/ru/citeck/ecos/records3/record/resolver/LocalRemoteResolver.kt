@@ -168,6 +168,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
             val cachedRecordAttValues = cachedAttValues[idx]
             notCachedAtts.clear()
             cachedAttsWithAliases.forEach { (alias, attribute) ->
+                // context attributes should not be cached
                 val valueFromCache = if (!attribute.startsWith("$")) {
                     cache[attribute]
                 } else {

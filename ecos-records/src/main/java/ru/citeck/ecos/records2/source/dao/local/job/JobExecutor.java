@@ -123,6 +123,8 @@ public class JobExecutor {
                     }
                 }
                 instance.future.cancel(true);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.warn("Exception while job cancelling. SourceId: " + instance.sourceId, e);
             }

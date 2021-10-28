@@ -4,13 +4,13 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import java.util.*
 
-class AttOrElseProcessor : AbstractAttProcessor<List<DataValue>>(true) {
+class AttOrElseProcessor : AttProcessor {
 
     companion object {
         const val ATT_PREFIX: String = "a:"
     }
 
-    override fun processOne(attributes: ObjectData, value: DataValue, args: List<DataValue>): Any? {
+    override fun process(attributes: ObjectData, value: DataValue, args: List<DataValue>): Any? {
 
         if (args.isEmpty()) {
             return value
@@ -38,10 +38,6 @@ class AttOrElseProcessor : AbstractAttProcessor<List<DataValue>>(true) {
             }
         }
         return newValue
-    }
-
-    override fun parseArgs(args: List<DataValue>): List<DataValue> {
-        return args
     }
 
     override fun getAttsToLoad(arguments: List<DataValue>): Collection<String> {

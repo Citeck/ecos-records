@@ -13,7 +13,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
 
 import java.time.Instant;
-import java.util.Date;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -88,6 +88,25 @@ public class OrElseAttTest {
         assertAtt("strField", "strField!strField!strField!'abc'");
     }
 
+    @Test
+    void arrOrElseTest() {
+        assertAtt(Collections.emptyList(), "strEmptyList[]?disp![]");
+        assertAtt(Collections.emptyList(), "strNullList[]?disp![]");
+        assertAtt(Collections.emptyList(), "strListWithNullElem[]?disp![]");
+        assertAtt(Collections.emptyList(), "strDvListWithNullElem[]?disp![]");
+        assertAtt(Collections.emptyList(), "strDvNullList[]?disp![]");
+
+        assertAtt(Collections.emptyList(), "strEmptyList[]?disp");
+        assertAtt(Collections.emptyList(), "strNullList[]?disp");
+        assertAtt(Collections.emptyList(), "strListWithNullElem[]?disp");
+        assertAtt(Collections.emptyList(), "strDvListWithNullElem[]?disp");
+        assertAtt(Collections.emptyList(), "strDvNullList[]?disp");
+
+        assertAtt(Arrays.asList(new String[] {null}), "dvListWithListWithNullElem[].unknownField");
+        assertAtt(Arrays.asList(new String[] {null}), "dvListWithListWithNullElem[].unknownField![]");
+        assertAtt(Collections.emptyList(), "dvListWithListWithNullElem.unknownField.unknownField[].unknownField![]");
+    }
+
     void assertAtt(Object expected, String att) {
         assertEquals(DataValue.create(expected), recordsService.getAtt(TEST_REF, att));
     }
@@ -104,6 +123,12 @@ public class OrElseAttTest {
         private Boolean boolField = true;
         private Boolean boolNullField = null;
         private MetaData meta = new MetaData();
+        private List<String> strEmptyList = new ArrayList<>();
+        private List<String> strNullList = new ArrayList<>();
+        private List<String> strListWithNullElem = Arrays.asList(new String[] {null});
+        private DataValue strDvListWithNullElem = DataValue.createArr().add(null);
+        private DataValue dvListWithListWithNullElem = DataValue.createArr().add(DataValue.createObj());
+        private DataValue strDvNullList = null;
     }
 
     public static class MetaData implements AttValue {

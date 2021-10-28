@@ -345,7 +345,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            val attValues = toList(attValue)
+            val attValues = rawToListWithoutNullValues(attValue)
             val alias = att.getAliasForValue()
             if (att.multiple) {
                 var valuesStream = attValues.stream()
@@ -409,26 +409,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
     }
 
-    private fun toList(rawValue: Any?): List<Any> {
+    private fun rawToListWithoutNullValues(rawValue: Any?): List<Any> {
 
-        return if (rawValue == null || isNull(rawValue)) {
-            emptyList()
-        } else if (rawValue is HasListView<*>) {
-            ArrayList(rawValue.getListView())
-        } else if (rawValue is DataValue) {
-            if (rawValue.isArray()) {
-                rawValue.toList()
-            } else {
-                arrayListOf(rawValue)
-            }
-        } else if (rawValue is ArrayNode) {
-            rawValue.toList()
-        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
-            rawValue.toList()
-        } else if (rawValue is Collection<*>) {
-            ArrayList(rawValue.filterNotNull())
-        } else if (rawValue.javaClass.isArray) {
-            if (ByteArray::class.java == rawValue.javaClass) {
+        if (rawValue == null || isNull(rawValue)) {
+            return emptyList()
+        }
+
+        if (rawValue.javaClass.isArray) {
+            return if (rawValue.javaClass == ByteArray::class.java) {
                 listOf(rawValue)
             } else {
                 val length = Array.getLength(rawValue)
@@ -437,13 +425,75 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 } else {
                     val result = ArrayList<Any>(length)
                     for (i in 0 until length) {
-                        result.add(Array.get(rawValue, i))
+                        val element = Array.get(rawValue, i)
+                        if (!isNull(element)) {
+                            result.add(element)
+                        }
                     }
                     result
                 }
             }
+        }
+
+        if (rawValue is HasListView<*>) {
+            return iterableToListWithoutNullValues(rawValue.getListView())
+        } else if (rawValue is DataValue) {
+            return if (rawValue.isArray()) {
+                if (rawValue.size() == 0) {
+                    emptyList()
+                } else {
+                    iterableToListWithoutNullValues(rawValue)
+                }
+            } else if (rawValue.isNull()) {
+                emptyList()
+            } else {
+                listOf(rawValue)
+            }
+        } else if (rawValue is ArrayNode) {
+            return iterableToListWithoutNullValues(rawValue)
+        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
+            return iterableToListWithoutNullValues(rawValue)
+        } else if (rawValue is Collection<*>) {
+            return iterableToListWithoutNullValues(rawValue)
+        }
+        return listOf(rawValue)
+    }
+
+    private fun <T> iterableToListWithoutNullValues(value: Iterable<T>): List<Any> {
+
+        if (value is Collection<*>) {
+            when (value.size) {
+                0 -> return emptyList()
+                1 -> {
+                    val element = if (value is List<*>) {
+                        value[0]
+                    } else {
+                        val iter = value.iterator()
+                        if (iter.hasNext()) {
+                            iter.next()
+                        } else {
+                            null
+                        }
+                    }
+                    return if (element == null || isNull(element)) {
+                        emptyList()
+                    } else {
+                        listOf(element)
+                    }
+                }
+                else -> {}
+            }
+        }
+        val result = ArrayList<Any>()
+        for (it in value) {
+            if (it != null && !isNull(it)) {
+                result.add(it)
+            }
+        }
+        return if (result.isEmpty()) {
+            emptyList()
         } else {
-            listOf(rawValue)
+            result
         }
     }
 

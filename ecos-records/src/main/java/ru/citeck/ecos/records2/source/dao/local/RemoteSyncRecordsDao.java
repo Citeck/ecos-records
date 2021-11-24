@@ -95,6 +95,8 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
                 serviceFactory.initJobs(null);
             }
             firstSyncFuture.get(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             ExceptionUtils.throwException(e);
         }

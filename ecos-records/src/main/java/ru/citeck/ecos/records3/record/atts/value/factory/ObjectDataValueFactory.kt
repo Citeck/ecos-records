@@ -37,6 +37,10 @@ class ObjectDataValueFactory : AttValueFactory<ObjectData> {
                 return null
             }
 
+            override fun has(name: String): Boolean {
+                return value.has(name)
+            }
+
             override fun asRaw(): Any {
                 return value
             }

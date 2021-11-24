@@ -1,10 +1,9 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
-enum class ComputedAttType {
+enum class RecordComputedAttType {
     SCRIPT,
     ATTRIBUTE,
     VALUE,
     TEMPLATE,
-    COUNTER,
     NONE
 }

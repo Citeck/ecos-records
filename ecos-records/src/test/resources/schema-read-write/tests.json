@@ -1,6 +1,25 @@
 {
   "tests": [
     {
+      "att": "strDvListWithNullElem[]?disp![]",
+      "expAfterWrite": "strDvListWithNullElem[]|or([])",
+      "exp": {
+        "name": "strDvListWithNullElem",
+        "multiple": true,
+        "inner": [
+          {
+            "name": "?disp"
+          }
+        ],
+        "processors": [
+          {
+            "type": "or",
+            "arguments": [[]]
+          }
+        ]
+      }
+    },
+    {
       "att": "appName{alias:?str|presuf('app/')}",
       "exp": {
         "name": "appName",

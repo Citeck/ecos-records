@@ -15,15 +15,12 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttValue
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.atts.value.AttValue
-import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
-import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
-import ru.citeck.ecos.records3.record.atts.value.HasListView
+import ru.citeck.ecos.records3.record.atts.value.*
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
@@ -56,7 +53,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     private val attProcService = factory.attProcService
     private val attSchemaReader = factory.attSchemaReader
     private val dtoSchemaReader = factory.dtoSchemaReader
-    private val computedAttsService = factory.computedAttsService
+    private val computedAttsService = factory.recordComputedAttsService
 
     private val recordTypeService by lazy { factory.recordTypeService }
 
@@ -271,8 +268,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     attName = attName.substring(1)
                 }
 
-                val computedAtts: Map<String, ComputedAtt> = value.computedAtts
-                val computedAtt: ComputedAtt? = computedAtts[attName]
+                val computedAtts: Map<String, RecordComputedAtt> = value.computedAtts
+                val computedAtt: RecordComputedAtt? = computedAtts[attName]
 
                 if (computedAtt != null && disabledComputedPaths.add(attPath)) {
                     attValue = try {
@@ -334,7 +331,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            if (attValue is ComputedAttValue) {
+            if (attValue is RecordComputedAttValue) {
                 val notNullAttValue = attValue
                 attValue = withoutSourceIdMapping(context) {
                     computedAttsService.compute(
@@ -348,7 +345,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
 
-            val attValues = toList(attValue)
+            val attValues = rawToListWithoutNullValues(attValue)
             val alias = att.getAliasForValue()
             if (att.multiple) {
                 var valuesStream = attValues.stream()
@@ -412,26 +409,14 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
     }
 
-    private fun toList(rawValue: Any?): List<Any> {
+    private fun rawToListWithoutNullValues(rawValue: Any?): List<Any> {
 
-        return if (rawValue == null || isNull(rawValue)) {
-            emptyList()
-        } else if (rawValue is HasListView<*>) {
-            ArrayList(rawValue.getListView())
-        } else if (rawValue is DataValue) {
-            if (rawValue.isArray()) {
-                rawValue.toList()
-            } else {
-                arrayListOf(rawValue)
-            }
-        } else if (rawValue is ArrayNode) {
-            rawValue.toList()
-        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
-            rawValue.toList()
-        } else if (rawValue is Collection<*>) {
-            ArrayList(rawValue.filterNotNull())
-        } else if (rawValue.javaClass.isArray) {
-            if (ByteArray::class.java == rawValue.javaClass) {
+        if (rawValue == null || isNull(rawValue)) {
+            return emptyList()
+        }
+
+        if (rawValue.javaClass.isArray) {
+            return if (rawValue.javaClass == ByteArray::class.java) {
                 listOf(rawValue)
             } else {
                 val length = Array.getLength(rawValue)
@@ -440,13 +425,75 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 } else {
                     val result = ArrayList<Any>(length)
                     for (i in 0 until length) {
-                        result.add(Array.get(rawValue, i))
+                        val element = Array.get(rawValue, i)
+                        if (!isNull(element)) {
+                            result.add(element)
+                        }
                     }
                     result
                 }
             }
+        }
+
+        if (rawValue is HasListView<*>) {
+            return iterableToListWithoutNullValues(rawValue.getListView())
+        } else if (rawValue is DataValue) {
+            return if (rawValue.isArray()) {
+                if (rawValue.size() == 0) {
+                    emptyList()
+                } else {
+                    iterableToListWithoutNullValues(rawValue)
+                }
+            } else if (rawValue.isNull()) {
+                emptyList()
+            } else {
+                listOf(rawValue)
+            }
+        } else if (rawValue is ArrayNode) {
+            return iterableToListWithoutNullValues(rawValue)
+        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
+            return iterableToListWithoutNullValues(rawValue)
+        } else if (rawValue is Collection<*>) {
+            return iterableToListWithoutNullValues(rawValue)
+        }
+        return listOf(rawValue)
+    }
+
+    private fun <T> iterableToListWithoutNullValues(value: Iterable<T>): List<Any> {
+
+        if (value is Collection<*>) {
+            when (value.size) {
+                0 -> return emptyList()
+                1 -> {
+                    val element = if (value is List<*>) {
+                        value[0]
+                    } else {
+                        val iter = value.iterator()
+                        if (iter.hasNext()) {
+                            iter.next()
+                        } else {
+                            null
+                        }
+                    }
+                    return if (element == null || isNull(element)) {
+                        emptyList()
+                    } else {
+                        listOf(element)
+                    }
+                }
+                else -> {}
+            }
+        }
+        val result = ArrayList<Any>()
+        for (it in value) {
+            if (it != null && !isNull(it)) {
+                result.add(it)
+            }
+        }
+        return if (result.isEmpty()) {
+            emptyList()
         } else {
-            listOf(rawValue)
+            result
         }
     }
 
@@ -500,7 +547,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         private val valueRef: RecordRef,
         val ctxSourceId: String,
         val context: RequestContext?,
-        val computedAtts: Map<String, ComputedAtt>
+        val computedAtts: Map<String, RecordComputedAtt>
     ) {
 
         companion object {
@@ -617,9 +664,12 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }
+            if (!attribute.startsWith('?') && value is AttValueProxy) {
+                return value.getAtt(attribute)
+            }
             val scalarType = ScalarType.getBySchemaOrMirrorAtt(attribute)
             return if (scalarType != null) {
-                getScalar(scalarType)
+                getScalar(scalarType, attribute)
             } else {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
@@ -644,7 +694,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         fun getLocalId() = getRef().id
 
-        private fun getScalar(scalar: ScalarType): Any? {
+        private fun getScalar(scalar: ScalarType, attribute: String): Any? {
             return when (scalar) {
                 ScalarType.STR -> value.asText()
                 ScalarType.DISP -> {
@@ -658,7 +708,13 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         when (disp) {
                             is NullNode -> null
                             is String -> disp
-                            is MLText -> MLText.getClosestValue(disp, RequestContext.getLocale())
+                            is MLText -> {
+                                if (attribute.startsWith('?')) {
+                                    MLText.getClosestValue(disp, RequestContext.getLocale())
+                                } else {
+                                    disp
+                                }
+                            }
                             else -> disp.toString()
                         }
                     }
@@ -739,8 +795,11 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             )
         }
 
-        private fun getComputedAtts(parent: ValueContext?, value: AttValue?): Map<String, ComputedAtt> {
-            val computedAtts = HashMap<String, ComputedAtt>()
+        private fun getComputedAtts(parent: ValueContext?, value: AttValue?): Map<String, RecordComputedAtt> {
+            if (value is AttValueProxy) {
+                return emptyMap()
+            }
+            val computedAtts = HashMap<String, RecordComputedAtt>()
             parent?.computedAtts?.forEach { (id, att) ->
                 val dotIdx: Int = AttStrUtils.indexOf(id, ".")
                 if (dotIdx > 0 && dotIdx < id.length + 1) {

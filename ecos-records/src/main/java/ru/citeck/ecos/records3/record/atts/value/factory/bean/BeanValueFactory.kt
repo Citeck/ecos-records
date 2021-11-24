@@ -87,6 +87,9 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         override fun has(name: String): Boolean {
+            if (bean is Map<*, *>) {
+                return bean.containsKey(name)
+            }
             return typeCtx.hasProperty(name)
         }
 

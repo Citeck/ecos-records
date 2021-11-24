@@ -27,8 +27,8 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAtt
-import ru.citeck.ecos.records3.record.atts.computed.ComputedAttsService
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttsService
 import ru.citeck.ecos.records3.record.atts.proc.*
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
@@ -90,7 +90,7 @@ open class RecordsServiceFactory {
     val attSchemaResolver: AttSchemaResolver by lazy { createAttSchemaResolver() }
     val metaValuesConverter: MetaValuesConverter by lazy { createMetaValuesConverter() }
     val attProcReader: AttProcReader by lazy { createAttProcReader() }
-    val computedAttsService: ComputedAttsService by lazy { createComputedAttsService() }
+    val recordComputedAttsService: RecordComputedAttsService by lazy { createRecordComputedAttsService() }
     val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
     val defaultCtxAttsProvider: ContextAttsProvider by lazy { createDefaultCtxAttsProvider() }
     val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
@@ -144,7 +144,7 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordTypeService(): RecordTypeService {
         return object : RecordTypeService {
-            override fun getComputedAtts(typeRef: RecordRef): List<ComputedAtt> {
+            override fun getComputedAtts(typeRef: RecordRef): List<RecordComputedAtt> {
                 return recordTypeServiceImpl?.getComputedAtts(typeRef) ?: emptyList()
             }
         }
@@ -365,8 +365,8 @@ open class RecordsServiceFactory {
         return AttProcReader()
     }
 
-    protected open fun createComputedAttsService(): ComputedAttsService {
-        return ComputedAttsService(this)
+    protected open fun createRecordComputedAttsService(): RecordComputedAttsService {
+        return RecordComputedAttsService(this)
     }
 
     protected open fun createRecordsTxnService(): RecordsTxnService {

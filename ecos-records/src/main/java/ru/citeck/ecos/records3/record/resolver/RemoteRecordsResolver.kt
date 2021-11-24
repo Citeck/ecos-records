@@ -253,46 +253,74 @@ class RemoteRecordsResolver(
 
         val context = RequestContext.getCurrentNotNull()
 
+        var txnException: Exception? = null
+
         RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, refs) ->
 
             val appName = sourceId.substringBefore("/", "")
 
             if (appName.isNotBlank() && isSourceTransactional(sourceId)) {
-
-                val body = TxnBody()
-                body.setRecords(refs.map { it.value.removeAppName() })
-                body.setAction(action)
-                setContextProps(body, context)
-
-                var exception: Exception? = null
-                for (i in 1..4) {
-                    try {
-                        exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
-                        if (exception != null) {
-                            log.info {
-                                "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
-                                    "was completed successfully after ${i - 1} retry"
-                            }
-                            exception = null
-                        }
-                    } catch (e: Exception) {
-                        exception = e
-                        if (i == 4) {
-                            break
-                        }
-                        val sleepTime = i * 1000L
-                        log.warn {
-                            "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
-                                "failed with exception ${e::class.simpleName} " +
-                                "msg: ${e.message}. Retry sleep: ${sleepTime}ms"
-                        }
-                        Thread.sleep(sleepTime)
+                val appRefs = refs.map { it.value }
+                try {
+                    commitImplInApp(appName, appRefs, action, context)
+                } catch (e: Exception) {
+                    log.error { "Exception while txn commit '${context.ctxData.txnId}'. Records: $appRefs" }
+                    // main transaction already completed, and we should
+                    // make as much remote commits or rollbacks as possible
+                    if (txnException == null) {
+                        txnException = e
+                    } else {
+                        txnException?.addSuppressed(e)
                     }
                 }
-                if (exception != null) {
-                    throw exception
-                }
             }
+        }
+        val finalException = txnException
+        if (finalException != null) {
+            throw finalException
+        }
+    }
+
+    private fun commitImplInApp(
+        appName: String,
+        refs: List<RecordRef>,
+        action: TxnBody.TxnAction,
+        context: RequestContext
+    ) {
+
+        val body = TxnBody()
+        body.setRecords(refs.map { it.removeAppName() })
+        body.setAction(action)
+        setContextProps(body, context)
+
+        var exception: Exception? = null
+        for (i in 1..4) {
+            try {
+                exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
+                if (exception != null) {
+                    log.info {
+                        "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
+                            "was completed successfully after ${i - 1} retry"
+                    }
+                    exception = null
+                }
+                break
+            } catch (e: Exception) {
+                exception = e
+                if (i == 4) {
+                    break
+                }
+                val sleepTime = i * 1000L
+                log.warn {
+                    "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
+                        "failed with exception ${e::class.simpleName} " +
+                        "msg: ${e.message}. Retry sleep: ${sleepTime}ms"
+                }
+                Thread.sleep(sleepTime)
+            }
+        }
+        if (exception != null) {
+            throw exception
         }
     }
 

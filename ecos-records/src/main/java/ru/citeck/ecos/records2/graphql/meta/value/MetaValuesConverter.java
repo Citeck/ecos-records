@@ -1,8 +1,10 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -66,6 +68,18 @@ public class MetaValuesConverter {
 
             result = new ArrayList<>((Collection<?>) rawValue);
 
+        } else if (rawValue instanceof DataValue && ((DataValue) rawValue).isArray()) {
+
+            result = toObjList((DataValue) rawValue);
+
+        } else if (rawValue instanceof ArrayNode) {
+
+            result = toObjList((ArrayNode) rawValue);
+
+        } else if (LibsUtils.isJacksonPresent() && rawValue instanceof com.fasterxml.jackson.databind.node.ArrayNode) {
+
+            result = toObjList((com.fasterxml.jackson.databind.node.ArrayNode) rawValue);
+
         } else if (rawValue.getClass().isArray()) {
 
             if (byte[].class.equals(rawValue.getClass())) {
@@ -97,6 +111,14 @@ public class MetaValuesConverter {
         return result.stream()
             .map(v -> getAsMetaValue(v, context, metaField, forceInit))
             .collect(Collectors.toList());
+    }
+
+    private List<Object> toObjList(Iterable<?> iterable) {
+        List<Object> result = new ArrayList<>();
+        for (Object element : iterable) {
+            result.add(element);
+        }
+        return result;
     }
 
     public MetaValue getAsMetaValue(Object value,

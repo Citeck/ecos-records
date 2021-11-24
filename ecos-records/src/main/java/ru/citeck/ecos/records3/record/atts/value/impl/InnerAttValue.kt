@@ -7,10 +7,11 @@ import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.HasListView
 import java.util.*
 
-class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue> {
+class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValueProxy {
 
     companion object {
 

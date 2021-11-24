@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.bean
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
@@ -38,6 +39,18 @@ class BeanValueFactoryTest2 {
 
         assertEquals("test@test", queryRecord.getAtt("id").asText())
         assertEquals("test@test", queryRecord.getId().toString())
+    }
+
+    @Test
+    fun mapHasTest() {
+
+        val map = mapOf(
+            "field" to "value"
+        )
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        assertThat(records.getAtt(map, "_has.field?bool").asBoolean()).isTrue
+        assertThat(records.getAtt(map, "_has.field123?bool").asBoolean()).isFalse
     }
 
     @Test

@@ -128,6 +128,9 @@ public class RecordElements implements Elements<RecordElement> {
 
         @Override
         public RecordElement next() {
+            if (idx >= records.size()) {
+                throw new NoSuchElementException("size: " + records.size() + " idx: " + idx);
+            }
             return records.get(idx++);
         }
     }

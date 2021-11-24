@@ -1,25 +1,28 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
-import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
 import kotlin.collections.LinkedHashMap
 
 class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
 
     companion object {
-        val ATTS_WITHOUT_LOADING = setOf(
-            ScalarType.ID.schema,
-            ScalarType.LOCAL_ID.schema,
-            ScalarType.ASSOC.schema,
-            ScalarType.STR.schema,
-            ScalarType.RAW.schema
+        private val SCALARS_WITHOUT_LOADING = listOf(
+            ScalarType.ID,
+            ScalarType.LOCAL_ID,
+            ScalarType.ASSOC,
+            ScalarType.STR,
+            ScalarType.RAW
+        )
+        private val ATTS_WITHOUT_LOADING = setOf(
+            *SCALARS_WITHOUT_LOADING.map { it.schema }.toTypedArray(),
+            *SCALARS_WITHOUT_LOADING.map { it.mirrorAtt }.toTypedArray()
         )
     }
 
@@ -32,14 +35,13 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
     override fun getValueTypes() = listOf(RecordRef::class.java)
 
-    inner class RecordRefValue(private val ref: RecordRef) : AttValue {
+    inner class RecordRefValue(private val ref: RecordRef) : AttValue, AttValueProxy {
 
         private val innerAtts: InnerAttValue
 
         init {
             val innerSchema = AttContext.getCurrentSchemaAtt().inner
 
-            val scalarMirrorAtts = mutableListOf<ScalarType>()
             val attsMap: MutableMap<String, String> = LinkedHashMap()
             val sb = StringBuilder()
 
@@ -47,36 +49,14 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
                 val innerName: String = inner.name
 
-                if (inner.name == RecordConstants.ATT_TYPE) {
-
-                    attsMap["_type"] = "_type?id"
-                } else if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
-
+                if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
                     schemaWriter.write(inner, sb, false)
-                    val mirrorScalarType = ScalarType.getByMirrorAtt(innerName)
-                    if (mirrorScalarType != null) {
-                        scalarMirrorAtts.add(mirrorScalarType)
-                    }
                     attsMap[innerName] = sb.toString()
                     sb.setLength(0)
                 }
             }
             val atts = if (attsMap.isNotEmpty()) {
-
-                val atts = loadRawAtts(attsMap)
-
-                scalarMirrorAtts.forEach {
-                    var scalarValue = atts.getAtt(it.mirrorAtt)
-                    while (scalarValue.isObject()) {
-                        scalarValue = if (scalarValue.size() > 0) {
-                            scalarValue.get(scalarValue.fieldNamesList()[0])
-                        } else {
-                            DataValue.NULL
-                        }
-                    }
-                    atts.setAtt(it.schema, scalarValue)
-                }
-                atts
+                loadRawAtts(attsMap)
             } else {
                 RecordAtts(ref)
             }
@@ -120,6 +100,17 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         }
 
         override fun getAtt(name: String): Any? {
+            if (ATTS_WITHOUT_LOADING.contains(name)) {
+                val type = ScalarType.getBySchemaOrMirrorAtt(name) ?: return null
+                return when (type) {
+                    ScalarType.ID,
+                    ScalarType.ASSOC,
+                    ScalarType.STR,
+                    ScalarType.RAW -> id
+                    ScalarType.LOCAL_ID -> id.id
+                    else -> null
+                }
+            }
             return innerAtts.getAtt(name)
         }
 

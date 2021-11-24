@@ -5,6 +5,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.graphql.meta.value.field.AttMetaField
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.utils.AttUtils
 
 /**
  * Adapter MetaValue -> AttValue
@@ -29,7 +30,8 @@ class AttMetaValue(private val metaValue: MetaValue) : AttValue {
     }
 
     override fun getEdge(name: String): AttEdge? {
-        return AttMetaEdge(metaValue.getEdge(name, AttMetaField))
+        val metaEdge = metaValue.getEdge(name, AttMetaField)
+        return metaEdge?.let { AttMetaEdge(it) }
     }
 
     @Throws(Exception::class)
@@ -38,7 +40,15 @@ class AttMetaValue(private val metaValue: MetaValue) : AttValue {
     }
 
     override fun asDouble(): Double? {
-        return metaValue.double
+        return try {
+            metaValue.double
+        } catch (e: NumberFormatException) {
+            AttUtils.logError(
+                this,
+                "Number format exception: " + e.message
+            )
+            null
+        }
     }
 
     override fun asBoolean(): Boolean? {

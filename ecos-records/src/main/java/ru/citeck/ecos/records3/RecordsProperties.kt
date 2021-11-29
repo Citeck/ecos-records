@@ -42,6 +42,7 @@ class RecordsProperties {
         var trustStore: String = ""
         var trustStoreType: String = "PKCS12"
         var trustStorePassword: String? = null
+        var verifyHostname: Boolean = false
     }
 
     class AppTls {

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.spring.config
 import com.netflix.discovery.EurekaClient
 import mu.KotlinLogging
 import org.apache.http.client.HttpClient
+import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContextBuilder
@@ -94,6 +95,8 @@ open class RecordsRestConfiguration {
                 .build()
         }
 
+        log.info { "SecureRestTemplate initialization started. TrustStore: ${tlsProps.trustStore}" }
+
         if (tlsProps.trustStore.isBlank()) {
             error("tls.enabled == true, but trustStore is not defined")
         }
@@ -108,9 +111,15 @@ open class RecordsRestConfiguration {
             .loadTrustMaterial(keyStore, null)
             .build()
         val socketFactory = SSLConnectionSocketFactory(sslContext)
-        val httpClient: HttpClient = HttpClients.custom()
+
+        val httpClientBuilder = HttpClients.custom()
             .setSSLSocketFactory(socketFactory)
-            .build()
+
+        if (!properties.tls.verifyHostname) {
+            httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+        }
+        val httpClient: HttpClient = httpClientBuilder.build()
+
         val factory = HttpComponentsClientHttpRequestFactory(httpClient)
 
         return this.restTemplateBuilder

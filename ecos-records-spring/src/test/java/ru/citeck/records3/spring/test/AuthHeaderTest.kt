@@ -52,7 +52,7 @@ open class AuthHeaderTest {
     lateinit var recordsServiceFactory: RecordsServiceFactory
 
     @Autowired
-    @Qualifier("recordsRestTemplate")
+    @Qualifier("recordsInsecureRestTemplate")
     lateinit var restTemplate: RestTemplate
     lateinit var mockServer: MockRestServiceServer
     @MockBean

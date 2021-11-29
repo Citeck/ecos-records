@@ -9,6 +9,7 @@ import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,8 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
     private final RecordsProperties properties;
     private final RemoteAppInfoProvider remoteAppInfoProvider;
     private final RestQueryExceptionConverter restQueryExceptionConverter;
+
+    private final Map<String, RecordsProperties.App> appProps = new ConcurrentHashMap<>();
 
     public RemoteRecordsRestApiImpl(RecordsRestTemplate template,
                                     RemoteAppInfoProvider remoteAppInfoProvider,
@@ -125,24 +128,39 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
     }
 
     private RecordsProperties.App getAppProps(String id) {
-        Map<String, RecordsProperties.App> apps = properties.getApps();
-        return apps.get(id);
+        return appProps.computeIfAbsent(id, appId -> {
+            RecordsProperties.App appProps = properties.getApps().get(appId);
+            if (appProps == null) {
+                appProps = new RecordsProperties.App();
+            }
+            RecordsProperties.App allProps = properties.getApps()
+                .getOrDefault("all", new RecordsProperties.App());
+
+            if (appProps.getTls().getEnabled() == null) {
+                appProps.getTls().setEnabled(allProps.getTls().getEnabled());
+            }
+            return appProps;
+        });
     }
 
     private String convertUrl(String url) {
 
-        if (!url.startsWith("http")) {
-            RecordsProperties.RestProps microRest = properties.getRest();
-            String schema = Boolean.TRUE.equals(microRest.getSecure()) ? "https:/" : "http:/";
-            url = schema + url;
+        String appName = url.substring(1, url.indexOf('/', 1));
+        RecordsProperties.App appProps = getAppProps(appName);
+
+        String schema;
+        if (Boolean.TRUE.equals(appProps.getTls().getEnabled())) {
+            schema = "https:/";
+        } else {
+            schema = "http:/";
         }
+        url = schema + url;
 
         if (remoteAppInfoProvider == null) {
             return url;
         }
 
         String baseUrlReplacement;
-        String appName = getAppName(url);
 
         RemoteAppInfo appInfo = null;
         try {
@@ -155,19 +173,17 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
             appInfo = new RemoteAppInfo();
         }
 
-        RecordsProperties.App app = getAppProps(appName);
-
-        String baseUrl = app != null ? app.getRecBaseUrl() : null;
-        String userBaseUrl = app != null ? app.getRecUserBaseUrl() : null;
+        String baseUrl = appProps.getRecBaseUrl();
+        String userBaseUrl = appProps.getRecUserBaseUrl();
 
         if (AuthContext.isRunAsSystem()) {
-            if (baseUrl != null) {
+            if (StringUtils.isNotBlank(baseUrl)) {
                 baseUrlReplacement = baseUrl;
             } else {
                 baseUrlReplacement = appInfo.getRecordsBaseUrl();
             }
         } else {
-            if (userBaseUrl != null) {
+            if (StringUtils.isNotBlank(userBaseUrl)) {
                 baseUrlReplacement = userBaseUrl;
             } else {
                 baseUrlReplacement = appInfo.getRecordsUserBaseUrl();

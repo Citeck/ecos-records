@@ -1,38 +1,46 @@
 package ru.citeck.ecos.records3.spring.config
 
 import com.netflix.discovery.EurekaClient
-import lombok.extern.slf4j.Slf4j
+import mu.KotlinLogging
+import org.apache.http.client.HttpClient
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.ssl.SSLContextBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.web.client.RestTemplate
 import ru.citeck.ecos.records2.rest.*
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.spring.web.SkipSslVerificationHttpRequestFactory
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
+import java.security.KeyStore
+import javax.net.ssl.SSLContext
 
-@Slf4j
 @Configuration
 open class RecordsRestConfiguration {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     private var eurekaClient: EurekaClient? = null
-    private var properties: RecordsProperties? = null
     private var authInterceptor: RecordsAuthInterceptor? = null
 
+    private lateinit var properties: RecordsProperties
     private lateinit var restTemplateBuilder: RestTemplateBuilder
 
     @Bean
     open fun remoteRespApi(restQueryExceptionConverter: RestQueryExceptionConverter): RemoteRecordsRestApi {
         return RemoteRecordsRestApiImpl(
-            RecordsRestTemplate {
-                url, request ->
-                jsonPost(url, request)
-            },
+            { url, request -> jsonPost(url, request) },
             createRemoteAppInfoProvider(), properties,
             restQueryExceptionConverter
         )
@@ -52,20 +60,68 @@ open class RecordsRestConfiguration {
     }
 
     private fun jsonPost(url: String, request: RestRequestEntity): RestResponseEntity {
+
         val headers = HttpHeaders()
         request.headers.forEach { key: String?, value: List<String?>? -> headers[key] = value }
         val httpEntity = HttpEntity(request.body, headers)
-        val result = recordsRestTemplate().exchange(url, HttpMethod.POST, httpEntity, ByteArray::class.java)
+
+        val restTemplate = if (url.startsWith("https")) {
+            recordsSecureRestTemplate()
+        } else {
+            recordsInsecureRestTemplate()
+        }
+
+        val result = restTemplate.exchange(url, HttpMethod.POST, httpEntity, ByteArray::class.java)
         val resultEntity = RestResponseEntity()
         resultEntity.body = result.body
         resultEntity.status = result.statusCode.value()
         result.headers.forEach { k: String?, v: List<String?>? -> resultEntity.headers.put(k, v) }
+
         return resultEntity
     }
 
     @Bean
     @LoadBalanced
-    open fun recordsRestTemplate(): RestTemplate {
+    open fun recordsSecureRestTemplate(): RestTemplate {
+
+        val tlsProps = properties.tls
+
+        if (!tlsProps.enabled) {
+            log.info { "TLS is not enabled. Secure RecordsRestTemplate will be replaced by insecure." }
+            return restTemplateBuilder
+                .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
+                .additionalInterceptors(authInterceptor)
+                .build()
+        }
+
+        if (tlsProps.trustStore.isBlank()) {
+            error("tls.enabled == true, but trustStore is not defined")
+        }
+
+        val keyStore = ClassPathResource(tlsProps.trustStore).inputStream.use {
+            val keyStore = KeyStore.getInstance(tlsProps.trustStoreType)
+            keyStore.load(it, tlsProps.trustStorePassword?.toCharArray())
+            keyStore
+        }
+
+        val sslContext: SSLContext = SSLContextBuilder()
+            .loadTrustMaterial(keyStore, null)
+            .build()
+        val socketFactory = SSLConnectionSocketFactory(sslContext)
+        val httpClient: HttpClient = HttpClients.custom()
+            .setSSLSocketFactory(socketFactory)
+            .build()
+        val factory = HttpComponentsClientHttpRequestFactory(httpClient)
+
+        return this.restTemplateBuilder
+            .requestFactory { factory }
+            .additionalInterceptors(authInterceptor)
+            .build()
+    }
+
+    @Bean
+    @LoadBalanced
+    open fun recordsInsecureRestTemplate(): RestTemplate {
         return restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
             .additionalInterceptors(authInterceptor)

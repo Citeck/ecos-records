@@ -12,17 +12,16 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
+import org.springframework.util.ResourceUtils
 import org.springframework.web.client.RestTemplate
 import ru.citeck.ecos.records2.rest.*
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.spring.web.SkipSslVerificationHttpRequestFactory
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
-import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
@@ -101,24 +100,22 @@ open class RecordsRestConfiguration {
             error("tls.enabled == true, but trustStore is not defined")
         }
 
-        val keyStore = ClassPathResource(tlsProps.trustStore).inputStream.use {
-            val keyStore = KeyStore.getInstance(tlsProps.trustStoreType)
-            keyStore.load(it, tlsProps.trustStorePassword?.toCharArray())
-            keyStore
-        }
-
+        val trustStoreUrl = ResourceUtils.getURL(tlsProps.trustStore)
         val sslContext: SSLContext = SSLContextBuilder()
-            .loadTrustMaterial(keyStore, null)
+            .loadTrustMaterial(trustStoreUrl, tlsProps.trustStorePassword?.toCharArray())
             .build()
-        val socketFactory = SSLConnectionSocketFactory(sslContext)
 
-        val httpClientBuilder = HttpClients.custom()
-            .setSSLSocketFactory(socketFactory)
-
+        var hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier()
         if (!properties.tls.verifyHostname) {
-            httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+            hostnameVerifier = NoopHostnameVerifier.INSTANCE
         }
-        val httpClient: HttpClient = httpClientBuilder.build()
+
+        val socketFactory = SSLConnectionSocketFactory(sslContext, hostnameVerifier)
+
+        val httpClient: HttpClient = HttpClients.custom()
+            .setSSLSocketFactory(socketFactory)
+            .setSSLHostnameVerifier(hostnameVerifier)
+            .build()
 
         val factory = HttpComponentsClientHttpRequestFactory(httpClient)
 

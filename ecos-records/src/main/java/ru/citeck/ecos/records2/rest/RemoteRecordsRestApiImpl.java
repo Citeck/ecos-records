@@ -16,6 +16,9 @@ import java.util.regex.Pattern;
 @Slf4j
 public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
 
+    private static final String HTTPS_PREFIX = "https:/";
+    private static final String HTTP_PREFIX = "http:/";
+
     private static final Pattern APP_NAME_PATTERN = Pattern.compile("^https?://(.+?)/.*");
 
     private final RecordsRestTemplate template;
@@ -133,12 +136,6 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
             if (appProps == null) {
                 appProps = new RecordsProperties.App();
             }
-            RecordsProperties.App allProps = properties.getApps()
-                .getOrDefault("all", new RecordsProperties.App());
-
-            if (appProps.getTls().getEnabled() == null) {
-                appProps.getTls().setEnabled(allProps.getTls().getEnabled());
-            }
             return appProps;
         });
     }
@@ -148,16 +145,8 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
         String appName = url.substring(1, url.indexOf('/', 1));
         RecordsProperties.App appProps = getAppProps(appName);
 
-        String schema;
-        if (Boolean.TRUE.equals(appProps.getTls().getEnabled())) {
-            schema = "https:/";
-        } else {
-            schema = "http:/";
-        }
-        url = schema + url;
-
         if (remoteAppInfoProvider == null) {
-            return url;
+            return HTTP_PREFIX + url;
         }
 
         String baseUrlReplacement;
@@ -170,8 +159,16 @@ public class RemoteRecordsRestApiImpl implements RemoteRecordsRestApi {
                 "Exception type: '" + e.getClass() + "' msg: '" + e.getMessage() + "'");
         }
         if (appInfo == null) {
-            appInfo = new RemoteAppInfo();
+            appInfo = RemoteAppInfo.EMPTY;
         }
+
+        String schema;
+        if (Boolean.TRUE.equals(appInfo.getSecurePortEnabled())) {
+            schema = HTTPS_PREFIX;
+        } else {
+            schema = HTTP_PREFIX;
+        }
+        url = schema + url;
 
         String baseUrl = appProps.getRecBaseUrl();
         String userBaseUrl = appProps.getRecUserBaseUrl();

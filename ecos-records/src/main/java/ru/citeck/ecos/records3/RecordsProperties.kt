@@ -20,7 +20,6 @@ class RecordsProperties {
         var recBaseUrl: String = ""
         var recUserBaseUrl: String = ""
         var auth: Authentication? = null
-        var tls: AppTls = AppTls()
     }
 
     class RestProps {
@@ -43,9 +42,5 @@ class RecordsProperties {
         var trustStoreType: String = "PKCS12"
         var trustStorePassword: String? = null
         var verifyHostname: Boolean = false
-    }
-
-    class AppTls {
-        var enabled: Boolean? = null
     }
 }

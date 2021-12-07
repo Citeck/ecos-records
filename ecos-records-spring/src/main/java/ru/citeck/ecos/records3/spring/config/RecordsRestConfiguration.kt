@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.spring.config
 
+import com.netflix.appinfo.InstanceInfo
 import com.netflix.discovery.EurekaClient
 import mu.KotlinLogging
 import org.apache.http.client.HttpClient
@@ -22,13 +23,15 @@ import ru.citeck.ecos.records2.rest.*
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.spring.web.SkipSslVerificationHttpRequestFactory
 import ru.citeck.ecos.records3.spring.web.interceptor.RecordsAuthInterceptor
-import javax.net.ssl.SSLContext
+import java.security.KeyStore
 
 @Configuration
 open class RecordsRestConfiguration {
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private const val TRUST_STORE_NAME = "TrustStore"
     }
 
     private var eurekaClient: EurekaClient? = null
@@ -47,15 +50,28 @@ open class RecordsRestConfiguration {
     }
 
     private fun createRemoteAppInfoProvider(): RemoteAppInfoProvider {
-        return RemoteAppInfoProvider { appName: String? ->
-            val info = RemoteAppInfo()
-            val instanceInfo = eurekaClient!!.getNextServerFromEureka(appName, false)
-            info.ip = instanceInfo.ipAddr
-            info.port = instanceInfo.port
-            info.host = instanceInfo.hostName
-            info.recordsBaseUrl = instanceInfo.metadata[RestConstants.RECS_BASE_URL_META_KEY]
-            info.recordsUserBaseUrl = instanceInfo.metadata[RestConstants.RECS_USER_BASE_URL_META_KEY]
-            info
+
+        return object : RemoteAppInfoProvider {
+            override fun getAppInfo(appName: String): RemoteAppInfo? {
+
+                val eureka = this@RecordsRestConfiguration.eurekaClient ?: return null
+
+                val instanceInfo = try {
+                    eureka.getNextServerFromEureka(appName, true)
+                } catch (e: Exception) {
+                    log.debug(e) { "Secure app doesn't found: $appName" }
+                    eureka.getNextServerFromEureka(appName, false)
+                }
+
+                return RemoteAppInfo.create()
+                    .withIp(instanceInfo.ipAddr)
+                    .withPort(instanceInfo.port)
+                    .withHost(instanceInfo.hostName)
+                    .withRecordsBaseUrl(instanceInfo.metadata[RestConstants.RECS_BASE_URL_META_KEY])
+                    .withRecordsUserBaseUrl(instanceInfo.metadata[RestConstants.RECS_USER_BASE_URL_META_KEY])
+                    .withSecurePortEnabled(instanceInfo.isPortEnabled(InstanceInfo.PortType.SECURE))
+                    .build()
+            }
         }
     }
 
@@ -80,6 +96,10 @@ open class RecordsRestConfiguration {
         return resultEntity
     }
 
+    private fun logTlsInfo(msg: () -> String) {
+        log.info { "[Records TLS] ${msg.invoke()}" }
+    }
+
     @Bean
     @LoadBalanced
     open fun recordsSecureRestTemplate(): RestTemplate {
@@ -87,30 +107,41 @@ open class RecordsRestConfiguration {
         val tlsProps = properties.tls
 
         if (!tlsProps.enabled) {
-            log.info { "TLS is not enabled. Secure RecordsRestTemplate will be replaced by insecure." }
+            logTlsInfo { "TLS disabled. Secure SecureRestTemplate will be replaced by insecure." }
             return restTemplateBuilder
                 .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
                 .additionalInterceptors(authInterceptor)
                 .build()
         }
 
-        log.info { "SecureRestTemplate initialization started. TrustStore: ${tlsProps.trustStore}" }
+        logTlsInfo { "TLS enabled. SecureRestTemplate initialization started." }
 
-        if (tlsProps.trustStore.isBlank()) {
-            error("tls.enabled == true, but trustStore is not defined")
+        val sslContextBuilder = SSLContextBuilder()
+
+        if (tlsProps.trustStore.isNotBlank()) {
+
+            val trustStore = loadKeyStore(
+                TRUST_STORE_NAME,
+                tlsProps.trustStore,
+                tlsProps.trustStorePassword,
+                tlsProps.trustStoreType
+            )
+
+            sslContextBuilder.loadTrustMaterial(trustStore, null)
+        } else {
+
+            logTlsInfo { "Custom $TRUST_STORE_NAME doesn't defined. Default will be used." }
         }
-
-        val trustStoreUrl = ResourceUtils.getURL(tlsProps.trustStore)
-        val sslContext: SSLContext = SSLContextBuilder()
-            .loadTrustMaterial(trustStoreUrl, tlsProps.trustStorePassword?.toCharArray())
-            .build()
 
         var hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier()
         if (!properties.tls.verifyHostname) {
+            logTlsInfo { "Hostname verification is disabled" }
             hostnameVerifier = NoopHostnameVerifier.INSTANCE
+        } else {
+            logTlsInfo { "Hostname verification is enabled" }
         }
 
-        val socketFactory = SSLConnectionSocketFactory(sslContext, hostnameVerifier)
+        val socketFactory = SSLConnectionSocketFactory(sslContextBuilder.build(), hostnameVerifier)
 
         val httpClient: HttpClient = HttpClients.custom()
             .setSSLSocketFactory(socketFactory)
@@ -123,6 +154,20 @@ open class RecordsRestConfiguration {
             .requestFactory { factory }
             .additionalInterceptors(authInterceptor)
             .build()
+    }
+
+    private fun loadKeyStore(name: String, path: String, password: String?, type: String): KeyStore {
+
+        logTlsInfo { "Start loading $name with type $type by path: $path" }
+        val url = ResourceUtils.getURL(path)
+        logTlsInfo { "$name URL: $url" }
+
+        return url.openStream().use {
+            val keyStore = KeyStore.getInstance(type)
+            keyStore.load(it, password?.toCharArray())
+            logTlsInfo { "$name loading finished. Entries size: ${keyStore.size()}" }
+            keyStore
+        }
     }
 
     @Bean

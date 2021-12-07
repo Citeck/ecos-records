@@ -1,6 +1,6 @@
-package ru.citeck.ecos.records2.rest;
+package ru.citeck.ecos.records2.rest
 
-public interface RemoteAppInfoProvider {
+interface RemoteAppInfoProvider {
 
-    RemoteAppInfo getAppInfo(String appName);
+    fun getAppInfo(appName: String): RemoteAppInfo?
 }

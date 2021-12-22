@@ -154,6 +154,7 @@ class RecordsDaoProxyAttsTest {
         compareAtts(listOf("_bool?bool"), getAtts)
         compareAtts(listOf("_type?id"), getAtts)
         compareAtts(listOf("_type._str?id"), getAtts)
+        compareAtts(listOf("_type?localId"), getAtts)
         compareAtts(listOf("_etype?id"), getAtts)
         // compareAtts(listOf("_type?disp"), getAtts)
 

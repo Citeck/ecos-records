@@ -34,6 +34,9 @@ class RecordRefValueFactoryTest {
         assertEquals(testRecord1.asBoolean(), records.getAtt(testRef, "ref?bool").asBoolean())
         assertEquals(DataValue.create(testRecord1.asJson()), records.getAtt(testRef, "ref?json"))
 
+        assertEquals("test1", records.getAtt(testRef, "ref.ref?localId").asText())
+        assertEquals("test1", records.getAtt(testRef, "ref.ref._localId").asText())
+
         assertEquals(records.getAtt(testRef, "ref.ref?id"), records.getAtt(testRef, "ref.ref?assoc"))
         assertEquals(records.getAtt(testRef, "ref.ref.ref?id"), records.getAtt(testRef, "ref.ref.ref?assoc"))
 

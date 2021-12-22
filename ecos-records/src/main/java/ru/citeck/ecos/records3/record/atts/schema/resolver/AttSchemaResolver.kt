@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -664,8 +665,20 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }
-            if (!attribute.startsWith('?') && value is AttValueProxy) {
-                return value.getAtt(attribute)
+            val isLocalIdSchema = attribute == ScalarType.LOCAL_ID.schema
+            // special case for ?localId because it is not equal to any other scalars
+            if (value is AttValueProxy && (isLocalIdSchema || !attribute.startsWith('?'))) {
+                val res = value.getAtt(attribute)
+                return if (isLocalIdSchema) {
+                    when (res) {
+                        is String -> res
+                        is AttValue -> res.asText()
+                        is MetaValue -> res.string
+                        else -> res.toString()
+                    }
+                } else {
+                    res
+                }
             }
             val scalarType = ScalarType.getBySchemaOrMirrorAtt(attribute)
             return if (scalarType != null) {

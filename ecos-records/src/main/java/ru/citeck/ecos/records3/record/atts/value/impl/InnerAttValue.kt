@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.atts.value.impl
 
 import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
+import ecos.com.fasterxml.jackson210.databind.node.TextNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -37,7 +38,11 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValu
         return if (node.isMissingNode || node.isNull) {
             null
         } else {
-            InnerAttValue(node)
+            if (node is TextNode) {
+                node.asText()
+            } else {
+                InnerAttValue(node)
+            }
         }
     }
 

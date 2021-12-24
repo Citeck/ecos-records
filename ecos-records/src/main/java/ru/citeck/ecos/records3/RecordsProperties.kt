@@ -8,7 +8,7 @@ class RecordsProperties {
     var apps: Map<String, App> = emptyMap()
     var sourceIdMapping: Map<String, String> = emptyMap()
     var readTimeout: Int? = null
-    var connectionTimeout: Int? = null
+    var connectTimeout: Int? = null
 
     /**
      * Used by gateway.

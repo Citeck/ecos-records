@@ -75,10 +75,10 @@ open class RecordsRestConfiguration {
         if (readTimeout != null) {
             recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
         }
-        
-        var connectionTimeout = properties?.connectionTimeout
-        if (connectionTimeout != null) {
-            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectionTimeout)
+
+        var connectTimeout = properties?.connectTimeout
+        if (connectTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
         }
 
         return recordsRestTemplate.build()

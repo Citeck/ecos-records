@@ -66,10 +66,22 @@ open class RecordsRestConfiguration {
     @Bean
     @LoadBalanced
     open fun recordsRestTemplate(): RestTemplate {
-        return restTemplateBuilder
+
+        var recordsRestTemplate = restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
             .additionalInterceptors(authInterceptor)
-            .build()
+
+        var readTimeout = properties?.readTimeout
+        if (readTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
+        }
+
+        var connectTimeout = properties?.connectTimeout
+        if (connectTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
+        }
+
+        return recordsRestTemplate.build()
     }
 
     @Autowired(required = false)

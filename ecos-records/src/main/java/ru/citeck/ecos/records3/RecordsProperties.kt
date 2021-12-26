@@ -9,6 +9,8 @@ class RecordsProperties {
     var sourceIdMapping: Map<String, String> = emptyMap()
     var peopleSourceId: String = ""
     var tls: Tls = Tls()
+    var readTimeout: Int? = null
+    var connectTimeout: Int? = null
 
     /**
      * Used by gateway.

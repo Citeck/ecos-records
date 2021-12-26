@@ -108,10 +108,21 @@ open class RecordsRestConfiguration {
 
         if (!tlsProps.enabled) {
             logTlsInfo { "TLS disabled. Secure SecureRestTemplate will be replaced by insecure." }
-            return restTemplateBuilder
+            var recordsRestTemplate = restTemplateBuilder
                 .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
                 .additionalInterceptors(authInterceptor)
-                .build()
+
+            var readTimeout = properties?.readTimeout
+            if (readTimeout != null) {
+                recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
+            }
+
+            var connectTimeout = properties?.connectTimeout
+            if (connectTimeout != null) {
+                recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
+            }
+
+            return recordsRestTemplate.build()
         }
 
         logTlsInfo { "TLS enabled. SecureRestTemplate initialization started." }
@@ -150,10 +161,21 @@ open class RecordsRestConfiguration {
 
         val factory = HttpComponentsClientHttpRequestFactory(httpClient)
 
-        return this.restTemplateBuilder
+        var recordsRestTemplate = restTemplateBuilder
             .requestFactory { factory }
             .additionalInterceptors(authInterceptor)
-            .build()
+
+        var readTimeout = properties?.readTimeout
+        if (readTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
+        }
+
+        var connectTimeout = properties?.connectTimeout
+        if (connectTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
+        }
+
+        return recordsRestTemplate.build()
     }
 
     private fun loadKeyStore(name: String, path: String, password: String?, type: String): KeyStore {
@@ -173,10 +195,21 @@ open class RecordsRestConfiguration {
     @Bean
     @LoadBalanced
     open fun recordsInsecureRestTemplate(): RestTemplate {
-        return restTemplateBuilder
+        var recordsRestTemplate = restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
             .additionalInterceptors(authInterceptor)
-            .build()
+
+        var readTimeout = properties?.readTimeout
+        if (readTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
+        }
+
+        var connectTimeout = properties?.connectTimeout
+        if (connectTimeout != null) {
+            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
+        }
+
+        return recordsRestTemplate.build()
     }
 
     @Autowired(required = false)

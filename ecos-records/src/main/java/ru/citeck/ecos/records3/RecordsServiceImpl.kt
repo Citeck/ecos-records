@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
+import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.read.AttReadException
 import ru.citeck.ecos.records3.record.dao.HasSourceIdAliases
@@ -16,8 +17,8 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.RecordRefUtils
-import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService() {
 
@@ -32,6 +33,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private val isGatewayMode = services.properties.gatewayMode
     private val currentAppName = services.properties.appName
+    private val defaultAppName = services.properties.defaultApp
 
     init {
         recordsResolver.setRecordsService(this)
@@ -143,8 +145,60 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private fun mutateImpl(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+
         if (isGatewayMode) {
-            return recordsResolver.mutate(records, attsToLoad, rawAtts)
+
+            if (records.size == 1) {
+                return recordsResolver.mutate(records, attsToLoad, rawAtts)
+            }
+            val recsToMutate = ArrayList<ValWithIdx<RecordAtts>>()
+            val allRecsAfterMutate = ArrayList<ValWithIdx<RecordAtts>>()
+            val refsByAliases = HashMap<String, RecordRef>()
+
+            val flushRecords = {
+
+                if (refsByAliases.isNotEmpty()) {
+                    for (record in recsToMutate) {
+                        convertAssocValues(record.value, refsByAliases, false)
+                    }
+                }
+                recsToMutate.reverse()
+                val recsAfterMutate = recordsResolver.mutate(recsToMutate.map { it.value }, attsToLoad, rawAtts)
+
+                for ((idx, atts) in recsAfterMutate.withIndex()) {
+                    val recToMutateWithIdx = recsToMutate[idx]
+                    val alias = findAliasInRawAttsToMutate(recToMutateWithIdx.value.getAtts())
+                    if (alias.isNotBlank()) {
+                        refsByAliases[alias] = atts.getId()
+                    }
+                    allRecsAfterMutate.add(ValWithIdx(atts, recToMutateWithIdx.idx))
+                }
+                recsToMutate.clear()
+            }
+
+            var appToMutate = ""
+
+            for (i in records.indices.reversed()) {
+                val record = records[i]
+                val appName = record.getId().appName.ifEmpty { defaultAppName }
+                if (appToMutate.isEmpty() || appName == appToMutate) {
+                    appToMutate = appName
+                    recsToMutate.add(ValWithIdx(record, i))
+                } else {
+                    flushRecords()
+                    appToMutate = appName
+                    recsToMutate.add(ValWithIdx(record, i))
+                }
+            }
+            if (recsToMutate.isNotEmpty()) {
+                flushRecords()
+            }
+
+            allRecsAfterMutate.sortBy { it.idx }
+            return allRecsAfterMutate.map { it.value }
         }
 
         val context = RequestContext.getCurrentNotNull()
@@ -178,23 +232,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         for (i in records.indices.reversed()) {
 
             val record: RecordAtts = records[i]
-            val recAtts = ObjectData.create()
-
-            record.forEach { name, valueArg ->
-                try {
-                    val parsedAtt = attSchemaReader.read("", name)
-                    val scalarName = parsedAtt.getScalarName()
-                    val value = if ("?assoc" == scalarName) {
-                        convertAssocValue(valueArg, aliasToRecordRef)
-                    } else {
-                        valueArg
-                    }
-                    recAtts.set(parsedAtt.name, value)
-                } catch (e: AttReadException) {
-                    log.error("Attribute read failed", e)
-                }
-            }
-            record.setAtts(recAtts)
+            convertAssocValues(record, aliasToRecordRef, true)
 
             val sourceMut: MutableList<RecordAtts> = mutableListOf(record)
             val recordMutResult = recordsResolver.mutate(sourceMut, attsToLoad, rawAtts)
@@ -205,6 +243,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")
+
                 if (ru.citeck.ecos.commons.utils.StringUtils.isNotBlank(alias)) {
                     aliasToRecordRef[alias] = resultMeta.getId()
                 }
@@ -213,7 +252,49 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         return result.toList()
     }
 
+    private fun findAliasInRawAttsToMutate(rawAtts: ObjectData): String {
+        if (rawAtts.size() == 0) {
+            return ""
+        }
+        for (field in rawAtts.fieldNames()) {
+            if (field.startsWith(RecordConstants.ATT_ALIAS)) {
+                if (RecordConstants.ATT_ALIAS == field.substringBefore('?')) {
+                    return rawAtts.get(field, "")
+                }
+            }
+        }
+        return ""
+    }
+
+    private fun convertAssocValues(record: RecordAtts, assocsMapping: Map<String, RecordRef>, simplifyAtts: Boolean) {
+
+        if (assocsMapping.isEmpty() && !simplifyAtts) {
+            return
+        }
+
+        val recAtts = ObjectData.create()
+
+        record.forEach { name, valueArg ->
+            try {
+                val parsedAtt = attSchemaReader.read("", name)
+                val scalarName = parsedAtt.getScalarName()
+                val value = if ("?assoc" == scalarName) {
+                    convertAssocValue(valueArg, assocsMapping)
+                } else {
+                    valueArg
+                }
+                recAtts.set(parsedAtt.name, value)
+            } catch (e: AttReadException) {
+                log.error("Attribute read failed", e)
+            }
+        }
+        record.setAtts(recAtts)
+    }
+
     private fun convertAssocValue(value: DataValue, mapping: Map<String, RecordRef>): DataValue {
+        if (mapping.isEmpty()) {
+            return value
+        }
         if (value.isTextual()) {
             val textValue: String = value.asText()
             if (mapping.containsKey(textValue)) {

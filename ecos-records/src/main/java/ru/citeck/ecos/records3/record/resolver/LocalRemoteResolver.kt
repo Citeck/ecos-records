@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.RecordRef
@@ -11,6 +12,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
@@ -18,6 +20,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.utils.AttUtils
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -29,6 +32,8 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         private val REFS_CACHE_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-system-raw"
         private val REFS_CACHE_NOT_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-system-cache"
     }
+
+    private val emptyAttsMap = AttsMap(emptyMap<String, Any>())
 
     private val local = services.localRecordsResolver
     private val remote = services.remoteRecordsResolver
@@ -89,19 +94,34 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
             }
         }
 
+        val attsMap = AttsMap(attributes)
         val context: RequestContext = RequestContext.getCurrentNotNull()
+        var evaluatedGlobalCtxAtts: ObjectData? = null
+        if (!isGatewayMode) {
+            val globalCtxAtts = attsMap.extractGlobalCtxAtts(context)
+            if (globalCtxAtts.getParsedAtts().isNotEmpty()) {
+                doWithSchema(globalCtxAtts) { atts ->
+                    val evaluatedAtts = local.getAtts(listOf(NullAttValue.INSTANCE), atts, rawAtts)
+                    evaluatedGlobalCtxAtts = evaluatedAtts[0].getAtts()
+                }
+            }
+        }
+
         val recordObjs = ArrayList<ValWithIdx<Any?>>()
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
 
         for ((idx, rec) in records.withIndex()) {
             if (rec is RecordRef) {
-                recordRefs.add(ValWithIdx(rec, idx))
+                if (RecordRef.isNotEmpty(rec) || local.hasDaoWithEmptyId()) {
+                    recordRefs.add(ValWithIdx(rec, idx))
+                } else {
+                    recordObjs.add(ValWithIdx(NullAttValue.INSTANCE, idx))
+                }
             } else {
                 recordObjs.add(ValWithIdx(rec, idx))
             }
         }
 
-        val attsMap = AttsMap(attributes)
         val results = ArrayList<ValWithIdx<RecordAtts>>()
 
         if (recordObjs.isNotEmpty()) {
@@ -114,11 +134,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
                     results.add(ValWithIdx(objAtts[i], recordObjs[i].idx))
                 }
             } else {
-                context.addMsg(MsgLevel.ERROR) {
+                error(
                     "Results count doesn't match with " +
                         "requested. objAtts: " + objAtts + " recordsObjValue: " + recordsObjValue
-                }
-                return recordsObjValue.map { RecordAtts() }
+                )
             }
         }
 
@@ -127,6 +146,16 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         refsBySource.forEach { (sourceId, recs) ->
             results.addAll(loadAttsForRefsWithCache(context, sourceId, recs, attsMap, rawAtts))
         }
+
+        val finalGlobalCtxAtts = evaluatedGlobalCtxAtts
+        if (finalGlobalCtxAtts != null && finalGlobalCtxAtts.size() > 0) {
+            for (record in results) {
+                finalGlobalCtxAtts.forEach { key, value ->
+                    record.value.setAtt(key, value)
+                }
+            }
+        }
+
         results.sortBy { it.idx }
         return results.map { it.value }
     }
@@ -158,7 +187,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
         val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
         val cachedAttsWithAliases: MutableMap<String, String> = HashMap(
-            attsMap.attributes.entries.mapNotNull {
+            attsMap.getAttributes().entries.mapNotNull {
                 val value = it.value
                 if (value !is String) {
                     null
@@ -199,9 +228,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         }
 
         val attsToLoad = if (cachedAttsWithAliases.isEmpty()) {
-            attsMap.attributes
+            attsMap.getAttributes()
         } else {
-            attsMap.attributes.filter { cachedAttsWithAliases[it.key] == null }.toMap()
+            attsMap.getAttributes().filter { cachedAttsWithAliases[it.key] == null }.toMap()
         }
 
         val loadedAtts = loadAttsForRefs(context, sourceId, recs, AttsMap(attsToLoad), rawAtts)
@@ -233,7 +262,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         if (recs.isEmpty()) {
             return emptyList()
         }
-        if (attsMap.attributes.isEmpty()) {
+        if (attsMap.getAttributes().isEmpty()) {
             return recs.map { ValWithIdx(RecordAtts(it.value), it.idx) }
         }
 
@@ -242,7 +271,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
             doWithSchema(attsMap) { schema -> local.getAtts(refs, schema, rawAtts) }
         } else if (remote != null && (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull()))) {
-            remote.getAtts(refs, attsMap.attributes, rawAtts)
+            remote.getAtts(refs, attsMap.getAttributes(), rawAtts)
         } else {
             doWithSchema(attsMap) { schema -> local.getAtts(refs, schema, rawAtts) }
         }
@@ -392,18 +421,54 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     /**
      * Class to cache attributes parsing result
      */
-    private inner class AttsMap(val attributes: Map<String, *>) {
+    private inner class AttsMap(attributes: Map<String, *>) {
 
-        private var parsedAtts: List<SchemaAtt>? = null
+        private var attributes: MutableMap<String, *> = LinkedHashMap(attributes)
+        private var parsedAtts: MutableList<SchemaAtt>? = null
 
-        fun getParsedAtts(): List<SchemaAtt> {
+        fun getAttributes(): Map<String, *> {
+            return attributes
+        }
+
+        fun getParsedAtts(): MutableList<SchemaAtt> {
             val currentAtts = parsedAtts
             if (currentAtts != null) {
                 return currentAtts
             }
-            val parsedAtts = reader.read(attributes)
+            val parsedAtts = ArrayList(reader.read(attributes))
             this.parsedAtts = parsedAtts
             return parsedAtts
+        }
+
+        /**
+         * Extract (get and remove) global context attributes
+         */
+        fun extractGlobalCtxAtts(context: RequestContext): AttsMap {
+
+            if (attributes.isEmpty()) {
+                return emptyAttsMap
+            }
+            val ctxAtts = context.getCtxAtts()
+            if (ctxAtts.isEmpty()) {
+                return emptyAttsMap
+            }
+            val newParsedAtts = ArrayList<SchemaAtt>()
+            val newAttsMap = LinkedHashMap<String, Any?>()
+
+            val it = getParsedAtts().listIterator()
+            while (it.hasNext()) {
+                val att = it.next()
+                if (AttUtils.isGlobalContextAtt(att, ctxAtts)) {
+                    newParsedAtts.add(att)
+                    val alias = att.getAliasForValue()
+                    newAttsMap[alias] = attributes.remove(alias)
+                    it.remove()
+                }
+            }
+
+            val newAtts = AttsMap(newAttsMap)
+            newAtts.parsedAtts = newParsedAtts
+            return newAtts
         }
     }
 }

@@ -195,6 +195,18 @@ class RequestContext {
             return doWithCtx(factory, { b: RequestCtxData.Builder -> ctxData.accept(b) }, action)
         }
 
+        fun <T> doWithoutCtx(action: () -> T): T {
+            val ctxBefore = current.get()
+            try {
+                current.remove()
+                return action.invoke()
+            } finally {
+                if (ctxBefore != null) {
+                    current.set(ctxBefore)
+                }
+            }
+        }
+
         fun <T> doWithCtx(
             factory: RecordsServiceFactory?,
             ctxData: ((RequestCtxData.Builder) -> Unit)?,

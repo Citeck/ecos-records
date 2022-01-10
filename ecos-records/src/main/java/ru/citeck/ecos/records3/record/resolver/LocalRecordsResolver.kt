@@ -38,6 +38,8 @@ interface LocalRecordsResolver {
 
     fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T?
 
+    fun hasDaoWithEmptyId(): Boolean
+
     fun getInterceptors(): List<LocalRecordsInterceptor>
 
     fun addInterceptors(interceptors: List<LocalRecordsInterceptor>)

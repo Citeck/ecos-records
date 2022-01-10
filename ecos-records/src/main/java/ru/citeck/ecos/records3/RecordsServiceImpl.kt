@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.ErrorUtils
@@ -111,7 +112,15 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     override fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
         return RequestContext.doWithCtx(services) {
-            mutateImpl(records, attsToLoad, rawAtts)
+            if (records.isEmpty()) {
+                emptyList()
+            } else {
+                val context = RequestContext.getCurrentNotNull()
+                if (context.ctxData.readOnly) {
+                    error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+                }
+                mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts, context)
+            }
         }
     }
 
@@ -125,13 +134,27 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             ?: error("Attributes class can't be instantiated. Class: $attsToLoad Schema: $schema")
     }
 
+    private inline fun <T> addTxnMutatedRecords(
+        txnChangedRecords: MutableSet<RecordRef>?,
+        sourceIdMapping: Map<String, String>,
+        records: List<T>,
+        getRef: (T) -> RecordRef
+    ) {
+        if (isGatewayMode || txnChangedRecords == null) {
+            return
+        }
+        records.forEach {
+            addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
+        }
+    }
+
     private fun addTxnMutatedRecord(
         txnChangedRecords: MutableSet<RecordRef>?,
         sourceIdMapping: Map<String, String>,
         recordRef: RecordRef?
     ) {
 
-        if (txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
+        if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
             return
         }
         txnChangedRecords.add(
@@ -143,85 +166,21 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         )
     }
 
-    private fun mutateImpl(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
-
-        if (records.isEmpty()) {
-            return emptyList()
-        }
-
-        if (isGatewayMode) {
-
-            if (records.size == 1) {
-                return recordsResolver.mutate(records, attsToLoad, rawAtts)
-            }
-            val recsToMutate = ArrayList<ValWithIdx<RecordAtts>>()
-            val allRecsAfterMutate = ArrayList<ValWithIdx<RecordAtts>>()
-            val refsByAliases = HashMap<String, RecordRef>()
-
-            val flushRecords = {
-
-                if (refsByAliases.isNotEmpty()) {
-                    for (record in recsToMutate) {
-                        convertAssocValues(record.value, refsByAliases, false)
-                    }
-                }
-                recsToMutate.reverse()
-                val recsAfterMutate = recordsResolver.mutate(recsToMutate.map { it.value }, attsToLoad, rawAtts)
-
-                for ((idx, atts) in recsAfterMutate.withIndex()) {
-                    val recToMutateWithIdx = recsToMutate[idx]
-                    val alias = findAliasInRawAttsToMutate(recToMutateWithIdx.value.getAtts())
-                    if (alias.isNotBlank()) {
-                        refsByAliases[alias] = atts.getId()
-                    }
-                    allRecsAfterMutate.add(ValWithIdx(atts, recToMutateWithIdx.idx))
-                }
-                recsToMutate.clear()
-            }
-
-            var appToMutate = ""
-
-            for (i in records.indices.reversed()) {
-                val record = records[i]
-                val appName = record.getId().appName.ifEmpty { defaultAppName }
-                if (appToMutate.isEmpty() || appName == appToMutate) {
-                    appToMutate = appName
-                    recsToMutate.add(ValWithIdx(record, i))
-                } else {
-                    flushRecords()
-                    appToMutate = appName
-                    recsToMutate.add(ValWithIdx(record, i))
-                }
-            }
-            if (recsToMutate.isNotEmpty()) {
-                flushRecords()
-            }
-
-            allRecsAfterMutate.sortBy { it.idx }
-            return allRecsAfterMutate.map { it.value }
-        }
-
-        val context = RequestContext.getCurrentNotNull()
-
-        if (context.ctxData.readOnly) {
-            error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
-        }
+    private fun mutateForApp(
+        appName: String,
+        records: List<RecordAtts>,
+        attsToLoad: Map<String, *>,
+        rawAtts: Boolean,
+        context: RequestContext
+    ): List<RecordAtts> {
 
         val txnChangedRecords = context.getTxnChangedRecords()
         val sourceIdMapping = context.ctxData.sourceIdMapping
 
-        if (currentAppName.isNotEmpty()) {
-            if (records.all {
-                val appName = it.getId().appName
-                appName.isNotEmpty() && appName != currentAppName
-            }
-            ) {
-                val result = recordsResolver.mutate(records, attsToLoad, rawAtts)
-                result.forEach {
-                    addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, it.getId())
-                }
-                return result
-            }
+        if (currentAppName.isNotEmpty() && currentAppName != appName) {
+            val result = recordsResolver.mutate(records, attsToLoad, rawAtts)
+            addTxnMutatedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
+            return result
         }
 
         val aliasToRecordRef = HashMap<String, RecordRef>()
@@ -244,12 +203,93 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             for (resultMeta in recordMutResult) {
                 val alias: String = record.getAtt(RecordConstants.ATT_ALIAS, "")
 
-                if (ru.citeck.ecos.commons.utils.StringUtils.isNotBlank(alias)) {
+                if (StringUtils.isNotBlank(alias)) {
                     aliasToRecordRef[alias] = resultMeta.getId()
                 }
             }
         }
         return result.toList()
+    }
+
+    private fun mutateForAllApps(
+        records: List<RecordAtts>,
+        attsToLoad: Map<String, *>,
+        rawAtts: Boolean,
+        context: RequestContext
+    ): List<RecordAtts> {
+
+        if (records.size == 1) {
+            val appName = getAppName(records[0].getId())
+            return mutateForApp(
+                appName,
+                records,
+                attsToLoad,
+                rawAtts,
+                context
+            )
+        }
+
+        val recsToMutate = ArrayList<ValWithIdx<RecordAtts>>()
+        val allRecsAfterMutate = ArrayList<ValWithIdx<RecordAtts>>()
+        val refsByAliases = HashMap<String, RecordRef>()
+
+        var appToMutate = ""
+
+        val flushRecords = {
+
+            if (refsByAliases.isNotEmpty()) {
+                for (record in recsToMutate) {
+                    convertAssocValues(record.value, refsByAliases, false)
+                }
+            }
+            recsToMutate.reverse()
+            val recsAfterMutate = mutateForApp(
+                appToMutate,
+                recsToMutate.map { it.value },
+                attsToLoad,
+                rawAtts,
+                context
+            )
+
+            for ((idx, atts) in recsAfterMutate.withIndex()) {
+                val recToMutateWithIdx = recsToMutate[idx]
+                val alias = findAliasInRawAttsToMutate(recToMutateWithIdx.value.getAtts())
+                if (alias.isNotBlank()) {
+                    refsByAliases[alias] = atts.getId()
+                }
+                allRecsAfterMutate.add(ValWithIdx(atts, recToMutateWithIdx.idx))
+            }
+            recsToMutate.clear()
+        }
+
+        for (i in records.indices.reversed()) {
+            val record = records[i]
+            val appName = getAppName(record.getId())
+            if (appToMutate.isEmpty() || appName == appToMutate) {
+                appToMutate = appName
+                recsToMutate.add(ValWithIdx(record, i))
+            } else {
+                flushRecords()
+                appToMutate = appName
+                recsToMutate.add(ValWithIdx(record, i))
+            }
+        }
+        if (recsToMutate.isNotEmpty()) {
+            flushRecords()
+        }
+
+        allRecsAfterMutate.sortBy { it.idx }
+        return allRecsAfterMutate.map { it.value }
+    }
+
+    private fun getAppName(ref: RecordRef): String {
+        return ref.appName.ifEmpty {
+            if (isGatewayMode) {
+                defaultAppName
+            } else {
+                currentAppName
+            }
+        }
     }
 
     private fun findAliasInRawAttsToMutate(rawAtts: ObjectData): String {

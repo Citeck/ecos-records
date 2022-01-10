@@ -60,6 +60,8 @@ public class LocalRecordsResolverV0 {
     private final String currentApp;
     private final JobExecutor jobExecutor;
 
+    private boolean hasDaoWithEmptyId = false;
+
     public LocalRecordsResolverV0(RecordsServiceFactory serviceFactory) {
 
         this.serviceFactory = serviceFactory;
@@ -430,6 +432,10 @@ public class LocalRecordsResolverV0 {
         register(sourceId, mutableDao, MutableRecordsDao.class, recordsDao);
         register(sourceId, queryWithMetaDao, RecordsQueryWithMetaDao.class, recordsDao);
 
+        if (sourceId.equals("")) {
+            hasDaoWithEmptyId = true;
+        }
+
         if (recordsDao instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) recordsDao).setRecordsServiceFactory(serviceFactory);
         }
@@ -446,6 +452,10 @@ public class LocalRecordsResolverV0 {
         queryDao.remove(sourceId);
         mutableDao.remove(sourceId);
         queryWithMetaDao.remove(sourceId);
+
+        if (sourceId.equals("")) {
+            hasDaoWithEmptyId = false;
+        }
 
         jobExecutor.removeJobs(sourceId);
     }
@@ -529,6 +539,10 @@ public class LocalRecordsResolverV0 {
 
     public boolean containsDao(String id) {
         return allDao.containsKey(id);
+    }
+
+    public boolean hasDaoWithEmptyId() {
+        return hasDaoWithEmptyId;
     }
 
     private static class DaoWithConvQuery<T extends RecordsQueryBaseDao> {

@@ -4,6 +4,8 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.request.ContextAttsProvider
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
@@ -11,15 +13,27 @@ import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import kotlin.random.Random
 
-class MockAppsFactory(
-    val defaultApp: String = "alf"
-) {
+class MockAppsFactory {
+
+    companion object {
+        private const val DEFAULT_GATEWAY_APP_NAME = "gateway"
+    }
 
     private val apps = mutableMapOf<String, MockApp>()
 
     val postedUrls = mutableListOf<String>()
 
-    fun createApp(name: String, gatewayMode: Boolean = false): MockApp {
+    fun createGatewayApp(defaultApp: String = "alf"): MockApp {
+        return createApp(DEFAULT_GATEWAY_APP_NAME, true, defaultApp)
+    }
+
+    fun createApp(name: String): MockApp {
+        return createApp(name, false)
+    }
+
+    private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
+
+        val defaultCtxAtts = HashMap<String, Any?>()
 
         val factory = object : RecordsServiceFactory() {
             public override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
@@ -27,7 +41,9 @@ class MockAppsFactory(
                     this,
                     object : RemoteRecordsRestApi {
                         override fun <T : Any> jsonPost(url: String, request: Any, respType: Class<T>): T {
-                            return this@MockAppsFactory.jsonPost(url, request, respType)
+                            return RequestContext.doWithoutCtx {
+                                this@MockAppsFactory.jsonPost(url, request, respType)
+                            }
                         }
                     }
                 )
@@ -42,9 +58,17 @@ class MockAppsFactory(
                 props.gatewayMode = gatewayMode
                 return props
             }
+
+            override fun createDefaultCtxAttsProvider(): ContextAttsProvider {
+                return object : ContextAttsProvider {
+                    override fun getContextAttributes(): Map<String, Any?> {
+                        return defaultCtxAtts
+                    }
+                }
+            }
         }
 
-        val app = MockApp(name, factory)
+        val app = MockApp(name, factory, defaultCtxAtts)
         apps[name] = app
         return app
     }

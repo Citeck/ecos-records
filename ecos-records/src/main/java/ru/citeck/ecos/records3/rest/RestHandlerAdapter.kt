@@ -101,6 +101,10 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         }
     }
 
+    fun getV1Handler(): RestHandlerV1 {
+        return restHandlerV1
+    }
+
     data class BodyWithVersion(
         val body: ObjectNode,
         val version: Int = 0

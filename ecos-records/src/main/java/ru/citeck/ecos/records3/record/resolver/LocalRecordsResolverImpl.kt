@@ -98,6 +98,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private var interceptors: List<LocalRecordsInterceptor> = emptyList()
 
+    private var hasDaoWithEmptyId = false
+
     override fun query(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
@@ -230,9 +232,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
                 if (dao == null) {
 
-                    if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-                        context.addMsg(MsgLevel.DEBUG, "Legacy Source Dao: '${query.sourceId}'")
-                    }
+                    context.addMsg(MsgLevel.DEBUG) { "Legacy Source Dao: '${query.sourceId}'" }
                     val v0Query = V1ConvUtils.recsQueryV1ToV0(query, context)
 
                     val queryStartMs = System.currentTimeMillis()
@@ -282,11 +282,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         val queryStartMs = System.currentTimeMillis()
         val queryRes = dao.second.queryRecords(query)
-        if (context.isMsgEnabled(MsgLevel.DEBUG)) {
-            context.addMsg(
-                MsgLevel.DEBUG,
-                "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
-            )
+        context.addMsg(MsgLevel.DEBUG) {
+            "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
         }
 
         if (queryRes != null) {
@@ -789,6 +786,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
         register(sourceId, txnDao, TxnRecordsDao::class.java, recordsDao)
 
+        if (sourceId == "") {
+            hasDaoWithEmptyId = true
+        }
+
         if (recordsDao is ServiceFactoryAware) {
             (recordsDao as ServiceFactoryAware).setRecordsServiceFactory(services)
         }
@@ -808,6 +809,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         mutateDao.remove(sourceId)
         deleteDao.remove(sourceId)
         txnDao.remove(sourceId)
+
+        if (sourceId == "") {
+            hasDaoWithEmptyId = false
+        }
 
         jobExecutor.removeJobs(sourceId)
     }
@@ -882,6 +887,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         } else {
             null
         }
+    }
+
+    override fun hasDaoWithEmptyId(): Boolean {
+        return hasDaoWithEmptyId || localRecordsResolverV0.hasDaoWithEmptyId()
     }
 
     override fun getInterceptors(): List<LocalRecordsInterceptor> {

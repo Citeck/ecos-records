@@ -49,7 +49,7 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
                 val innerName: String = inner.name
 
-                if (!ATTS_WITHOUT_LOADING.contains(innerName)) {
+                if (!innerName.startsWith('$') && !ATTS_WITHOUT_LOADING.contains(innerName)) {
                     schemaWriter.write(inner, sb, false)
                     attsMap[innerName] = sb.toString()
                     sb.setLength(0)

@@ -192,6 +192,10 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
         return RecordAtts(getId(), newAtts)
     }
 
+    fun deepCopy(): RecordAtts {
+        return RecordAtts(id, attributes.deepCopy())
+    }
+
     override fun toString(): String {
         return Json.mapper.toString(this) ?: "RecordAtts"
     }

@@ -2,6 +2,8 @@ package ru.citeck.ecos.records3.utils
 
 import org.slf4j.LoggerFactory
 import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 
@@ -36,5 +38,14 @@ object AttUtils {
             // do nothing
         }
         log.error("Attribute error. Value id: '$id' path: '${AttContext.getCurrentAttPath()}' ($msg)")
+    }
+
+    fun isGlobalContextAtt(value: SchemaAtt, contextAtts: Map<String, *>): Boolean {
+        val name = value.name
+        if (!name.startsWith('$')) {
+            return false
+        }
+        val ctxAttValue = contextAtts[name.substring(1)]
+        return ctxAttValue != null && ctxAttValue !is RecordComputedAttValue
     }
 }

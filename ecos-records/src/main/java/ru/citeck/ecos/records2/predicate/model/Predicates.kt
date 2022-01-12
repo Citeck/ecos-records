@@ -91,6 +91,11 @@ object Predicates {
     }
 
     @JvmStatic
+    fun gt(attribute: String?, value: Number): ValuePredicate {
+        return ValuePredicate.gt(attribute, value)
+    }
+
+    @JvmStatic
     fun ge(attribute: String?, value: OffsetDateTime?): ValuePredicate {
         return ValuePredicate.ge(attribute, value)
     }
@@ -107,6 +112,11 @@ object Predicates {
 
     @JvmStatic
     fun ge(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.ge(attribute, value)
+    }
+
+    @JvmStatic
+    fun ge(attribute: String?, value: Number): ValuePredicate {
         return ValuePredicate.ge(attribute, value)
     }
 
@@ -131,6 +141,11 @@ object Predicates {
     }
 
     @JvmStatic
+    fun lt(attribute: String?, value: Number): ValuePredicate {
+        return ValuePredicate.lt(attribute, value)
+    }
+
+    @JvmStatic
     fun le(attribute: String?, value: Instant?): ValuePredicate {
         return ValuePredicate.le(attribute, value)
     }
@@ -147,6 +162,11 @@ object Predicates {
 
     @JvmStatic
     fun le(attribute: String?, value: Double): ValuePredicate {
+        return ValuePredicate.le(attribute, value)
+    }
+
+    @JvmStatic
+    fun le(attribute: String?, value: Number): ValuePredicate {
         return ValuePredicate.le(attribute, value)
     }
 }

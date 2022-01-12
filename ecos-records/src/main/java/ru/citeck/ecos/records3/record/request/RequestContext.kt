@@ -22,7 +22,6 @@ import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
 
 class RequestContext {
@@ -33,6 +32,10 @@ class RequestContext {
         private const val TXN_OWNED_KEY = "__txn_owned__"
         private const val READ_ONLY_CACHE_KEY = "__read_only_cache__"
         private const val AFTER_COMMIT_ACTIONS_KEY = "__after_commit_actions__"
+        private const val BEFORE_COMMIT_ACTIONS_KEY = "__before_commit_actions__"
+
+        private const val BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS = 20
+        private const val AFTER_COMMIT_ACTIONS_MAX_ITERATIONS = 10
 
         private val log = KotlinLogging.logger {}
 
@@ -284,6 +287,7 @@ class RequestContext {
                             MsgLevel.ERROR -> log.error(msg.toString())
                             MsgLevel.WARN -> log.warn(msg.toString())
                             MsgLevel.DEBUG -> log.debug(msg.toString())
+                            else -> {}
                         }
                     }
                     RequestContext.current.remove()
@@ -317,37 +321,89 @@ class RequestContext {
         val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
         val txnRecords = mutRecords[txnId] ?: emptySet()
 
-        if (txnRecords.isNotEmpty()) {
+        val beforeCommitActions = getList<OrderedAction>(BEFORE_COMMIT_ACTIONS_KEY)
+        val afterCommitActions = getList<OrderedAction>(AFTER_COMMIT_ACTIONS_KEY)
+
+        try {
             if (success) {
-                serviceFactory.recordsResolver.commit(txnRecords.toList())
-            } else {
-                serviceFactory.recordsResolver.rollback(txnRecords.toList())
+                invokeActionsList(beforeCommitActions, BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS) {
+                    error(
+                        "Before commit actions iterations limit was exceeded: " +
+                            "$BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
+                    )
+                }
             }
+            if (txnRecords.isNotEmpty()) {
+                if (success) {
+                    serviceFactory.recordsResolver.commit(txnRecords.toList())
+                } else {
+                    serviceFactory.recordsResolver.rollback(txnRecords.toList())
+                }
+            }
+            if (success) {
+                invokeActionsList(afterCommitActions, AFTER_COMMIT_ACTIONS_MAX_ITERATIONS) {
+                    log.warn {
+                        "After commit actions iterations limit was exceeded: " +
+                            "$AFTER_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
+                    }
+                }
+            }
+            mutRecords.remove(txnId)
+        } finally {
+            beforeCommitActions.clear()
+            afterCommitActions.clear()
         }
-        val afterCommitActions = getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY)
-        if (success) {
-            var iterations = 5
-            while (--iterations > 0 && afterCommitActions.isNotEmpty()) {
-                val actionsToExecute = ArrayList(afterCommitActions)
-                afterCommitActions.clear()
+    }
+
+    private fun invokeActionsList(
+        actionsList: MutableList<OrderedAction>,
+        maxIterations: Int,
+        onMaxIterations: () -> Unit
+    ) {
+        if (actionsList.isEmpty()) {
+            return
+        }
+        try {
+            var iterations = maxIterations
+            while (--iterations > 0 && actionsList.isNotEmpty()) {
+                val actionsToExecute = ArrayList(actionsList)
+                actionsList.clear()
+                actionsToExecute.sortBy { it.order }
                 for (action in actionsToExecute) {
-                    action.invoke()
+                    action.action.invoke()
                 }
             }
             if (iterations == 0) {
-                log.warn { "After commit actions iterations == 0. It may be cyclic dependency." }
+                onMaxIterations.invoke()
             }
+        } finally {
+            actionsList.clear()
         }
-        afterCommitActions.clear()
-        mutRecords.remove(txnId)
     }
 
     fun doAfterCommit(action: () -> Unit) {
+        doAfterCommit(0f, action)
+    }
+
+    fun doAfterCommit(order: Float, action: () -> Unit) {
         val txnId = ctxData.txnId
         if (txnId == null) {
             action.invoke()
         } else {
-            getList<() -> Unit>(AFTER_COMMIT_ACTIONS_KEY).add(action)
+            getList<OrderedAction>(AFTER_COMMIT_ACTIONS_KEY).add(OrderedAction(order, action))
+        }
+    }
+
+    fun doBeforeCommit(action: () -> Unit) {
+        doBeforeCommit(0f, action)
+    }
+
+    fun doBeforeCommit(order: Float, action: () -> Unit) {
+        val txnId = ctxData.txnId
+        if (txnId == null) {
+            action.invoke()
+        } else {
+            getList<OrderedAction>(BEFORE_COMMIT_ACTIONS_KEY).add(OrderedAction(order, action))
         }
     }
 
@@ -439,7 +495,7 @@ class RequestContext {
     }
 
     fun <T> getSet(key: String): MutableSet<T> {
-        return getOrPutVar(key, MutableSet::class.java) { HashSet() }
+        return getOrPutVar(key, MutableSet::class.java) { LinkedHashSet() }
     }
 
     fun getCount(key: String): Int {
@@ -541,4 +597,9 @@ class RequestContext {
     fun getErrors(): List<ReqMsg> {
         return messages.filter { MsgLevel.ERROR.isEnabled(it.level) }
     }
+
+    private class OrderedAction(
+        val order: Float,
+        val action: () -> Unit
+    )
 }

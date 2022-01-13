@@ -64,7 +64,7 @@ class RequestContext {
         fun getCurrentNotNull(): RequestContext {
             return getCurrent() ?: error(
                 "Request context is mandatory. " +
-                    "Add RequestContex.withCtx(ctx -> {...}) before call"
+                    "Add RequestContext.withCtx(ctx -> {...}) before call"
             )
         }
 

@@ -25,6 +25,7 @@ import ru.citeck.ecos.records3.record.atts.value.*
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
+import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
@@ -84,7 +85,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             } else {
                 args.valueRefs[i]
             }
-            attValues.add(context.toRootValueContext(values[i] ?: EmptyAttValue.INSTANCE, ref))
+            attValues.add(context.toRootValueContext(values[i] ?: NullAttValue.INSTANCE, ref))
         }
         val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
         val result = resolveRoot(attValues, simpleAtts, context)

@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 
 class RecordAttsDaoTest {
 
@@ -69,5 +70,39 @@ class RecordAttsDaoTest {
 
         val res = records.getAtt(RecordRef.valueOf("$sourceId@localId2"), "test").asText()
         assertThat(res).isEqualTo("value")
+    }
+
+    @Test
+    fun notExistsTest() {
+
+        val recordAttsDao = object : RecordAttsDao {
+            override fun getId() = "test"
+            override fun getRecordAtts(recordId: String): Any? {
+                if (recordId == "null") {
+                    return null
+                }
+                return recordId
+            }
+        }
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(recordAttsDao)
+        assertThat(records.getAtt("test@null", "_notExists?bool").asBoolean()).isTrue
+        assertThat(records.getAtt("test@other", "_notExists?bool").asBoolean()).isFalse
+
+        val recordsAttsDao = object : RecordsAttsDao {
+            override fun getId() = "test2"
+            override fun getRecordsAtts(recordsId: List<String>): List<Any?> {
+                return recordsId.map {
+                    if (it == "null") {
+                        null
+                    } else {
+                        it
+                    }
+                }
+            }
+        }
+        records.register(recordsAttsDao)
+        assertThat(records.getAtt("test2@null", "_notExists?bool").asBoolean()).isTrue
+        assertThat(records.getAtt("test2@other", "_notExists?bool").asBoolean()).isFalse
     }
 }

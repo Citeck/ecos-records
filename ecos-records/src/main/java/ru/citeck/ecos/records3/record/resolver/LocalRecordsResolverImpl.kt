@@ -597,6 +597,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 for (ignored in recs) {
                     recAtts.add(EmptyAttValue.INSTANCE)
                 }
+            } else {
+                recAtts = recAtts.map { it ?: EmptyAttValue.INSTANCE }
             }
             if (recAtts.size != recs.size) {
                 val finalRecAtts = recAtts

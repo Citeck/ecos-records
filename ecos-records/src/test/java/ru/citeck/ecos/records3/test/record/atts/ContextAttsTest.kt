@@ -29,33 +29,73 @@ class ContextAttsTest {
         val factory = RecordsServiceFactory()
         val records = factory.recordsServiceV1
 
-        val testWithCtxValue = { record: Any, withCtxAtts: Boolean ->
+        val attName = "attName"
+        val ctxAttName = "ctxAttName"
+        val ctxValue = "ctxValue"
 
-            val ctxValue = "ctxValue"
+        val testWithCtxValue = { record: Any?, withCtxAtts: Boolean ->
+
+            // get atts for record
             val value = if (withCtxAtts) {
-                RequestContext.doWithAtts(mapOf("ctxAttName" to ctxValue)) { _ ->
-                    records.getAtts(record, listOf("attName", "\$ctxAttName"))
+                RequestContext.doWithAtts(mapOf(ctxAttName to ctxValue)) { _ ->
+                    records.getAtts(record, listOf(attName, "\$$ctxAttName"))
                 }
             } else {
-                records.getAtts(record, listOf("attName", "\$ctxAttName"))
+                records.getAtts(record, listOf(attName, "\$$ctxAttName"))
             }
             assertThat(value.getAtts().size()).isEqualTo(2)
-            assertThat(value.hasAtt("attName")).isTrue
-            assertThat(value.hasAtt("\$ctxAttName")).isTrue
-            assertThat(value.getAtt("attName").isNull()).isTrue
+            assertThat(value.hasAtt(attName)).isTrue
+            assertThat(value.hasAtt("\$$ctxAttName")).isTrue
+            assertThat(value.getAtt(attName).isNull()).isTrue
             if (withCtxAtts) {
-                assertThat(value.getAtt("\$ctxAttName", "")).isEqualTo(ctxValue)
+                assertThat(value.getAtt("\$$ctxAttName", "")).isEqualTo(ctxValue)
             } else {
-                assertThat(value.getAtt("\$ctxAttName").isNull()).isTrue
+                assertThat(value.getAtt("\$$ctxAttName").isNull()).isTrue
+            }
+
+            // getAtt for record
+            val valueWithGetAtt = if (withCtxAtts) {
+                RequestContext.doWithAtts(mapOf(ctxAttName to ctxValue)) { _ ->
+                    records.getAtt(record, "\$$ctxAttName")
+                }
+            } else {
+                records.getAtt(record, "\$$ctxAttName")
+            }
+            if (withCtxAtts) {
+                assertThat(valueWithGetAtt.asText()).isEqualTo(ctxValue)
+            } else {
+                assertThat(valueWithGetAtt.isNull()).isTrue
+            }
+
+            // getAttsForRecords
+            val valueWithGetAttsForRecords = if (withCtxAtts) {
+                RequestContext.doWithAtts(mapOf(ctxAttName to ctxValue)) { _ ->
+                    records.getAtts(listOf(record), listOf("\$$ctxAttName"))
+                }
+            } else {
+                records.getAtts(listOf(record), listOf("\$$ctxAttName"))
+            }
+            assertThat(valueWithGetAttsForRecords).hasSize(1)
+            assertThat(valueWithGetAttsForRecords[0].getAtts().has("\$$ctxAttName")).isTrue
+            val ctxAttVal = valueWithGetAttsForRecords[0].getAtts().get("\$$ctxAttName")
+            if (withCtxAtts) {
+                assertThat(ctxAttVal.asText()).isEqualTo(ctxValue)
+            } else {
+                assertThat(ctxAttVal.isNull()).isTrue
             }
         }
 
-        listOf(RecordRef.EMPTY, NullAttValue.INSTANCE).forEach { record ->
+        listOf(RecordRef.EMPTY, NullAttValue.INSTANCE, null).forEach { record ->
             try {
                 testWithCtxValue.invoke(record, false)
                 testWithCtxValue.invoke(record, true)
             } catch (e: Throwable) {
-                log.error { "Record: '$record' with class ${record::class.simpleName}" }
+                val clazz = if (record != null) {
+                    record::class.simpleName
+                } else {
+                    "null"
+                }
+                log.error { "Record: '$record' with class $clazz" }
                 throw e
             }
         }

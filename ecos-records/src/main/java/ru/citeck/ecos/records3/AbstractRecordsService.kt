@@ -57,15 +57,15 @@ abstract class AbstractRecordsService : RecordsService {
     /* ATTRIBUTES */
 
     override fun getAtt(record: Any?, attribute: String): DataValue {
-        if (record == null || StringUtils.isBlank(attribute)) {
+        if (StringUtils.isBlank(attribute)) {
             return DataValue.NULL
         }
-        val meta: List<RecordAtts> = getAtts(listOf<Any?>(record), listOf(attribute))
+        val meta: List<RecordAtts> = getAtts(listOf(record), listOf(attribute))
         return meta[0].getAtt(attribute)
     }
 
     override fun <T : Any> getAtts(record: Any?, attributes: Class<T>): T {
-        return getAtts(listOf(record ?: ObjectData.create()), attributes)[0]
+        return getAtts(listOf(record), attributes)[0]
     }
 
     override fun getAtts(records: Collection<*>, attributes: Collection<String>): List<RecordAtts> {
@@ -73,11 +73,11 @@ abstract class AbstractRecordsService : RecordsService {
     }
 
     override fun getAtts(record: Any?, attributes: Collection<String>): RecordAtts {
-        return getAtts(listOf(record ?: ObjectData.create()), attributes)[0]
+        return getAtts(listOf(record), attributes)[0]
     }
 
     override fun getAtts(record: Any?, attributes: Map<String, *>): RecordAtts {
-        return getAtts(listOf(record ?: ObjectData.create()), attributes, false)[0]
+        return getAtts(listOf(record), attributes, false)[0]
     }
 
     override fun getAtts(records: Collection<*>, attributes: Map<String, *>): List<RecordAtts> {

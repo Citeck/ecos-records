@@ -23,6 +23,7 @@ object ComputedUtils {
         return RequestContext.getCurrentNotNull().doWithVar(IS_RECORD_MUTATED, true, action)
     }
 
+    @JvmStatic
     fun <T : Any> doWithMutatedRecordJ(action: Supplier<T?>): T? {
         return doWithMutatedRecord { action.get() }
     }

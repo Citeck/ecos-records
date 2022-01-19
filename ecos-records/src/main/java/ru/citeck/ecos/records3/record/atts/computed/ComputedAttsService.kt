@@ -19,14 +19,27 @@ class ComputedAttsService(services: RecordsServiceFactory) {
 
     fun compute(context: AttValueCtx, att: ComputedAtt): Any? {
 
-        if (att.def.storingType == StoringType.ON_CREATE && !ComputedUtils.isNewRecord()) {
-            return context.getAtt(att.id)
-        }
-        if (att.def.storingType == StoringType.ON_EMPTY) {
-            val currentValue = context.getAtt(att.id)
-            if (!currentValue.isNull() && (!currentValue.isTextual() || !currentValue.asText().isBlank())) {
-                return currentValue.asJavaObj()
+        when (att.def.storingType) {
+            StoringType.ON_CREATE -> {
+                if (!ComputedUtils.isNewRecord()) {
+                    return context.getAtt(att.id)
+                }
             }
+            StoringType.ON_EMPTY -> {
+                if (!ComputedUtils.isMutatedRecord()) {
+                    return context.getAtt(att.id)
+                }
+                val currentValue = context.getAtt(att.id)
+                if (!currentValue.isNull() && (!currentValue.isTextual() || currentValue.asText().isNotBlank())) {
+                    return currentValue.asJavaObj()
+                }
+            }
+            StoringType.ON_MUTATE -> {
+                if (!ComputedUtils.isMutatedRecord()) {
+                    return context.getAtt(att.id)
+                }
+            }
+            StoringType.NONE -> {}
         }
 
         return when (att.def.type) {

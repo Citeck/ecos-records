@@ -403,4 +403,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     override fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
         return recordsResolver.getRecordsDao(sourceId, type)
     }
+
+    override fun getRecordsDao(sourceId: String): RecordsDao? {
+        return getRecordsDao(sourceId, RecordsDao::class.java)
+    }
 }

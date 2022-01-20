@@ -25,6 +25,7 @@ import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
+import ru.citeck.ecos.records3.cache.CacheManager
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
@@ -42,6 +43,7 @@ import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.InstantValueFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValueFactory
+import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.request.ContextAttsProvider
@@ -96,6 +98,8 @@ open class RecordsServiceFactory {
     val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
     val jobExecutor: JobExecutor by lazy { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazy { createTxnActionManager() }
+
+    internal val cacheManager: CacheManager by lazy { CacheManager(this) }
 
     @Deprecated("")
     val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
@@ -224,6 +228,7 @@ open class RecordsServiceFactory {
             RecordsSourceRecordsDao(this),
             PredicateRecords(),
             RecordsGroupDao(),
+            RecordsApiRecordsDao(),
             ru.citeck.ecos.records2.source.common.group.RecordsGroupDao()
         )
     }

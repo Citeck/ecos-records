@@ -4,5 +4,8 @@ public interface Job {
 
     long getInitDelay();
 
+    /**
+     * @return true if job work is not completed
+     */
     boolean execute();
 }

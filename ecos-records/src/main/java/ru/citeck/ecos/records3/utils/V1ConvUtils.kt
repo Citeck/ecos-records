@@ -18,6 +18,9 @@ object V1ConvUtils {
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             v0Query.isDebug = true
         }
+        if (query.isAfterIdMode()) {
+            v0Query.afterId = query.page.afterId
+        }
         return v0Query
     }
 

@@ -10,6 +10,7 @@ import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
+import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -27,8 +28,13 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 val v0Body: QueryBody = mapper.convert(bodyWithVersion.body, QueryBody::class.java) ?: QueryBody()
                 restHandlerV0.queryRecords(v0Body)
             }
-            1 -> {
-                val v1Body = mapper.convert(bodyWithVersion.body, QueryBodyV1::class.java) ?: QueryBodyV1()
+            1, 2 -> {
+                val queryType: Class<out QueryBodyV1> = if (bodyWithVersion.version == 2) {
+                    QueryBodyV2::class.java
+                } else {
+                    QueryBodyV1::class.java
+                }
+                val v1Body = mapper.convert(bodyWithVersion.body, queryType) ?: QueryBodyV1()
                 restHandlerV1.queryRecords(v1Body)
             }
             else -> {

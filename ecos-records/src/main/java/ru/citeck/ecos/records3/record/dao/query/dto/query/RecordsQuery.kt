@@ -48,18 +48,18 @@ data class RecordsQuery(
     }
 
     fun <T : Any> getQuery(type: Class<T>): T {
-        var result = getQueryOrNull(type)
+        val result = getQueryOrNull(type)
         if (result == null) {
             log.warn("Can't convert query to type $type. Query: $query")
-            result = type.newInstance()
+            return type.newInstance()
         }
-        return result!!
+        return result
     }
 
     @JsonIgnore
     @JackJsonIgnore
     fun isAfterIdMode(): Boolean {
-        return page.afterId != RecordRef.EMPTY
+        return page.afterId != null
     }
 
     fun copy(): Builder {

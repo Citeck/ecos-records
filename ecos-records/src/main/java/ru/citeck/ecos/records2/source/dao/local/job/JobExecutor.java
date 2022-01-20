@@ -21,6 +21,8 @@ import java.util.function.Predicate;
 })
 public class JobExecutor {
 
+    private static final String SYSTEM_JOBS_SOURCE_ID = "SYSTEM";
+
     private final List<JobInstance> jobs = new CopyOnWriteArrayList<>();
     private final RecordsServiceFactory serviceFactory;
     private ScheduledExecutorService executor;
@@ -78,6 +80,10 @@ public class JobExecutor {
 
     public synchronized void addJobs(String sourceId, List<Job> jobs) {
         jobs.forEach(j -> addJob(sourceId, j));
+    }
+
+    public synchronized void addSystemJob(Job job) {
+        addJob(SYSTEM_JOBS_SOURCE_ID, job);
     }
 
     public synchronized void addJob(String sourceId, Job job) {

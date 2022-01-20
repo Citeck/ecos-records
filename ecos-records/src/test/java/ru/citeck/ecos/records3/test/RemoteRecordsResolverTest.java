@@ -92,6 +92,10 @@ class RemoteRecordsResolverTest {
 
             if (body.getRecords() != null) {
 
+                if (body.getRecords().size() == 1 && body.getRecords().get(0).getSourceId().equals("api")) {
+                    urls.remove(urls.size() - 1);
+                    return null;
+                }
                 for (RecordRef ref : body.getRecords()) {
                     assertTrue(refs.stream().map(RecordRef::removeAppName).anyMatch(ref::equals));
                 }

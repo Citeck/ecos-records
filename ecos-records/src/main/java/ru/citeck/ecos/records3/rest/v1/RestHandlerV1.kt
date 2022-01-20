@@ -59,7 +59,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
 
     private fun queryRecordsImpl(body: QueryBody, context: RequestContext): QueryResp {
 
-        if (body.query != null && body.getRecords() != null) {
+        if (body.getQuery() != null && body.getRecords() != null) {
             context.addMsg(MsgLevel.WARN) {
                 (
                     "There must be one of 'records' or 'query' field " +
@@ -89,7 +89,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         }
 
         val resp = QueryResp()
-        val query = body.query
+        val query = body.getQuery()
 
         if (query != null) {
 

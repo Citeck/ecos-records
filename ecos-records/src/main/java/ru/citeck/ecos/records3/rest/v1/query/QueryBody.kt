@@ -16,12 +16,30 @@ import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JackJsonInclude(JackJsonInclude.Include.NON_NULL)
-class QueryBody : RequestBody() {
+open class QueryBody : RequestBody() {
 
     private var records: MutableList<RecordRef>? = null
-    var query: RecordsQuery? = null
+    private var query: RecordsQuery? = null
     var attributes: DataValue = DataValue.NULL
     var rawAtts = false
+
+    open fun setQuery(query: RecordsQuery?) {
+        this.query = if (query != null && RecordRef.isEmpty(query.page.afterId)) {
+            query.copy {
+                withAfterId(null)
+            }
+        } else {
+            query
+        }
+    }
+
+    fun setQueryWithoutProcessing(query: RecordsQuery?) {
+        this.query = query
+    }
+
+    open fun getQuery(): RecordsQuery? {
+        return query
+    }
 
     fun setRecord(record: RecordRef) {
         records = (records ?: ArrayList()).apply { add(record) }

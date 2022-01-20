@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 data class QueryPage(
     val maxItems: Int,
     val skipCount: Int,
-    val afterId: RecordRef
+    val afterId: RecordRef?
 ) {
 
     companion object {
@@ -44,7 +44,7 @@ data class QueryPage(
 
         var maxItems: Int = -1
         var skipCount: Int = 0
-        var afterId: RecordRef = RecordRef.EMPTY
+        var afterId: RecordRef? = null
 
         constructor(base: QueryPage) : this() {
             maxItems = base.maxItems
@@ -63,7 +63,7 @@ data class QueryPage(
         }
 
         fun withAfterId(afterId: RecordRef?): Builder {
-            this.afterId = afterId ?: RecordRef.EMPTY
+            this.afterId = afterId
             return this
         }
 
@@ -72,7 +72,7 @@ data class QueryPage(
                 log.warn { "Skip count can't be less than zero. Actual value: $skipCount will be replaced with 0" }
                 skipCount = 0
             }
-            if (skipCount > 0 && afterId != RecordRef.EMPTY) {
+            if (skipCount > 0 && afterId != null) {
                 log.warn(
                     "Skip count can't be used when afterId is set. " +
                         "skipCount: $skipCount afterId: $afterId. Skip count will be replaced with 0"

@@ -90,7 +90,7 @@ class RecsDaoConverter {
 
         return object : RecordsMutateWithAnyResDao {
             override fun getId() = dao.getId()
-            override fun mutate(records: List<LocalRecordAtts>): List<Any> {
+            override fun mutateForAnyRes(records: List<LocalRecordAtts>): List<Any> {
                 if (records.isEmpty()) {
                     return emptyList()
                 }
@@ -103,7 +103,7 @@ class RecsDaoConverter {
     private fun mapToMutateWithAnyResDao(dao: RecordsMutateCrossSrcDao): RecordsMutateWithAnyResDao {
         return object : RecordsMutateWithAnyResDao {
             override fun getId() = dao.getId()
-            override fun mutate(records: List<LocalRecordAtts>): List<Any> {
+            override fun mutateForAnyRes(records: List<LocalRecordAtts>): List<Any> {
                 return dao.mutate(records)
             }
         }

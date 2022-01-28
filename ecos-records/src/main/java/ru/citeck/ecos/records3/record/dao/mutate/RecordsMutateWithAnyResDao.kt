@@ -5,5 +5,5 @@ import ru.citeck.ecos.records3.record.dao.RecordsDao
 
 interface RecordsMutateWithAnyResDao : RecordsDao {
 
-    fun mutate(records: List<LocalRecordAtts>): List<Any>
+    fun mutateForAnyRes(records: List<LocalRecordAtts>): List<Any>
 }

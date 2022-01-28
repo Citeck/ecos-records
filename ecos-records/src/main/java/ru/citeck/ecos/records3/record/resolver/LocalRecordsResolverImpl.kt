@@ -674,7 +674,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             } else {
 
                 val localId = record.getId().id
-                val mutResValues = dao.second.mutate(listOf(LocalRecordAtts(localId, record.getAtts())))
+                val mutResValues = dao.second.mutateForAnyRes(listOf(LocalRecordAtts(localId, record.getAtts())))
                 val mutRes = mutableListOf<RecordAtts>()
 
                 if (attsToLoad.isEmpty()) {

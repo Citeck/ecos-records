@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -27,6 +28,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
+import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
@@ -38,6 +40,14 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private val NULL_ATT = SchemaAtt.create()
+            .withName(RecordConstants.ATT_NULL)
+            .withInner(
+                SchemaAtt.create()
+                    .withName(ScalarType.STR.schema)
+            )
+            .build()
     }
 
     private val scalars = ConcurrentHashMap<Class<*>, ScalarField<*>>()
@@ -102,12 +112,20 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     }
 
     private fun getAttributes(attsClass: Class<*>, visited: MutableSet<Class<*>>?): List<SchemaAtt> {
+        val isRoot = visited == null || visited.isEmpty()
         var attributes = attributesCache[attsClass]
         if (attributes == null) {
             attributes = getAttributesImpl(attsClass, visited ?: HashSet())
             attributesCache.putIfAbsent(attsClass, attributes)
         }
-        return attributes
+        return if (!isRoot && attributes.size == 1) {
+            // prevent atts simplifying
+            val newAtts = ArrayList(attributes)
+            newAtts.add(NULL_ATT)
+            newAtts
+        } else {
+            attributes
+        }
     }
 
     private fun getAttributesImpl(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {

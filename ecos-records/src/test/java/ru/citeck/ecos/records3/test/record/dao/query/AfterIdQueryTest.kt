@@ -132,4 +132,62 @@ class AfterIdQueryTest {
             )
         }
     }
+
+    @Test
+    fun queryBodyTest() {
+
+        val factory = RecordsServiceFactory()
+        val queries = mutableListOf<RecordsQuery>()
+
+        factory.recordsServiceV1.register(object : RecordsQueryDao {
+            override fun getId() = "test"
+            override fun queryRecords(recsQuery: RecordsQuery): Any? {
+                queries.add(recsQuery)
+                return null
+            }
+        })
+
+        val queryImpl = { version: Int, page: ObjectData ->
+            factory.restHandlerAdapter.queryRecords(
+                ObjectData.create()
+                    .set("version", version)
+                    .set(
+                        "query",
+                        ObjectData.create()
+                            .set("sourceId", "test")
+                            .set("page", page)
+                    )
+            )
+        }
+
+        val page0 = ObjectData.create()
+            .set("skipCount", 10)
+            .set("afterId", "")
+            .set("maxItems", 10)
+
+        queryImpl(1, page0)
+        queryImpl(2, page0)
+
+        assertThat(queries).hasSize(2)
+        assertThat(queries[0].isAfterIdMode()).isFalse
+        assertThat(queries[0].page.skipCount).isEqualTo(10)
+        assertThat(queries[1].isAfterIdMode()).isTrue
+        assertThat(queries[1].page.skipCount).isEqualTo(0)
+
+        queries.clear()
+
+        val page1 = ObjectData.create()
+            .set("skipCount", 10)
+            .set("afterId", "someId")
+            .set("maxItems", 10)
+
+        queryImpl(1, page1)
+        queryImpl(2, page1)
+
+        assertThat(queries).hasSize(2)
+        assertThat(queries[0].isAfterIdMode()).isTrue
+        assertThat(queries[0].page.skipCount).isEqualTo(0)
+        assertThat(queries[1].isAfterIdMode()).isTrue
+        assertThat(queries[1].page.skipCount).isEqualTo(0)
+    }
 }

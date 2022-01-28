@@ -24,16 +24,6 @@ open class QueryBody : RequestBody() {
     var rawAtts = false
 
     open fun setQuery(query: RecordsQuery?) {
-        this.query = if (query != null && RecordRef.isEmpty(query.page.afterId)) {
-            query.copy {
-                withAfterId(null)
-            }
-        } else {
-            query
-        }
-    }
-
-    fun setQueryWithoutProcessing(query: RecordsQuery?) {
         this.query = query
     }
 

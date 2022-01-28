@@ -29,12 +29,18 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 restHandlerV0.queryRecords(v0Body)
             }
             1, 2 -> {
+                var bodyData = bodyWithVersion.body
                 val queryType: Class<out QueryBodyV1> = if (bodyWithVersion.version == 2) {
                     QueryBodyV2::class.java
                 } else {
+                    val afterId = bodyData.path("query").path("page").path("afterId")
+                    if (afterId.isTextual && afterId.asText().isBlank()) {
+                        bodyData = bodyData.deepCopy()
+                        (bodyData.path("query").path("page") as? ObjectNode)?.remove("afterId")
+                    }
                     QueryBodyV1::class.java
                 }
-                val v1Body = mapper.convert(bodyWithVersion.body, queryType) ?: QueryBodyV1()
+                val v1Body = mapper.convert(bodyData, queryType) ?: QueryBodyV1()
                 restHandlerV1.queryRecords(v1Body)
             }
             else -> {

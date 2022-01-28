@@ -7,5 +7,6 @@ class RecordsSourceMeta(
     var supportedLanguages: List<String> = emptyList(),
     var columnsSourceId: String? = null,
     var features: RecordsSourceFeatures = RecordsSourceFeatures(),
-    var client: ClientMeta? = null
+    var client: ClientMeta? = null,
+    var version: Int = 1
 )

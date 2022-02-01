@@ -317,13 +317,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         record.forEach { name, valueArg ->
             try {
                 val parsedAtt = attSchemaReader.read("", name)
-                val scalarName = parsedAtt.getScalarName()
-                val value = if ("?assoc" == scalarName) {
-                    convertAssocValue(valueArg, assocsMapping)
-                } else {
-                    valueArg
-                }
-                recAtts.set(parsedAtt.name, value)
+                recAtts.set(parsedAtt.name, convertAssocValue(valueArg, assocsMapping))
             } catch (e: AttReadException) {
                 log.error("Attribute read failed", e)
             }

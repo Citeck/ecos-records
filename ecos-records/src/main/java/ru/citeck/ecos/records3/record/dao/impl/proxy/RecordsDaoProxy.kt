@@ -183,6 +183,10 @@ open class RecordsDaoProxy(
         return id
     }
 
+    fun getTargetId(): String {
+        return targetId
+    }
+
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         super.setRecordsServiceFactory(serviceFactory)
         if (processor is ServiceFactoryAware) {

@@ -55,6 +55,8 @@ class RemoteRecordsResolver(
         const val MUTATE_URL: String = BASE_URL + "mutate"
         const val DELETE_URL: String = BASE_URL + "delete"
         const val TXN_URL: String = BASE_URL + "txn"
+
+        const val UNKNOWN_BODY_VERSION_MSG = "Unknown body version"
     }
 
     private var defaultAppName: String = ""
@@ -119,7 +121,15 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp: QueryResp = exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
+        val queryResp: QueryResp = try {
+            exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
+        } catch (e: Exception) {
+            if (e.message?.startsWith(UNKNOWN_BODY_VERSION_MSG) == true) {
+                remoteAppApiMeta.remove(appName)
+            }
+            throw e
+        }
+
         val result = RecsQueryRes<RecordAtts>()
 
         result.setRecords(queryResp.records)

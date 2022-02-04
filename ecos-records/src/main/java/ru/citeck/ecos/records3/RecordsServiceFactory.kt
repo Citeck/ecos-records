@@ -59,7 +59,6 @@ import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
 import java.util.*
-import java.util.concurrent.ScheduledExecutorService
 import java.util.function.Consumer
 import java.util.function.Supplier
 
@@ -123,8 +122,6 @@ open class RecordsServiceFactory {
 
     private var recordTypeServiceImpl: RecordTypeService? = null
 
-    private var isJobsInitialized = false
-
     init {
         Json.context.addDeserializer(predicateJsonDeserializer)
         Json.context.addSerializer(PredicateJsonSerializer())
@@ -156,15 +153,6 @@ open class RecordsServiceFactory {
 
     protected open fun createMetaValuesConverter(): MetaValuesConverter {
         return MetaValuesConverter(this)
-    }
-
-    @Synchronized
-    open fun initJobs(executor: ScheduledExecutorService?) {
-        if (!isJobsInitialized) {
-            log.info("Records jobs initialization started. Executor: $executor")
-            jobExecutor.init(executor)
-            isJobsInitialized = true
-        }
     }
 
     protected open fun createPredicateTypes(): PredicateTypes {

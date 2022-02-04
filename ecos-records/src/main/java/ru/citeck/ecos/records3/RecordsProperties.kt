@@ -11,12 +11,17 @@ class RecordsProperties {
     var tls: Tls = Tls()
     var readTimeout: Int? = null
     var connectTimeout: Int? = null
+    var jobs: Jobs = Jobs()
 
     /**
      * Used by gateway.
      */
     var gatewayMode = false
     var defaultApp: String = ""
+
+    class Jobs {
+        var corePoolSize: Int? = null
+    }
 
     class App {
         var recBaseUrl: String = ""

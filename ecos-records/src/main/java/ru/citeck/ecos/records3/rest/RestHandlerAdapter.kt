@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.request.rest.QueryBody
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
@@ -44,7 +45,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 restHandlerV1.queryRecords(v1Body)
             }
             else -> {
-                error("Unknown body version. Body: $bodyWithVersion")
+                error(RemoteRecordsResolver.UNKNOWN_BODY_VERSION_MSG + ": " + bodyWithVersion.version)
             }
         }
     }

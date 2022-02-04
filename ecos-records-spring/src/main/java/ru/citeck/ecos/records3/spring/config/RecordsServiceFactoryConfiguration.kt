@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.context.i18n.LocaleContextHolder
 import ru.citeck.ecos.records2.RecordsService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
@@ -139,5 +141,20 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
         if (appInstanceId.isNotEmpty() && props.appInstanceId.isEmpty()) {
             props.appInstanceId = appInstanceId
         }
+    }
+
+    @EventListener
+    fun onServicesInitialized(event: ContextRefreshedEvent) {
+        if (jobExecutor.isInitialized()) {
+            return
+        }
+        Timer().schedule(
+            object : TimerTask() {
+                override fun run() {
+                    jobExecutor.init()
+                }
+            },
+            10_000L
+        )
     }
 }

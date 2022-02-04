@@ -92,7 +92,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             if (!firstSyncFuture.isDone()) {
                 log.warn("!!! Current thread will be blocked until data will be synchronized. "
                     + "SourceId: " + getId() + ". Timeout: 5min !!!");
-                serviceFactory.initJobs(null);
+                serviceFactory.getJobExecutor().init();
             }
             firstSyncFuture.get(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {

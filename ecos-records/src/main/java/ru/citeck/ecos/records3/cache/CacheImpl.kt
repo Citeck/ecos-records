@@ -36,6 +36,10 @@ class CacheImpl<K : Any, V>(
     private val maxAllowedSizeBeforeCleanInGet = max(50, config.maxItems) * 2
     private var removedItemsCount = AtomicLong()
 
+    override fun remove(key: K) {
+        data.remove(key)
+    }
+
     override fun get(key: K): V {
         val result = data.computeIfAbsent(key) {
             load(it, defaultCacheValue)

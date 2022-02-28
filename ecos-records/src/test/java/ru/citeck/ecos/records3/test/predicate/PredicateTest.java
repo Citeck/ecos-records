@@ -230,6 +230,7 @@ class PredicateTest {
             Predicates.empty("empty-att"),
             Predicates.not(Predicates.empty("empty-att1"))
         );
+        Predicate optimizedPredicate = PredicateUtils.optimize(predicate);
         String predicateStr = Json.getMapper().toString(predicate);
 
         assertEquals(predicate, Json.getMapper().read(predicate.toString(), Predicate.class));
@@ -239,7 +240,7 @@ class PredicateTest {
 
         DtoWithPredicateField dto = Json.getMapper().read(dtoStr, DtoWithPredicateField.class);
         assert dto != null;
-        assertEquals(predicate, dto.predicate);
+        assertEquals(optimizedPredicate, dto.predicate);
 
         String dtoStr2 = "{\"predicate\":\"\"}";
         DtoWithPredicateField dto2 = Json.getMapper().read(dtoStr2, DtoWithPredicateField.class);
@@ -248,12 +249,12 @@ class PredicateTest {
 
         DtoWithPredicateField dto3 = new DtoWithPredicateField();
         Json.getMapper().applyData(dto3, dto);
-        assertEquals(predicate, dto3.predicate);
+        assertEquals(optimizedPredicate, dto3.predicate);
 
         String predicateFromRecordStr = services.getRecordsServiceV1().getAtt(dto, "predicate").asText();
         Predicate predicateFromRecord = Json.getMapper().read(predicateFromRecordStr, Predicate.class);
 
-        assertEquals(predicate, predicateFromRecord);
+        assertEquals(optimizedPredicate, predicateFromRecord);
         assertEquals("{}", VoidPredicate.INSTANCE.toString());
     }
 

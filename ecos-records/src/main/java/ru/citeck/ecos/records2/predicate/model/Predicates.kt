@@ -7,6 +7,16 @@ import java.util.*
 object Predicates {
 
     @JvmStatic
+    fun alwaysTrue(): Predicate {
+        return VoidPredicate.INSTANCE
+    }
+
+    @JvmStatic
+    fun alwaysFalse(): Predicate {
+        return not(alwaysTrue())
+    }
+
+    @JvmStatic
     fun inVals(attribute: String?, values: Collection<String>): ValuePredicate {
         return `in`(attribute, values)
     }

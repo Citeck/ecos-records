@@ -93,17 +93,7 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
 
         if (predicateType != null) {
 
-            if (AndPredicate.class.equals(predicateType)
-                    || OrPredicate.class.equals(predicateType)) {
-
-                JsonNode children = predicateNode.get("val");
-                if (children instanceof ArrayNode && children.size() == 1) {
-                    predicate = codec.treeToValue(children.get(0), Predicate.class);
-                }
-            }
-            if (predicate == null) {
-                predicate = codec.treeToValue(predicateNode, predicateType);
-            }
+            predicate = codec.treeToValue(predicateNode, predicateType);
 
         } else {
 

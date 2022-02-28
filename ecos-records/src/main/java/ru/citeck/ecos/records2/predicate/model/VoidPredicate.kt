@@ -2,6 +2,10 @@ package ru.citeck.ecos.records2.predicate.model
 
 import ecos.com.fasterxml.jackson210.annotation.JsonValue
 
+/**
+ * This predicate used when predicate is null or not-parsable value.
+ * For conditions this predicate should be interpreted as AlwaysTruePredicate
+ */
 class VoidPredicate private constructor() : Predicate {
 
     companion object {

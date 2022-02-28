@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
@@ -76,6 +77,6 @@ public class PredicateJsonConverterTest {
 
         Predicate jsonToPred = Json.getMapper().convert(deepJson, Predicate.class);
 
-        assertEquals(Predicates.equal("name", "value"), jsonToPred);
+        assertEquals(Predicates.equal("name", "value"), PredicateUtils.optimize(jsonToPred));
     }
 }

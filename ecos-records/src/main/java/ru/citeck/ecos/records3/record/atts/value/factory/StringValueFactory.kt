@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import java.lang.NumberFormatException
 import java.util.concurrent.ConcurrentHashMap
 
 class StringValueFactory : AttValueFactory<String> {
@@ -31,8 +32,12 @@ class StringValueFactory : AttValueFactory<String> {
                 return value
             }
 
-            override fun asDouble(): Double {
-                return value.toDouble()
+            override fun asDouble(): Double? {
+                return try {
+                    value.toDouble()
+                } catch (e: NumberFormatException) {
+                    null
+                }
             }
 
             override fun getAs(type: String): Any? {

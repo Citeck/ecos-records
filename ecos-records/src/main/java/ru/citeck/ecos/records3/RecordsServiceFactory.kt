@@ -262,10 +262,13 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createAttValueFactories(): List<AttValueFactory<*>> {
+
+        val dataValueFactory = DataValueAttFactory()
+
         val metaValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
-        metaValueFactories.add(ObjectDataValueFactory())
+        metaValueFactories.add(ObjectDataValueFactory(dataValueFactory))
         metaValueFactories.add(ByteArrayValueFactory())
-        metaValueFactories.add(DataValueAttFactory())
+        metaValueFactories.add(dataValueFactory)
         metaValueFactories.add(MLTextValueFactory())
         metaValueFactories.add(RecordAttsValueFactory())
         metaValueFactories.add(BeanValueFactory())
@@ -275,12 +278,12 @@ open class RecordsServiceFactory {
         metaValueFactories.add(OffsetDateTimeValueFactory())
         metaValueFactories.add(DoubleValueFactory())
         metaValueFactories.add(IntegerValueFactory())
-        metaValueFactories.add(JsonNodeValueFactory())
+        metaValueFactories.add(JsonNodeValueFactory(dataValueFactory))
         metaValueFactories.add(LongValueFactory())
         metaValueFactories.add(StringValueFactory())
         metaValueFactories.add(RecordRefValueFactory(this))
         if (isJacksonPresent()) {
-            metaValueFactories.add(JacksonJsonNodeValueFactory())
+            metaValueFactories.add(JacksonJsonNodeValueFactory(dataValueFactory))
         }
         return metaValueFactories
     }

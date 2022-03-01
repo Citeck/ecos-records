@@ -8,13 +8,15 @@ import ru.citeck.ecos.records3.record.atts.value.HasListView
 
 class DataValueAttFactory : AttValueFactory<DataValue> {
 
-    override fun getValue(value: DataValue): AttValue? {
+    override fun getValue(value: DataValue): AttValue {
 
         return object : AttValue, HasListView<DataValue> {
 
             override fun getId(): Any? {
                 if (value.isTextual()) {
                     return value.asText()
+                } else if (value.isObject() && value.has("id")) {
+                    return value.get("id").asText().ifEmpty { null }
                 }
                 return null
             }
@@ -29,15 +31,40 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
 
             override fun getAtt(name: String): Any? {
                 val res = value.get(name)
-                return if (res.isNull()) {
-                    null
-                } else {
+                return if (res.isObject()) {
                     getValue(res)
+                } else {
+                    unboxAttValue(res)
+                }
+            }
+
+            private fun unboxAttValue(value: DataValue): Any? {
+                return when {
+                    value.isNull() -> null
+                    value.isTextual() -> value.textValue()
+                    value.isBoolean() -> value.booleanValue()
+                    value.isInt() -> value.intValue()
+                    value.isLong() -> value.longValue()
+                    value.isFloat() -> value.floatValue()
+                    value.isDouble() -> value.doubleValue()
+                    value.isArray() -> {
+                        val list = ArrayList<Any?>(value.size())
+                        for (inner in value) {
+                            list.add(unboxAttValue(inner))
+                        }
+                        list
+                    }
+                    else -> value
                 }
             }
 
             override fun asBoolean(): Boolean? {
-                return value.asBoolean()
+                if (value.isBoolean()) {
+                    return value.asBoolean()
+                } else if (value.isTextual()) {
+                    return value.asText() == true.toString()
+                }
+                return null
             }
 
             override fun getListView(): List<DataValue> {
@@ -45,6 +72,17 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
                     return value.toList()
                 }
                 return listOf(value)
+            }
+
+            override fun asDouble(): Double? {
+                if (value.isNumber() || value.isTextual()) {
+                    return value.asDouble()
+                }
+                return null
+            }
+
+            override fun has(name: String): Boolean {
+                return value.has(name)
             }
 
             override fun getAs(type: String?): Any? {
@@ -55,6 +93,10 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             }
 
             override fun asRaw(): Any {
+                return value
+            }
+
+            override fun asJson(): Any {
                 return value
             }
         }

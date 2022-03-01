@@ -17,6 +17,24 @@ class IterableRecordRefs(
         return Iter(iterableRecords.iterator())
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
+        other as IterableRecordRefs
+        if (iterableRecords != other.iterableRecords) {
+            return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return iterableRecords.hashCode()
+    }
+
     private class Iter(val impl: RecordsIterator<RecordAtts>) : RecordsIterator<RecordRef> {
 
         override fun hasNext() = impl.hasNext()

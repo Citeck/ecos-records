@@ -31,21 +31,21 @@ class BeanValueFactory : AttValueFactory<Any> {
 
         override fun getId(): Any? {
             if (typeCtx.hasProperty(ScalarType.ID.schema)) {
-                return getAttWithType("?id", Any::class.java)
+                return getAttWithType(ScalarType.ID.schema, Any::class.java)
             }
             return null
         }
 
         override fun asDouble(): Double? {
-            if (typeCtx.hasProperty("?num")) {
-                return getAttWithType("?num", Double::class.java)
+            if (typeCtx.hasProperty(ScalarType.NUM.schema)) {
+                return getAttWithType(ScalarType.NUM.schema, Double::class.java)
             }
             return asText()?.toDouble()
         }
 
         override fun asBoolean(): Boolean? {
-            if (typeCtx.hasProperty("?bool")) {
-                return getAttWithType("?bool", Boolean::class.java)
+            if (typeCtx.hasProperty(ScalarType.BOOL.schema)) {
+                return getAttWithType(ScalarType.BOOL.schema, Boolean::class.java)
             }
             return asText()?.toBoolean()
         }
@@ -65,15 +65,15 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         override fun getDisplayName(): Any? {
-            if (typeCtx.hasProperty("?disp")) {
-                return getAttWithType("?disp", Any::class.java)
+            if (typeCtx.hasProperty(ScalarType.DISP.schema)) {
+                return getAttWithType(ScalarType.DISP.schema, Any::class.java)
             }
             return asText()
         }
 
         override fun asText(): String? {
-            if (typeCtx.hasProperty("?str")) {
-                return getAttWithType("?str", String::class.java)
+            if (typeCtx.hasProperty(ScalarType.STR.schema)) {
+                return getAttWithType(ScalarType.STR.schema, String::class.java)
             }
             return bean.toString()
         }
@@ -90,25 +90,29 @@ class BeanValueFactory : AttValueFactory<Any> {
             if (bean is Map<*, *>) {
                 return bean.containsKey(name)
             }
-            return typeCtx.hasProperty(name)
+            return typeCtx.beanHas(bean, name)
+        }
+
+        override fun getAs(type: String): Any? {
+            return typeCtx.beanGetAs(bean, type)
         }
 
         override fun asJson(): Any? {
-            if (typeCtx.hasProperty("?json")) {
-                return getAttWithType("?json", DataValue::class.java)
+            if (typeCtx.hasProperty(ScalarType.JSON.schema)) {
+                return getAttWithType(ScalarType.JSON.schema, DataValue::class.java)
             }
             return Json.mapper.toJson(bean)
         }
 
         override fun asRaw(): Any? {
-            if (typeCtx.hasProperty("?raw")) {
-                return getAttWithType("?raw", Any::class.java)
+            if (typeCtx.hasProperty(ScalarType.RAW.schema)) {
+                return getAttWithType(ScalarType.RAW.schema, Any::class.java)
             }
             return Json.mapper.toJson(bean)
         }
 
-        override fun getEdge(name: String): AttEdge? {
-            return BeanEdge(name, this)
+        override fun getEdge(name: String): AttEdge {
+            return typeCtx.beanGetEdge(bean, name) ?: BeanEdge(name, this)
         }
 
         private fun <T : Any> getAttWithType(name: String, type: Class<T>): T? {

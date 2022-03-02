@@ -7,6 +7,7 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import java.beans.PropertyDescriptor
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 
 object BeanTypeUtils {
@@ -16,7 +17,29 @@ object BeanTypeUtils {
     @JvmStatic
     fun getTypeContext(type: Class<*>): BeanTypeContext {
         return typeCtxCache.computeIfAbsent(type) {
-            BeanTypeContext(getGetters(it), getPropsPath(it))
+            BeanTypeContext(
+                getGetters(it),
+                getPropsPath(it),
+                getMethodWithStrArg(it, "getAs"),
+                getMethodWithStrArg(it, "has"),
+                getMethodWithStrArg(it, "getEdge")
+            )
+        }
+    }
+
+    private inline fun <reified T> getMethodWithStrArg(type: Class<*>, name: String): ((Any, String) -> T)? {
+
+        val getAsMethod: Method = try {
+            type.getMethod(name, String::class.java)
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        if (!getAsMethod.returnType.kotlin.isSubclassOf(T::class)) {
+            return null
+        }
+        return { value, arg ->
+            @Suppress("UNCHECKED_CAST")
+            getAsMethod.invoke(value, arg) as T
         }
     }
 

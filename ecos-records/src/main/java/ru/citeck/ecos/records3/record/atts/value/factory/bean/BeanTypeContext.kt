@@ -4,12 +4,16 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import java.lang.reflect.InvocationTargetException
 import java.util.HashMap
 
 class BeanTypeContext(
     private val getters: Map<String, (Any) -> Any?>,
-    private val propsPath: Map<String, String>
+    private val propsPath: Map<String, String>,
+    private val getAsMethod: ((Any, String) -> Any?)?,
+    private val hasMethod: ((Any, String) -> Boolean)?,
+    private val getEdgeMethod: ((Any, String) -> AttEdge?)?
 ) {
 
     companion object {
@@ -18,6 +22,18 @@ class BeanTypeContext(
 
     fun hasProperty(name: String): Boolean {
         return getters.containsKey(name)
+    }
+
+    fun beanGetAs(value: Any, arg: String): Any? {
+        return getAsMethod?.invoke(value, arg)
+    }
+
+    fun beanHas(value: Any, name: String): Boolean {
+        return hasMethod?.invoke(value, name) ?: hasProperty(name)
+    }
+
+    fun beanGetEdge(value: Any, name: String): AttEdge? {
+        return getEdgeMethod?.invoke(value, name)
     }
 
     fun applyData(bean: Any, data: ObjectData) {

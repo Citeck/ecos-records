@@ -7,7 +7,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.iter.IterableRecordRefs
 import ru.citeck.ecos.records3.iter.IterableRecords
 import ru.citeck.ecos.records3.iter.IterableRecordsConfig
-import ru.citeck.ecos.records3.iter.PageStrategy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 
 class IterableRecordsTest {

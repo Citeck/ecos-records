@@ -46,8 +46,10 @@ import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValu
 import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
-import ru.citeck.ecos.records3.record.request.ContextAttsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
+import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
+import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
@@ -93,7 +95,8 @@ open class RecordsServiceFactory {
     val attProcReader: AttProcReader by lazy { createAttProcReader() }
     val recordComputedAttsService: RecordComputedAttsService by lazy { createRecordComputedAttsService() }
     val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
-    val defaultCtxAttsProvider: ContextAttsProvider by lazy { createDefaultCtxAttsProvider() }
+    val ctxAttsProviders: List<CtxAttsProvider> by lazy { createCtxAttsProviders() }
+    val ctxAttsService: CtxAttsService by lazy { CtxAttsService(this) }
     val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
     val jobExecutor: JobExecutor by lazy { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazy { createTxnActionManager() }
@@ -137,10 +140,10 @@ open class RecordsServiceFactory {
         return { Locale.ENGLISH }
     }
 
-    protected open fun createDefaultCtxAttsProvider(): ContextAttsProvider {
-        return object : ContextAttsProvider {
-            override fun getContextAttributes(): Map<String, Any?> = emptyMap()
-        }
+    private fun createCtxAttsProviders(): List<CtxAttsProvider> {
+        val providers = ArrayList<CtxAttsProvider>()
+        providers.add(StdCtxAttsProvider(this))
+        return providers
     }
 
     protected open fun createRecordTypeService(): RecordTypeService {

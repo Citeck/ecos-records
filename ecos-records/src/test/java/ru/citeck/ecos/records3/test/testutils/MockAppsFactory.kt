@@ -5,8 +5,8 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.request.ContextAttsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
@@ -59,15 +59,13 @@ class MockAppsFactory {
                 props.gatewayMode = gatewayMode
                 return props
             }
-
-            override fun createDefaultCtxAttsProvider(): ContextAttsProvider {
-                return object : ContextAttsProvider {
-                    override fun getContextAttributes(): Map<String, Any?> {
-                        return defaultCtxAtts
-                    }
-                }
-            }
         }
+
+        factory.ctxAttsService.register(object : CtxAttsProvider {
+            override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
+                attributes.putAll(defaultCtxAtts)
+            }
+        })
 
         val app = MockApp(name, factory, defaultCtxAtts)
         apps[name] = app

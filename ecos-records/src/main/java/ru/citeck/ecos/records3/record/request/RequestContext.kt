@@ -4,13 +4,10 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.func.UncheckedRunnable
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
-import ru.citeck.ecos.records3.record.atts.value.impl.auth.AuthContextValue
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
@@ -42,10 +39,6 @@ class RequestContext {
         private var lastCreatedServices: RecordsServiceFactory? = null
         private var defaultServices: RecordsServiceFactory? = null
         private val current: ThreadLocal<RequestContext> = ThreadLocal()
-
-        private val strCtxAtt = AttFuncValue { it }
-        private val refCtxAtt = AttFuncValue { RecordRef.valueOf(it) }
-        private val authCtxAtt = AuthContextValue()
 
         fun setDefaultServices(defaultServices: RecordsServiceFactory?) {
             this.defaultServices = defaultServices
@@ -228,21 +221,8 @@ class RequestContext {
                 ctxData?.invoke(builder)
                 current = RequestContext()
 
-                val contextAtts = HashMap(notNullServices.defaultCtxAttsProvider.getContextAttributes())
-                contextAtts["now"] = Date()
-                contextAtts["str"] = strCtxAtt
-                contextAtts["ref"] = refCtxAtt
-                contextAtts["auth"] = authCtxAtt
-
-                val props = notNullServices.properties
-                contextAtts["appName"] = props.appName
-                contextAtts["appInstanceId"] = props.appInstanceId
-
-                if (props.peopleSourceId.isNotBlank()) {
-                    contextAtts["user"] = getCurrentUserRef(props.peopleSourceId)
-                }
-
-                current.ctxData = builder.withCtxAtts(contextAtts)
+                val ctxAtts = notNullServices.ctxAttsService.getContextAtts()
+                current.ctxData = builder.withCtxAtts(ctxAtts)
                     .withLocale(notNullServices.localeSupplier.invoke())
                     .build()
 
@@ -293,14 +273,6 @@ class RequestContext {
                     RequestContext.current.remove()
                 }
             }
-        }
-
-        private fun getCurrentUserRef(peopleSourceId: String): RecordRef {
-            val currentUser = AuthContext.getCurrentUser()
-            if (currentUser.isEmpty() || peopleSourceId.isBlank()) {
-                return RecordRef.EMPTY
-            }
-            return RecordRef.valueOf(peopleSourceId + RecordRef.SOURCE_DELIMITER + currentUser)
         }
     }
 

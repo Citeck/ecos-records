@@ -21,7 +21,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
     override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
 
-        attributes["now"] = Date()
+        attributes["now"] = { Date() }
         attributes["str"] = strCtxAtt
         attributes["ref"] = refCtxAtt
         attributes["auth"] = authCtxAtt

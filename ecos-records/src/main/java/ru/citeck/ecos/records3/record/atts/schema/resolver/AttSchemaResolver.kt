@@ -345,6 +345,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         notNullAttValue
                     )
                 }
+            } else if (attValue is Function0<*>) {
+                attValue = attValue.invoke()
             }
 
             val attValues = rawToListWithoutNullValues(attValue)

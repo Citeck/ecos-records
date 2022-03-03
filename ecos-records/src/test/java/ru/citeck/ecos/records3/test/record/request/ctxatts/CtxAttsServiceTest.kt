@@ -28,7 +28,7 @@ class CtxAttsServiceTest {
         val res2 = services.recordsServiceV1.getAtt("", "\$now|fmt('yyyy')").asInt()
         assertThat(res2).isEqualTo(LocalDate.now().year)
 
-        fun createOverrideProv(order: Float) : CtxAttsProvider {
+        fun createOverrideProv(order: Float): CtxAttsProvider {
             return object : CtxAttsProvider {
                 override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
                     attributes[key] = "456"

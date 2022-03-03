@@ -267,6 +267,7 @@ open class RecordsServiceFactory {
     protected open fun createAttValueFactories(): List<AttValueFactory<*>> {
 
         val dataValueFactory = DataValueAttFactory()
+        val instantValueFactory = InstantValueFactory()
 
         val metaValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
         metaValueFactories.add(ObjectDataValueFactory(dataValueFactory))
@@ -276,8 +277,8 @@ open class RecordsServiceFactory {
         metaValueFactories.add(RecordAttsValueFactory())
         metaValueFactories.add(BeanValueFactory())
         metaValueFactories.add(BooleanValueFactory())
-        metaValueFactories.add(DateValueFactory())
-        metaValueFactories.add(InstantValueFactory())
+        metaValueFactories.add(DateValueFactory(instantValueFactory))
+        metaValueFactories.add(instantValueFactory)
         metaValueFactories.add(OffsetDateTimeValueFactory())
         metaValueFactories.add(DoubleValueFactory())
         metaValueFactories.add(IntegerValueFactory())

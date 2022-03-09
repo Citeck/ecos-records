@@ -107,22 +107,14 @@ open class RecordsRestConfiguration {
         val tlsProps = properties.tls
 
         if (!tlsProps.enabled) {
+
             logTlsInfo { "TLS disabled. Secure SecureRestTemplate will be replaced by insecure." }
-            var recordsRestTemplate = restTemplateBuilder
+
+            val recordsRestTemplate = restTemplateBuilder
                 .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
                 .additionalInterceptors(authInterceptor)
 
-            var readTimeout = properties?.readTimeout
-            if (readTimeout != null) {
-                recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
-            }
-
-            var connectTimeout = properties?.connectTimeout
-            if (connectTimeout != null) {
-                recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
-            }
-
-            return recordsRestTemplate.build()
+            return setTimeouts(recordsRestTemplate).build()
         }
 
         logTlsInfo { "TLS enabled. SecureRestTemplate initialization started." }
@@ -161,21 +153,11 @@ open class RecordsRestConfiguration {
 
         val factory = HttpComponentsClientHttpRequestFactory(httpClient)
 
-        var recordsRestTemplate = restTemplateBuilder
+        val recordsRestTemplate = restTemplateBuilder
             .requestFactory { factory }
             .additionalInterceptors(authInterceptor)
 
-        var readTimeout = properties?.readTimeout
-        if (readTimeout != null) {
-            recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
-        }
-
-        var connectTimeout = properties?.connectTimeout
-        if (connectTimeout != null) {
-            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
-        }
-
-        return recordsRestTemplate.build()
+        return setTimeouts(recordsRestTemplate).build()
     }
 
     private fun loadKeyStore(name: String, path: String, password: String?, type: String): KeyStore {
@@ -195,21 +177,24 @@ open class RecordsRestConfiguration {
     @Bean
     @LoadBalanced
     open fun recordsInsecureRestTemplate(): RestTemplate {
-        var recordsRestTemplate = restTemplateBuilder
+        val recordsRestTemplate = restTemplateBuilder
             .requestFactory(SkipSslVerificationHttpRequestFactory::class.java)
             .additionalInterceptors(authInterceptor)
 
-        var readTimeout = properties?.readTimeout
+        return setTimeouts(recordsRestTemplate).build()
+    }
+
+    private fun setTimeouts(builder: RestTemplateBuilder): RestTemplateBuilder {
+        val readTimeout = properties.readTimeout
+        var result = builder
         if (readTimeout != null) {
-            recordsRestTemplate = recordsRestTemplate.setReadTimeout(readTimeout)
+            result = result.setReadTimeout(readTimeout)
         }
-
-        var connectTimeout = properties?.connectTimeout
+        val connectTimeout = properties.connectTimeout
         if (connectTimeout != null) {
-            recordsRestTemplate = recordsRestTemplate.setConnectTimeout(connectTimeout)
+            result = result.setConnectTimeout(connectTimeout)
         }
-
-        return recordsRestTemplate.build()
+        return result
     }
 
     @Autowired(required = false)

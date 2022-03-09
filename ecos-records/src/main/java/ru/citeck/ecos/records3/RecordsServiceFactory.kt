@@ -140,7 +140,7 @@ open class RecordsServiceFactory {
         return { Locale.ENGLISH }
     }
 
-    private fun createCtxAttsProviders(): List<CtxAttsProvider> {
+    protected open fun createCtxAttsProviders(): List<CtxAttsProvider> {
         val providers = ArrayList<CtxAttsProvider>()
         providers.add(StdCtxAttsProvider(this))
         return providers

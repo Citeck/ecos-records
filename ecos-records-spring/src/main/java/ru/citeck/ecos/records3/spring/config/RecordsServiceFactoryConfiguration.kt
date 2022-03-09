@@ -40,6 +40,8 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     @Value("\${eureka.instance.instanceId:}")
     private lateinit var appInstanceId: String
 
+    private var customCtxAttsProviders: List<CtxAttsProvider> = emptyList()
+
     @PostConstruct
     fun init() {
         RequestContext.setDefaultServices(this)
@@ -47,6 +49,12 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
 
     override fun createLocaleSupplier(): () -> Locale {
         return { LocaleContextHolder.getLocale() }
+    }
+
+    override fun createCtxAttsProviders(): List<CtxAttsProvider> {
+        val providers = ArrayList(super.createCtxAttsProviders())
+        providers.addAll(customCtxAttsProviders)
+        return providers
     }
 
     override fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
@@ -143,6 +151,6 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
 
     @Autowired(required = false)
     fun setCtxAttsProviders(providers: List<CtxAttsProvider>) {
-        this.ctxAttsService.register(providers)
+        customCtxAttsProviders = providers
     }
 }

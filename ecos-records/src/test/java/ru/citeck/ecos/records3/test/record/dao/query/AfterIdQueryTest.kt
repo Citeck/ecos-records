@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.test.record.dao.query
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult
@@ -189,5 +190,43 @@ class AfterIdQueryTest {
         assertThat(queries[0].page.skipCount).isEqualTo(0)
         assertThat(queries[1].isAfterIdMode()).isTrue
         assertThat(queries[1].page.skipCount).isEqualTo(0)
+    }
+
+    @Test
+    fun queryPageTest() {
+
+        val page = QueryPage.create()
+            .withMaxItems(100)
+            .withSkipCount(10)
+            .build()
+        val json = Json.mapper.convert(page, ObjectData::class.java)!!
+
+        assertThat(json.size()).isEqualTo(2)
+        assertThat(json.has("afterId")).isFalse
+        assertThat(json.get("maxItems").asInt()).isEqualTo(100)
+        assertThat(json.get("skipCount").asInt()).isEqualTo(10)
+
+        val page2 = QueryPage.create()
+            .withAfterId(RecordRef.EMPTY)
+            .build()
+        val json2 = Json.mapper.convert(page2, ObjectData::class.java)!!
+
+        assertThat(json2.size()).isEqualTo(3)
+        assertThat(json2.has("afterId")).isTrue
+        assertThat(json2.get("afterId").asText()).isEqualTo("")
+        assertThat(json2.get("maxItems").asInt()).isEqualTo(-1)
+        assertThat(json2.get("skipCount").asInt()).isEqualTo(0)
+
+        val ref = RecordRef.create("emodel", "type", "abc")
+        val page3 = QueryPage.create()
+            .withAfterId(ref)
+            .build()
+        val json3 = Json.mapper.convert(page3, ObjectData::class.java)!!
+
+        assertThat(json3.size()).isEqualTo(3)
+        assertThat(json3.has("afterId")).isTrue
+        assertThat(json3.get("afterId").asText()).isEqualTo(ref.toString())
+        assertThat(json3.get("maxItems").asInt()).isEqualTo(-1)
+        assertThat(json3.get("skipCount").asInt()).isEqualTo(0)
     }
 }

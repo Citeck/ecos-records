@@ -1,10 +1,12 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.query
 
+import ecos.com.fasterxml.jackson210.annotation.JsonInclude
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import mu.KotlinLogging
 import ru.citeck.ecos.records2.RecordRef
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = QueryPage.Builder::class)
 @JackJsonDeserialize(builder = QueryPage.Builder::class)
 data class QueryPage(

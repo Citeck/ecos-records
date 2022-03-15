@@ -6,7 +6,6 @@ import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.request.rest.QueryBody
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
@@ -15,6 +14,10 @@ import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
+
+    companion object {
+        const val UNKNOWN_BODY_VERSION_MSG = "Unknown body version"
+    }
 
     private val restHandlerV0 = services.restHandler
     private val restHandlerV1 = RestHandlerV1(services)
@@ -45,7 +48,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 restHandlerV1.queryRecords(v1Body)
             }
             else -> {
-                error(RemoteRecordsResolver.UNKNOWN_BODY_VERSION_MSG + ": " + bodyWithVersion.version)
+                error(UNKNOWN_BODY_VERSION_MSG + ": " + bodyWithVersion.version)
             }
         }
     }
@@ -69,7 +72,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 restHandlerV1.deleteRecords(v1Body)
             }
             else -> {
-                throw IllegalArgumentException("Unknown body version. Body: $bodyWithVersion")
+                throw IllegalArgumentException("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")
             }
         }
     }
@@ -88,7 +91,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 restHandlerV1.mutateRecords(v1Body)
             }
             else -> {
-                error("Unknown body version. Body: $bodyWithVersion")
+                error("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")
             }
         }
     }

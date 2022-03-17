@@ -23,7 +23,7 @@ class AuthContextValue : AttValue {
 
     class AuthAttValue(val auth: AuthData) : AttValue {
 
-        override fun getAtt(name: String?): Any? {
+        override fun getAtt(name: String): Any? {
             return when (name) {
                 "user" -> auth.getUser()
                 "authorities" -> auth.getAuthorities()

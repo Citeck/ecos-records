@@ -1,7 +1,9 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.future.RecFuture
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
@@ -37,9 +39,10 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
 
     inner class RecordRefValue(private val ref: RecordRef) : AttValue, AttValueProxy {
 
-        private val innerAtts: InnerAttValue
+        private lateinit var innerAtts: InnerAttValue
 
-        init {
+        override fun init(): RecFuture<Unit>? {
+
             val innerSchema = AttContext.getCurrentSchemaAtt().inner
 
             val attsMap: MutableMap<String, String> = LinkedHashMap()
@@ -56,11 +59,12 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
                 }
             }
             val atts = if (attsMap.isNotEmpty()) {
-                loadRawAtts(attsMap)
+                loadRawAtts(attsMap).getAtts()
             } else {
-                RecordAtts(ref)
+                ObjectData.create()
             }
-            innerAtts = InnerAttValue(atts.getAtts().getData().asJson())
+            innerAtts = InnerAttValue(atts.getData().asJson())
+            return null
         }
 
         private fun loadRawAtts(attsMap: Map<String, String>): RecordAtts {

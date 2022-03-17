@@ -86,7 +86,7 @@ class RecordRefValueFactoryTest {
             return RecordRef.valueOf("abc@def")
         }
 
-        override fun getAtt(name: String?): Any? {
+        override fun getAtt(name: String): Any? {
             if (name == "ref") {
                 return ref
             }

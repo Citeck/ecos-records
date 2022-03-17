@@ -85,7 +85,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
                 return value.has(name)
             }
 
-            override fun getAs(type: String?): Any? {
+            override fun getAs(type: String): Any? {
                 if (type == "mltext") {
                     return value.getAs(MLText::class.java)
                 }

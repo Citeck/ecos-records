@@ -88,6 +88,8 @@ class BeanValueFactoryTest2 {
         assertThat(getAtt("_has.value2?bool").asBoolean()).isEqualTo(false)
         assertThat(getAtt("_edge.unknown.title").asText()).isEqualTo("")
         assertThat(getAtt("_edge.bean.title").asText()).isEqualTo("edge-title")
+        assertThat(getAtt("customAtt").asText()).isEqualTo("custom-att")
+        assertThat(getAtt("unknownAtt").asText()).isEqualTo("unknownAtt-value")
 
         assertThat(records.getAtt(BeanWithCustomGetEdge(), "_edge.bean.title").asText()).isEqualTo("edge-title")
 
@@ -95,6 +97,9 @@ class BeanValueFactoryTest2 {
     }
 
     class BeanWithStrFunctions {
+        fun getCustomAtt(): String {
+            return "custom-att"
+        }
         fun getAs(arg: String): Any {
             return "$arg-postfix"
         }
@@ -110,6 +115,9 @@ class BeanValueFactoryTest2 {
         }
         fun has(arg: String): Boolean {
             return arg == "value"
+        }
+        fun getAtt(arg: String): Any {
+            return "$arg-value"
         }
     }
 

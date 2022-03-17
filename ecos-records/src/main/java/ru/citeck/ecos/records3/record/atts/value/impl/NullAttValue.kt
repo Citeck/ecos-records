@@ -25,7 +25,7 @@ class NullAttValue private constructor() : AttValue {
         return null
     }
 
-    override fun getAs(type: String?): Any? {
+    override fun getAs(type: String): Any? {
         return null
     }
 
@@ -45,11 +45,11 @@ class NullAttValue private constructor() : AttValue {
         return null
     }
 
-    override fun has(name: String?): Boolean {
+    override fun has(name: String): Boolean {
         return false
     }
 
-    override fun getEdge(name: String?): AttEdge? {
+    override fun getEdge(name: String): AttEdge? {
         return null
     }
 

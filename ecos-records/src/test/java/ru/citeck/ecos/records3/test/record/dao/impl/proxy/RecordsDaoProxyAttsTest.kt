@@ -289,7 +289,7 @@ class RecordsDaoProxyAttsTest {
 
     class AttValueRec : AttValue {
 
-        override fun getEdge(name: String?): AttEdge? {
+        override fun getEdge(name: String): AttEdge? {
             if (name == "_status") {
                 return object : AttEdge {
                     override fun getTitle(): MLText {

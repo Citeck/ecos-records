@@ -4,7 +4,6 @@ import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -14,10 +13,6 @@ import java.beans.PropertyDescriptor
 import java.lang.reflect.ParameterizedType
 
 class BeanValueFactory : AttValueFactory<Any> {
-
-    companion object {
-        private const val EMODEL_TYPE_PREFIX = "emodel/type@"
-    }
 
     override fun getValue(value: Any): AttValue {
         return Value(value)
@@ -50,18 +45,11 @@ class BeanValueFactory : AttValueFactory<Any> {
             return asText()?.toBoolean()
         }
 
-        override fun getType(): RecordRef {
+        override fun getType(): Any? {
             if (typeCtx.hasProperty(RecordConstants.ATT_TYPE)) {
-                var result = getAttWithType(RecordConstants.ATT_TYPE, Any::class.java) ?: RecordRef.EMPTY
-                if (result is String) {
-                    if (!result.startsWith(EMODEL_TYPE_PREFIX)) {
-                        result = EMODEL_TYPE_PREFIX + result
-                    }
-                    return RecordRef.valueOf(result)
-                }
-                return Json.mapper.convert(result, RecordRef::class.java) ?: RecordRef.EMPTY
+                return getAttWithType(RecordConstants.ATT_TYPE, Any::class.java)
             }
-            return RecordRef.EMPTY
+            return null
         }
 
         override fun getDisplayName(): Any? {

@@ -13,7 +13,8 @@ class BeanTypeContext(
     private val propsPath: Map<String, String>,
     private val getAsMethod: ((Any, String) -> Any?)?,
     private val hasMethod: ((Any, String) -> Boolean)?,
-    private val getEdgeMethod: ((Any, String) -> AttEdge?)?
+    private val getEdgeMethod: ((Any, String) -> AttEdge?)?,
+    private val getAttMethod: ((Any, String) -> Any?)?
 ) {
 
     companion object {
@@ -64,15 +65,19 @@ class BeanTypeContext(
     fun getProperty(bean: Any?, name: String): Any? {
         bean ?: return null
         val getter = getters[name]
-        return if (getter != null) {
-            try {
+        return try {
+            if (getter != null) {
                 getter.invoke(bean)
-            } catch (e: InvocationTargetException) {
-                throw e.cause ?: e
+            } else {
+                if (getAttMethod != null) {
+                    return getAttMethod.invoke(bean, name)
+                } else {
+                    log.trace("Property not found: " + name + " in type " + bean.javaClass)
+                }
+                null
             }
-        } else {
-            log.trace("Property not found: " + name + " in type " + bean.javaClass)
-            null
+        } catch (e: InvocationTargetException) {
+            throw e.cause ?: e
         }
     }
 }

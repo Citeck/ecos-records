@@ -45,7 +45,7 @@ class MLTextValueFactory : AttValueFactory<MLText> {
             return value.has(Locale(name))
         }
 
-        override fun getAs(type: String?): Any? {
+        override fun getAs(type: String): Any? {
             if (type == "mltext") {
                 return this
             }

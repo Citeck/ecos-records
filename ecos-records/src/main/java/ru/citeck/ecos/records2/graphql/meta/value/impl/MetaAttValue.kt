@@ -8,6 +8,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
+import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.request.RequestContext
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
@@ -53,7 +54,7 @@ class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun getAs(type: String) = attValue.getAs(type)
 
-    override fun getRecordType(): RecordRef = attValue.type
+    override fun getRecordType() = RecTypeUtils.anyTypeToRef(attValue.type)
 
     override fun getEdge(name: String, field: MetaField): MetaEdge? {
         val edge = attValue.getEdge(name) ?: return null

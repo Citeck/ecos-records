@@ -222,7 +222,7 @@ open class RecordsDaoProxy(
             return id
         }
 
-        override fun getAtt(name: String?): Any? {
+        override fun getAtt(name: String): Any? {
             if (postProcAtts.containsKey(name)) {
                 return postProcAtts[name]
             }

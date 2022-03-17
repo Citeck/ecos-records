@@ -145,7 +145,7 @@ class ContextAttsTest {
         var getAttCallsCount = 0
         val recordsToGetAtts = Array(recsCount) {
             object : AttValue {
-                override fun getAtt(name: String?): Any? {
+                override fun getAtt(name: String): Any? {
                     getAttCallsCount++
                     if (name == "field") {
                         return "value-$it"
@@ -189,7 +189,7 @@ class ContextAttsTest {
         val contextValueFieldValue = "value-ctx"
         var contextValueCallsCount = 0
         val contextValue = object : AttValue {
-            override fun getAtt(name: String?): Any? {
+            override fun getAtt(name: String): Any? {
                 contextValueCallsCount++
                 if (name == "field") {
                     return contextValueFieldValue

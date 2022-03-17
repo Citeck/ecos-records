@@ -43,7 +43,7 @@ public class MetaFieldTest extends AbstractRecordsDao
     }
 
     @BeforeAll
-    void init() {
+    void beforeAll() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();

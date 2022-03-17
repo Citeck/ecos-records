@@ -22,7 +22,8 @@ object BeanTypeUtils {
                 getPropsPath(it),
                 getMethodWithStrArg(it, "getAs"),
                 getMethodWithStrArg(it, "has"),
-                getMethodWithStrArg(it, "getEdge")
+                getMethodWithStrArg(it, "getEdge"),
+                getMethodWithStrArg(it, "getAtt")
             )
         }
     }

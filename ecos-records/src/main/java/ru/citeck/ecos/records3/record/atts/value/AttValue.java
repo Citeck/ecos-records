@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records3.future.RecFuture;
 import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
 import ru.citeck.ecos.records3.utils.AttUtils;
 
@@ -14,6 +14,15 @@ import ru.citeck.ecos.records3.utils.AttUtils;
  * @author Pavel Simonov
  */
 public interface AttValue {
+
+    /**
+     * Method to initialize AttValue before it will be resolved by AttSchemaResolver
+     * This method may be used to pre evaluate inner attributes using AttContext
+     */
+    @Nullable
+    default RecFuture<?> init() throws Exception {
+        return null;
+    }
 
     @Nullable
     default Object getId() throws Exception {
@@ -31,7 +40,7 @@ public interface AttValue {
     }
 
     @Nullable
-    default Object getAs(String type) throws Exception {
+    default Object getAs(@NotNull String type) throws Exception {
         return null;
     }
 
@@ -73,22 +82,22 @@ public interface AttValue {
         return asText();
     }
 
-    default boolean has(String name) throws Exception {
+    default boolean has(@NotNull String name) throws Exception {
         return false;
     }
 
     @Nullable
-    default Object getAtt(String name) throws Exception {
+    default Object getAtt(@NotNull String name) throws Exception {
         return null;
     }
 
     @Nullable
-    default AttEdge getEdge(String name) throws Exception {
+    default AttEdge getEdge(@NotNull String name) throws Exception {
         return new SimpleAttEdge(name, this);
     }
 
-    @NotNull
-    default RecordRef getType() throws Exception {
-        return RecordRef.EMPTY;
+    @Nullable
+    default Object getType() throws Exception {
+        return null;
     }
 }

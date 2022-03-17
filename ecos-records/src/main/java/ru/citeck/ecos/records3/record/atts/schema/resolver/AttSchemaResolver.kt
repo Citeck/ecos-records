@@ -21,6 +21,7 @@ import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.*
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
@@ -689,7 +690,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             } else {
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
-                    RecordConstants.ATT_ECOS_TYPE -> value.type
+                    RecordConstants.ATT_ECOS_TYPE -> RecTypeUtils.anyTypeToRef(value.type)
                     RecordConstants.ATT_AS -> AttFuncValue { type -> value.getAs(type) }
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }
@@ -773,11 +774,15 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         var rootValue: ValueContext = ValueContext.EMPTY
 
         private fun convertToAttValue(value: Any): AttValue? {
-            return if (value is AttValue) {
+            val result = if (value is AttValue) {
                 value
             } else {
                 converter.toAttValue(value)
             }
+            // At this moment we will wait until async initialization will be completed
+            // in this method, but in future this waiting may be moved outside for various optimizations
+            result?.init()?.get()
+            return result
         }
 
         fun toRootValueContext(value: Any, valueRef: RecordRef): ValueContext {
@@ -823,7 +828,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 }
             }
             try {
-                val typeRef = value?.type ?: RecordRef.EMPTY
+                val typeRef = RecTypeUtils.anyTypeToRef(value?.type)
                 if (RecordRef.isNotEmpty(typeRef)) {
                     for (att in recordTypeService.getComputedAtts(typeRef)) {
                         if (AttUtils.isValidComputedAtt(att.id)) {

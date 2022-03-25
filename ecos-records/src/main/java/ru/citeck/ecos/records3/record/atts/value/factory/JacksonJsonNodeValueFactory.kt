@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 
-class JacksonJsonNodeValueFactory(
-    private val dataValueFactory: DataValueAttFactory
-) : AttValueFactory<JsonNode> {
+class JacksonJsonNodeValueFactory : AttValueFactory<JsonNode> {
 
-    override fun getValue(value: JsonNode): AttValue {
+    private lateinit var dataValueFactory: DataValueAttFactory
+
+    override fun init(attValuesConverter: AttValuesConverter) {
+        this.dataValueFactory = attValuesConverter.getFactory(DataValueAttFactory::class.java)
+    }
+
+    override fun getValue(value: JsonNode): AttValue? {
         return dataValueFactory.getValue(DataValue.create(value))
     }
 

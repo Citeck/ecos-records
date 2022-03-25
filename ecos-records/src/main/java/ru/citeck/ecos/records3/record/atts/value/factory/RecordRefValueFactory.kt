@@ -2,17 +2,20 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.future.RecFuture
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
 import kotlin.collections.LinkedHashMap
 
-class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<RecordRef> {
+class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
 
     companion object {
         private val SCALARS_WITHOUT_LOADING = listOf(
@@ -28,14 +31,19 @@ class RecordRefValueFactory(services: RecordsServiceFactory) : AttValueFactory<R
         )
     }
 
-    private val recordsService = services.recordsServiceV1
-    private val schemaWriter = services.attSchemaWriter
+    private lateinit var recordsService: RecordsService
+    private lateinit var schemaWriter: AttSchemaWriter
 
     override fun getValue(value: RecordRef): AttValue {
         return RecordRefValue(value)
     }
 
     override fun getValueTypes() = listOf(RecordRef::class.java)
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsService = serviceFactory.recordsServiceV1
+        this.schemaWriter = serviceFactory.attSchemaWriter
+    }
 
     inner class RecordRefValue(private val ref: RecordRef) : AttValue, AttValueProxy {
 

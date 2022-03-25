@@ -4,7 +4,6 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.*
 import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
-import ru.citeck.ecos.records3.record.atts.value.factory.time.InstantValueFactory
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,38 +14,44 @@ class ValuesConverterTest {
     fun test() {
 
         val factory = RecordsServiceFactory()
+        val conv = factory.attValuesConverter
 
         assertEquals(
-            factory.attValuesConverter.toAttValue(true)!!::class.java,
-            BooleanValueFactory().getValue(true)!!::class.java
+            conv.toAttValue(true)!!::class.java,
+            conv.getFactory(BooleanValueFactory::class.java).getValue(true)::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(10)!!::class.java,
-            IntegerValueFactory().getValue(10)::class.java
+            conv.toAttValue(10)!!::class.java,
+            conv.getFactory(IntegerValueFactory::class.java).getValue(10)::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(10.0)!!::class.java,
-            DoubleValueFactory().getValue(10.0)::class.java
+            conv.toAttValue(10.0)!!::class.java,
+            conv.getFactory(DoubleValueFactory::class.java).getValue(10.0)::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(ByteArray(10) { it.toByte() })!!::class.java,
-            ByteArrayValueFactory().getValue(ByteArray(10) { it.toByte() })::class.java
+            conv.toAttValue(10.0f)!!::class.java,
+            conv.getFactory(FloatValueFactory::class.java).getValue(10.0f)::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(Date())!!::class.java,
-            DateValueFactory(InstantValueFactory()).getValue(Date())::class.java
+            conv.toAttValue(ByteArray(10) { it.toByte() })!!::class.java,
+            conv.getFactory(ByteArrayValueFactory::class.java).getValue(ByteArray(10) { it.toByte() })::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(10L)!!::class.java,
-            LongValueFactory().getValue(10L)::class.java
+            conv.toAttValue(Date())!!::class.java,
+            conv.getFactory(DateValueFactory::class.java).getValue(Date())::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue(MLText())!!::class.java,
-            MLTextValueFactory().getValue(MLText())!!::class.java
+            conv.toAttValue(10L)!!::class.java,
+            conv.getFactory(LongValueFactory::class.java)
+                .getValue(10L)::class.java
         )
         assertEquals(
-            factory.attValuesConverter.toAttValue("12")!!::class.java,
-            StringValueFactory().getValue("12")::class.java
+            conv.toAttValue(MLText())!!::class.java,
+            conv.getFactory(MLTextValueFactory::class.java).getValue(MLText())!!::class.java
+        )
+        assertEquals(
+            conv.toAttValue("12")!!::class.java,
+            conv.getFactory(StringValueFactory::class.java).getValue("12")::class.java
         )
     }
 }

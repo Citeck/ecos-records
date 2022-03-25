@@ -266,28 +266,38 @@ open class RecordsServiceFactory {
 
     protected open fun createAttValueFactories(): List<AttValueFactory<*>> {
 
+        val metaValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
+
+        val doubleValueFactory = DoubleValueFactory()
+        val floatValueFactory = FloatValueFactory()
+        val booleanValueFactory = BooleanValueFactory()
+        val stringValueFactory = StringValueFactory()
+        val integerValueFactory = IntegerValueFactory()
+        val longValueFactory = LongValueFactory()
+
+        metaValueFactories.add(doubleValueFactory)
+        metaValueFactories.add(floatValueFactory)
+        metaValueFactories.add(booleanValueFactory)
+        metaValueFactories.add(stringValueFactory)
+        metaValueFactories.add(integerValueFactory)
+        metaValueFactories.add(longValueFactory)
+
         val dataValueFactory = DataValueAttFactory()
         val instantValueFactory = InstantValueFactory()
 
-        val metaValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
-        metaValueFactories.add(ObjectDataValueFactory(dataValueFactory))
+        metaValueFactories.add(ObjectDataValueFactory())
         metaValueFactories.add(ByteArrayValueFactory())
         metaValueFactories.add(dataValueFactory)
         metaValueFactories.add(MLTextValueFactory())
         metaValueFactories.add(RecordAttsValueFactory())
         metaValueFactories.add(BeanValueFactory())
-        metaValueFactories.add(BooleanValueFactory())
-        metaValueFactories.add(DateValueFactory(instantValueFactory))
+        metaValueFactories.add(DateValueFactory())
         metaValueFactories.add(instantValueFactory)
         metaValueFactories.add(OffsetDateTimeValueFactory())
-        metaValueFactories.add(DoubleValueFactory())
-        metaValueFactories.add(IntegerValueFactory())
-        metaValueFactories.add(JsonNodeValueFactory(dataValueFactory))
-        metaValueFactories.add(LongValueFactory())
-        metaValueFactories.add(StringValueFactory())
-        metaValueFactories.add(RecordRefValueFactory(this))
+        metaValueFactories.add(JsonNodeValueFactory())
+        metaValueFactories.add(RecordRefValueFactory())
         if (isJacksonPresent()) {
-            metaValueFactories.add(JacksonJsonNodeValueFactory(dataValueFactory))
+            metaValueFactories.add(JacksonJsonNodeValueFactory())
         }
         return metaValueFactories
     }

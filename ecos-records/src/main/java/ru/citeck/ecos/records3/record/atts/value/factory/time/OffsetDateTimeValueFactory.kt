@@ -15,7 +15,7 @@ class OffsetDateTimeValueFactory : AttValueFactory<OffsetDateTime> {
     class DateValue(private val date: OffsetDateTime) : AttValue {
 
         override fun asText(): String {
-            return date.toInstant().toString()
+            return date.toString()
         }
 
         override fun asDouble(): Double {

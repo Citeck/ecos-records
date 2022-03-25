@@ -25,6 +25,7 @@ import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttWithProc
 import java.beans.PropertyDescriptor
 import java.lang.reflect.*
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
@@ -74,6 +75,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(java.lang.Byte::class.java, ScalarType.NUM),
             ScalarField(Date::class.java, ScalarType.STR),
             ScalarField(Instant::class.java, ScalarType.STR),
+            ScalarField(OffsetDateTime::class.java, ScalarType.STR),
             ScalarField(MLText::class.java, ScalarType.JSON),
             ScalarField(JsonNode::class.java, ScalarType.JSON),
             ScalarField(ObjectNode::class.java, ScalarType.JSON),

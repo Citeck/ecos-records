@@ -2,12 +2,17 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 
-class ObjectDataValueFactory(
-    private val dataValueFactory: DataValueAttFactory
-) : AttValueFactory<ObjectData> {
+class ObjectDataValueFactory : AttValueFactory<ObjectData> {
 
-    override fun getValue(value: ObjectData): AttValue {
+    private lateinit var dataValueFactory: DataValueAttFactory
+
+    override fun init(attValuesConverter: AttValuesConverter) {
+        this.dataValueFactory = attValuesConverter.getFactory(DataValueAttFactory::class.java)
+    }
+
+    override fun getValue(value: ObjectData): AttValue? {
         return dataValueFactory.getValue(value.getData())
     }
 

@@ -4,7 +4,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class BooleanValueFactory : AttValueFactory<Boolean> {
 
-    override fun getValue(value: Boolean): AttValue? {
+    override fun getValue(value: Boolean): AttValue {
 
         return object : AttValue {
 

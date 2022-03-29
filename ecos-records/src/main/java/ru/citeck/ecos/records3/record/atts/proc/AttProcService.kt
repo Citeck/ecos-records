@@ -20,7 +20,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
     private val processors = ConcurrentHashMap<String, AttProcessor>()
     private val attSchemaReader = serviceFactory.attSchemaReader
 
-    fun process(attributes: ObjectData, value: DataValue, processorsDef: List<AttProcDef>): DataValue? {
+    fun process(attributes: ObjectData, value: DataValue, processorsDef: List<AttProcDef>): DataValue {
 
         if (processorsDef.isEmpty()) {
             return value

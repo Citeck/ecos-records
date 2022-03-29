@@ -1,47 +1,47 @@
 package ru.citeck.ecos.records3.record.atts.schema
 
-enum class ScalarType(val schema: String, val overridable: Boolean) {
+enum class ScalarType(schema: String, val overridable: Boolean = true) {
 
     /**
      * Global identifier value. e.g. appName/localSourceId@localId
      */
-    ID("?id", false),
+    ID("id", false),
 
     /**
      * String value.
      */
-    STR("?str", true),
+    STR("str"),
 
     /**
      * Display name value.
      */
-    DISP("?disp", true),
+    DISP("disp"),
 
     /**
      * Double number value.
      */
-    NUM("?num", true),
+    NUM("num"),
 
     /**
      * Same as ID, but used in mutation to detect linked virtual records which should be created.
      */
-    ASSOC("?assoc", true),
+    ASSOC("assoc", false),
 
     /**
      * Local ID value.
      * ID: appName/localSourceId@localId <- localId - value after @.
      */
-    LOCAL_ID("?localId", false),
+    LOCAL_ID("localId", false),
 
     /**
      * Boolean value
      */
-    BOOL("?bool", true),
+    BOOL("bool"),
 
     /**
      * JSON Object value.
      */
-    JSON("?json", true),
+    JSON("json"),
 
     /**
      * Value as-is without transformations.
@@ -50,9 +50,10 @@ enum class ScalarType(val schema: String, val overridable: Boolean) {
      * bool: true
      * object: {}
      */
-    RAW("?raw", true);
+    RAW("raw");
 
-    val mirrorAtt = schema.replaceFirst('?', '_')
+    val schema = "?$schema"
+    val mirrorAtt = "_$schema"
 
     companion object {
 

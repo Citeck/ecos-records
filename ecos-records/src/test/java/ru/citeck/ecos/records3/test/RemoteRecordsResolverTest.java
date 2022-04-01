@@ -41,7 +41,6 @@ class RemoteRecordsResolverTest {
         public RemoteRecordsResolver createRemoteRecordsResolver() {
             RemoteRecordsResolver resolver = new RemoteRecordsResolver(this,
                 RemoteRecordsResolverTest.this::jsonPost);
-            resolver.setDefaultAppName(DEFAULT_APP);
             return resolver;
         }
 
@@ -49,6 +48,7 @@ class RemoteRecordsResolverTest {
         protected RecordsProperties createProperties() {
             RecordsProperties props = super.createProperties();
             props.setGatewayMode(true);
+            props.setDefaultApp(DEFAULT_APP);
             return props;
         }
     }

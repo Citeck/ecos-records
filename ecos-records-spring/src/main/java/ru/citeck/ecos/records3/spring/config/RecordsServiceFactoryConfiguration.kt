@@ -72,11 +72,7 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
             } else {
                 log.info("Initialize remote records resolver in Normal mode")
             }
-            val resolver = RemoteRecordsResolver(this, restApi)
-            if (props.gatewayMode) {
-                resolver.setDefaultAppName(props.defaultApp)
-            }
-            resolver
+            RemoteRecordsResolver(this, restApi)
         } else {
             check(!props.gatewayMode) {
                 ("restApi should be not null in gateway mode! Props: $props")

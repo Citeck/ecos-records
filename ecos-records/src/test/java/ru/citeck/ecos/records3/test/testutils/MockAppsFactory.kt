@@ -47,7 +47,6 @@ class MockAppsFactory {
                         }
                     }
                 )
-                resolver.setDefaultAppName(defaultApp)
                 return resolver
             }
 
@@ -56,6 +55,7 @@ class MockAppsFactory {
                 props.appName = name
                 props.appInstanceId = name + ":" + Random.nextInt(0, Int.MAX_VALUE)
                 props.gatewayMode = gatewayMode
+                props.defaultApp = defaultApp
                 return props
             }
 

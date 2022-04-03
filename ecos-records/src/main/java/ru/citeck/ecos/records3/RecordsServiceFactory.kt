@@ -114,7 +114,14 @@ open class RecordsServiceFactory {
 
     val metaRecordsDaoAttsProvider: MetaRecordsDaoAttsProvider by lazy { createMetaRecordsDaoAttsProvider() }
 
-    val properties: RecordsProperties by lazy { createProperties() }
+    val properties: RecordsProperties by lazy {
+        val props = createProperties()
+        if (!props.gatewayMode && props.defaultApp.isNotEmpty()) {
+            log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
+            props.defaultApp = ""
+        }
+        props
+    }
 
     private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
 

@@ -39,7 +39,11 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import java.util.*
+import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 class RemoteRecordsResolver(
@@ -57,7 +61,7 @@ class RemoteRecordsResolver(
         const val TXN_URL: String = BASE_URL + "txn"
     }
 
-    private var defaultAppName: String = ""
+    private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
@@ -194,11 +198,22 @@ class RemoteRecordsResolver(
         return queryResp.records
     }
 
+    // todo: records grouping by appName performed on RecordsService level and this method should be refactored
     fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result: MutableList<ValWithIdx<RecordAtts>> = ArrayList()
-        val attsByApp: Map<String, MutableList<ValWithIdx<RecordAtts>>> = RecordsUtils.groupAttsByApp(records)
+        var attsByApp: Map<String, List<ValWithIdx<RecordAtts>>> = RecordsUtils.groupAttsByApp(records)
+
+        if (defaultAppName.isNotEmpty() && attsByApp.containsKey(defaultAppName) && attsByApp.containsKey("")) {
+            val newDefaultAppRecs = ArrayList(attsByApp[defaultAppName] ?: emptyList())
+            newDefaultAppRecs.addAll(attsByApp[""] ?: emptyList())
+            newDefaultAppRecs.sortBy { it.idx }
+            val newAttsByApp = HashMap(attsByApp)
+            newAttsByApp[defaultAppName] = newDefaultAppRecs
+            newAttsByApp.remove("")
+            attsByApp = newAttsByApp
+        }
 
         attsByApp.forEach { (appArg, atts) ->
 
@@ -491,10 +506,6 @@ class RemoteRecordsResolver(
     }
 
     fun getSourcesInfo(): List<RecordsSourceMeta> = emptyList()
-
-    fun setDefaultAppName(defaultAppName: String) {
-        this.defaultAppName = defaultAppName
-    }
 
     fun setRecordsService(recordsService: RecordsService) {
         this.recordsService = recordsService

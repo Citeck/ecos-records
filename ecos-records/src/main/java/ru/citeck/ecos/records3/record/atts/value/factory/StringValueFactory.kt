@@ -47,6 +47,10 @@ class StringValueFactory : AttValueFactory<String> {
             override fun asRaw(): Any {
                 return value
             }
+
+            override fun asBin(): Any {
+                return value
+            }
         }
     }
 

@@ -82,6 +82,11 @@ public interface AttValue {
         return asText();
     }
 
+    @Nullable
+    default Object asBin() throws Exception {
+        return asText();
+    }
+
     default boolean has(@NotNull String name) throws Exception {
         return false;
     }

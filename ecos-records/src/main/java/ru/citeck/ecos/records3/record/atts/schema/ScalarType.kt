@@ -50,7 +50,12 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
      * bool: true
      * object: {}
      */
-    RAW("raw");
+    RAW("raw"),
+
+    /**
+     * Binary value
+     */
+    BIN("bin");
 
     val schema = "?$schema"
     val mirrorAtt = "_$schema"
@@ -72,6 +77,7 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
                 BOOL.schema -> BOOL
                 JSON.schema -> JSON
                 RAW.schema -> RAW
+                BIN.schema -> BIN
                 else -> null
             }
         }
@@ -91,6 +97,7 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
                 BOOL.mirrorAtt -> BOOL
                 JSON.mirrorAtt -> JSON
                 RAW.mirrorAtt -> RAW
+                BIN.mirrorAtt -> BIN
                 else -> null
             }
         }

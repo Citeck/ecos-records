@@ -18,11 +18,17 @@ class ByteArrayValueFactory : AttValueFactory<ByteArray> {
             override fun getAs(type: String): Any? {
                 return if ("string" == type) {
                     String(value, StandardCharsets.UTF_8)
-                } else null
+                } else {
+                    null
+                }
             }
 
             override fun asJson(): Any? {
                 return Json.mapper.read(value, JsonNode::class.java)
+            }
+
+            override fun asBin(): Any {
+                return value
             }
         }
     }

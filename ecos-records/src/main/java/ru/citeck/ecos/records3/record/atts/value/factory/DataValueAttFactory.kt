@@ -35,6 +35,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             value.isLong() -> value.longValue()
             value.isFloat() -> value.floatValue()
             value.isDouble() -> value.doubleValue()
+            value.isBinary() -> value.binaryValue()
             value.isArray() -> {
                 val list = ArrayList<Any?>(value.size())
                 for (inner in value) {
@@ -97,6 +98,10 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
                 return value.asDouble()
             }
             return null
+        }
+
+        override fun asBin(): Any? {
+            return value
         }
 
         override fun has(name: String): Boolean {

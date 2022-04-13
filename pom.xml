@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>3.46.0-SNAPSHOT</revision>
+        <revision>3.46.0</revision>
 
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
 

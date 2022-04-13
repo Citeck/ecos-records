@@ -89,14 +89,14 @@ class BeanValueFactory : AttValueFactory<Any> {
             if (typeCtx.hasProperty(ScalarType.JSON.schema)) {
                 return getAttWithType(ScalarType.JSON.schema, DataValue::class.java)
             }
-            return Json.mapper.toJson(bean)
+            return Json.mapper.toNonDefaultJson(bean)
         }
 
         override fun asRaw(): Any? {
             if (typeCtx.hasProperty(ScalarType.RAW.schema)) {
                 return getAttWithType(ScalarType.RAW.schema, Any::class.java)
             }
-            return Json.mapper.toJson(bean)
+            return Json.mapper.toNonDefaultJson(bean)
         }
 
         override fun getEdge(name: String): AttEdge {

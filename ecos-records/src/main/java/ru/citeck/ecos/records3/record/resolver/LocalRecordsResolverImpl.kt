@@ -4,7 +4,9 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
@@ -633,10 +635,50 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         if (records.isEmpty()) {
             return emptyList()
         }
+        val preProcessedRecords = records.map {
+            val selfAttValue = readSelfAttribute(it.getAtt(RecordConstants.ATT_SELF))
+            if (!selfAttValue.isObject()) {
+                it
+            } else {
+                val newAtts = ObjectData.create()
+                it.getAttributes().forEach { key, value ->
+                    if (key == RecordConstants.ATT_SELF) {
+                        selfAttValue.forEach { selfKey, selfValue ->
+                            newAtts.set(selfKey, selfValue)
+                        }
+                    } else {
+                        newAtts.set(key, value)
+                    }
+                }
+                RecordAtts(it.getId(), newAtts)
+            }
+        }
         return if (interceptors.isEmpty()) {
-            mutateImpl(records, attsToLoad, rawAtts)
+            mutateImpl(preProcessedRecords, attsToLoad, rawAtts)
         } else {
-            MutateInterceptorsChain(this, interceptors.iterator()).invoke(records, attsToLoad, rawAtts)
+            MutateInterceptorsChain(this, interceptors.iterator())
+                .invoke(preProcessedRecords, attsToLoad, rawAtts)
+        }
+    }
+
+    private fun readSelfAttribute(value: DataValue): DataValue {
+        return if (value.isNull()) {
+            value
+        } else if (value.isArray()) {
+            if (value.size() > 0) {
+                readSelfAttribute(value.get(0))
+            } else {
+                DataValue.NULL
+            }
+        } else if (value.isObject()) {
+            val url = value.get("url")
+            if (url.isTextual() && url.asText().startsWith(DataUriUtil.DATA_PREFIX)) {
+                Json.mapper.read(url.asText(), ObjectData::class.java)?.getData() ?: DataValue.NULL
+            } else {
+                value
+            }
+        } else {
+            DataValue.NULL
         }
     }
 

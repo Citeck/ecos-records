@@ -31,6 +31,7 @@ object RecordConstants {
     const val ATT_CONTENT = "_content"
     const val ATT_ACTIONS = "_actions"
     const val ATT_DOC_NUM = "_docNum"
+    const val ATT_SELF = "_self"
 
     const val ATT_DISP = "_disp"
     const val ATT_STR = "_str"

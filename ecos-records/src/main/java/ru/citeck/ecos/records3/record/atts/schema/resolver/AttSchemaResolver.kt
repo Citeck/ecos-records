@@ -694,6 +694,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     RecordConstants.ATT_AS -> AttFuncValue { type -> value.getAs(type) }
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }
+                    RecordConstants.ATT_SELF -> value
                     else -> {
                         value.getAtt(
                             if (attribute.startsWith("\\_")) {

@@ -636,17 +636,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             return emptyList()
         }
         val preProcessedRecords = records.map {
-            if (!it.hasAtt(RecordConstants.ATT_SELF)) {
+            val selfAttValue = readSelfAttribute(it.getAtt(RecordConstants.ATT_SELF))
+            if (!selfAttValue.isObject()) {
                 it
             } else {
                 val newAtts = ObjectData.create()
                 it.getAttributes().forEach { key, value ->
                     if (key == RecordConstants.ATT_SELF) {
-                        val selfAtt = readSelfAttribute(value)
-                        if (selfAtt.isObject()) {
-                            selfAtt.forEach { selfKey, selfValue ->
-                                newAtts.set(selfKey, selfValue)
-                            }
+                        selfAttValue.forEach { selfKey, selfValue ->
+                            newAtts.set(selfKey, selfValue)
                         }
                     } else {
                         newAtts.set(key, value)
@@ -664,7 +662,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     private fun readSelfAttribute(value: DataValue): DataValue {
-        return if (value.isArray()) {
+        return if (value.isNull()) {
+            value
+        } else if (value.isArray()) {
             if (value.size() > 0) {
                 readSelfAttribute(value.get(0))
             } else {

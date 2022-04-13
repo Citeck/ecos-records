@@ -29,11 +29,14 @@ class SelfAttTest {
         )
         val refId = records.create("test", testDto)
 
-        val atts = records.getAtts(refId, mapOf(
-            "json" to "_self?json",
-            "selfField0" to "_self.field0",
-            "field0" to "field0"
-        ))
+        val atts = records.getAtts(
+            refId,
+            mapOf(
+                "json" to "_self?json",
+                "selfField0" to "_self.field0",
+                "field0" to "field0"
+            )
+        )
 
         assertThat(atts.getAtt("json")).isEqualTo(DataValue.create(testDto))
         assertThat(atts.getAtt("selfField0").asText()).isEqualTo("value0")
@@ -79,12 +82,15 @@ class SelfAttTest {
 
             records.register(InMemDataRecordsDao("test"))
 
-            val recRef = records.mutate("test@", mapOf(
-                "field0" to "value0",
-                "field1" to "value1",
-                RecordConstants.ATT_SELF to value,
-                "field2" to "value2"
-            ))
+            val recRef = records.mutate(
+                "test@",
+                mapOf(
+                    "field0" to "value0",
+                    "field1" to "value1",
+                    RecordConstants.ATT_SELF to value,
+                    "field2" to "value2"
+                )
+            )
 
             val dtoRes = records.getAtts(recRef, TestDto::class.java)
             assertThat(dtoRes.field0).isEqualTo("self_value0")

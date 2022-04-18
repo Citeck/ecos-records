@@ -146,7 +146,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
 
         RecordRef newWithInnerRef = RecordRef.valueOf(withInnerRef + "-new");
         TestDto withInnerDto = newValues.get(newWithInnerRef);
-        String newInnerRef = innerRef.toString() + "-new";
+        String newInnerRef = innerRef + "-new";
         assertEquals(newInnerRef, withInnerDto.getAssoc0());
         assertEquals(newInnerRef, withInnerDto.getAssoc1());
 

@@ -758,6 +758,30 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                         else -> DataValue.create(raw)
                     }
                 }
+                ScalarType.BIN -> {
+                    when (val bin = value.asBin()) {
+                        is ByteArray -> bin
+                        is String -> strScalarToBinaryValue(bin)
+                        is DataValue -> {
+                            if (bin.isBinary()) {
+                                bin.binaryValue()
+                            } else if (bin.isTextual()) {
+                                strScalarToBinaryValue(bin.textValue())
+                            } else {
+                                Json.mapper.toBytes(value)
+                            }
+                        }
+                        else -> Json.mapper.toBytes(bin)
+                    }
+                }
+            }
+        }
+
+        private fun strScalarToBinaryValue(text: String): ByteArray {
+            return try {
+                Base64.getDecoder().decode(text)
+            } catch (e: IllegalArgumentException) {
+                text.toByteArray()
             }
         }
     }

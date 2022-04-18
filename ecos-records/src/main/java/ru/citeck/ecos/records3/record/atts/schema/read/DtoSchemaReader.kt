@@ -58,6 +58,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
     init {
         listOf(
+            ScalarField(ByteArray::class.java, ScalarType.BIN),
             ScalarField(String::class.java, ScalarType.DISP),
             ScalarField(Boolean::class.java, ScalarType.BOOL),
             ScalarField(java.lang.Boolean::class.java, ScalarType.BOOL),

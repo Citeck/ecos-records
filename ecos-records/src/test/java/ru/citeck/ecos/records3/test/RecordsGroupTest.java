@@ -2,8 +2,9 @@ package ru.citeck.ecos.records3.test;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.predicate.model.*;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -12,6 +13,7 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records3.RecordsServiceImpl;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records2.predicate.PredicateService;
+import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy;
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
@@ -29,6 +31,7 @@ class RecordsGroupTest extends AbstractRecordsDao
                        implements RecordsQueryDao {
 
     private static final String SOURCE_ID = "test-source";
+    private static final String PROXY_ID = "test-source-proxy";
 
     @NotNull
     @Override
@@ -78,6 +81,7 @@ class RecordsGroupTest extends AbstractRecordsDao
         queryLangService.register(q -> q, PredicateService.LANGUAGE_PREDICATE, "fts");
 
         recordsService.register(this);
+        recordsService.register(new RecordsDaoProxy(PROXY_ID, SOURCE_ID, null));
     }
 
     private java.util.function.Predicate<PojoMeta> buildPred(Predicate predicate) {
@@ -108,51 +112,31 @@ class RecordsGroupTest extends AbstractRecordsDao
 
             switch (valPred.getAttribute()) {
                 case "strVal":
-
                     String value = valPred.getValue().asText();
                     pred = m -> Objects.equals(m.getStrVal(), value);
-
                     break;
                 case "numKey":
-
                     double valPredValue = valPred.getValue().asDouble();
-
                     switch (valPred.getType()) {
-
                         case EQ:
-
                             pred = m -> m.getKeyNum() == valPredValue;
-
                             break;
-
                         case GT:
-
                             pred = m -> m.getKeyNum() > valPredValue;
-
                             break;
                         case GE:
-
                             pred = m -> m.getKeyNum() >= valPredValue;
-
                             break;
                         case LT:
-
                             pred = m -> m.getKeyNum() < valPredValue;
-
                             break;
                         case LE:
-
                             pred = m -> m.getKeyNum() <= valPredValue;
-
                             break;
-
                         default:
-
                             pred = m -> false;
                     }
-
                     break;
-
                 default:
                     pred = m -> false;
             }
@@ -195,14 +179,15 @@ class RecordsGroupTest extends AbstractRecordsDao
         return result;
     }
 
-    @Test
-    void test() throws IOException {
+    @ParameterizedTest
+    @ValueSource(strings = { SOURCE_ID, PROXY_ID } )
+    void test(String sourceId) throws IOException {
 
         Predicate predicate = Predicates.gt("numKey", 4);
 
         RecordsQuery recordsQuery = RecordsQuery.create()
             .withQuery(predicate)
-            .withSourceId(SOURCE_ID)
+            .withSourceId(sourceId)
             .withLanguage("fts")
             .withGroupBy(Collections.singletonList("strVal"))
             .build();
@@ -252,30 +237,37 @@ class RecordsGroupTest extends AbstractRecordsDao
         }
     }
 
-    @Test
-    void testDistinct() {
+    @ParameterizedTest
+    @ValueSource(strings = { SOURCE_ID/*, PROXY_ID todo */ } )
+    void testDistinct(String sourceId) {
 
-        testDistinct(Predicates.gt("numKey", 4), p -> p.keyNum > 4);
-        testDistinct(Predicates.lt("numKey", 4), p -> p.keyNum < 4);
-        testDistinct(Predicates.ge("numKey", 4), p -> p.keyNum >= 4);
-        testDistinct(Predicates.le("numKey", 4), p -> p.keyNum <= 4);
+        testDistinct(sourceId, Predicates.gt("numKey", 4), p -> p.keyNum > 4);
+        testDistinct(sourceId, Predicates.lt("numKey", 4), p -> p.keyNum < 4);
+        testDistinct(sourceId, Predicates.ge("numKey", 4), p -> p.keyNum >= 4);
+        testDistinct(sourceId, Predicates.le("numKey", 4), p -> p.keyNum <= 4);
 
-        testDistinct(Predicates.le("numKey", 10), p -> p.keyNum <= 10);
-        testDistinct(Predicates.ge("numKey", 10), p -> p.keyNum >= 10);
-        testDistinct(Predicates.gt("numKey", 10), p -> p.keyNum > 10);
-        testDistinct(Predicates.lt("numKey", 10), p -> p.keyNum < 10);
-        testDistinct(Predicates.eq("numKey", 10), p -> p.keyNum == 10);
+        testDistinct(sourceId, Predicates.le("numKey", 10), p -> p.keyNum <= 10);
+        testDistinct(sourceId, Predicates.ge("numKey", 10), p -> p.keyNum >= 10);
+        testDistinct(sourceId, Predicates.gt("numKey", 10), p -> p.keyNum > 10);
+        testDistinct(sourceId, Predicates.lt("numKey", 10), p -> p.keyNum < 10);
+        testDistinct(sourceId, Predicates.eq("numKey", 10), p -> p.keyNum == 10);
 
-        testDistinct(Predicates.gt("numKey", Integer.MAX_VALUE), p -> false);
+        testDistinct(sourceId, Predicates.gt("numKey", Integer.MAX_VALUE), p -> false);
 
-        testDistinct(Predicates.ge("numKey", 10), p -> false, "unknown");
+        testDistinct(sourceId, Predicates.ge("numKey", 10), p -> false, "unknown");
     }
 
-    private void testDistinct(Predicate predicate, Function<PojoMeta, Boolean> predicateFunc) {
-        testDistinct(predicate, predicateFunc, "strVal");
+    private void testDistinct(String sourceId,
+                              Predicate predicate,
+                              Function<PojoMeta, Boolean> predicateFunc) {
+
+        testDistinct(sourceId, predicate, predicateFunc, "strVal");
     }
 
-    private void testDistinct(Predicate predicate, Function<PojoMeta, Boolean> predicateFunc, String distinctAtt) {
+    private void testDistinct(String sourceId,
+                              Predicate predicate,
+                              Function<PojoMeta, Boolean> predicateFunc,
+                              String distinctAtt) {
 
         DistinctQuery distinctQuery = new DistinctQuery();
         distinctQuery.setAttribute(distinctAtt);
@@ -283,7 +275,7 @@ class RecordsGroupTest extends AbstractRecordsDao
         distinctQuery.setQuery(predicate);
 
         RecordsQuery recordsQuery = RecordsQuery.create()
-            .withSourceId(SOURCE_ID)
+            .withSourceId(sourceId)
             .withLanguage(DistinctQuery.LANGUAGE)
             .withQuery(distinctQuery)
             .build();

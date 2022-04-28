@@ -19,6 +19,7 @@ import ru.citeck.ecos.records3.record.dao.impl.source.client.ClientMeta
 import ru.citeck.ecos.records3.record.dao.impl.source.client.HasClientMeta
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
+import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
@@ -37,7 +38,8 @@ open class RecordsDaoProxy(
     RecordsMutateDao,
     RecordsDeleteDao,
     HasClientMeta,
-    TxnRecordsDao {
+    TxnRecordsDao,
+    RecsGroupQueryDao {
 
     private val attsProc = processor as? AttsProxyProcessor
     private val mutProc = processor as? MutateProxyProcessor

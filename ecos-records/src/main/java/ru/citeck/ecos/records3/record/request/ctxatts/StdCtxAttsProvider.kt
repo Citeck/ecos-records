@@ -5,7 +5,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.auth.AuthContextValue
-import java.util.*
+import java.time.Instant
 
 class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
@@ -21,7 +21,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
     override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
 
-        attributes["now"] = { Date() }
+        attributes["now"] = { Instant.now() }
         attributes["str"] = strCtxAtt
         attributes["ref"] = refCtxAtt
         attributes["auth"] = authCtxAtt

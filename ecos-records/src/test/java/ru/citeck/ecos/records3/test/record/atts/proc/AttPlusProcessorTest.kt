@@ -30,12 +30,12 @@ class AttPlusProcessorTest {
             )
         )
 
-        val expected = atts.getAtt("now").getAsInstantOrEpoch()
+        val expected = atts.getAtt("now").getAs(Instant::class.java)!!
             .minus(Duration.ofHours(10))
             .truncatedTo(ChronoUnit.HOURS)
         assertThat(
             atts.getAtt("nowPlus10h")
-                .getAsInstantOrEpoch()
+                .getAs(Instant::class.java)!!
                 .truncatedTo(ChronoUnit.HOURS)
         ).isEqualTo(expected)
     }

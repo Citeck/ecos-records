@@ -21,25 +21,18 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
 
         private const val LOCALE_ARG_IDX = 1
         private const val TIMEZONE_ARG_IDX = 2
-
-        // Value 50 is not something special, but we can
-        // be sure that a date will not be longer than this value
-        private const val DATE_MAX_LENGTH = 50
-
-        private const val ZULU_TIME_POSTFIX = "T00:00:00Z"
     }
 
     override fun processOne(attributes: ObjectData, value: DataValue, args: Args): Any? {
 
-        if (value.isTextual() && isDateValue(value.asText())) {
-
-            val formatter = SimpleDateFormat(args.format, args.locale)
+        if (DateTimeAttProcUtils.isDateTimeValue(value)) {
 
             val dateTime = try {
-                ZonedDateTime.parse(normalizeDateTimeValue(value.asText()))
+                ZonedDateTime.parse(DateTimeAttProcUtils.normalizeDateTimeValue(value.asText()))
             } catch (e: DateTimeParseException) {
                 return value
             }
+            val formatter = SimpleDateFormat(args.format, args.locale)
             formatter.timeZone = args.timeZone ?: if (isFmtContainsTz(args.format)) {
                 TimeZone.getTimeZone(dateTime.zone)
             } else {
@@ -61,43 +54,10 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
         return value
     }
 
-    private fun normalizeDateTimeValue(value: String): String {
-        return if (value.endsWith("Z")) {
-            value
-        } else if (value.length == 10) {
-            // check for yyyy-MM-dd ("2020-01-01") date format
-            if (value[4] == '-' && value[7] == '-') {
-                value + ZULU_TIME_POSTFIX
-                // check for dd-MM-yyyy ("01-01-2020") date format
-            } else if (value[2] == '-' && value[5] == '-') {
-                val parts = value.split("-")
-                if (parts.size != 3) {
-                    value
-                } else {
-                    parts[2] + "-" + parts[1] + "-" + parts[0] + ZULU_TIME_POSTFIX
-                }
-            } else {
-                value
-            }
-        } else {
-            value
-        }
-    }
-
     private fun isFmtContainsTz(format: String): Boolean {
         return format.contains("Z") ||
             format.contains("z") ||
             format.contains("X")
-    }
-
-    private fun isDateValue(value: String): Boolean {
-        return if (value.isBlank() || value.length > DATE_MAX_LENGTH) {
-            false
-        } else if (value.length > 10) {
-            value.contains("T")
-        } else {
-            return value.indexOf('-') > 0
-        }
     }
 
     override fun parseArgs(args: List<DataValue>): Args {

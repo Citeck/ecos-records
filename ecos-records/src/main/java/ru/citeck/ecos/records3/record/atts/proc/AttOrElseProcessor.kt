@@ -10,7 +10,7 @@ class AttOrElseProcessor : AttProcessor {
         const val ATT_PREFIX: String = "a:"
     }
 
-    override fun process(attributes: ObjectData, value: DataValue, args: List<DataValue>): Any? {
+    override fun process(attributes: ObjectData, value: DataValue, args: List<DataValue>): Any {
 
         if (args.isEmpty()) {
             return value

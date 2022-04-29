@@ -24,8 +24,9 @@
         <jackson.version>2.3.2</jackson.version>
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
         <ecos.snakeyaml.version>2.2.0</ecos.snakeyaml.version>
-        <ecos.commons.version>2.5.4</ecos.commons.version>
+        <ecos.commons.version>2.6.1</ecos.commons.version>
         <ecos.context-lib.version>1.1.4</ecos.context-lib.version>
+        <ecos.webapp-api.version>1.0.1</ecos.webapp-api.version>
 
         <junit.version>5.4.0</junit.version>
         <slf4j.version>1.7.28</slf4j.version>
@@ -59,6 +60,12 @@
             <artifactId>ecos-context-lib</artifactId>
             <version>${ecos.context-lib.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.webapp</groupId>
+            <artifactId>ecos-webapp-api</artifactId>
+            <version>${ecos.webapp-api.version}</version>
         </dependency>
 
         <dependency>

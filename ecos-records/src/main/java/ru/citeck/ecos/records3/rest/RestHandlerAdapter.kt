@@ -1,16 +1,22 @@
 package ru.citeck.ecos.records3.rest
 
+import ecos.com.fasterxml.jackson210.databind.JsonNode
+import ecos.com.fasterxml.jackson210.databind.node.IntNode
+import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
 import ru.citeck.ecos.records2.request.rest.QueryBody
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.RestHandlerV1
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
+import ru.citeck.ecos.webapp.api.web.EcosWebController
+import ru.citeck.ecos.webapp.api.web.EcosWebExecutor
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -23,9 +29,46 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     private val restHandlerV1 = RestHandlerV1(services)
     private val mapper = Json.mapper
 
-    fun queryRecords(body: Any): Any {
+    init {
+        registerWebExecutors(services.getEcosWebAppContext()?.getWebController())
+    }
 
-        val bodyWithVersion = getBodyWithVersion(body)
+    private fun registerWebExecutors(controller: EcosWebController?) {
+        controller ?: return
+        controller.registerExecutor(
+            RemoteRecordsResolver.QUERY_PATH,
+            object : EcosWebExecutor<ObjectNode> {
+                override fun execute(apiVersion: Int, request: ObjectNode) = queryRecords(request, apiVersion)
+                override fun getApiVersion() = 2
+            }
+        )
+        controller.registerExecutor(
+            RemoteRecordsResolver.MUTATE_PATH,
+            object : EcosWebExecutor<ObjectNode> {
+                override fun execute(apiVersion: Int, request: ObjectNode) = mutateRecords(request, apiVersion)
+                override fun getApiVersion() = 1
+            }
+        )
+        controller.registerExecutor(
+            RemoteRecordsResolver.DELETE_PATH,
+            object : EcosWebExecutor<ObjectNode> {
+                override fun execute(apiVersion: Int, request: ObjectNode) = deleteRecords(request, apiVersion)
+                override fun getApiVersion() = 1
+            }
+        )
+        controller.registerExecutor(
+            RemoteRecordsResolver.TXN_PATH,
+            object : EcosWebExecutor<ObjectNode> {
+                override fun execute(apiVersion: Int, request: ObjectNode) = txnAction(request)
+                override fun getApiVersion() = 1
+            }
+        )
+    }
+
+    @JvmOverloads
+    fun queryRecords(body: Any, version: Int? = null): Any {
+
+        val bodyWithVersion = getBodyWithVersion(body, version)
 
         return when (bodyWithVersion.version) {
             0 -> {
@@ -58,9 +101,10 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         return restHandlerV1.txnAction(txnBody)
     }
 
-    fun deleteRecords(body: Any): Any {
+    @JvmOverloads
+    fun deleteRecords(body: Any, version: Int? = null): Any {
 
-        val bodyWithVersion = getBodyWithVersion(body)
+        val bodyWithVersion = getBodyWithVersion(body, version)
 
         return when (bodyWithVersion.version) {
             0 -> {
@@ -77,9 +121,10 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         }
     }
 
-    fun mutateRecords(body: Any): Any {
+    @JvmOverloads
+    fun mutateRecords(body: Any, version: Int? = null): Any {
 
-        val bodyWithVersion = getBodyWithVersion(body)
+        val bodyWithVersion = getBodyWithVersion(body, version)
 
         return when (bodyWithVersion.version) {
             0 -> {
@@ -96,17 +141,20 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         }
     }
 
-    private fun getBodyWithVersion(body: Any?): BodyWithVersion {
+    private fun getBodyWithVersion(body: Any?, version: Int? = null): BodyWithVersion {
 
         val jsonBody: ObjectNode = mapper.convert(body, ObjectNode::class.java)
             ?: error("Incorrect request body. Expected JSON Object, but found: $body")
 
-        var version = jsonBody.path("v")
-        if (!version.isNumber) {
-            version = jsonBody.path("version")
+        var bodyVersion: JsonNode = version?.let { IntNode.valueOf(it) } ?: NullNode.getInstance()
+        if (!bodyVersion.isNumber) {
+            bodyVersion = jsonBody.path("v")
         }
-        if (version.isNumber) {
-            return BodyWithVersion(jsonBody, version.asInt())
+        if (!bodyVersion.isNumber) {
+            bodyVersion = jsonBody.path("version")
+        }
+        if (bodyVersion.isNumber) {
+            return BodyWithVersion(jsonBody, bodyVersion.asInt())
         }
 
         val v1Body = jsonBody.path("v1Body")

@@ -1,9 +1,10 @@
 package ru.citeck.ecos.records3.test;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -21,6 +22,8 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
+import ru.citeck.ecos.records3.test.testutils.MockWebAppContext;
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,13 +40,15 @@ class RemoteRecordsResolverTest {
         Factory() {
         }
 
+        @Nullable
         @Override
-        public RemoteRecordsResolver createRemoteRecordsResolver() {
-            RemoteRecordsResolver resolver = new RemoteRecordsResolver(this,
-                RemoteRecordsResolverTest.this::jsonPost);
-            return resolver;
+        public EcosWebAppContext getEcosWebAppContext() {
+            MockWebAppContext ctx = new MockWebAppContext();
+            ctx.setWebClientExecuteImpl(RemoteRecordsResolverTest.this::jsonPost);
+            return ctx;
         }
 
+        @NotNull
         @Override
         protected RecordsProperties createProperties() {
             RecordsProperties props = super.createProperties();
@@ -82,9 +87,9 @@ class RemoteRecordsResolverTest {
         });
     }
 
-    private <T> T jsonPost(String url, Object request, Class<T> resultType) {
+    private Object jsonPost(String targetApp, String path, Object request) {
 
-        urls.add(url);
+        urls.add("/" + targetApp + path);
 
         if (request instanceof QueryBody) {
 
@@ -102,14 +107,14 @@ class RemoteRecordsResolverTest {
 
                 RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
                 result.setRecords(body.getRecords().stream().map(metaByRef::get).collect(Collectors.toList()));
-                return Json.getMapper().convert(result, resultType);
+                return result;
 
             } else if (body.getQuery() != null) {
 
                 assertFalse(body.getQuery().getSourceId().contains("/"));
                 RecordsResult<RecordMeta> result = new RecordsResult<>();
                 result.setRecords(new ArrayList<>(metaByRef.values()));
-                return Json.getMapper().convert(result, resultType);
+                return result;
 
             } else {
                 throw new IllegalStateException("Incorrect query: " + request);
@@ -120,7 +125,7 @@ class RemoteRecordsResolverTest {
 
             MutateResp result = new MutateResp();
             result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r.getId())).collect(Collectors.toList()));
-            return Json.getMapper().convert(result, resultType);
+            return result;
 
         } else if (request instanceof DeleteBody) {
 
@@ -128,7 +133,7 @@ class RemoteRecordsResolverTest {
 
             DeleteResp result = new DeleteResp();
             result.setStatuses(body.getRecords().stream().map((v) -> DelStatus.OK).collect(Collectors.toList()));
-            return Json.getMapper().convert(result, resultType);
+            return result;
 
         } else {
             throw new IllegalArgumentException("Body type is unknown: " + request + " "
@@ -153,7 +158,7 @@ class RemoteRecordsResolverTest {
             result.getRecords());
 
         assertEquals(1, urls.size());
-        assertEquals("/" + appId + RemoteRecordsResolver.QUERY_URL, urls.get(0));
+        assertEquals("/" + appId + RemoteRecordsResolver.QUERY_PATH, urls.get(0));
 
         urls.clear();
 

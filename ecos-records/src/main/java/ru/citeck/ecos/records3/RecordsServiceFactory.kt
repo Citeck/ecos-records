@@ -60,6 +60,7 @@ import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
 import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 import java.util.*
 import java.util.function.Consumer
 import java.util.function.Supplier
@@ -120,9 +121,13 @@ open class RecordsServiceFactory {
             log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
             props.defaultApp = ""
         }
+        val ctx = getEcosWebAppContext()
+        if (ctx != null) {
+            props.appName = ctx.getProperties().appName
+            props.appInstanceId = ctx.getProperties().appInstanceId
+        }
         props
     }
-
     private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
 
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
@@ -236,7 +241,16 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-        return null
+        val webAppContext = this.getEcosWebAppContext()
+        return if (webAppContext != null) {
+            RemoteRecordsResolver(this)
+        } else {
+            check(!properties.gatewayMode) {
+                ("WebAppContext should be not null in gateway mode! Props: $properties")
+            }
+            log.warn("EcosWebAppContext is not exists. Remote records requests wont be allowed")
+            null
+        }
     }
 
     protected open fun createLocalRecordsResolver(): LocalRecordsResolver {
@@ -390,6 +404,10 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordsTxnService(): RecordsTxnService {
         return DefaultRecordsTxnService()
+    }
+
+    open fun getEcosWebAppContext(): EcosWebAppContext? {
+        return null
     }
 
     fun setRecordTypeService(recordTypeService: RecordTypeService) {

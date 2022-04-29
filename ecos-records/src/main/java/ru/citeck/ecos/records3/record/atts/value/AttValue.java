@@ -4,9 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records3.future.RecFuture;
 import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge;
 import ru.citeck.ecos.records3.utils.AttUtils;
+import ru.citeck.ecos.webapp.api.promise.Promise;
 
 /**
  * Attribute value. Used to get attributes by schema.
@@ -20,7 +20,7 @@ public interface AttValue {
      * This method may be used to pre evaluate inner attributes using AttContext
      */
     @Nullable
-    default RecFuture<?> init() throws Exception {
+    default Promise<?> init() throws Exception {
         return null;
     }
 

@@ -163,6 +163,10 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
         return attributes.get(name, Boolean::class.java)
     }
 
+    operator fun get(name: String?): DataValue {
+        return getAtt(name)
+    }
+
     fun getAtt(name: String?): DataValue {
         if (name == null) {
             return DataValue.NULL
@@ -175,6 +179,10 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
             return orElse
         }
         return attributes.get(name, orElse)
+    }
+
+    operator fun set(name: String?, value: Any?) {
+        return setAtt(name, value)
     }
 
     fun setAtt(name: String?, value: Any?) {

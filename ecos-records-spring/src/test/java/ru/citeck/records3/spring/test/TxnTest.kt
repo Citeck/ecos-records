@@ -22,8 +22,8 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
-import ru.citeck.ecos.records3.spring.web.rest.RecordsRestApi
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -37,7 +37,7 @@ class TxnTest {
     @Autowired
     lateinit var recordsDao: Config.RecordsTxnDao
     @Autowired
-    lateinit var restApi: RecordsRestApi
+    lateinit var restAdapter: RestHandlerAdapter
 
     @Test
     fun test() {
@@ -48,7 +48,7 @@ class TxnTest {
         atts.setAtt("test", "value")
         body.addRecord(atts)
 
-        restApi.recordsMutate(Json.mapper.toBytes(body)!!)
+        restAdapter.mutateRecords(Json.mapper.toBytesNotNull(body))
 
         assertThat(recordsDao.txnRecordsMap).isEmpty()
         assertThat(recordsDao.recordsMap).hasSize(1)
@@ -81,7 +81,7 @@ class TxnTest {
         atts.setId("$proxyDaoId@")
         atts.setAtt("test", "value22")
 
-        restApi.recordsMutate(Json.mapper.toBytes(body)!!)
+        restAdapter.mutateRecords(Json.mapper.toBytesNotNull(body))
 
         assertThat(recordsDao.txnRecordsMap).isEmpty()
         assertThat(recordsDao.recordsMap).hasSize(1)
@@ -93,7 +93,7 @@ class TxnTest {
         atts.setId("$proxyDaoId@")
         atts.setAtt("test", "value22")
 
-        restApi.recordsMutate(Json.mapper.toBytes(body)!!)
+        restAdapter.mutateRecords(Json.mapper.toBytesNotNull(body))
 
         assertThat(recordsDao.txnRecordsMap).isEmpty()
         assertThat(recordsDao.recordsMap).isEmpty()
@@ -105,7 +105,7 @@ class TxnTest {
                 RequestContext.doAfterCommit {
                     elementsAfterCommit.add("element")
                 }
-                restApi.recordsMutate(Json.mapper.toBytes(body)!!)
+                restAdapter.mutateRecords(Json.mapper.toBytesNotNull(body))
             }
             if (error) {
                 assertThat(elementsAfterCommit).isEmpty()

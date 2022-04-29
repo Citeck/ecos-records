@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.resolver
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
@@ -8,7 +7,6 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.exception.RecordsException
 import ru.citeck.ecos.records2.exception.RemoteRecordsException
 import ru.citeck.ecos.records2.request.error.RecordsError
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsService
@@ -16,10 +14,8 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.cache.Cache
 import ru.citeck.ecos.records3.cache.CacheConfig
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
-import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -38,36 +34,34 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
-import java.util.*
+import ru.citeck.ecos.webapp.api.web.EcosWebClient
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 class RemoteRecordsResolver(
-    val services: RecordsServiceFactory,
-    private val restApi: RemoteRecordsRestApi
+    val services: RecordsServiceFactory
 ) {
 
     companion object {
         val log = KotlinLogging.logger {}
 
-        const val BASE_URL: String = "/api/records/"
-        const val QUERY_URL: String = BASE_URL + "query"
-        const val MUTATE_URL: String = BASE_URL + "mutate"
-        const val DELETE_URL: String = BASE_URL + "delete"
-        const val TXN_URL: String = BASE_URL + "txn"
+        const val BASE_PATH: String = "/records/"
+        const val QUERY_PATH: String = BASE_PATH + "query"
+        const val MUTATE_PATH: String = BASE_PATH + "mutate"
+        const val DELETE_PATH: String = BASE_PATH + "delete"
+        const val TXN_PATH: String = BASE_PATH + "txn"
     }
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
-    private val dtoSchemaReader = services.dtoSchemaReader
-    private val attSchemaWriter = services.attSchemaWriter
 
     private val sourceIdMeta: Cache<String, RecSrcMeta>
-    private val remoteAppApiMeta: Cache<String, RemoteAppApiMeta>
+    private val webClient: EcosWebClient = services.getEcosWebAppContext()?.getWebClient()
+        ?: error("EcosWebAppContext is null")
 
     init {
         sourceIdMeta = services.cacheManager.create(
@@ -78,14 +72,6 @@ class RemoteRecordsResolver(
             ),
             RecSrcMeta(false)
         ) { k -> evalSourceIdMeta(k) }
-        remoteAppApiMeta = services.cacheManager.create(
-            CacheConfig(
-                key = "remote-app-api-meta",
-                expireAfterWrite = TimeUnit.MINUTES.toMillis(1),
-                maxItems = 200
-            ),
-            RemoteAppApiMeta()
-        ) { k -> evalRemoteAppApiMeta(k) }
     }
 
     fun query(
@@ -110,8 +96,7 @@ class RemoteRecordsResolver(
             .withSourceId(sourceId.substring(appDelimIdx + 1))
             .build()
 
-        val api = remoteAppApiMeta.get(appName)
-        val queryBody = if (api.versions.query >= 2) {
+        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH) >= 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -121,7 +106,7 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp = exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
+        val queryResp = exchangeRemoteRequest(appName, QUERY_PATH, queryBody, QueryResp::class, context)
 
         val result = RecsQueryRes<RecordAtts>()
 
@@ -151,8 +136,7 @@ class RemoteRecordsResolver(
                 refs.map { it.value.removeAppName() },
                 attributes,
                 rawAtts,
-                context,
-                remoteAppApiMeta.get(app)
+                context
             )
             for (i in refs.indices) {
                 val ref: ValWithIdx<RecordRef> = refs[i]
@@ -169,11 +153,10 @@ class RemoteRecordsResolver(
         records: List<RecordRef>,
         attributes: Map<String, *>,
         rawAtts: Boolean,
-        context: RequestContext,
-        api: RemoteAppApiMeta
+        context: RequestContext
     ): List<RecordAtts> {
 
-        val queryBody = if (api.versions.query >= 2) {
+        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH) >= 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -183,7 +166,7 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp = exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
+        val queryResp = exchangeRemoteRequest(appName, QUERY_PATH, queryBody, QueryResp::class, context)
 
         if (queryResp.records.size != records.size) {
             throw RecordsException(
@@ -230,7 +213,7 @@ class RemoteRecordsResolver(
 
             val mutateResp: MutateResp = exchangeRemoteRequest(
                 appName,
-                MUTATE_URL,
+                MUTATE_PATH,
                 mutateBody,
                 MutateResp::class,
                 context
@@ -272,7 +255,7 @@ class RemoteRecordsResolver(
             deleteBody.setRecords(refs.map { it.value.removeAppName() })
             setContextProps(deleteBody, context)
 
-            val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_URL, deleteBody, DeleteResp::class, context)
+            val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_PATH, deleteBody, DeleteResp::class, context)
 
             val statuses = resp.statuses
             if (statuses.size != deleteBody.records.size) {
@@ -361,7 +344,7 @@ class RemoteRecordsResolver(
         var exception: Exception? = null
         for (i in 1..4) {
             try {
-                exchangeRemoteRequest(appName, TXN_URL, body, TxnResp::class, context)
+                exchangeRemoteRequest(appName, TXN_PATH, body, TxnResp::class, context)
                 if (exception != null) {
                     log.info {
                         "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
@@ -394,38 +377,6 @@ class RemoteRecordsResolver(
         return RecSrcMeta(atts.isTransactional ?: false)
     }
 
-    private fun evalRemoteAppApiMeta(appName: String): RemoteAppApiMeta {
-
-        val atts = dtoSchemaReader.read(RemoteAppApiVersionAtts::class.java)
-
-        val metaAttribute = attSchemaWriter.write(
-            SchemaAtt.create()
-                .withName("version")
-                .withInner(atts)
-                .build()
-        )
-
-        val attsFromApp = getAttsForApp(
-            appName,
-            listOf(RecordRef.create(RecordsApiRecordsDao.ID, "")),
-            mapOf("meta" to metaAttribute),
-            false,
-            RequestContext.getCurrentNotNull(),
-            RemoteAppApiMeta()
-        )[0].getAtts().get("meta").asObjectData()
-
-        val remoteMeta = dtoSchemaReader.instantiate(RemoteAppApiVersionAtts::class.java, attsFromApp)
-
-        return RemoteAppApiMeta(
-            versions = RemoteAppApiVersions(
-                query = remoteMeta?.query ?: 1,
-                mutate = remoteMeta?.mutate ?: 1,
-                txn = remoteMeta?.txn ?: 1,
-                delete = remoteMeta?.delete ?: 1
-            )
-        )
-    }
-
     private fun setContextProps(body: RequestBody, ctx: RequestContext) {
         val ctxData = ctx.ctxData
         body.msgLevel = ctxData.msgLevel
@@ -436,28 +387,14 @@ class RemoteRecordsResolver(
 
     private fun <T : RequestResp> exchangeRemoteRequest(
         appName: String,
-        url: String,
+        requestPath: String,
         body: RequestBody,
         respType: KClass<T>,
         context: RequestContext
     ): T {
 
-        val respBody = postRecords(appName, url, body)
+        val result = webClient.execute(appName, requestPath, body, respType.java).get()
 
-        if (respBody == null || respBody.isEmpty) {
-            throw RecordsException(
-                "Expected ${respType.simpleName} but received empty body. " +
-                    "app: $appName " +
-                    "url: $url " +
-                    "body: ${formatObjForLog(body)}"
-            )
-        }
-        val result = Json.mapper.convert(respBody, respType.java) ?: throw RecordsException(
-            "Response body can't be converted to ${respType.simpleName}. " +
-                "app: $appName " +
-                "url: $url " +
-                "body: ${formatObjForLog(respBody)}"
-        )
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)
         txnActionManager.execute(result.txnActions, context)
@@ -493,11 +430,6 @@ class RemoteRecordsResolver(
         }
     }
 
-    private fun postRecords(appName: String, url: String, body: Any): ObjectNode? {
-        val appUrl = "/$appName$url"
-        return restApi.jsonPost(appUrl, body, ObjectNode::class.java)
-    }
-
     fun getSourceInfo(sourceId: String): RecordsSourceMeta? {
         // todo
         return null
@@ -516,28 +448,5 @@ class RemoteRecordsResolver(
     data class RecSrcMetaAtts(
         @AttName("features.transactional")
         val isTransactional: Boolean?
-    )
-
-    private data class RemoteAppApiVersionAtts(
-        val query: Int?,
-        val mutate: Int?,
-        val txn: Int?,
-        val delete: Int?
-    )
-
-    private data class RemoteAppApiVersions(
-        val query: Int,
-        val mutate: Int,
-        val txn: Int,
-        val delete: Int
-    )
-
-    private data class RemoteAppApiMeta(
-        val versions: RemoteAppApiVersions = RemoteAppApiVersions(
-            query = 1,
-            mutate = 1,
-            txn = 1,
-            delete = 1
-        )
     )
 }

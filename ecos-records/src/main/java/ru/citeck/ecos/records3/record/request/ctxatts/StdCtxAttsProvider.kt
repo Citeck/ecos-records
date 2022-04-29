@@ -29,17 +29,10 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
         attributes["appName"] = props.appName
         attributes["appInstanceId"] = props.appInstanceId
 
-        if (props.peopleSourceId.isNotBlank()) {
-            attributes["user"] = getCurrentUserRef(props.peopleSourceId)
+        val user = AuthContext.getCurrentUser()
+        if (user.isNotBlank()) {
+            attributes["user"] = RecordRef.create("emodel", "person", user)
         }
-    }
-
-    private fun getCurrentUserRef(peopleSourceId: String): RecordRef {
-        val currentUser = AuthContext.getCurrentUser()
-        if (currentUser.isEmpty() || peopleSourceId.isBlank()) {
-            return RecordRef.EMPTY
-        }
-        return RecordRef.valueOf(peopleSourceId + RecordRef.SOURCE_DELIMITER + currentUser)
     }
 
     override fun getOrder() = ORDER

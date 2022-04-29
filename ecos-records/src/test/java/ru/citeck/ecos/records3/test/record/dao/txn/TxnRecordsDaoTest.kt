@@ -5,9 +5,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -22,6 +22,10 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.web.EcosWebClient
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
@@ -89,15 +93,8 @@ class TxnRecordsDaoTest {
     fun deleteTest() {
 
         val services = object : RecordsServiceFactory() {
-            override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
-                return RemoteRecordsResolver(
-                    this,
-                    object : RemoteRecordsRestApi {
-                        override fun <T : Any?> jsonPost(url: String?, request: Any?, respType: Class<T>?): T {
-                            error("Not supported")
-                        }
-                    }
-                )
+            override fun getEcosWebAppContext(): EcosWebAppContext? {
+                return MockWebAppContext("test")
             }
         }
         val records = services.recordsServiceV1
@@ -179,29 +176,35 @@ class TxnRecordsDaoTest {
         remoteServices.recordsServiceV1.register(TxnDao())
 
         val localServices = object : RecordsServiceFactory() {
-            override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
-                return RemoteRecordsResolver(
-                    this,
-                    object : RemoteRecordsRestApi {
-                        override fun <T : Any> jsonPost(url: String, request: Any, respType: Class<T>): T {
-                            val restHandler = remoteServices.restHandlerAdapter
-                            val urlPrefix = "/$remoteAppName"
-                            val result = AtomicReference<Any>()
-                            thread(start = true) {
-                                result.set(
-                                    when (url) {
-                                        urlPrefix + RemoteRecordsResolver.QUERY_URL -> restHandler.queryRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.MUTATE_URL -> restHandler.mutateRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.DELETE_URL -> restHandler.deleteRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.TXN_URL -> restHandler.txnAction(request)
-                                        else -> error("Unknown url: '$url'")
-                                    }
-                                )
-                            }.join()
-                            return Json.mapper.convert(result.get(), respType)!!
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                val context = object : MockWebAppContext("test") {
+                    override fun getWebClient(): EcosWebClient {
+                        return object : EcosWebClient {
+                            override fun <R : Any> execute(
+                                targetApp: String,
+                                path: String,
+                                request: Any,
+                                respType: Class<R>
+                            ): Promise<R> {
+                                val restHandler = remoteServices.restHandlerAdapter
+                                val result = AtomicReference<Any>()
+                                thread(start = true) {
+                                    result.set(
+                                        when (path) {
+                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(request)
+                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(request)
+                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(request)
+                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(request)
+                                            else -> error("Unknown path: '$path'")
+                                        }
+                                    )
+                                }.join()
+                                return Promises.resolve(Json.mapper.convert(result.get(), respType)!!)
+                            }
                         }
                     }
-                )
+                }
+                return context
             }
         }
         RequestContext.setDefaultServices(localServices)

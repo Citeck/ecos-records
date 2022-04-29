@@ -93,15 +93,6 @@ public class RecordMeta extends RecordAtts {
     }
 
     @NotNull
-    public DataValue get(@NotNull String name) {
-        return getAtt(name);
-    }
-
-    public void set(@NotNull String name, @Nullable Object value) {
-        getAttributes().set(name, value);
-    }
-
-    @NotNull
     @Override
     public RecordMeta withoutSensitiveData() {
         RecordAtts recordAtts = super.withoutSensitiveData();

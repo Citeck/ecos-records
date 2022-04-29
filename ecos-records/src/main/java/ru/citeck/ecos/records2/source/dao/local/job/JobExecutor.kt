@@ -5,15 +5,11 @@ import mu.KotlinLogging
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.webapp.api.scheduling.EcosScheduledTask
+import ru.citeck.ecos.webapp.api.scheduling.EcosTaskScheduler
 import java.lang.Exception
-import java.lang.InterruptedException
-import java.lang.Thread
-import java.time.Instant
+import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.function.Predicate
 
@@ -21,63 +17,55 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
 
     companion object {
         private const val SYSTEM_JOBS_SOURCE_ID = "SYSTEM"
+        private const val SCHEDULER_ID = "records"
 
         private val log = KotlinLogging.logger {}
     }
 
     private val jobs: MutableList<JobInstance> = CopyOnWriteArrayList()
-    private lateinit var executor: ScheduledExecutorService
+    private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()?.getTaskScheduler(SCHEDULER_ID)
 
+    @Volatile
     private var initialized = false
+
+    init {
+        serviceFactory.getEcosWebAppContext()?.doWhenWebAppReady { init() }
+    }
+
+    fun init() {
+        if (initialized) {
+            return
+        }
+        if (scheduler != null) {
+            log.info { "Initialize JobExecutor" }
+            synchronized(jobs) {
+                for (job in jobs) {
+                    scheduleJob(job)
+                }
+            }
+        } else {
+            log.info { "JobExecutor is disabled because scheduler is null" }
+        }
+        initialized = true
+    }
 
     fun isInitialized(): Boolean {
         return initialized
     }
 
-    @Synchronized
-    fun init() {
-        if (initialized) {
-            return
-        }
-        val corePoolSize = serviceFactory.properties.jobs.corePoolSize ?: 5
-
-        if (corePoolSize > 0) {
-
-            log.info { "Initialize JobExecutor with corePoolSize: $corePoolSize" }
-            executor = Executors.newScheduledThreadPool(corePoolSize)
-
-            Runtime.getRuntime().addShutdownHook(
-                Thread {
-                    log.info("Shutdown hook triggered")
-                    jobs.forEach(Consumer { it.enabled = false })
-                    removeJobs { true }
-                    executor.shutdown()
-                    log.info("Shutdown hook completed")
-                }
-            )
-            for (job in jobs) {
-                scheduleJob(job)
-            }
-        } else {
-            log.info { "JobExecutor disabled because corePoolSize is less or equal to zero" }
-        }
-        initialized = true
-    }
-
     private fun scheduleJob(instance: JobInstance) {
-        instance.future = if (instance.job is PeriodicJob) {
-            executor.scheduleAtFixedRate(
-                { execute(instance) },
-                instance.job.getInitDelay(),
-                instance.job.period,
-                TimeUnit.MILLISECONDS
-            )
+        val scheduler = this.scheduler ?: return
+        instance.task = if (instance.job is PeriodicJob) {
+            scheduler.scheduleWithFixedDelay(
+                { "records-job" },
+                Duration.ofMillis(instance.job.getInitDelay()),
+                Duration.ofMillis(instance.job.period)
+            ) { execute(instance) }
         } else {
-            executor.schedule(
-                { execute(instance) },
-                instance.job.initDelay,
-                TimeUnit.MILLISECONDS
-            )
+            scheduler.schedule(
+                { "records-job" },
+                Duration.ofMillis(instance.job.initDelay)
+            ) { execute(instance) }
         }
     }
 
@@ -94,9 +82,11 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     @Synchronized
     fun addJob(sourceId: String, job: Job) {
         val instance = JobInstance(sourceId, job)
-        jobs.add(instance)
-        if (initialized) {
-            scheduleJob(instance)
+        synchronized(jobs) {
+            jobs.add(instance)
+            if (initialized) {
+                scheduleJob(instance)
+            }
         }
     }
 
@@ -106,37 +96,25 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
 
     @Synchronized
     private fun removeJobs(filter: Predicate<JobInstance>) {
-        jobs.removeIf { instance: JobInstance ->
-            if (!filter.test(instance)) {
-                return@removeIf false
-            }
-            instance.enabled = false
-            if (!initialized || instance.future == null) {
-                return@removeIf true
-            }
-            try {
-                if (instance.running) {
-                    val waitUntilRunning = System.currentTimeMillis() + 5000
-                    log.info(
-                        "Job from sourceId '" + instance.sourceId + "' is running. Try to wait until " +
-                            Instant.ofEpochMilli(waitUntilRunning)
-                    )
-                    while (instance.running && System.currentTimeMillis() < waitUntilRunning) {
-                        Thread.sleep(100)
-                    }
-                    if (instance.running) {
-                        log.warn("Job is still running and will be cancelled")
-                    } else {
-                        log.info("Job is not running")
-                    }
+        val jobsToCancel = mutableListOf<JobInstance>()
+        synchronized(jobs) {
+            jobs.removeIf {
+                if (filter.test(it)) {
+                    jobsToCancel.add(it)
+                    true
+                } else {
+                    false
                 }
-                instance.future?.cancel(true)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            } catch (e: Exception) {
-                log.warn("Exception while job cancelling. SourceId: " + instance.sourceId, e)
             }
-            true
+        }
+        jobsToCancel.map {
+            it to it.task?.cancel(Duration.ofSeconds(10))
+        }.forEach {
+            try {
+                it.second?.get(Duration.ofSeconds(20))
+            } catch (e: Exception) {
+                log.warn("Exception while job cancelling. SourceId: " + it.first.sourceId, e)
+            }
         }
     }
 
@@ -171,7 +149,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     private class JobInstance(val sourceId: String, val job: Job) {
         @Transient
         var enabled = true
-        var future: ScheduledFuture<*>? = null
+        var task: EcosScheduledTask? = null
         @Transient
         var running = false
     }

@@ -4,15 +4,16 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.commons.promise.Promises;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
@@ -28,6 +29,10 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
+import ru.citeck.ecos.records3.test.testutils.MockWebAppContext;
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
+import ru.citeck.ecos.webapp.api.promise.Promise;
+import ru.citeck.ecos.webapp.api.web.EcosWebClient;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -51,18 +56,36 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
+        EcosWebAppContext webAppContext = new MockWebAppContext() {
+            @NotNull
+            @Override
+            public EcosWebClient getWebClient() {
+                return new EcosWebClient() {
+                    @NotNull
+                    @Override
+                    public <R> Promise<R> execute(
+                        @NotNull String targetApp,
+                        @NotNull String path,
+                        @NotNull Object request,
+                        @NotNull Class<R> respType
+                    ) {
+                        @SuppressWarnings("unchecked")
+                        R res = (R) remoteFactory.getRestHandlerAdapter().queryRecords(request);
+                        return Promises.resolve(Json.getMapper().convert(res, respType));
+                    }
+
+                    @Override
+                    public int getApiVersion(@NotNull String s, @NotNull String s1) {
+                        return 0;
+                    }
+                };
+            }
+        };
 
         RecordsServiceFactory localFactory = new RecordsServiceFactory() {
             @Override
-            protected RemoteRecordsResolver createRemoteRecordsResolver() {
-            return new RemoteRecordsResolver(this, new RemoteRecordsRestApi() {
-                @Override
-                public <T> T jsonPost(String url, Object request, Class<T> respType) {
-                    @SuppressWarnings("unchecked")
-                    T res = (T) remoteFactory.getRestHandlerAdapter().queryRecords(request);
-                    return Json.getMapper().convert(res, respType);
-                }
-            });
+            public EcosWebAppContext getEcosWebAppContext() {
+                return webAppContext;
             }
         };
         recordsServiceFactory = localFactory;
@@ -166,7 +189,7 @@ public class RemoteSyncRecordsDaoTest {
             }
 
             if (query.getSortBy().size() != 1
-                    || !query.getSortBy().get(0).getAttribute().equals(RecordConstants.ATT_MODIFIED)) {
+                || !query.getSortBy().get(0).getAttribute().equals(RecordConstants.ATT_MODIFIED)) {
                 throw new IllegalArgumentException("Expected 1 SortBy with "
                     + RecordConstants.ATT_MODIFIED + " field. " + query);
             }

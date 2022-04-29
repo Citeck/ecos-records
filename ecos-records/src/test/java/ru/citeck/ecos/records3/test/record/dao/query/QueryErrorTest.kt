@@ -5,16 +5,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
+import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
 import java.lang.Exception
 
 class QueryErrorTest {
@@ -107,32 +106,26 @@ class QueryErrorTest {
     private fun createRecordsFactoryWithRemote(remoteFactory: RecordsServiceFactory): RecordsServiceFactory {
 
         val restAdapter = remoteFactory.restHandlerAdapter
+        val context = MockWebAppContext()
+        context.webClientExecuteImpl = { _, path, request ->
+            when {
+                path.contains("/query") -> {
+                    restAdapter.queryRecords(Json.mapper.convert(request, QueryBody::class.java)!!)
+                }
+                path.contains("/mutate") -> {
+                    restAdapter.mutateRecords(Json.mapper.convert(request, MutateBody::class.java)!!)
+                }
+                path.contains("/delete") -> {
+                    restAdapter.deleteRecords(Json.mapper.convert(request, DeleteBody::class.java)!!)
+                }
+                else -> {
+                    error("Unknown path: $path")
+                }
+            }
+        }
 
         return object : RecordsServiceFactory() {
-            override fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-                return RemoteRecordsResolver(
-                    this,
-                    object : RemoteRecordsRestApi {
-                        override fun <T : Any> jsonPost(url: String, request: Any?, respType: Class<T>): T {
-                            val result = when {
-                                url.contains("/query") -> {
-                                    restAdapter.queryRecords(Json.mapper.convert(request, QueryBody::class.java)!!)
-                                }
-                                url.contains("/mutate") -> {
-                                    restAdapter.mutateRecords(Json.mapper.convert(request, MutateBody::class.java)!!)
-                                }
-                                url.contains("/delete") -> {
-                                    restAdapter.deleteRecords(Json.mapper.convert(request, DeleteBody::class.java)!!)
-                                }
-                                else -> {
-                                    error("Unknown URL: $url")
-                                }
-                            }
-                            return Json.mapper.convert(result, respType)!!
-                        }
-                    }
-                )
-            }
+            override fun getEcosWebAppContext() = context
         }
     }
 

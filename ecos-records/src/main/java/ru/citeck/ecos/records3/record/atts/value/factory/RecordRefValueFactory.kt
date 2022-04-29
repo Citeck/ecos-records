@@ -5,7 +5,6 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.future.RecFuture
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
+import ru.citeck.ecos.webapp.api.promise.Promise
 import kotlin.collections.LinkedHashMap
 
 class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
@@ -49,7 +49,7 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
 
         private lateinit var innerAtts: InnerAttValue
 
-        override fun init(): RecFuture<Unit>? {
+        override fun init(): Promise<Unit>? {
 
             val innerSchema = AttContext.getCurrentSchemaAtt().inner
 

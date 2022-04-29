@@ -5,18 +5,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
-import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
-import java.util.*
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.web.EcosWebClient
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
@@ -151,42 +153,37 @@ class TxnActionsTest {
     private fun createServices(appId: String): AppData {
 
         val services = object : RecordsServiceFactory() {
-            override fun createProperties(): RecordsProperties {
-                val props = RecordsProperties()
-                props.appName = appId
-                props.appInstanceId = appId + ":" + UUID.randomUUID()
-                return props
-            }
 
-            override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
-                return RemoteRecordsResolver(
-                    this,
-                    object : RemoteRecordsRestApi {
-                        override fun <T : Any> jsonPost(url: String, request: Any, respType: Class<T>): T {
-                            val remoteAppName = url.substring(1).substringBefore('/')
-                            val services = this@TxnActionsTest.services[remoteAppName]!!
-                            val restHandler = services.restHandlerAdapter
-                            val urlPrefix = "/$remoteAppName"
-                            val result = AtomicReference<Any>()
-                            thread(start = true) {
-                                result.set(
-                                    when (url) {
-                                        urlPrefix + RemoteRecordsResolver.QUERY_URL -> restHandler.queryRecords(request)
-                                        urlPrefix + RemoteRecordsResolver.MUTATE_URL -> restHandler.mutateRecords(
-                                            request
-                                        )
-                                        urlPrefix + RemoteRecordsResolver.DELETE_URL -> restHandler.deleteRecords(
-                                            request
-                                        )
-                                        urlPrefix + RemoteRecordsResolver.TXN_URL -> restHandler.txnAction(request)
-                                        else -> error("Unknown url: '$url'")
-                                    }
-                                )
-                            }.join()
-                            return Json.mapper.convert(result.get(), respType)!!
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                val context = object : MockWebAppContext(appId) {
+                    override fun getWebClient(): EcosWebClient {
+                        return object : EcosWebClient {
+                            override fun <R : Any> execute(
+                                targetApp: String,
+                                path: String,
+                                request: Any,
+                                respType: Class<R>
+                            ): Promise<R> {
+                                val services = this@TxnActionsTest.services[targetApp]!!
+                                val restHandler = services.restHandlerAdapter
+                                val result = AtomicReference<Any>()
+                                thread(start = true) {
+                                    result.set(
+                                        when (path) {
+                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(request)
+                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(request)
+                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(request)
+                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(request)
+                                            else -> error("Unknown path: '$path'")
+                                        }
+                                    )
+                                }.join()
+                                return Promises.resolve(Json.mapper.convert(result.get(), respType)!!)
+                            }
                         }
                     }
-                )
+                }
+                return context
             }
         }
 

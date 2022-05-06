@@ -5,8 +5,8 @@ import mu.KotlinLogging
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.webapp.api.scheduling.EcosScheduledTask
-import ru.citeck.ecos.webapp.api.scheduling.EcosTaskScheduler
+import ru.citeck.ecos.webapp.api.task.scheduler.EcosScheduledTask
+import ru.citeck.ecos.webapp.api.task.scheduler.EcosTaskScheduler
 import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
@@ -23,13 +23,15 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     }
 
     private val jobs: MutableList<JobInstance> = CopyOnWriteArrayList()
-    private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()?.getTaskScheduler(SCHEDULER_ID)
+    private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()
+        ?.getTasksApi()
+        ?.getTaskScheduler(SCHEDULER_ID)
 
     @Volatile
     private var initialized = false
 
     init {
-        serviceFactory.getEcosWebAppContext()?.doWhenWebAppReady { init() }
+        serviceFactory.getEcosWebAppContext()?.doWhenAppReady { init() }
     }
 
     fun init() {

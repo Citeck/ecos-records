@@ -33,7 +33,7 @@ class MockAppsFactory {
     private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
 
         val defaultCtxAtts = HashMap<String, Any?>()
-        val webAppContext = MockWebAppContext(name)
+        val webAppContext = WebAppContextMock(name)
         webAppContext.webClientExecuteImpl = { targetApp, path, request ->
             jsonPost(targetApp, path, request)
         }

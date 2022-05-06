@@ -22,7 +22,7 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
-import ru.citeck.ecos.records3.test.testutils.MockWebAppContext;
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock;
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
 
 import java.util.*;
@@ -43,7 +43,7 @@ class RemoteRecordsResolverTest {
         @Nullable
         @Override
         public EcosWebAppContext getEcosWebAppContext() {
-            MockWebAppContext ctx = new MockWebAppContext();
+            WebAppContextMock ctx = new WebAppContextMock();
             ctx.setWebClientExecuteImpl(RemoteRecordsResolverTest.this::jsonPost);
             return ctx;
         }

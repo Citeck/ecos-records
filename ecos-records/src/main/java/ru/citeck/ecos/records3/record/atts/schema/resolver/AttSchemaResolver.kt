@@ -10,6 +10,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
@@ -60,6 +61,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
     private val recordTypeService by lazy { factory.recordTypeService }
 
+    private val currentAppName = factory.getEcosWebAppContext()?.getProperties()?.appName ?: ""
+
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()
         return if (context == null) {
@@ -86,7 +89,13 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             } else {
                 args.valueRefs[i]
             }
-            attValues.add(context.toRootValueContext(values[i] ?: NullAttValue.INSTANCE, ref))
+            attValues.add(
+                context.toRootValueContext(
+                    this,
+                    values[i] ?: NullAttValue.INSTANCE,
+                    ref
+                )
+            )
         }
         val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
         val result = resolveRoot(attValues, simpleAtts, context)
@@ -361,7 +370,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     }
                 }
                 val values: List<ValueContext> = valuesStream
-                    .map { v: Any? -> context.toValueContext(value, v) }
+                    .map { v: Any? -> context.toValueContext(this, value, v) }
                     .collect(Collectors.toList())
                 result[alias] = resolve(values, att.inner, context)
             } else {
@@ -371,7 +380,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     if (att.isScalar()) {
                         result[alias] = attValues[0]
                     } else {
-                        val valueContext = context.toValueContext(value, attValues[0])
+                        val valueContext = context.toValueContext(this, value, attValues[0])
                         result[alias] = resolve(valueContext, att.inner, context)
                     }
                 }
@@ -546,6 +555,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
     }
 
     private class ValueContext(
+        val resolver: AttSchemaResolver?,
         val resolveCtx: ResolveContext?,
         val parent: ValueContext?,
         val value: AttValue,
@@ -557,6 +567,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         companion object {
             val EMPTY = ValueContext(
+                null,
                 null,
                 null,
                 EmptyAttValue.INSTANCE,
@@ -602,7 +613,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             if (RecordRef.isEmpty(result)) {
                 result
             } else {
-                val currentAppName = context?.getServices()?.properties?.appName ?: ""
+                val currentAppName = resolver?.currentAppName ?: ""
                 if (result.appName.isBlank() && currentAppName.isNotBlank()) {
                     result = result.withDefaultAppName(currentAppName)
                 }
@@ -728,7 +739,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                             is String -> disp
                             is MLText -> {
                                 if (attribute.startsWith('?')) {
-                                    MLText.getClosestValue(disp, RequestContext.getLocale())
+                                    MLText.getClosestValue(disp, I18nContext.getLocale())
                                 } else {
                                     disp
                                 }
@@ -810,9 +821,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             return result
         }
 
-        fun toRootValueContext(value: Any, valueRef: RecordRef): ValueContext {
+        fun toRootValueContext(resolver: AttSchemaResolver, value: Any, valueRef: RecordRef): ValueContext {
             val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
+                resolver,
                 this,
                 null,
                 attValue,
@@ -824,12 +836,13 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             )
         }
 
-        fun toValueContext(parent: ValueContext?, value: Any?): ValueContext {
+        fun toValueContext(resolver: AttSchemaResolver, parent: ValueContext?, value: Any?): ValueContext {
             if (value == null) {
                 return ValueContext.EMPTY
             }
             val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
+                resolver,
                 this,
                 parent,
                 attValue,

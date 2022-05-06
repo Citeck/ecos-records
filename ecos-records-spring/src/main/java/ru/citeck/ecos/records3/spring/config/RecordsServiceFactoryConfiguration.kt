@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.i18n.LocaleContextHolder
 import ru.citeck.ecos.records2.RecordsService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -32,10 +31,6 @@ open class RecordsServiceFactoryConfiguration : RecordsServiceFactory() {
     @PostConstruct
     fun init() {
         RequestContext.setDefaultServices(this)
-    }
-
-    override fun createLocaleSupplier(): () -> Locale {
-        return { LocaleContextHolder.getLocale() }
     }
 
     override fun createCtxAttsProviders(): List<CtxAttsProvider> {

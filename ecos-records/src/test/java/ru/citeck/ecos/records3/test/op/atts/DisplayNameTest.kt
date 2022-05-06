@@ -2,12 +2,12 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
-import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -29,17 +29,18 @@ class DisplayNameTest {
 
         assertEquals(RU_DISP, records.getAtt(AttValueStrRuDispClass(), "?disp").asText())
         assertEquals(EN_DISP, records.getAtt(AttValueMlDispClass(), "?disp").asText())
-        RequestContext.doWithCtx(factory, { it.withLocale(Locale("ru")) }) {
+
+        I18nContext.doWithLocale(Locale("ru")) {
             assertEquals(RU_DISP, records.getAtt(AttValueMlDispClass(), "?disp").asText())
         }
 
         assertEquals(RU_DISP, records.getAtt(DtoStrDispClass(), "?disp").asText())
         assertEquals(EN_DISP, records.getAtt(DtoMLDispClass(), "?disp").asText())
-        RequestContext.doWithCtx(factory, { it.withLocale(Locale("ru")) }) {
+        I18nContext.doWithLocale(Locale("ru")) {
             assertEquals(RU_DISP, records.getAtt(DtoMLDispClass(), "?disp").asText())
         }
 
-        RequestContext.doWithCtx(factory, { it.withLocale(Locale.FRANCE) }) {
+        I18nContext.doWithLocale(Locale.FRANCE) {
             assertEquals(EN_DISP, records.getAtt(DtoMLDispClass(), "?disp").asText())
         }
 
@@ -50,7 +51,7 @@ class DisplayNameTest {
         )
 
         assertEquals(EN_DISP, records.getAtt(DtoWithLinkToDtoMLDispClass(), "link?disp").asText())
-        RequestContext.doWithCtx(factory, { it.withLocale(Locale("ru")) }) {
+        I18nContext.doWithLocale(I18nContext.RUSSIAN) {
             assertEquals(RU_DISP, records.getAtt(DtoWithLinkToDtoMLDispClass(), "link?disp").asText())
         }
     }

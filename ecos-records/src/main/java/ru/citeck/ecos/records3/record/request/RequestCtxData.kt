@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 data class RequestCtxData(
     val requestId: String,
     val requestTrace: List<String>,
-    val locale: Locale,
     val ctxAtts: Map<String, Any?>,
     val computedAttsDisabled: Boolean,
     val msgLevel: MsgLevel,
@@ -50,7 +49,6 @@ data class RequestCtxData(
 
         var requestId: String = ""
         var requestTrace = mutableListOf<String>()
-        var locale: Locale = Locale.ENGLISH
         var ctxAtts: MutableMap<String, Any?> = mutableMapOf()
         var computedAttsDisabled = false
         var msgLevel: MsgLevel = MsgLevel.WARN
@@ -63,7 +61,6 @@ data class RequestCtxData(
         constructor(base: RequestCtxData) : this() {
             requestId = base.requestId
             requestTrace = base.requestTrace.toMutableList()
-            locale = base.locale
             ctxAtts = base.ctxAtts.toMutableMap()
             computedAttsDisabled = base.computedAttsDisabled
             msgLevel = base.msgLevel
@@ -86,11 +83,6 @@ data class RequestCtxData(
 
         fun withRequestTrace(requestTrace: List<String>): Builder {
             this.requestTrace = requestTrace.toMutableList()
-            return this
-        }
-
-        fun withLocale(locale: Locale): Builder {
-            this.locale = locale
             return this
         }
 
@@ -138,7 +130,6 @@ data class RequestCtxData(
             return RequestCtxData(
                 requestId,
                 requestTrace,
-                locale,
                 ctxAtts,
                 computedAttsDisabled,
                 msgLevel,

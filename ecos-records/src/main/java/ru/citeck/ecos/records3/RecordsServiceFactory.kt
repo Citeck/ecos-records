@@ -98,7 +98,6 @@ open class RecordsServiceFactory {
     val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
     val ctxAttsProviders: List<CtxAttsProvider> by lazy { createCtxAttsProviders() }
     val ctxAttsService: CtxAttsService by lazy { CtxAttsService(this) }
-    val localeSupplier: () -> Locale by lazy { createLocaleSupplier() }
     val jobExecutor: JobExecutor by lazy { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazy { createTxnActionManager() }
 
@@ -122,10 +121,8 @@ open class RecordsServiceFactory {
             props.defaultApp = ""
         }
         val ctx = getEcosWebAppContext()
-        if (ctx != null) {
-            props.appName = ctx.getProperties().appName
-            props.appInstanceId = ctx.getProperties().appInstanceId
-        }
+        props.appName = ctx?.getProperties()?.appName ?: ""
+        props.appInstanceId = ctx?.getProperties()?.appInstanceId ?: ""
         props
     }
     private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
@@ -146,10 +143,6 @@ open class RecordsServiceFactory {
 
     protected open fun createJobExecutor(): JobExecutor {
         return JobExecutor(this)
-    }
-
-    protected open fun createLocaleSupplier(): () -> Locale {
-        return { Locale.ENGLISH }
     }
 
     protected open fun createCtxAttsProviders(): List<CtxAttsProvider> {
@@ -241,8 +234,8 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-        val webAppContext = this.getEcosWebAppContext()
-        return if (webAppContext != null) {
+        val webClient = this.getEcosWebAppContext()?.getWebClient()
+        return if (webClient != null) {
             RemoteRecordsResolver(this)
         } else {
             check(!properties.gatewayMode) {

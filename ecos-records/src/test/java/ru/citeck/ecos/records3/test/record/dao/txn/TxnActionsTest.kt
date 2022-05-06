@@ -14,7 +14,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 import ru.citeck.ecos.webapp.api.promise.Promise
@@ -155,7 +155,7 @@ class TxnActionsTest {
         val services = object : RecordsServiceFactory() {
 
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                val context = object : MockWebAppContext(appId) {
+                val context = object : WebAppContextMock(appId) {
                     override fun getWebClient(): EcosWebClient {
                         return object : EcosWebClient {
                             override fun <R : Any> execute(

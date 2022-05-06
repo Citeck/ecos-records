@@ -2,11 +2,11 @@ package ru.citeck.ecos.records2.graphql.meta.value.impl
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.graphql.meta.value.CreateVariant
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
-import ru.citeck.ecos.records3.record.request.RequestContext
 
 class MetaAttEdge(private val edge: AttEdge) : MetaEdge {
 
@@ -35,9 +35,9 @@ class MetaAttEdge(private val edge: AttEdge) : MetaEdge {
 
     override fun getType(): String? = edge.type
 
-    override fun getTitle(): String? = MLText.getClosestValue(edge.title, RequestContext.getLocale())
+    override fun getTitle(): String = MLText.getClosestValue(edge.title, I18nContext.getLocale())
 
-    override fun getDescription(): String? = MLText.getClosestValue(edge.title, RequestContext.getLocale())
+    override fun getDescription(): String = MLText.getClosestValue(edge.title, I18nContext.getLocale())
 
     override fun getName(): String? = edge.name
 

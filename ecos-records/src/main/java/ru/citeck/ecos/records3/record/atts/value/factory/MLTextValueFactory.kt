@@ -1,20 +1,20 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
-import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.*
 
 class MLTextValueFactory : AttValueFactory<MLText> {
 
-    override fun getValue(value: MLText): AttValue? {
+    override fun getValue(value: MLText): AttValue {
         return Value(value, false)
     }
 
     internal class Value(val value: MLText, private val closest: Boolean) : AttValue {
 
         override fun asText(): String {
-            return value.getClosestValue(RequestContext.getLocale())
+            return value.getClosestValue(I18nContext.getLocale())
         }
 
         override fun getAtt(name: String): Any {

@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
 import ru.citeck.ecos.context.lib.func.UncheckedRunnable
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -62,8 +63,12 @@ class RequestContext {
         }
 
         @JvmStatic
+        @Deprecated(
+            "Use I8nContext.getLocale() instead",
+            ReplaceWith("I8nContext.getLocale()", "ru.citeck.ecos.context.lib.i18n.I8nContext")
+        )
         fun getLocale(): Locale {
-            return getCurrent()?.getCtxLocale() ?: Locale.ENGLISH
+            return I18nContext.getLocale()
         }
 
         @JvmStatic
@@ -222,9 +227,7 @@ class RequestContext {
                 current = RequestContext()
 
                 val ctxAtts = notNullServices.ctxAttsService.getContextAtts()
-                current.ctxData = builder.withCtxAtts(ctxAtts)
-                    .withLocale(notNullServices.localeSupplier.invoke())
-                    .build()
+                current.ctxData = builder.withCtxAtts(ctxAtts).build()
 
                 current.serviceFactory = notNullServices
 
@@ -407,8 +410,12 @@ class RequestContext {
         }
     }
 
+    @Deprecated(
+        "Use I18nContext.getLocale() instead",
+        ReplaceWith("I18nContext.getLocale()", "ru.citeck.ecos.context.lib.i18n.I18nContext")
+    )
     fun getCtxLocale(): Locale {
-        return ctxData.locale
+        return I18nContext.getLocale()
     }
 
     fun hasVar(key: String): Boolean {

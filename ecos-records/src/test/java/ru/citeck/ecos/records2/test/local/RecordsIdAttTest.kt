@@ -9,9 +9,10 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao
-import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class RecordsIdAttTest {
 
@@ -19,11 +20,8 @@ class RecordsIdAttTest {
     fun test() {
 
         val services = object : RecordsServiceFactory() {
-            override fun createProperties(): RecordsProperties {
-                val props = super.createProperties()
-                props.appName = "app0"
-                props.appInstanceId = "app0-123"
-                return props
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                return WebAppContextMock("app0")
             }
         }
         val props = services.properties

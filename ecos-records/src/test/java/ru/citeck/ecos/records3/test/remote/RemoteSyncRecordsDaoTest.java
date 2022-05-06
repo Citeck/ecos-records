@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -26,10 +25,9 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.records3.test.testutils.MockWebAppContext;
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock;
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
 import ru.citeck.ecos.webapp.api.promise.Promise;
 import ru.citeck.ecos.webapp.api.web.EcosWebClient;
@@ -56,7 +54,7 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
-        EcosWebAppContext webAppContext = new MockWebAppContext() {
+        EcosWebAppContext webAppContext = new WebAppContextMock() {
             @NotNull
             @Override
             public EcosWebClient getWebClient() {

@@ -9,11 +9,12 @@ import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDao
-import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class RecordDeleteDaoTest {
 
@@ -23,10 +24,8 @@ class RecordDeleteDaoTest {
     fun test() {
 
         val services = object : RecordsServiceFactory() {
-            override fun createProperties(): RecordsProperties {
-                val props = super.createProperties()
-                props.appName = "test-app"
-                return props
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                return WebAppContextMock("test-app")
             }
         }
         val records = services.recordsServiceV1

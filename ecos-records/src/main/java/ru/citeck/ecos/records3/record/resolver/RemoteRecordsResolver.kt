@@ -61,7 +61,7 @@ class RemoteRecordsResolver(
 
     private val sourceIdMeta: Cache<String, RecSrcMeta>
     private val webClient: EcosWebClient = services.getEcosWebAppContext()?.getWebClient()
-        ?: error("EcosWebAppContext is null")
+        ?: error("EcosWebAppContext or WebClient is null")
 
     init {
         sourceIdMeta = services.cacheManager.create(

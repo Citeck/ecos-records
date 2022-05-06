@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.citeck.ecos.context.lib.i18n.I18nContext;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
@@ -89,7 +90,7 @@ public class QueryContext {
     }
 
     public Locale getLocale() {
-        return RequestContext.getLocale();
+        return I18nContext.getLocale();
     }
 
     public List<?> getMetaValues() {

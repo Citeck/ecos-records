@@ -22,7 +22,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 import ru.citeck.ecos.webapp.api.promise.Promise
 import ru.citeck.ecos.webapp.api.web.EcosWebClient
@@ -94,7 +94,7 @@ class TxnRecordsDaoTest {
 
         val services = object : RecordsServiceFactory() {
             override fun getEcosWebAppContext(): EcosWebAppContext? {
-                return MockWebAppContext("test")
+                return WebAppContextMock("test")
             }
         }
         val records = services.recordsServiceV1
@@ -177,7 +177,7 @@ class TxnRecordsDaoTest {
 
         val localServices = object : RecordsServiceFactory() {
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                val context = object : MockWebAppContext("test") {
+                val context = object : WebAppContextMock("test") {
                     override fun getWebClient(): EcosWebClient {
                         return object : EcosWebClient {
                             override fun <R : Any> execute(

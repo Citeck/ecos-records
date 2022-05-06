@@ -13,7 +13,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
-import ru.citeck.ecos.records3.test.testutils.MockWebAppContext
+import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import java.lang.Exception
 
 class QueryErrorTest {
@@ -106,7 +106,7 @@ class QueryErrorTest {
     private fun createRecordsFactoryWithRemote(remoteFactory: RecordsServiceFactory): RecordsServiceFactory {
 
         val restAdapter = remoteFactory.restHandlerAdapter
-        val context = MockWebAppContext()
+        val context = WebAppContextMock()
         context.webClientExecuteImpl = { _, path, request ->
             when {
                 path.contains("/query") -> {

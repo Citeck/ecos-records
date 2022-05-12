@@ -352,7 +352,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             }
         } else {
             readInnerRawAtts(innerAttsStr, false) {
-                al, innerAtt, proc ->
+                    al, innerAtt, proc ->
                 readInner(al, innerAtt, proc, lastInnerAtts)
             }
         }
@@ -479,7 +479,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     .withName(attName)
                     .withInner(
                         readInnerRawAtts(attInner, true) {
-                            al, att, proc ->
+                                al, att, proc ->
                             readInner(al, att, proc, lastInnerAtts)
                         }
                     )
@@ -590,7 +590,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     .withMultiple(multiple)
                     .withInner(
                         readInnerRawAtts(attInnerAtts, true) {
-                            al, att, proc ->
+                                al, att, proc ->
                             this.readInner(al, att, proc, innerAtts)
                         }
                     )
@@ -624,7 +624,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         } else {
             attName = matcher.group(2)
             gqlInnerAtts = readInnerRawAtts(matcher.group(3), true) {
-                al, att, proc ->
+                    al, att, proc ->
                 readInner(al, att, proc, innerAtts)
             }
         }

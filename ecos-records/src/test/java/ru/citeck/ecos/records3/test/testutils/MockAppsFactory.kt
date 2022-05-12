@@ -41,9 +41,8 @@ class MockAppsFactory {
         val factory = object : RecordsServiceFactory() {
 
             override fun createProperties(): RecordsProperties {
-                val props = super.createProperties()
-                props.defaultApp = defaultApp
-                return props
+                return super.createProperties()
+                    .withDefaultApp(defaultApp)
             }
 
             override fun getEcosWebAppContext(): EcosWebAppContext {

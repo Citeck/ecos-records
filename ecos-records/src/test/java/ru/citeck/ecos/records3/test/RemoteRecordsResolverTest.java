@@ -51,9 +51,7 @@ class RemoteRecordsResolverTest {
         @NotNull
         @Override
         protected RecordsProperties createProperties() {
-            RecordsProperties props = super.createProperties();
-            props.setDefaultApp(DEFAULT_APP);
-            return props;
+            return super.createProperties().withDefaultApp(DEFAULT_APP);
         }
     }
 

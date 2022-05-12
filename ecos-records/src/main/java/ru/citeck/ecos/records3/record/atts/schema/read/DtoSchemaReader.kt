@@ -87,8 +87,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(Map::class.java, ScalarType.JSON),
             ScalarField(Predicate::class.java, ScalarType.JSON)
         ).forEach(
-            Consumer {
-                field ->
+            Consumer { field ->
                 scalars[field.fieldType] = field
             }
         )
@@ -98,8 +97,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 ScalarField(com.fasterxml.jackson.databind.node.ObjectNode::class.java, ScalarType.JSON),
                 ScalarField(com.fasterxml.jackson.databind.node.ArrayNode::class.java, ScalarType.JSON)
             ).forEach(
-                Consumer {
-                    field ->
+                Consumer { field ->
                     scalars[field.fieldType] = field
                 }
             )

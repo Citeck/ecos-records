@@ -22,7 +22,7 @@ open class TestApp {
     @Bean
     @ConditionalOnMissingBean(RecordsProperties::class)
     open fun recordsProps(): RecordsProperties {
-        return RecordsProperties()
+        return RecordsProperties.create {}
     }
 
     @Bean

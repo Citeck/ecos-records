@@ -120,9 +120,10 @@ open class RecordsServiceFactory {
         val webappProps = this.webappProps
         if (!webappProps.gatewayMode && props.defaultApp.isNotEmpty()) {
             log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
-            props.defaultApp = ""
+            props.withDefaultApp("")
+        } else {
+            props
         }
-        props
     }
 
     val webappProps by lazy {
@@ -345,7 +346,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createProperties(): RecordsProperties {
-        return RecordsProperties()
+        return RecordsProperties.DEFAULT
     }
 
     protected open fun createMetaRecordsDaoAttsProvider(): MetaRecordsDaoAttsProvider {

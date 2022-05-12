@@ -82,7 +82,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
         }
         val dataMap: MutableMap<String, Any?> = LinkedHashMap()
         data.forEach {
-            key, value ->
+                key, value ->
             dataMap[key] = value
         }
         return ObjectData.create(applyProcessors(dataMap, processors))

@@ -95,7 +95,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private val converter: RecsDaoConverter = RecsDaoConverter()
 
-    private val currentApp = services.properties.appName
+    private val currentApp = services.webappProps.appName
     private val jobExecutor = services.jobExecutor
 
     private var interceptors: List<LocalRecordsInterceptor> = emptyList()

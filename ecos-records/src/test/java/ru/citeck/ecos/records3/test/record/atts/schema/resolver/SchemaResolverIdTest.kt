@@ -29,6 +29,6 @@ class SchemaResolverIdTest {
         records.register(recordsDao)
 
         val id = records.getAtt(RecordRef.create("test", "some-id"), "?id").asText()
-        assertThat(id).isEqualTo(services.properties.appName + "/test@some-id")
+        assertThat(id).isEqualTo(services.webappProps.appName + "/test@some-id")
     }
 }

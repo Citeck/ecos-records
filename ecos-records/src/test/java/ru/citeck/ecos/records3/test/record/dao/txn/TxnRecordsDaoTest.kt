@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -167,10 +166,8 @@ class TxnRecordsDaoTest {
 
         val remoteAppName = "remoteApp"
         val remoteServices = object : RecordsServiceFactory() {
-            override fun createProperties(): RecordsProperties {
-                val props = super.createProperties()
-                props.appName = remoteAppName
-                return props
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                return WebAppContextMock(remoteAppName)
             }
         }
         remoteServices.recordsServiceV1.register(TxnDao())

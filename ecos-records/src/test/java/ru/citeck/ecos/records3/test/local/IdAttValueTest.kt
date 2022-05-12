@@ -26,7 +26,7 @@ class IdAttValueTest {
         )
 
         val res = records.getAtt("test@first", "?id").asText()
-        assertThat(res).isEqualTo(services.properties.appName + "/test@first")
+        assertThat(res).isEqualTo(services.webappProps.appName + "/test@first")
     }
 
     class TestDto(val id: String)

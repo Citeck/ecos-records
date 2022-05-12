@@ -66,7 +66,7 @@ public class LocalRecordsResolverV0 {
 
         this.serviceFactory = serviceFactory;
         this.queryLangService = serviceFactory.getQueryLangService();
-        this.currentApp = serviceFactory.getProperties().getAppName();
+        this.currentApp = serviceFactory.getWebappProps().getAppName();
         this.jobExecutor = serviceFactory.getJobExecutor();
 
         daoMapByType = new HashMap<>();

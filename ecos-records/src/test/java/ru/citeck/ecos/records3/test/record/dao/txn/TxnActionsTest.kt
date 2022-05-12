@@ -48,10 +48,10 @@ class TxnActionsTest {
         val mutate = { source: RecordsServiceFactory, target: RecordsServiceFactory, nonErrorRecords: Int, error: Boolean ->
             val records = mutableListOf<RecordRef>()
             repeat(nonErrorRecords) {
-                records.add(RecordRef.create(target.properties.appName, MUT_DAO_SOURCE_ID, "123"))
+                records.add(RecordRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "123"))
             }
             if (error) {
-                records.add(RecordRef.create(target.properties.appName, MUT_DAO_SOURCE_ID, "error"))
+                records.add(RecordRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "error"))
             }
             source.recordsServiceV1.mutate(records.map { RecordAtts(it, ObjectData.create(actionData)) })
         }

@@ -24,7 +24,7 @@ class RecordsIdAttTest {
                 return WebAppContextMock("app0")
             }
         }
-        val props = services.properties
+        val props = services.webappProps
         val records = services.recordsServiceV1
 
         val results = listOf("first", "second")

@@ -118,8 +118,6 @@ open class RecordsServiceFactory {
     val properties: RecordsProperties by lazy {
         val props = createProperties()
         val webappProps = this.webappProps
-        props.appName = webappProps.appName
-        props.appInstanceId = webappProps.appInstanceId
         if (!webappProps.gatewayMode && props.defaultApp.isNotEmpty()) {
             log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
             props.defaultApp = ""

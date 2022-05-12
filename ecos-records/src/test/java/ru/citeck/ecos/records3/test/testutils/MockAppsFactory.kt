@@ -33,7 +33,7 @@ class MockAppsFactory {
     private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
 
         val defaultCtxAtts = HashMap<String, Any?>()
-        val webAppContext = WebAppContextMock(name)
+        val webAppContext = WebAppContextMock(name, gatewayMode)
         webAppContext.webClientExecuteImpl = { targetApp, path, request ->
             jsonPost(targetApp, path, request)
         }
@@ -42,7 +42,6 @@ class MockAppsFactory {
 
             override fun createProperties(): RecordsProperties {
                 val props = super.createProperties()
-                props.gatewayMode = gatewayMode
                 props.defaultApp = defaultApp
                 return props
             }
@@ -72,7 +71,7 @@ class MockAppsFactory {
 
         val response = if (path.contains(RemoteRecordsResolver.QUERY_PATH)) {
             val query = mapper.convert(reqObjData, QueryBody::class.java) ?: error("Incorrect QueryBody. Url: $path")
-            val mockApp = apps[targetApp] ?: error("Application doesn't found: $targetApp")
+            val mockApp = apps[targetApp] ?: error("Application doesn't found: '$targetApp'")
             mockApp.factory.restHandlerAdapter.queryRecords(query)
         } else if (path.contains(RemoteRecordsResolver.MUTATE_PATH)) {
             val query = mapper.convert(reqObjData, MutateBody::class.java) ?: error("Incorrect MutateBody. Url: $path")

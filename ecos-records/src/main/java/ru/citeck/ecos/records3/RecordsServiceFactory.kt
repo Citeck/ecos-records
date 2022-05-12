@@ -61,6 +61,7 @@ import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.properties.EcosWebAppProperties
 import java.util.*
 import java.util.function.Consumer
 import java.util.function.Supplier
@@ -116,15 +117,20 @@ open class RecordsServiceFactory {
 
     val properties: RecordsProperties by lazy {
         val props = createProperties()
-        if (!props.gatewayMode && props.defaultApp.isNotEmpty()) {
+        val webappProps = this.webappProps
+        props.appName = webappProps.appName
+        props.appInstanceId = webappProps.appInstanceId
+        if (!webappProps.gatewayMode && props.defaultApp.isNotEmpty()) {
             log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
             props.defaultApp = ""
         }
-        val ctx = getEcosWebAppContext()
-        props.appName = ctx?.getProperties()?.appName ?: ""
-        props.appInstanceId = ctx?.getProperties()?.appInstanceId ?: ""
         props
     }
+
+    val webappProps by lazy {
+        getEcosWebAppContext()?.getProperties() ?: EcosWebAppProperties("", "")
+    }
+
     private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
 
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
@@ -234,14 +240,15 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-        val webClient = this.getEcosWebAppContext()?.getWebClient()
+        val ctx = this.getEcosWebAppContext()
+        val webClient = ctx?.getWebClient()
         return if (webClient != null) {
             RemoteRecordsResolver(this)
         } else {
-            check(!properties.gatewayMode) {
-                ("WebAppContext should be not null in gateway mode! Props: $properties")
+            check(!webappProps.gatewayMode) {
+                "WebAppContext should not be null in gateway mode! Props: $properties"
             }
-            log.warn("EcosWebAppContext is not exists. Remote records requests wont be allowed")
+            log.warn("EcosWebAppContext does not exists. Remote records requests wont be allowed")
             null
         }
     }

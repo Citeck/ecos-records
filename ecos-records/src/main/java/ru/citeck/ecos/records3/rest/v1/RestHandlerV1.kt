@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.rest.v1
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -32,22 +31,20 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     }
 
     private val recordsService = services.recordsServiceV1
-    private val properties = services.properties
     private val recordsTxnService = services.recordsTxnService
     private val recordsResolver = services.localRecordsResolver
     private val txnActionManager = services.txnActionManager
 
     private val currentAppId: String
-    private val currentAppName: String = properties.appName
-    private val isGateway = properties.gatewayMode
+    private val currentAppName: String = services.webappProps.appName
+    private val isGateway = services.webappProps.gatewayMode
 
     init {
-        var currentAppId = if (StringUtils.isBlank(properties.appInstanceId)) {
-            properties.appName
-        } else {
-            properties.appInstanceId
+        val props = services.webappProps
+        var currentAppId = props.appInstanceId.ifBlank {
+            props.appName
         }
-        if (StringUtils.isBlank(currentAppId)) {
+        if (currentAppId.isBlank()) {
             currentAppId = "unknown:" + UUID.randomUUID()
         }
         this.currentAppId = currentAppId

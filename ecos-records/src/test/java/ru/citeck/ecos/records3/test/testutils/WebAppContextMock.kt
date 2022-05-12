@@ -18,9 +18,12 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
 
-open class WebAppContextMock(val appName: String = "test-app") : EcosWebAppContext {
+open class WebAppContextMock(
+    val appName: String = "test-app",
+    val gatewayMode: Boolean = false
+) : EcosWebAppContext {
 
-    private val executor = Executors.newScheduledThreadPool(10)
+    private val executor = Executors.newScheduledThreadPool(1)
 
     private val tasksApi = object : EcosTasksApi {
 
@@ -28,8 +31,14 @@ open class WebAppContextMock(val appName: String = "test-app") : EcosWebAppConte
             return object : EcosTaskExecutor {
                 override fun <R> execute(taskInfo: () -> String, task: () -> R): Promise<R> {
                     val future = CompletableFuture<R>()
+                    val callException = RuntimeException("task execution source")
                     executor.execute {
-                        future.complete(task.invoke())
+                        try {
+                            future.complete(task.invoke())
+                        } catch (e: Throwable) {
+                            e.addSuppressed(callException)
+                            future.completeExceptionally(e)
+                        }
                     }
                     return Promises.create(future)
                 }
@@ -97,6 +106,7 @@ open class WebAppContextMock(val appName: String = "test-app") : EcosWebAppConte
         }
     }
 
+    private val webClientExecutor = tasksApi.getTaskExecutor("web-client")
     var webClientExecuteImpl: ((String, String, Any) -> Any)? = null
 
     override fun <T> doWhenAppReady(order: Float, action: () -> T): Promise<T> {
@@ -104,7 +114,7 @@ open class WebAppContextMock(val appName: String = "test-app") : EcosWebAppConte
     }
 
     override fun getProperties(): EcosWebAppProperties {
-        return EcosWebAppProperties(appName, appName + ":" + UUID.randomUUID().toString())
+        return EcosWebAppProperties(appName, appName + ":" + UUID.randomUUID().toString(), gatewayMode)
     }
 
     override fun getWebClient(): EcosWebClient {
@@ -116,12 +126,10 @@ open class WebAppContextMock(val appName: String = "test-app") : EcosWebAppConte
                 respType: Class<R>
             ): Promise<R> {
                 val executeImpl = webClientExecuteImpl ?: return Promises.reject(RuntimeException("Not implemented"))
-                val future = CompletableFuture<R>()
-                executor.execute {
+                return webClientExecutor.execute({ "request $targetApp $path $request $respType" }) {
                     val res = executeImpl.invoke(targetApp, path, request)
-                    future.complete(Json.mapper.convert(res, respType) ?: error("Conversion error. Res: $res"))
+                    Json.mapper.convert(res, respType) ?: error("Conversion error. Res: $res")
                 }
-                return Promises.create(future)
             }
         }
     }

@@ -26,8 +26,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val dtoSchemaReader = services.dtoSchemaReader
     private val attSchemaWriter = services.attSchemaWriter
 
-    private val isGatewayMode = services.properties.gatewayMode
-    private val currentAppName = services.properties.appName
+    private val isGatewayMode = services.webappProps.gatewayMode
+    private val currentAppName = services.webappProps.appName
 
     init {
         recordsResolver.setRecordsService(this)

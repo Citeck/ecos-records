@@ -8,9 +8,5 @@ class RecordsProperties {
     var appInstanceId = ""
     var sourceIdMapping: Map<String, String> = emptyMap()
 
-    /**
-     * Used by gateway.
-     */
-    var gatewayMode = false
     var defaultApp: String = ""
 }

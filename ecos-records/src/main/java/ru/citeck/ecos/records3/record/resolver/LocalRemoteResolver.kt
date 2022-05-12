@@ -42,10 +42,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     private val remote = services.remoteRecordsResolver
     private val reader = services.attSchemaReader
 
-    private val currentAppName = services.properties.appName
+    private val currentAppName = services.webappProps.appName
     private val defaultAppName = services.properties.defaultApp
-    private val currentAppSourceIdPrefix = services.properties.appName + "/"
-    private val isGatewayMode = services.properties.gatewayMode
+    private val currentAppSourceIdPrefix = "$currentAppName/"
+    private val isGatewayMode = services.webappProps.gatewayMode
 
     fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
         val sourceId = query.sourceId

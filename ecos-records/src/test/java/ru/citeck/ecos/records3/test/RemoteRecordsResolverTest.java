@@ -43,7 +43,7 @@ class RemoteRecordsResolverTest {
         @Nullable
         @Override
         public EcosWebAppContext getEcosWebAppContext() {
-            WebAppContextMock ctx = new WebAppContextMock();
+            WebAppContextMock ctx = new WebAppContextMock("test", true);
             ctx.setWebClientExecuteImpl(RemoteRecordsResolverTest.this::jsonPost);
             return ctx;
         }
@@ -52,7 +52,6 @@ class RemoteRecordsResolverTest {
         @Override
         protected RecordsProperties createProperties() {
             RecordsProperties props = super.createProperties();
-            props.setGatewayMode(true);
             props.setDefaultApp(DEFAULT_APP);
             return props;
         }

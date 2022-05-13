@@ -42,7 +42,7 @@ public class RecordsMetaQueryTest {
 
         assertEquals("jsonArrayNode?json", attributes.get("jsonArrayNode"));
         assertEquals("jsonObjectNode?json", attributes.get("jsonObjectNode"));
-        assertEquals("jsonNode?json", attributes.get("jsonNode"));
+        assertEquals("jsonNode?raw", attributes.get("jsonNode"));
         assertEquals("aaa.bbb[]", attributes.get("someatt"));
         assertEquals("_edge.cm:title.multiple?bool", attributes.get("edge"));
         assertEquals("_edge.cm:field.options[]{label:?disp,value:?str}", attributes.get("options"));

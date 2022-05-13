@@ -78,11 +78,11 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(Instant::class.java, ScalarType.STR),
             ScalarField(OffsetDateTime::class.java, ScalarType.STR),
             ScalarField(MLText::class.java, ScalarType.JSON),
-            ScalarField(JsonNode::class.java, ScalarType.JSON),
+            ScalarField(JsonNode::class.java, ScalarType.RAW),
             ScalarField(ObjectNode::class.java, ScalarType.JSON),
             ScalarField(ArrayNode::class.java, ScalarType.JSON),
             ScalarField(ObjectData::class.java, ScalarType.JSON),
-            ScalarField(DataValue::class.java, ScalarType.JSON),
+            ScalarField(DataValue::class.java, ScalarType.RAW),
             ScalarField(RecordRef::class.java, ScalarType.ID),
             ScalarField(Map::class.java, ScalarType.JSON),
             ScalarField(Predicate::class.java, ScalarType.JSON)
@@ -93,7 +93,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         )
         if (LibsUtils.isJacksonPresent()) {
             listOf(
-                ScalarField(com.fasterxml.jackson.databind.JsonNode::class.java, ScalarType.JSON),
+                ScalarField(com.fasterxml.jackson.databind.JsonNode::class.java, ScalarType.RAW),
                 ScalarField(com.fasterxml.jackson.databind.node.ObjectNode::class.java, ScalarType.JSON),
                 ScalarField(com.fasterxml.jackson.databind.node.ArrayNode::class.java, ScalarType.JSON)
             ).forEach(

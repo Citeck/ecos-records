@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>3.47.6</revision>
+        <revision>3.47.7</revision>
 
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
 
@@ -379,7 +379,6 @@
 
     <modules>
         <module>ecos-records</module>
-        <module>ecos-records-spring</module>
     </modules>
 
     <repositories>

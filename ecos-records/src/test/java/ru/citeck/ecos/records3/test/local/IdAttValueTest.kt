@@ -2,9 +2,9 @@ package ru.citeck.ecos.records3.test.local
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class IdAttValueTest {
@@ -14,7 +14,7 @@ class IdAttValueTest {
 
         val services = object : RecordsServiceFactory() {
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                return WebAppContextMock("app0")
+                return EcosWebAppContextMock("app0")
             }
         }
         val records = services.recordsServiceV1

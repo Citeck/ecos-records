@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.record.dao.delete
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
@@ -13,7 +14,6 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
-import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class RecordDeleteDaoTest {
@@ -25,7 +25,7 @@ class RecordDeleteDaoTest {
 
         val services = object : RecordsServiceFactory() {
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                return WebAppContextMock("test-app")
+                return EcosWebAppContextMock("test-app")
             }
         }
         val records = services.recordsServiceV1

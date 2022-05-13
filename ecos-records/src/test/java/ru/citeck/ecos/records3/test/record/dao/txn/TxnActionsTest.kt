@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.promise.Promises
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -14,7 +15,6 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 import ru.citeck.ecos.webapp.api.promise.Promise
@@ -155,7 +155,7 @@ class TxnActionsTest {
         val services = object : RecordsServiceFactory() {
 
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                val context = object : WebAppContextMock(appId) {
+                val context = object : EcosWebAppContextMock(appId) {
                     override fun getWebClient(): EcosWebClient {
                         return object : EcosWebClient {
                             override fun <R : Any> execute(

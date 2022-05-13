@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.testutils
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
@@ -33,7 +34,7 @@ class MockAppsFactory {
     private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
 
         val defaultCtxAtts = HashMap<String, Any?>()
-        val webAppContext = WebAppContextMock(name, gatewayMode)
+        val webAppContext = EcosWebAppContextMock(appName = name, gatewayMode = gatewayMode)
         webAppContext.webClientExecuteImpl = { targetApp, path, request ->
             jsonPost(targetApp, path, request)
         }

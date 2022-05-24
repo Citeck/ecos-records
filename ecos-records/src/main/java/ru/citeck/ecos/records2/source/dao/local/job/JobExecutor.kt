@@ -25,7 +25,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     private val jobs: MutableList<JobInstance> = CopyOnWriteArrayList()
     private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()
         ?.getTasksApi()
-        ?.getTaskScheduler(SCHEDULER_ID)
+        ?.getScheduler(SCHEDULER_ID)
 
     @Volatile
     private var initialized = false

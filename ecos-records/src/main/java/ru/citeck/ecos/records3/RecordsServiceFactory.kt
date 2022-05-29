@@ -316,6 +316,7 @@ open class RecordsServiceFactory {
         metaValueFactories.add(OffsetDateTimeValueFactory())
         metaValueFactories.add(JsonNodeValueFactory())
         metaValueFactories.add(RecordRefValueFactory())
+        metaValueFactories.add(EntityWithMetaValueFactory())
         if (isJacksonPresent()) {
             metaValueFactories.add(JacksonJsonNodeValueFactory())
         }

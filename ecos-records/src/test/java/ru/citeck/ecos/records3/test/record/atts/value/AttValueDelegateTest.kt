@@ -20,11 +20,14 @@ class AttValueDelegateTest {
 
     private fun getFunctions(clazz: KClass<*>): Set<Func> {
         return clazz.declaredFunctions.map {
-            Func(it.name, it.parameters.filter {
-                p -> p.kind == KParameter.Kind.VALUE
-            }.map {
-                p -> p.type.classifier
-            })
+            Func(
+                it.name,
+                it.parameters.filter { p ->
+                    p.kind == KParameter.Kind.VALUE
+                }.map { p ->
+                    p.type.classifier
+                }
+            )
         }.toSet()
     }
 

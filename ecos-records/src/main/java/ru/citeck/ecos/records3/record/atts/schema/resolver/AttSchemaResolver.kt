@@ -869,7 +869,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 val typeRef = RecTypeUtils.anyTypeToRef(value?.type)
                 if (RecordRef.isNotEmpty(typeRef)) {
                     for (att in recordTypeService.getComputedAtts(typeRef)) {
-                        if (AttUtils.isValidComputedAtt(att.id)) {
+                        if (AttUtils.isValidComputedAtt(att.id, false)) {
                             val scalar = ScalarType.getBySchemaOrMirrorAtt(att.id)
                             if (scalar != null) {
                                 if (scalar.overridable) {

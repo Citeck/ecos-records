@@ -64,7 +64,7 @@ class MixinContextImpl() : MixinContext {
 
             mixin.getProvidedAtts().forEach { att ->
 
-                if (AttUtils.isValidComputedAtt(att)) {
+                if (AttUtils.isValidComputedAtt(att, true)) {
 
                     val mixinAttCtx = MixinAttContext(mixin, att)
 

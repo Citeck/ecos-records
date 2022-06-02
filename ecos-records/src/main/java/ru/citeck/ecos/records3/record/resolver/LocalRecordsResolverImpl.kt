@@ -912,8 +912,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     private fun <T : RecordsDao> getRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T>? {
+        val mapByType = daoMapByType[type]
+        var result = mapByType?.get(sourceId)
+        if (result == null && sourceId.indexOf('/') == -1) {
+            result = mapByType?.get("$currentApp/$sourceId")
+        }
         @Suppress("UNCHECKED_CAST")
-        return daoMapByType[type]?.get(sourceId) as? Pair<RecordsDao, T>?
+        return result as? Pair<RecordsDao, T>?
     }
 
     private fun <T : RecordsDao> needRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T> {

@@ -12,7 +12,7 @@ interface AttValueScriptCtx {
 
     fun load(attributes: Any?): Any?
 
-    fun save() : AttValueScriptCtx
+    fun save(): AttValueScriptCtx
 
     fun att(attribute: String, value: Any?)
 

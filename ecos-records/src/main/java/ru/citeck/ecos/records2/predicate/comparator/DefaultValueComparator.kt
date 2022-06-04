@@ -22,11 +22,17 @@ class DefaultValueComparator : ValueComparator {
             val v1: Double = value1.doubleValue()
             return abs(v0 - v1) < DOUBLE_THRESHOLD
         }
-        return if (value0.isTextual() || value1.isTextual()) {
-            value0.asText() == value1.asText()
-        } else {
-            value0 == value1
+        if (value0.isTextual() && value1.isNumber() || value0.isNumber() && value1.isTextual()) {
+            val v0 = toDouble(value0)
+            val v1 = toDouble(value1)
+            if (!v0.isNaN() && !v1.isNaN()) {
+                return abs(v0 - v1) < DOUBLE_THRESHOLD
+            }
         }
+        if (value0.isTextual() || value1.isTextual()) {
+            return value0.asText() == value1.asText()
+        }
+        return value0 == value1
     }
 
     override fun isContains(value: DataValue, subValue: DataValue): Boolean {

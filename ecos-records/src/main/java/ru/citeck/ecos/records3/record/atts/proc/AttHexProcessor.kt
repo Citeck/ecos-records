@@ -31,7 +31,7 @@ class AttHexProcessor : AbstractAttProcessor<AttHexProcessor.Arguments>(false) {
 
         return bytes.joinToString(args.delimiter) {
             (it.toInt() and 0xFF).toString(16)
-                .toUpperCase()
+                .uppercase()
                 .padStart(2, '0')
         }
     }

@@ -29,6 +29,10 @@ class DefaultValueComparator : ValueComparator {
                 return abs(v0 - v1) < DOUBLE_THRESHOLD
             }
         }
+        if (value0.isObject() && value1.isTextual()) {
+            val val1Str = value1.asText()
+            return compareObjStrValues(value0) { it == val1Str }
+        }
         if (value0.isTextual() || value1.isTextual()) {
             return value0.asText() == value1.asText()
         }
@@ -42,9 +46,13 @@ class DefaultValueComparator : ValueComparator {
         if (value.isArray()) {
             return value.any { isEquals(it, subValue) }
         }
+        if (value.isObject() && subValue.isTextual()) {
+            val subValStr = subValue.asText().lowercase()
+            return compareObjStrValues(value) { it.lowercase().contains(subValStr) }
+        }
         if (value.isTextual() || subValue.isTextual()) {
-            val v0 = value.asText().toLowerCase()
-            val v1 = subValue.asText().toLowerCase()
+            val v0 = value.asText().lowercase()
+            val v1 = subValue.asText().lowercase()
             return v0.contains(v1)
         }
         return false
@@ -72,21 +80,23 @@ class DefaultValueComparator : ValueComparator {
         if (value.isNull() || likeValue.isNull()) {
             return false
         }
-        val valueStr = value.asText().toLowerCase()
-        var likeStr = likeValue.asText().toLowerCase()
+        var likeStr = likeValue.asText().lowercase()
         likeStr = likeStr.replace("%", ".*")
         likeStr = likeStr.replace("_", ".")
-        return valueStr.matches(likeStr.toRegex())
+        val regex = likeStr.toRegex()
+
+        if (value.isObject()) {
+            return compareObjStrValues(value) { it.lowercase().matches(regex) }
+        }
+        val valueStr = value.asText().lowercase()
+        return valueStr.matches(regex)
     }
 
     override fun isEmpty(value: DataValue): Boolean {
         if (value.isNull()) {
             return true
         }
-        if (value.isTextual()) {
-            return value.asText().isEmpty()
-        }
-        return value.size() == 0
+        return value.isEmpty()
     }
 
     private fun compareGL(
@@ -164,6 +174,17 @@ class DefaultValueComparator : ValueComparator {
             }
         }
         return value.asDouble(Double.NaN)
+    }
+
+    private inline fun compareObjStrValues(obj: DataValue, compare: (String) -> Boolean): Boolean {
+        val it = obj.fieldNames()
+        while (it.hasNext()) {
+            val value = obj[it.next()]
+            if (value.isTextual() && compare(value.asText())) {
+                return true
+            }
+        }
+        return false
     }
 
     private enum class CompareResult {

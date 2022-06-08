@@ -20,7 +20,7 @@ class RecsAttsQueryRes : RecsQueryRes<RecordAtts> {
     }
 
     fun addAppName(appName: String): RecsAttsQueryRes {
-        setRecords(getRecords().map { it.withId(it.getId().addAppName(appName)) })
+        setRecords(getRecords().map { it.withId(it.getId().withAppName(appName)) })
         return this
     }
 }

@@ -1,7 +1,13 @@
 package ru.citeck.ecos.records3.test.op.query
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.dao.RecordsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -35,6 +41,32 @@ class RecordsQueryTest {
                 "],\"hasMore\":false,\"totalCount\":0}",
             query.toString()
         )
+    }
+
+    @Test
+    fun strCollectionResultTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        fun createDao(srcId: String): RecordsDao = object : RecordsQueryDao, RecordAttsDao {
+            override fun getId(): String {
+                return srcId
+            }
+            override fun queryRecords(recsQuery: RecordsQuery): Any {
+                return listOf("some-id")
+            }
+            override fun getRecordAtts(recordId: String): Any? {
+                if (recordId == "some-id") {
+                    return DataValue.create("""{"aa":"bb"}""")
+                }
+                return null
+            }
+        }
+        listOf("test", "app/test").forEach { sourceId ->
+            records.register(createDao(sourceId))
+            val res = records.query(RecordsQuery.create { withSourceId(sourceId) }, listOf("aa"))
+            assertThat(res.getRecords()).describedAs("src: $sourceId").hasSize(1)
+            assertThat(res.getRecords()[0]["aa"].asText()).describedAs("src: $sourceId").isEqualTo("bb")
+        }
     }
 
     class TestObj {

@@ -28,7 +28,7 @@ public class RecordsMetaQueryResult extends RecordsQueryResult<RecordMeta> {
 
     public RecordsMetaQueryResult addAppName(String appName) {
         setRecords(getRecords().stream()
-                               .map(m -> new RecordMeta(m, ref -> ref.addAppName(appName)))
+                               .map(m -> new RecordMeta(m, ref -> ref.withAppName(appName)))
                                .collect(Collectors.toList()));
         return this;
     }

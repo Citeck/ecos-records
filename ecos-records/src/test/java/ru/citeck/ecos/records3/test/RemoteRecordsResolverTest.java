@@ -182,7 +182,7 @@ class RemoteRecordsResolverTest {
         assertEquals(expected.size(), records.size());
         assertEquals(expected.stream().map(r -> {
                 if (r.getAppName().isEmpty() && addDefaultAppName) {
-                    return r.addAppName(DEFAULT_APP);
+                    return r.withAppName(DEFAULT_APP);
                 }
                 return r;
             }).collect(Collectors.toList()),

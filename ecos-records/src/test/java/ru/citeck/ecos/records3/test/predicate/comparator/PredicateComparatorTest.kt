@@ -64,4 +64,18 @@ class PredicateComparatorTest {
         testWithValueConv("num:num-toString", { it }, { it.toString() })
         testWithValueConv("num:num-num", { it }, { it })
     }
+
+    @Test
+    fun objTest() {
+
+        val comparator = DefaultValueComparator()
+
+        val obj = DataValue.createObj()
+            .set("ru", "Ru name")
+            .set("en", "En name")
+
+        assertTrue(comparator.isContains(obj, DataValue.create("name")))
+        assertTrue(comparator.isContains(obj, DataValue.create("Name")))
+        assertTrue(comparator.isEquals(obj, DataValue.create("Ru name")))
+    }
 }

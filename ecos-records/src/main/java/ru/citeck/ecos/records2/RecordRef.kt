@@ -122,11 +122,34 @@ class RecordRef : Serializable {
     }
 
     fun addAppName(appName: String): RecordRef {
-        val current = toString()
-        return if (current.contains("@")) {
-            valueOf("$appName/$current")
+        return withAppName(appName)
+    }
+
+    fun withDefault(
+        appName: String = this.appName,
+        sourceId: String = this.sourceId,
+        id: String = this.id
+    ): RecordRef {
+        val newAppName = this.appName.ifEmpty { appName }
+        val newSourceId = this.sourceId.ifEmpty { sourceId }
+        val newId = this.id.ifEmpty { id }
+        if (newAppName === this.appName &&
+            newSourceId === this.sourceId &&
+            newId === this.id
+        ) {
+            return this
+        }
+        return create(newAppName, newSourceId, newId)
+    }
+
+    fun withDefaultSourceId(sourceId: String): RecordRef {
+        if (isBlank(sourceId)) {
+            return this
+        }
+        return if (this.sourceId.isNotEmpty()) {
+            this
         } else {
-            valueOf("$appName/@$current")
+            withSourceId(sourceId)
         }
     }
 
@@ -137,7 +160,7 @@ class RecordRef : Serializable {
         return if (this.appName.isNotEmpty()) {
             this
         } else {
-            addAppName(appName)
+            withAppName(appName)
         }
     }
 

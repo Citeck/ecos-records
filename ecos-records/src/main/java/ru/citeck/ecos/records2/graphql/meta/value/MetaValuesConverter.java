@@ -1,19 +1,14 @@
 package ru.citeck.ecos.records2.graphql.meta.value;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.commons.utils.LibsUtils;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.impl.MetaAttValue;
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttValueUtils;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter;
-import ru.citeck.ecos.records3.record.atts.value.HasListView;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,74 +46,11 @@ public class MetaValuesConverter {
                                            MetaField metaField,
                                            boolean forceInit) {
 
-        List<Object> result;
-
-        if (rawValue == null
-            || rawValue instanceof RecordRef && RecordRef.isEmpty((RecordRef) rawValue)
-            || rawValue instanceof DataValue && ((DataValue) rawValue).isNull()
-            || rawValue instanceof JsonNode && ((JsonNode) rawValue).isNull()) {
-
-            result = Collections.emptyList();
-
-        } else if (rawValue instanceof HasListView) {
-
-            result = new ArrayList<>(((HasListView<?>) rawValue).getListView());
-
-        } else if (rawValue instanceof Collection<?>) {
-
-            result = new ArrayList<>((Collection<?>) rawValue);
-
-        } else if (rawValue instanceof DataValue && ((DataValue) rawValue).isArray()) {
-
-            result = toObjList((DataValue) rawValue);
-
-        } else if (rawValue instanceof ArrayNode) {
-
-            result = toObjList((ArrayNode) rawValue);
-
-        } else if (LibsUtils.isJacksonPresent() && rawValue instanceof com.fasterxml.jackson.databind.node.ArrayNode) {
-
-            result = toObjList((com.fasterxml.jackson.databind.node.ArrayNode) rawValue);
-
-        } else if (rawValue.getClass().isArray()) {
-
-            if (byte[].class.equals(rawValue.getClass())) {
-
-                result = Collections.singletonList(rawValue);
-
-            } else {
-
-                int length = Array.getLength(rawValue);
-
-                if (length == 0) {
-
-                    result = Collections.emptyList();
-
-                } else {
-
-                    result = new ArrayList<>(length);
-                    for (int i = 0; i < length; i++) {
-                        result.add(Array.get(rawValue, i));
-                    }
-                }
-            }
-
-        } else {
-
-            result = Collections.singletonList(rawValue);
-        }
+        List<Object> result = AttValueUtils.rawToListWithoutNullValues(rawValue);
 
         return result.stream()
             .map(v -> getAsMetaValue(v, context, metaField, forceInit))
             .collect(Collectors.toList());
-    }
-
-    private List<Object> toObjList(Iterable<?> iterable) {
-        List<Object> result = new ArrayList<>();
-        for (Object element : iterable) {
-            result.add(element);
-        }
-        return result;
     }
 
     public MetaValue getAsMetaValue(Object value,

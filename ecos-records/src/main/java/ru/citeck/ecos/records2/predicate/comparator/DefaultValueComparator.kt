@@ -4,11 +4,11 @@ import ru.citeck.ecos.commons.data.DataValue
 import java.time.Instant
 import kotlin.math.abs
 
-class DefaultValueComparator : ValueComparator {
+object DefaultValueComparator : ValueComparator {
 
-    companion object {
-        private const val DOUBLE_THRESHOLD = 0.00000001
-    }
+    private const val DOUBLE_THRESHOLD = 0.000001
+
+    operator fun invoke(): DefaultValueComparator = this
 
     override fun isEquals(value0: DataValue, value1: DataValue): Boolean {
         if (value0 === value1) {

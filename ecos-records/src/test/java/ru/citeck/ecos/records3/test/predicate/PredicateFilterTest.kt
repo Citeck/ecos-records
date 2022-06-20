@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.predicate
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -24,8 +25,10 @@ class PredicateFilterTest {
 
         fun testTruePredicate(pred: Predicate) {
             val res = predicateService.filter(elements, pred)
-            assertThat(res).hasSize(1)
-            assertThat(res[0]).isEqualTo(elements[0])
+            assertThat(res).describedAs(pred.toString()).hasSize(1)
+            assertThat(res[0]).describedAs(pred.toString()).isEqualTo(elements[0])
+
+            assertTrue(predicateService.isMatch(elements[0], pred)) { pred.toString() }
         }
 
         testTruePredicate(Predicates.eq("num", 10.0))

@@ -76,11 +76,13 @@ open class InMemDataRecordsDao(
         }
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
-        val resultRecs = predicateService.filter(recordsList, predicate)
-        if (recsQuery.page.maxItems >= 0) {
-            return resultRecs.take(recsQuery.page.maxItems)
-        }
-        return resultRecs
+        return predicateService.filterAndSort(
+            recordsList,
+            predicate,
+            recsQuery.sortBy,
+            recsQuery.page.skipCount,
+            recsQuery.page.maxItems
+        )
     }
 
     fun getRecords(): Map<String, ObjectData> {

@@ -128,7 +128,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
                 addTxnMutatedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
 
-                result
+                result.map { it.withDefaultAppName(currentAppName) }
             }
         }
     }

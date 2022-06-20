@@ -16,12 +16,27 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class RecordMutateDaoTest {
 
     private val mutatedList = mutableListOf<RecordAtts>()
+
+    @Test
+    fun appNameTest() {
+        val services = object : RecordsServiceFactory() {
+            override fun getEcosWebAppContext(): EcosWebAppContext {
+                return EcosWebAppContextMock("test")
+            }
+        }
+        val records = services.recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val res = records.create("test", mapOf("id" to "123"))
+        assertThat(res).isEqualTo(RecordRef.create("test", "test", "123"))
+    }
 
     @Test
     fun test() {

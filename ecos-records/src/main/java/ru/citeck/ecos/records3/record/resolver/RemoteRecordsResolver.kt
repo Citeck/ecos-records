@@ -36,7 +36,6 @@ import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
-import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -67,7 +66,6 @@ class RemoteRecordsResolver(
     private val attSchemaWriter = services.attSchemaWriter
 
     private val sourceIdMeta: Cache<String, RecSrcMeta>
-    private val remoteAppApiMeta: Cache<String, RemoteAppApiMeta>
 
     init {
         sourceIdMeta = services.cacheManager.create(
@@ -78,14 +76,6 @@ class RemoteRecordsResolver(
             ),
             RecSrcMeta(false)
         ) { k -> evalSourceIdMeta(k) }
-        remoteAppApiMeta = services.cacheManager.create(
-            CacheConfig(
-                key = "remote-app-api-meta",
-                expireAfterWrite = TimeUnit.HOURS.toMillis(1),
-                maxItems = 200
-            ),
-            RemoteAppApiMeta()
-        ) { k -> evalRemoteAppApiMeta(k) }
     }
 
     fun query(
@@ -110,25 +100,13 @@ class RemoteRecordsResolver(
             .withSourceId(sourceId.substring(appDelimIdx + 1))
             .build()
 
-        val api = remoteAppApiMeta.get(appName)
-        val queryBody = if (api.versions.query >= 2) {
-            QueryBodyV2()
-        } else {
-            QueryBody()
-        }
+        val queryBody = QueryBody()
         queryBody.setQuery(appQuery)
         queryBody.setAttributes(attributes)
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp: QueryResp = try {
-            exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
-        } catch (e: Exception) {
-            if (e.message?.startsWith(UNKNOWN_BODY_VERSION_MSG) == true) {
-                remoteAppApiMeta.remove(appName)
-            }
-            throw e
-        }
+        val queryResp: QueryResp = exchangeRemoteRequest(appName, QUERY_URL, queryBody, QueryResp::class, context)
 
         val result = RecsQueryRes<RecordAtts>()
 
@@ -158,8 +136,7 @@ class RemoteRecordsResolver(
                 refs.map { it.value.removeAppName() },
                 attributes,
                 rawAtts,
-                context,
-                remoteAppApiMeta.get(app)
+                context
             )
             for (i in refs.indices) {
                 val ref: ValWithIdx<RecordRef> = refs[i]
@@ -176,15 +153,10 @@ class RemoteRecordsResolver(
         records: List<RecordRef>,
         attributes: Map<String, *>,
         rawAtts: Boolean,
-        context: RequestContext,
-        api: RemoteAppApiMeta
+        context: RequestContext
     ): List<RecordAtts> {
 
-        val queryBody = if (api.versions.query >= 2) {
-            QueryBodyV2()
-        } else {
-            QueryBody()
-        }
+        val queryBody = QueryBody()
         queryBody.setRecords(records)
         queryBody.setAttributes(attributes)
         queryBody.rawAtts = rawAtts
@@ -406,8 +378,7 @@ class RemoteRecordsResolver(
             listOf(RecordRef.create(RecordsApiRecordsDao.ID, "")),
             mapOf("meta" to metaAttribute),
             false,
-            RequestContext.getCurrentNotNull(),
-            RemoteAppApiMeta()
+            RequestContext.getCurrentNotNull()
         )[0].getAtts().get("meta").asObjectData()
 
         val remoteMeta = dtoSchemaReader.instantiate(RemoteAppApiVersionAtts::class.java, attsFromApp)

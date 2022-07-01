@@ -24,6 +24,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -116,14 +117,19 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
 
         for ((idx, rec) in records.withIndex()) {
-            if (rec is RecordRef) {
-                if (RecordRef.isNotEmpty(rec) || local.hasDaoWithEmptyId()) {
-                    recordRefs.add(ValWithIdx(rec, idx))
+            val fixedRec = if (rec is EntityRef && rec !is RecordRef) {
+                RecordRef.create(rec.getAppName(), rec.getSourceId(), rec.getLocalId())
+            } else {
+                rec
+            }
+            if (fixedRec is RecordRef) {
+                if (RecordRef.isNotEmpty(fixedRec) || local.hasDaoWithEmptyId()) {
+                    recordRefs.add(ValWithIdx(fixedRec, idx))
                 } else {
                     recordObjs.add(ValWithIdx(NullAttValue.INSTANCE, idx))
                 }
             } else {
-                recordObjs.add(ValWithIdx(rec, idx))
+                recordObjs.add(ValWithIdx(fixedRec, idx))
             }
         }
 

@@ -66,7 +66,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                     ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
 
                     val emptyAtts = ObjectData.create()
-                    attributes.keys.forEach { emptyAtts.set(it, DataValue.NULL) }
+                    attributes.keys.forEach { emptyAtts[it] = DataValue.NULL }
 
                     val result = ArrayList<RecordAtts>(records.size)
                     for (record in records) {

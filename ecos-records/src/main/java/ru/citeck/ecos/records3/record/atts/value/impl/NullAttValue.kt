@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.value.impl
 
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -12,6 +13,9 @@ class NullAttValue private constructor() : AttValue {
     }
 
     override fun getAtt(name: String): Any? {
+        if (name == RecordConstants.ATT_NOT_EXISTS) {
+            return true
+        }
         return null
     }
 

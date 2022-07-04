@@ -25,6 +25,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -47,6 +48,8 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
     private val defaultAppName = services.properties.defaultApp
     private val currentAppSourceIdPrefix = "$currentAppName/"
     private val isGatewayMode = services.webappProps.gatewayMode
+
+    private val virtualRecords = ConcurrentHashMap<EntityRef, Any>()
 
     fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
         val sourceId = query.sourceId
@@ -117,19 +120,24 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
 
         for ((idx, rec) in records.withIndex()) {
-            val fixedRec = if (rec is EntityRef && rec !is RecordRef) {
+            val fixedRef = if (rec is EntityRef && rec !is RecordRef) {
                 RecordRef.create(rec.getAppName(), rec.getSourceId(), rec.getLocalId())
             } else {
                 rec
             }
-            if (fixedRec is RecordRef) {
-                if (RecordRef.isNotEmpty(fixedRec) || local.hasDaoWithEmptyId()) {
-                    recordRefs.add(ValWithIdx(fixedRec, idx))
+            if (fixedRef is RecordRef) {
+                if (RecordRef.isNotEmpty(fixedRef) || local.hasDaoWithEmptyId()) {
+                    val virtualRecord = virtualRecords[fixedRef.withDefaultAppName(currentAppName)]
+                    if (virtualRecord != null) {
+                        recordObjs.add(ValWithIdx(virtualRecord, idx))
+                    } else {
+                        recordRefs.add(ValWithIdx(fixedRef, idx))
+                    }
                 } else {
                     recordObjs.add(ValWithIdx(NullAttValue.INSTANCE, idx))
                 }
             } else {
-                recordObjs.add(ValWithIdx(fixedRec, idx))
+                recordObjs.add(ValWithIdx(fixedRef, idx))
             }
         }
 
@@ -559,6 +567,14 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) {
 
     fun <T : Any> getRecordsDao(sourceId: String, type: Class<T>): T? {
         return local.getRecordsDao(sourceId, type)
+    }
+
+    fun registerVirtualRecord(ref: EntityRef, value: Any) {
+        this.virtualRecords[ref.withDefaultAppName(currentAppName)] = value
+    }
+
+    fun unregisterVirtualRecord(ref: EntityRef) {
+        this.virtualRecords.remove(ref.withDefaultAppName(currentAppName))
     }
 
     fun setRecordsService(serviceFactory: RecordsService) {

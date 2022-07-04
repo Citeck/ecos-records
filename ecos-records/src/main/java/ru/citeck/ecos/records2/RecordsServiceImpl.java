@@ -44,21 +44,16 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Deprecated
-public class RecordsServiceImpl extends AbstractRecordsService {
+public class RecordsServiceImpl extends AbstractRecordsService implements ServiceFactoryAware {
 
-    private final RecordsService recordsServiceV1;
-    private final LocalRecordsResolverV0 localRecordsResolverV0;
-    private final AttSchemaReader attSchemaReader;
-    private final AttSchemaWriter attSchemaWriter;
-    private final DtoSchemaReader dtoSchemaReader;
+    private RecordsService recordsServiceV1;
+    private LocalRecordsResolverV0 localRecordsResolverV0;
+    private AttSchemaReader attSchemaReader;
+    private AttSchemaWriter attSchemaWriter;
+    private DtoSchemaReader dtoSchemaReader;
 
     public RecordsServiceImpl(RecordsServiceFactory serviceFactory) {
         super(serviceFactory);
-        dtoSchemaReader = serviceFactory.getDtoSchemaReader();
-        recordsServiceV1 = serviceFactory.getRecordsServiceV1();
-        localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
-        attSchemaWriter = serviceFactory.getAttSchemaWriter();
-        attSchemaReader = serviceFactory.getAttSchemaReader();
     }
 
     /* QUERY */
@@ -432,5 +427,21 @@ public class RecordsServiceImpl extends AbstractRecordsService {
     @Override
     public void unregister(String sourceId) {
         localRecordsResolverV0.unregister(sourceId);
+    }
+
+    @Override
+    public void setRecordsServiceFactory(@NotNull RecordsServiceFactory serviceFactory) {
+
+        dtoSchemaReader = serviceFactory.getDtoSchemaReader();
+        recordsServiceV1 = serviceFactory.getRecordsServiceV1();
+        localRecordsResolverV0 = serviceFactory.getLocalRecordsResolverV0();
+        attSchemaWriter = serviceFactory.getAttSchemaWriter();
+        attSchemaReader = serviceFactory.getAttSchemaReader();
+
+        for (Object dao : serviceFactory.getDefaultRecordsDao()) {
+            if (dao instanceof RecordsDao) {
+                register((RecordsDao) dao);
+            }
+        }
     }
 }

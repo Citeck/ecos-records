@@ -17,21 +17,24 @@ class VirtualRecordsTest {
         val records = services.recordsServiceV1
         records.register(recordsDao)
 
-        val localRemoteResolver = services.recordsResolver
+        val resolver = services.localRecordsResolver
 
         recordsDao.setRecord("realRec", TestDto("abc"))
 
-        localRemoteResolver.registerVirtualRecord(
+        resolver.registerVirtualRecord(
             EntityRef.create("test", "virtRec"),
             TestDto("def")
         )
 
-        val atts = records.getAtts(listOf(
-            EntityRef.valueOf("test@realRec"),
-            EntityRef.valueOf("test@virtRec")
-        ), mapOf(
-            "field" to "field"
-        ))
+        val atts = records.getAtts(
+            listOf(
+                EntityRef.valueOf("test@realRec"),
+                EntityRef.valueOf("test@virtRec")
+            ),
+            mapOf(
+                "field" to "field"
+            )
+        )
 
         assertThat(atts[0]["field"].asText()).isEqualTo("abc")
         assertThat(atts[1]["field"].asText()).isEqualTo("def")

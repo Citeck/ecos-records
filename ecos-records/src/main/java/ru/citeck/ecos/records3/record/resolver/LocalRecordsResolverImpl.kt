@@ -55,12 +55,14 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.interceptor.*
 import ru.citeck.ecos.records3.utils.V1ConvUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
 import kotlin.math.max
 
-open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) : LocalRecordsResolver {
+open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) :
+    LocalRecordsResolver, ServiceFactoryAware {
 
     companion object {
 
@@ -101,6 +103,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private var interceptors: List<LocalRecordsInterceptor> = emptyList()
 
     private var hasDaoWithEmptyId = false
+
+    private val virtualRecords = ConcurrentHashMap<EntityRef, Any>()
 
     override fun query(
         queryArg: RecordsQuery,
@@ -462,11 +466,16 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
         for ((idx, rec) in records.withIndex()) {
             if (rec is RecordRef) {
-                var ref = rec
-                if (ref.appName == currentApp) {
-                    ref = ref.removeAppName()
+                val virtualRec = virtualRecords[rec.withDefaultAppName(currentApp)]
+                if (virtualRec != null) {
+                    recordObjs.add(ValWithIdx(virtualRec, idx))
+                } else {
+                    var ref = rec
+                    if (ref.appName == currentApp) {
+                        ref = ref.removeAppName()
+                    }
+                    recordRefs.add(ValWithIdx(ref, idx))
                 }
-                recordRefs.add(ValWithIdx(ref, idx))
             } else {
                 recordObjs.add(ValWithIdx(rec, idx))
             }
@@ -960,7 +969,19 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         this.interceptors = interceptors
     }
 
-    fun setRecordsTemplateService(recordsTemplateService: RecordsTemplateService) {
-        this.recordsTemplateService = recordsTemplateService
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsTemplateService = serviceFactory.recordsTemplateService
+    }
+
+    override fun containsVirtualRecord(ref: EntityRef): Boolean {
+        return virtualRecords.contains(ref.withDefaultAppName(currentApp))
+    }
+
+    override fun registerVirtualRecord(ref: EntityRef, value: Any) {
+        virtualRecords[ref.withDefaultAppName(currentApp)] = value
+    }
+
+    override fun unregisterVirtualRecord(ref: EntityRef) {
+        virtualRecords.remove(ref.withDefaultAppName(currentApp))
     }
 }

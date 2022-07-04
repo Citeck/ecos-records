@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records2.predicate
 
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator
 import ru.citeck.ecos.records2.predicate.comparator.ValueComparator
 import ru.citeck.ecos.records2.predicate.element.Element
@@ -13,9 +14,9 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import java.util.*
 
-open class PredicateServiceImpl(factory: RecordsServiceFactory) : PredicateService {
+open class PredicateServiceImpl : PredicateService, ServiceFactoryAware {
 
-    private val recordsService: RecordsService = factory.recordsServiceV1
+    private lateinit var recordsService: RecordsService
 
     override fun <T : Any> filter(elements: Iterable<T?>, predicate: Predicate): List<T> {
         return filter(elements, predicate, Int.MAX_VALUE)
@@ -284,5 +285,9 @@ open class PredicateServiceImpl(factory: RecordsServiceFactory) : PredicateServi
                 0
             }
         }
+    }
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsService = serviceFactory.recordsServiceV1
     }
 }

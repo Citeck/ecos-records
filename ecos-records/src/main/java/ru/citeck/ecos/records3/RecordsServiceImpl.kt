@@ -4,8 +4,11 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.dao.HasSourceIdAliases
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -13,25 +16,22 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import kotlin.collections.ArrayList
 
-class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService() {
+class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService(), ServiceFactoryAware {
 
     companion object {
         val log = KotlinLogging.logger {}
     }
 
-    private val recordsResolver = services.recordsResolver
-    private val dtoSchemaReader = services.dtoSchemaReader
-    private val attSchemaWriter = services.attSchemaWriter
+    private lateinit var recordsResolver: LocalRemoteResolver
+    private lateinit var dtoSchemaReader: DtoSchemaReader
+    private lateinit var attSchemaWriter: AttSchemaWriter
 
     private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
-
-    init {
-        recordsResolver.setRecordsService(this)
-    }
 
     /* QUERY */
 
@@ -223,5 +223,19 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     override fun getRecordsDao(sourceId: String): RecordsDao? {
         return getRecordsDao(sourceId, RecordsDao::class.java)
+    }
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+
+        recordsResolver = serviceFactory.recordsResolver
+        dtoSchemaReader = serviceFactory.dtoSchemaReader
+        attSchemaWriter = serviceFactory.attSchemaWriter
+        recordsResolver.setRecordsService(this)
+
+        for (dao in serviceFactory.defaultRecordsDao) {
+            if (dao is RecordsDao) {
+                register(dao)
+            }
+        }
     }
 }

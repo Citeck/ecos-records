@@ -33,5 +33,6 @@ abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryA
         this.serviceFactory = serviceFactory
         recordsService = serviceFactory.recordsServiceV1
         predicateService = serviceFactory.predicateService
+        mixinContext.addMixinsProvider(serviceFactory.globalAttMixinsProvider)
     }
 }

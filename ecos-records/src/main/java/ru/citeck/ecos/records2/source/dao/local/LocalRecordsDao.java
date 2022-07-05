@@ -283,6 +283,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         metaValuesConverter = serviceFactory.getMetaValuesConverter();
         dtoSchemaReader = serviceFactory.getDtoSchemaReader();
         recordsServiceV1 = serviceFactory.getRecordsServiceV1();
+
+        mixinContext.addMixinsProvider(serviceFactory.getGlobalAttMixinsProvider());
     }
 
     public void addAttributesMixin(AttMixin mixin) {

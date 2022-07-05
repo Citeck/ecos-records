@@ -13,9 +13,6 @@ class NullAttValue private constructor() : AttValue {
     }
 
     override fun getAtt(name: String): Any? {
-        if (name == RecordConstants.ATT_NOT_EXISTS) {
-            return true
-        }
         return null
     }
 

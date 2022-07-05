@@ -32,7 +32,7 @@ open class RecordsDaoProxy(
     private val id: String,
     private val targetId: String,
     private val processor: ProxyProcessor? = null
-) : AbstractRecordsDao(),
+) : AbstractRecordsDao(addGlobalMixins = false),
     RecordsQueryResDao,
     RecordsAttsDao,
     RecordsMutateDao,

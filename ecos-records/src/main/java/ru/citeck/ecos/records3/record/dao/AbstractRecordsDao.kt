@@ -9,7 +9,9 @@ import ru.citeck.ecos.records3.record.mixin.AttMixinsHolder
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContextImpl
 
-abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryAware {
+abstract class AbstractRecordsDao @JvmOverloads constructor(
+    private val addGlobalMixins: Boolean = true
+) : RecordsDao, AttMixinsHolder, ServiceFactoryAware {
 
     private val mixinContext = MixinContextImpl()
 
@@ -33,6 +35,8 @@ abstract class AbstractRecordsDao : RecordsDao, AttMixinsHolder, ServiceFactoryA
         this.serviceFactory = serviceFactory
         recordsService = serviceFactory.recordsServiceV1
         predicateService = serviceFactory.predicateService
-        mixinContext.addMixinsProvider(serviceFactory.globalAttMixinsProvider)
+        if (addGlobalMixins) {
+            mixinContext.addMixinsProvider(serviceFactory.globalAttMixinsProvider)
+        }
     }
 }

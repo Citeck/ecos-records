@@ -32,7 +32,7 @@ class GlobalMixinsTest {
         assertThat(att2).isEqualTo("local")
     }
 
-    class ConstMixin(val att: String, val value: Any): AttMixin {
+    class ConstMixin(val att: String, val value: Any) : AttMixin {
         override fun getAtt(path: String, value: AttValueCtx): Any = this.value
         override fun getProvidedAtts() = listOf(att)
     }

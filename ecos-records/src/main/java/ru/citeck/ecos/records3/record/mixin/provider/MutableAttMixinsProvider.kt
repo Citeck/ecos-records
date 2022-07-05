@@ -6,5 +6,7 @@ interface MutableAttMixinsProvider : AttMixinsProvider {
 
     fun addMixin(mixin: AttMixin)
 
+    fun addMixins(mixins: Collection<AttMixin>)
+
     fun removeMixin(mixin: AttMixin)
 }

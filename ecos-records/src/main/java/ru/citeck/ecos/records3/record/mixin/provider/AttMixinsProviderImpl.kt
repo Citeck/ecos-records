@@ -21,6 +21,12 @@ class AttMixinsProviderImpl : MutableAttMixinsProvider {
     }
 
     @Synchronized
+    override fun addMixins(mixins: Collection<AttMixin>) {
+        this.mixins.addAll(mixins)
+        listeners.forEach { it.invoke() }
+    }
+
+    @Synchronized
     override fun removeMixin(mixin: AttMixin) {
         mixins.remove(mixin)
         listeners.forEach { it.invoke() }

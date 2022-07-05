@@ -47,15 +47,11 @@ class MixinContextImpl() : MixinContext {
 
     @Synchronized
     private fun updateMixins() {
-        if (!dirty.compareAndSet(true, false)) {
+        if (!dirty.get()) {
             return
         }
-        try {
-            updateMixinsImpl()
-        } catch (e: Exception) {
-            dirty.set(true)
-            throw e
-        }
+        updateMixinsImpl()
+        dirty.set(false)
     }
 
     @Synchronized
@@ -105,19 +101,23 @@ class MixinContextImpl() : MixinContext {
         this.endsWithMixins = newEndsWithMixins
     }
 
+    @Synchronized
     fun addMixin(mixin: AttMixin) {
         addMixins(listOf(mixin))
     }
 
+    @Synchronized
     fun addMixins(vararg mixins: AttMixin) {
         addMixins(mixins.toList())
     }
 
+    @Synchronized
     fun addMixins(mixins: Iterable<AttMixin>) {
         this.mixins.addAll(mixins)
         dirty.set(true)
     }
 
+    @Synchronized
     fun addMixinsProvider(provider: AttMixinsProvider) {
         provider.onChanged { dirty.set(true) }
         providers.add(provider)

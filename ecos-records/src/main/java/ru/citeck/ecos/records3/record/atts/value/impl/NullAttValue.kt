@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.atts.value.impl
 
-import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue

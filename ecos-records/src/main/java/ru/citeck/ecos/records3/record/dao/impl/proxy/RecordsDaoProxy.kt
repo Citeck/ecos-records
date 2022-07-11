@@ -6,7 +6,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
-import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.AttValueDelegate
@@ -47,20 +46,20 @@ open class RecordsDaoProxy(
     private val clientMetaProc = processor as? HasClientMeta
     private lateinit var recordsResolver: LocalRemoteResolver
 
-    private val sourceIdMapping = mapOf(targetId to id)
+    protected val sourceIdMapping = mapOf(targetId to id)
 
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
         val procContext = ProxyProcContext()
         val contextAtts = getContextAtts(procContext)
-        val attsFromTarget = withSourceIdMapping {
+        val attsFromTarget = doWithSourceIdMapping {
             recordsService.getAtts(toTargetRefs(recordsId), contextAtts, true)
         }
 
         return postProcessAtts(attsFromTarget, procContext)
     }
 
-    private fun postProcessAtts(attsFromTarget: List<RecordAtts>, procContext: ProxyProcContext): List<AttValue> {
+    protected open fun postProcessAtts(attsFromTarget: List<RecordAtts>, procContext: ProxyProcContext): List<AttValue> {
 
         val proxyTargetAtts = attsFromTarget.map { ProxyRecordAtts(it) }
         val postProcAtts = attsProc?.attsPostProcess(proxyTargetAtts, procContext) ?: proxyTargetAtts
@@ -87,7 +86,7 @@ open class RecordsDaoProxy(
         val targetQuery = recsQuery.copy().withSourceId(targetId).build()
 
         return if (contextAtts.isEmpty()) {
-            val result = withSourceIdMapping {
+            val result = doWithSourceIdMapping {
                 recordsService.query(targetQuery)
             }
             result.setRecords(
@@ -97,7 +96,7 @@ open class RecordsDaoProxy(
             )
             result
         } else {
-            val queryRes = withSourceIdMapping {
+            val queryRes = doWithSourceIdMapping {
                 recordsService.query(targetQuery, contextAtts, true)
             }
             val queryResWithAtts = RecsQueryRes<Any>()
@@ -108,7 +107,7 @@ open class RecordsDaoProxy(
         }
     }
 
-    private inline fun <T> withSourceIdMapping(crossinline action: () -> T): T {
+    protected open fun <T> doWithSourceIdMapping(action: () -> T): T {
         return RequestContext.doWithCtx({
             it.withSourceIdMapping(sourceIdMapping)
         }) {
@@ -121,7 +120,7 @@ open class RecordsDaoProxy(
         val procContext = ProxyProcContext()
         delProc?.deletePreProcess(recordsId, procContext)
 
-        val statuses = withSourceIdMapping {
+        val statuses = doWithSourceIdMapping {
             recordsService.delete(toTargetRefs(recordsId))
         }
 
@@ -144,8 +143,8 @@ open class RecordsDaoProxy(
         return processedRefs.map { it.id }
     }
 
-    fun mutateWithoutProcessing(records: List<LocalRecordAtts>): List<RecordRef> {
-        return withSourceIdMapping {
+    open fun mutateWithoutProcessing(records: List<LocalRecordAtts>): List<RecordRef> {
+        return doWithSourceIdMapping {
             recordsService.mutate(
                 records.map {
                     RecordAtts(toTargetRef(it.id), it.attributes)
@@ -154,24 +153,24 @@ open class RecordsDaoProxy(
         }
     }
 
-    private fun toTargetRefs(recordsId: List<String>): List<RecordRef> {
+    protected open fun toTargetRefs(recordsId: List<String>): List<RecordRef> {
         return recordsId.map { toTargetRef(it) }
     }
 
-    private fun toTargetRef(recordId: String): RecordRef {
+    protected open fun toTargetRef(recordId: String): RecordRef {
         return RecordRef.valueOf("$targetId@$recordId")
     }
 
-    private fun getContextAtts(procContext: ProxyProcContext): Map<String, String> {
+    protected open fun getContextAtts(procContext: ProxyProcContext): Map<String, String> {
 
-        var schemaAtts = AttSchemaUtils.simplifySchema(AttContext.getCurrentSchemaAtt().inner)
+        var schemaAtts = AttContext.getCurrentSchemaAtt().inner
         schemaAtts = attsProc?.attsPreProcess(schemaAtts, procContext) ?: schemaAtts
 
         val writer = serviceFactory.attSchemaWriter
         val result = LinkedHashMap<String, String>()
 
         schemaAtts.forEach { att ->
-            result[att.getAliasForValue()] = writer.write(att)
+            result[att.name] = writer.write(att)
         }
 
         return result

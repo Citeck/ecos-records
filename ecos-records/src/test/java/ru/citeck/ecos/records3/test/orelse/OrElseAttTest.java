@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
+import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy;
 
 import java.time.Instant;
 import java.util.*;
@@ -23,6 +24,7 @@ public class OrElseAttTest {
     private RecordsService recordsService;
 
     private final RecordRef TEST_REF = RecordRef.create("test", "test");
+    private final RecordRef PROXY_REF = RecordRef.create("proxy", "test");
 
     @BeforeAll
     void init() {
@@ -33,6 +35,8 @@ public class OrElseAttTest {
         recordsService.register(RecordsDaoBuilder.create("test")
             .addRecord("test", new RecordData())
             .build());
+
+        recordsService.register(new RecordsDaoProxy("proxy", "test", null));
     }
 
     @Test
@@ -109,6 +113,7 @@ public class OrElseAttTest {
 
     void assertAtt(Object expected, String att) {
         assertEquals(DataValue.create(expected), recordsService.getAtt(TEST_REF, att));
+        assertEquals(DataValue.create(expected), recordsService.getAtt(PROXY_REF, att));
     }
 
     @Data

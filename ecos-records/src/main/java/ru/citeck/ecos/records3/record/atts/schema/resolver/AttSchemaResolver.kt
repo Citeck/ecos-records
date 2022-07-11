@@ -69,16 +69,19 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         }
     }
 
-    private fun resolveInAttCtx(args: ResolveArgs): List<Map<String, Any?>> {
-
-        val values: List<Any?> = args.values
-        var schemaAttsToLoad: List<SchemaAtt> = args.attributes
-
-        if (!args.rawAtts) {
+    fun getFlatAttributes(atts: List<SchemaAtt>, expandProcAtts: Boolean): List<SchemaAtt> {
+        var schemaAttsToLoad: List<SchemaAtt> = atts
+        if (expandProcAtts) {
             schemaAttsToLoad = expandAttsWithProcAtts(schemaAttsToLoad)
         }
-        val schemaAtts = schemaAttsToLoad
+        return AttSchemaUtils.simplifySchema(schemaAttsToLoad)
+    }
+
+    private fun resolveInAttCtx(args: ResolveArgs): List<Map<String, Any?>> {
+
         val context = ResolveContext(attValuesConverter, args.mixinCtx, recordTypeService)
+
+        val values: List<Any?> = args.values
         val attValues = ArrayList<ValueContext>()
         for (i in values.indices) {
             val ref = if (args.valueRefs.isEmpty()) {
@@ -94,9 +97,15 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 )
             )
         }
-        val simpleAtts = AttSchemaUtils.simplifySchema(schemaAtts)
-        val result = resolveRoot(attValues, simpleAtts, context)
-        return resolveResultsWithAliases(result, schemaAtts, args.rawAtts)
+
+        var expandedAtts = args.attributes
+        if (!args.rawAtts) {
+            expandedAtts = expandAttsWithProcAtts(expandedAtts)
+        }
+
+        val flattenAtts = getFlatAttributes(expandedAtts, false)
+        val result = resolveRoot(attValues, flattenAtts, context)
+        return resolveResultsWithAliases(result, expandedAtts, args.rawAtts)
     }
 
     private fun expandAttsWithProcAtts(atts: List<SchemaAtt>): List<SchemaAtt> {

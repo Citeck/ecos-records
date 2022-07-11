@@ -54,29 +54,30 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         val sourceId = query.sourceId
         val remote = this.remote
         return if (remote == null || !isGatewayMode && !isRemoteSourceId(sourceId)) {
-            doWithSchema(attributes) { schema -> local.query(query, schema, rawAtts) }
+            doWithSchema(attributes, rawAtts) { schema -> local.query(query, schema, rawAtts) }
         } else {
             remote.query(query, attributes, rawAtts)
         }
     }
 
-    private fun <T> doWithSchema(attributes: Map<String, *>, action: (List<SchemaAtt>) -> T): T {
-        return doWithSchema(reader.read(attributes), action)
+    private fun <T> doWithSchema(attributes: Map<String, *>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
+        return doWithSchema(reader.read(attributes), rawAtts, action)
     }
 
-    private fun <T> doWithSchema(attributes: AttsMap, action: (List<SchemaAtt>) -> T): T {
-        return doWithSchema(attributes.getParsedAtts(), action)
+    private fun <T> doWithSchema(attributes: AttsMap, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
+        return doWithSchema(attributes.getParsedAtts(), rawAtts, action)
     }
 
-    private fun <T> doWithSchema(atts: List<SchemaAtt>, action: (List<SchemaAtt>) -> T): T {
+    private fun <T> doWithSchema(atts: List<SchemaAtt>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
         return AttContext.doWithCtx(services) { attContext ->
             val schemaAttBefore = attContext.getSchemaAtt()
             val attPathBefore = attContext.getAttPath()
             if (atts.isNotEmpty()) {
+                val flatAtts = services.attSchemaResolver.getFlatAttributes(atts, !rawAtts)
                 attContext.setSchemaAtt(
                     SchemaAtt.create()
                         .withName(SchemaAtt.ROOT_NAME)
-                        .withInner(atts)
+                        .withInner(flatAtts)
                         .build()
                 )
                 attContext.setAttPath("")
@@ -109,7 +110,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         if (!isGatewayMode) {
             val globalCtxAtts = attsMap.extractGlobalCtxAtts(context)
             if (globalCtxAtts.getParsedAtts().isNotEmpty()) {
-                doWithSchema(globalCtxAtts) { atts ->
+                doWithSchema(globalCtxAtts, rawAtts) { atts ->
                     val evaluatedAtts = local.getAtts(listOf(NullAttValue.INSTANCE), atts, rawAtts)
                     evaluatedGlobalCtxAtts = evaluatedAtts[0].getAtts()
                 }
@@ -144,7 +145,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
 
         if (recordObjs.isNotEmpty()) {
             val recordsObjValue = recordObjs.map { it.value }
-            val objAtts = doWithSchema(attsMap) { atts ->
+            val objAtts = doWithSchema(attsMap, rawAtts) { atts ->
                 local.getAtts(recordsObjValue, atts, rawAtts)
             }
             if (objAtts.size == recordsObjValue.size) {
@@ -288,11 +289,11 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
 
         val remote = this.remote
         val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
-            doWithSchema(attsMap) { schema -> local.getAtts(refs, schema, rawAtts) }
+            doWithSchema(attsMap, rawAtts) { schema -> local.getAtts(refs, schema, rawAtts) }
         } else if (remote != null && (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull()))) {
             remote.getAtts(refs, attsMap.getAttributes(), rawAtts)
         } else {
-            doWithSchema(attsMap) { schema -> local.getAtts(refs, schema, rawAtts) }
+            doWithSchema(attsMap, rawAtts) { schema -> local.getAtts(refs, schema, rawAtts) }
         }
         return if (atts.size != refs.size) {
             context.addMsg(MsgLevel.ERROR) {
@@ -385,7 +386,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
             )
             remote.mutate(records, attsToLoad, rawAtts)
         } else {
-            doWithSchema(attsToLoad) { schema -> local.mutate(records, schema, rawAtts) }
+            doWithSchema(attsToLoad, rawAtts) { schema -> local.mutate(records, schema, rawAtts) }
         }
         return result
     }

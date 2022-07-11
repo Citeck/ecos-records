@@ -62,6 +62,14 @@ data class RecordsQuery(
         return page.afterId != null
     }
 
+    fun withSourceId(sourceId: String): RecordsQuery {
+        return copy().withSourceId(sourceId).build()
+    }
+
+    fun withQuery(query: DataValue): RecordsQuery {
+        return copy().withQuery(query).build()
+    }
+
     fun copy(): Builder {
         return Builder(this)
     }

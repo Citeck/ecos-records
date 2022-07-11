@@ -7,11 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 
 import java.time.Instant;
 import java.util.*;
@@ -81,7 +83,7 @@ public class OrElseAttTest {
 
     @Test
     void innerTest() {
-        assertAtt(true,"meta?as('recordData').boolField?bool");
+        assertAtt(true, "meta?as('recordData').boolField?bool");
         assertAtt(true, "meta?as('recordData').meta?has('abc')");
         assertAtt(false, "meta?as('recordData').meta?has('def')");
     }
@@ -106,14 +108,22 @@ public class OrElseAttTest {
         assertAtt(Collections.emptyList(), "strDvListWithNullElem[]?disp");
         assertAtt(Collections.emptyList(), "strDvNullList[]?disp");
 
-        assertAtt(Arrays.asList(new String[] {null}), "dvListWithListWithNullElem[].unknownField");
-        assertAtt(Arrays.asList(new String[] {null}), "dvListWithListWithNullElem[].unknownField![]");
+        assertAtt(Arrays.asList(new String[]{null}), "dvListWithListWithNullElem[].unknownField");
+        assertAtt(Arrays.asList(new String[]{null}), "dvListWithListWithNullElem[].unknownField![]");
         assertAtt(Collections.emptyList(), "dvListWithListWithNullElem.unknownField.unknownField[].unknownField![]");
     }
 
     void assertAtt(Object expected, String att) {
+
         assertEquals(DataValue.create(expected), recordsService.getAtt(TEST_REF, att));
         assertEquals(DataValue.create(expected), recordsService.getAtt(PROXY_REF, att));
+
+        RecordsQuery query = RecordsQuery.create()
+            .withQuery(Predicates.alwaysTrue())
+            .build();
+
+        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(TEST_REF.sourceId), att));
+        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(PROXY_REF.sourceId), att));
     }
 
     @Data
@@ -130,7 +140,7 @@ public class OrElseAttTest {
         private MetaData meta = new MetaData();
         private List<String> strEmptyList = new ArrayList<>();
         private List<String> strNullList = new ArrayList<>();
-        private List<String> strListWithNullElem = Arrays.asList(new String[] {null});
+        private List<String> strListWithNullElem = Arrays.asList(new String[]{null});
         private DataValue strDvListWithNullElem = DataValue.createArr().add(null);
         private DataValue dvListWithListWithNullElem = DataValue.createArr().add(DataValue.createObj());
         private DataValue strDvNullList = null;
@@ -149,8 +159,10 @@ public class OrElseAttTest {
         @Override
         public boolean has(@NotNull String name) {
             switch (name) {
-                case "abc": return true;
-                case "def": return false;
+                case "abc":
+                    return true;
+                case "def":
+                    return false;
             }
             return false;
         }

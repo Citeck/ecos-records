@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.txn.RecordsTxnService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class RestHandler {
@@ -19,10 +20,13 @@ public class RestHandler {
     private final RecordsServiceFactory factory;
     private final RecordsTxnService recordsTxnService;
 
+    private final AttsLegacySchemaParser legacySchemaParser;
+
     public RestHandler(RecordsServiceFactory factory) {
         this.factory = factory;
         this.recordsService = factory.getRecordsService();
         this.recordsTxnService = factory.getRecordsTxnService();
+        this.legacySchemaParser = new AttsLegacySchemaParser(factory);
     }
 
     public Object queryRecords(QueryBody body) {
@@ -40,13 +44,18 @@ public class RestHandler {
                    + "but found both. 'schema' field will be ignored");
         }
 
+        Map<String, String> attributes = body.getAttributes();
+        if (attributes == null || attributes.isEmpty() && body.getSchema() != null) {
+            attributes = legacySchemaParser.parse(body.getSchema());
+        }
+
         RecordsResult<?> recordsResult;
 
         if (body.getQuery() != null) {
 
-            if (body.getAttributes() != null) {
+            if (attributes != null) {
 
-                recordsResult = recordsService.queryRecords(body.getQuery(), body.getAttributes());
+                recordsResult = recordsService.queryRecords(body.getQuery(), attributes);
 
             } else {
 
@@ -57,17 +66,17 @@ public class RestHandler {
             if (body.getRecords() == null) {
                 throw new IllegalArgumentException("At least 'records' or 'query' must be specified");
             }
-            if (body.getSchema() == null && body.getAttributes() == null) {
+            if (body.getSchema() == null && attributes == null) {
                 throw new IllegalArgumentException("You must specify 'schema' or 'attributes' for records");
             }
 
-            if (body.getAttributes() == null) {
+            if (attributes == null) {
 
                 recordsResult = recordsService.getAttributes(body.getRecords(), Collections.emptyList());
 
             } else {
 
-                recordsResult = recordsService.getAttributes(body.getRecords(), body.getAttributes());
+                recordsResult = recordsService.getAttributes(body.getRecords(), attributes);
             }
         }
 

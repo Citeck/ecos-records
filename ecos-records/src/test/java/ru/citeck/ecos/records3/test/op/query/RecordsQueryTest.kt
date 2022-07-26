@@ -11,7 +11,6 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import kotlin.test.assertEquals
 
 class RecordsQueryTest {
@@ -19,18 +18,25 @@ class RecordsQueryTest {
     @Test
     fun removeAfterIdTest() {
 
-        val queryBody = QueryBody()
-        queryBody.query = RecordsQuery.create {}
-
-        val srcData = DataValue.create(queryBody)
-        assertThat(srcData.get("query").get("page").has("afterId")).isTrue
+        val srcData = DataValue.create(
+            """
+            {
+                "query":{
+                    "page": {
+                        "afterId": "abc"
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+        assertThat(srcData["query"]["page"].has("afterId")).isTrue
         val newData = srcData.copy().remove("$.query.page.afterId")
-        assertThat(newData.get("query").get("page").has("afterId")).isFalse
+        assertThat(newData["query"]["page"].has("afterId")).isFalse
         val newData2 = newData.copy().remove("$.query.page.afterId")
-        assertThat(newData2.get("query").get("page").has("afterId")).isFalse
+        assertThat(newData2["query"]["page"].has("afterId")).isFalse
 
         val dataWithAfterId = srcData.copy()
-        dataWithAfterId.get("query").get("page").set("afterId", "")
+        dataWithAfterId["query"]["page"]["afterId"] = "abc"
         assertThat(dataWithAfterId).isEqualTo(srcData)
     }
 

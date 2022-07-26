@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
@@ -395,7 +396,15 @@ class RemoteRecordsResolver(
         context: RequestContext
     ): T {
 
-        val result = webClient.execute(appName, requestPath, body, respType.java).get()
+        val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
+            val data = DataValue.create(body)
+            data.remove("$.query.page.afterId")
+            data
+        } else {
+            body
+        }
+
+        val result = webClient.execute(appName, requestPath, convertedBody, respType.java).get()
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

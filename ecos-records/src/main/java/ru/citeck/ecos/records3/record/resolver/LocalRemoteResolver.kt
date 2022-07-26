@@ -49,6 +49,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
     private val defaultAppName = services.properties.defaultApp
     private val currentAppSourceIdPrefix = "$currentAppName/"
     private val isGatewayMode = services.webappProps.gatewayMode
+    private val legacyApiMode = services.properties.legacyApiMode
 
     fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
         val sourceId = query.sourceId
@@ -346,7 +347,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         for (i in records.indices.reversed()) {
             val record = records[i]
             val appName = getTargetAppName(record.getId())
-            if (appToMutate.isEmpty() || appName == appToMutate) {
+            if (appToMutate.isEmpty() || (appName == appToMutate && !legacyApiMode)) {
                 appToMutate = appName
                 recsToMutate.add(ValWithIdx(record, i))
                 // we should not batch local records for correct

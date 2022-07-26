@@ -8,6 +8,7 @@ class RecordsProperties {
     var apps: Map<String, App> = emptyMap()
     var sourceIdMapping: Map<String, String> = emptyMap()
     var peopleSourceId: String = ""
+    var legacyApiMode: Boolean = false
     var tls: Tls = Tls()
 
     /**

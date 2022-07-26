@@ -35,6 +35,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private val isGatewayMode = services.properties.gatewayMode
     private val currentAppName = services.properties.appName
     private val defaultAppName = services.properties.defaultApp
+    private val legacyApiMode = services.properties.legacyApiMode
 
     init {
         recordsResolver.setRecordsService(this)
@@ -265,7 +266,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         for (i in records.indices.reversed()) {
             val record = records[i]
             val appName = getAppName(record.getId())
-            if (appToMutate.isEmpty() || appName == appToMutate) {
+            if (appToMutate.isEmpty() || (appName == appToMutate && !legacyApiMode)) {
                 appToMutate = appName
                 recsToMutate.add(ValWithIdx(record, i))
             } else {

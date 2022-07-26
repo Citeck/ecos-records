@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.resolver
 
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
@@ -59,6 +60,8 @@ class RemoteRecordsResolver(
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private val legacyApiMode = services.properties.legacyApiMode
+
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
 
@@ -419,7 +422,14 @@ class RemoteRecordsResolver(
 
     private fun postRecords(appName: String, url: String, body: Any): ObjectNode? {
         val appUrl = "/$appName$url"
-        return restApi.jsonPost(appUrl, body, ObjectNode::class.java)
+        val convertedBody: Any = if (url.contains("query") && legacyApiMode) {
+            val data = DataValue.create(body)
+            data.remove("$.query.page.afterId")
+            data
+        } else {
+            body
+        }
+        return restApi.jsonPost(appUrl, convertedBody, ObjectNode::class.java)
     }
 
     fun getSourceInfo(sourceId: String): RecordsSourceMeta? {

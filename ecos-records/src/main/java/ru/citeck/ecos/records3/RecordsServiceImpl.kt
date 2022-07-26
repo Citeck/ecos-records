@@ -32,6 +32,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
+    private val legacyApiMode = services.properties.legacyApiMode
 
     /* QUERY */
 

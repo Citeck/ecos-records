@@ -56,6 +56,8 @@ class RemoteRecordsResolver(
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private val legacyApiMode = services.properties.legacyApiMode
+
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
 

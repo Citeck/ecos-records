@@ -5,7 +5,8 @@ import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 @JsonDeserialize(builder = RecordsProperties.Builder::class)
 class RecordsProperties(
     val sourceIdMapping: Map<String, String>,
-    val defaultApp: String
+    val defaultApp: String,
+    val legacyApiMode: Boolean
 ) {
     companion object {
 
@@ -43,10 +44,12 @@ class RecordsProperties(
 
         var sourceIdMapping: Map<String, String> = emptyMap()
         var defaultApp: String = ""
+        var legacyApiMode: Boolean = false
 
         constructor(base: RecordsProperties) : this() {
             sourceIdMapping = base.sourceIdMapping
             defaultApp = base.defaultApp
+            legacyApiMode = base.legacyApiMode
         }
 
         fun withSourceIdMapping(sourceIdMapping: Map<String, String>?): Builder {
@@ -59,8 +62,13 @@ class RecordsProperties(
             return this
         }
 
+        fun withLegacyApiMode(legacyApiMode: Boolean?): Builder {
+            this.legacyApiMode = legacyApiMode ?: false
+            return this
+        }
+
         fun build(): RecordsProperties {
-            return RecordsProperties(sourceIdMapping, defaultApp)
+            return RecordsProperties(sourceIdMapping, defaultApp, legacyApiMode)
         }
     }
 }

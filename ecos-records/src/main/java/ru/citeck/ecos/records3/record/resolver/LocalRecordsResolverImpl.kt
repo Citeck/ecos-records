@@ -848,8 +848,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         if (recordsDao is JobsProvider) {
             val jobs: List<Job> = (recordsDao as JobsProvider).jobs
-            for (job in jobs) {
-                jobExecutor.addJob(sourceId, job)
+            for ((idx, job) in jobs.withIndex()) {
+                jobExecutor.addJob(idx, sourceId, job)
             }
         }
     }

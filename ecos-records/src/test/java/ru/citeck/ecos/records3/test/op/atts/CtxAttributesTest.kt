@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.context.lib.time.TimeZoneContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory

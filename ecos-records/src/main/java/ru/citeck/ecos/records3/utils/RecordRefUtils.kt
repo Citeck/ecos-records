@@ -9,14 +9,14 @@ object RecordRefUtils {
         currentAppName: String,
         mapping: Map<String, String>?
     ): RecordRef {
-        if (RecordRef.isEmpty(recordRef) || mapping == null || mapping.isEmpty()) {
+        if (RecordRef.isEmpty(recordRef) || mapping.isNullOrEmpty()) {
             return recordRef
         }
         var targetId = ""
         if (recordRef.appName.isNotBlank()) {
             targetId = mapping[recordRef.appName + "/" + recordRef.sourceId] ?: ""
         }
-        if (targetId.isBlank() && recordRef.appName == currentAppName) {
+        if (targetId.isBlank() && (recordRef.appName == currentAppName || recordRef.appName.isEmpty())) {
             targetId = mapping[recordRef.sourceId] ?: ""
         }
         if (targetId.isBlank()) {

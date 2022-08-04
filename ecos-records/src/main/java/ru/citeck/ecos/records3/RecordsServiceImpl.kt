@@ -126,28 +126,28 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 val sourceIdMapping = context.ctxData.sourceIdMapping
                 val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
 
-                addTxnMutatedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
+                addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
 
                 result.map { it.withDefaultAppName(currentAppName) }
             }
         }
     }
 
-    private inline fun <T> addTxnMutatedRecords(
+    private inline fun <T> addTxnChangedRecords(
         txnChangedRecords: MutableSet<RecordRef>?,
         sourceIdMapping: Map<String, String>,
         records: List<T>,
-        getRef: (T) -> RecordRef
+        crossinline getRef: (T) -> RecordRef
     ) {
         if (isGatewayMode || txnChangedRecords == null) {
             return
         }
         records.forEach {
-            addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
+            addTxnChangedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
         }
     }
 
-    private fun addTxnMutatedRecord(
+    private fun addTxnChangedRecord(
         txnChangedRecords: MutableSet<RecordRef>?,
         sourceIdMapping: Map<String, String>,
         recordRef: RecordRef?
@@ -156,9 +156,14 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
             return
         }
+        val normalizedRef = if (recordRef.appName == currentAppName) {
+            recordRef.withoutAppName()
+        } else {
+            recordRef
+        }
         txnChangedRecords.add(
             RecordRefUtils.mapAppIdAndSourceId(
-                recordRef,
+                normalizedRef,
                 currentAppName,
                 sourceIdMapping
             )
@@ -177,7 +182,12 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             error("Deletion is not allowed in read-only mode. Records: $records")
         }
         val status = recordsResolver.delete(records)
-        context.getTxnChangedRecords()?.addAll(records)
+
+        val txnChangedRecords = context.getTxnChangedRecords()
+        val sourceIdMapping = context.ctxData.sourceIdMapping
+
+        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { it }
+
         return status
     }
 

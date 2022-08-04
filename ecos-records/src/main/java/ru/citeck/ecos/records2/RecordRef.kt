@@ -154,6 +154,10 @@ class RecordRef : EntityRef, Serializable {
         }
     }
 
+    override fun withoutAppName(): RecordRef {
+        return withAppName("")
+    }
+
     fun removeAppName(): RecordRef {
         return if (appName.isEmpty()) {
             this

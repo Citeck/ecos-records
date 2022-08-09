@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.cache.Cache
 import ru.citeck.ecos.records3.cache.CacheConfig
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaLegacyWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -57,7 +58,10 @@ class RemoteRecordsResolver(
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private val attSchemaReader = services.attSchemaReader
+
     private val legacyApiMode = services.properties.legacyApiMode
+    private val legacyAttsWriter = AttSchemaLegacyWriter()
 
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
@@ -399,6 +403,13 @@ class RemoteRecordsResolver(
         val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
             val data = DataValue.create(body)
             data.remove("$.query.page.afterId")
+            val atts = data["attributes"]
+            if (atts.isObject() && atts.size() > 0) {
+                val attsMap = legacyAttsWriter.writeToMap(
+                    attSchemaReader.read(atts.asMap(String::class.java, Any::class.java))
+                )
+                data["attributes"] = attsMap
+            }
             data
         } else {
             body

@@ -35,6 +35,13 @@ data class SchemaAtt(
         }
     }
 
+    fun withName(name: String): SchemaAtt {
+        if (this.name == name) {
+            return this
+        }
+        return copy().withName(name).build()
+    }
+
     fun withAlias(alias: String): SchemaAtt {
         if (this.alias == alias) {
             return this

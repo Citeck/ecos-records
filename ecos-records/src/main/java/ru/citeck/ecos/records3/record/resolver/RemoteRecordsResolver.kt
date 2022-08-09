@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaLegacyWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -60,7 +61,10 @@ class RemoteRecordsResolver(
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private val attSchemaReader = services.attSchemaReader
+
     private val legacyApiMode = services.properties.legacyApiMode
+    private val legacyAttsWriter = AttSchemaLegacyWriter()
 
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
@@ -368,6 +372,16 @@ class RemoteRecordsResolver(
         respType: KClass<T>,
         context: RequestContext
     ): T {
+
+        if (legacyApiMode && body is QueryBody) {
+            val atts = body.attributes
+            if (atts.isObject() && atts.size() > 0) {
+                val attsMap = legacyAttsWriter.writeToMap(
+                    attSchemaReader.read(atts.asMap(String::class.java, Any::class.java))
+                )
+                body.attributes = DataValue.create(attsMap)
+            }
+        }
 
         val respBody = postRecords(appName, url, body)
 

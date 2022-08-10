@@ -1,4 +1,4 @@
-package ru.citeck.ecos.records2.meta.util;
+package ru.citeck.ecos.records3.record.atts.schema.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

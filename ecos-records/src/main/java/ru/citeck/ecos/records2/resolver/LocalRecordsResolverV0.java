@@ -9,9 +9,9 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
-import ru.citeck.ecos.records2.exception.LanguageNotSupportedException;
-import ru.citeck.ecos.records2.exception.RecordsException;
-import ru.citeck.ecos.records2.exception.RecsSourceNotFoundException;
+import ru.citeck.ecos.records3.exception.LanguageNotSupportedException;
+import ru.citeck.ecos.records3.exception.RecordsException;
+import ru.citeck.ecos.records3.exception.RecordsSourceNotFoundException;
 import ru.citeck.ecos.records2.querylang.QueryLangService;
 import ru.citeck.ecos.records2.querylang.QueryWithLang;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
@@ -532,7 +532,7 @@ public class LocalRecordsResolverV0 {
     private <T extends RecordsDao> T needRecordsDao(String sourceId, Class<T> type) {
         Optional<T> source = getRecordsDao(sourceId, type);
         if (!source.isPresent()) {
-            throw new RecsSourceNotFoundException(sourceId, type);
+            throw new RecordsSourceNotFoundException(sourceId, type);
         }
         return source.get();
     }

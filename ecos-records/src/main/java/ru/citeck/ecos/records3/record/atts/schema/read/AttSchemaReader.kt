@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
@@ -339,8 +339,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             innerAttsStr = att.substring(openBraceIdx + 1, closeBraceIdx)
         }
 
-        val resInnerAtts: List<SchemaAtt>
-        resInnerAtts = if (innerAttsStr == null) {
+        val resInnerAtts: List<SchemaAtt> = if (innerAttsStr == null) {
             if (lastInnerAtts.isNotEmpty()) {
                 lastInnerAtts
             } else {

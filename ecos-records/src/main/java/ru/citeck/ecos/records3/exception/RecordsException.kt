@@ -1,12 +1,6 @@
-package ru.citeck.ecos.records2.exception;
+package ru.citeck.ecos.records3.exception
 
-public class RecordsException extends RuntimeException {
-
-    public RecordsException(String message) {
-        super(message);
-    }
-
-    public RecordsException(String message, Throwable cause) {
-        super(message, cause);
-    }
+open class RecordsException : RuntimeException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }

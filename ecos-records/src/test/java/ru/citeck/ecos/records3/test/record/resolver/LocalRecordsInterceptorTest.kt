@@ -3,10 +3,10 @@ package ru.citeck.ecos.records3.test.record.resolver
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.exception.RecsSourceNotFoundException
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.exception.RecordsSourceNotFoundException
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -97,13 +97,13 @@ class LocalRecordsInterceptorTest {
 
         try {
             records.delete("test@test")
-        } catch (e: RecsSourceNotFoundException) {
+        } catch (e: RecordsSourceNotFoundException) {
             // do nothing
         }
         assertThat(deleteCalls).hasSize(1)
         try {
             records.mutate("test@test", mapOf("str" to "value"))
-        } catch (e: RecsSourceNotFoundException) {
+        } catch (e: RecordsSourceNotFoundException) {
             // do nothing
         }
         assertThat(mutateCalls).hasSize(1)

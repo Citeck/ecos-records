@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
-import ru.citeck.ecos.records2.meta.util.AttStrUtils
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType

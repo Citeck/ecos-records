@@ -8,6 +8,9 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 
+/**
+ * Adapter from legacy MetaEdge to AttEdge
+ */
 class MetaAttEdge(private val edge: AttEdge) : MetaEdge {
 
     override fun isProtected(): Boolean = edge.isProtected

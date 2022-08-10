@@ -29,6 +29,7 @@ import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.exception.LanguageNotSupportedException
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -212,7 +213,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 }
             } else {
 
-                recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
+                recordsResult = queryRecordsFromDao(sourceId, dao, query, attributes, rawAtts, context)
             }
         } else {
 
@@ -265,7 +266,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     return queryRes
                 } else {
 
-                    recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
+                    recordsResult = queryRecordsFromDao(sourceId, dao, query, attributes, rawAtts, context)
                 }
             }
         }
@@ -276,6 +277,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     private fun queryRecordsFromDao(
+        sourceId: String,
         dao: Pair<RecordsDao, RecordsQueryResDao>,
         extQuery: RecordsQuery,
         attributes: List<SchemaAtt>,
@@ -284,7 +286,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     ): RecsQueryRes<RecordAtts> {
 
         val recordsResult = RecsQueryRes<RecordAtts>()
-        val query = updateQueryLanguage(extQuery, dao) ?: error("Query language is not supported. $extQuery")
+        val query = updateQueryLanguage(extQuery, dao)
+            ?: throw LanguageNotSupportedException(sourceId, extQuery.language)
 
         val queryStartMs = System.currentTimeMillis()
         val queryRes = dao.second.queryRecords(query)

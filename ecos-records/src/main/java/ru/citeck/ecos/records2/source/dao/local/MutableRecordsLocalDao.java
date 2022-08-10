@@ -7,6 +7,10 @@ import ru.citeck.ecos.records2.source.dao.MutableRecordsDao;
 
 import java.util.List;
 
+/**
+ * @deprecated replace with RecordMutateDtoDao
+ */
+@Deprecated
 public interface MutableRecordsLocalDao<T> extends MutableRecordsDao {
 
     @NotNull

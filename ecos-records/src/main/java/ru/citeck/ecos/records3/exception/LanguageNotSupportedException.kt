@@ -1,21 +1,4 @@
-package ru.citeck.ecos.records2.exception;
+package ru.citeck.ecos.records3.exception
 
-public class LanguageNotSupportedException extends RecordsException {
-
-    private String language;
-    private String sourceId;
-
-    public LanguageNotSupportedException(String sourceId, String language) {
-        super("Language '" + language + "' is not supported by source: '" + sourceId + "'");
-        this.sourceId = sourceId;
-        this.language = language;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public String getSourceId() {
-        return sourceId;
-    }
-}
+class LanguageNotSupportedException(val sourceId: String, val language: String) :
+    RecordsException("Language '$language' is not supported by source: '$sourceId'")

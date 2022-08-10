@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.graphql
 
+@Deprecated("doesn't have replacement")
 object GqlConstants {
 
     @JvmField

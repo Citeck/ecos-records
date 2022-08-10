@@ -14,6 +14,9 @@ import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
+/**
+ * Adapter from legacy MetaValue to AttValue
+ */
 class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun <T : QueryContext> init(context: T, field: MetaField) {

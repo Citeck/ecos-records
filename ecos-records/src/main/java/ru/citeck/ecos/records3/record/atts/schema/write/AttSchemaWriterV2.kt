@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.schema.write
 
-import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 
 open class AttSchemaWriterV2 : AttSchemaWriter {
 

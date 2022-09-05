@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.request.rest
 
-import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 
 class AttsLegacySchemaParser(services: RecordsServiceFactory) {
 

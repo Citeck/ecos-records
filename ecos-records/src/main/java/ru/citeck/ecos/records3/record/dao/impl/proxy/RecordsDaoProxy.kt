@@ -28,9 +28,9 @@ import java.util.*
 import kotlin.collections.LinkedHashMap
 
 open class RecordsDaoProxy(
-    private val id: String,
-    private val targetId: String,
-    private val processor: ProxyProcessor? = null
+    id: String,
+    targetId: String,
+    processor: ProxyProcessor? = null
 ) : AbstractRecordsDao(addGlobalMixins = false),
     RecordsQueryResDao,
     RecordsAttsDao,
@@ -40,13 +40,20 @@ open class RecordsDaoProxy(
     TxnRecordsDao,
     RecsGroupQueryDao {
 
+    // fields in constructor cause exception
+    // Incorrect resolution sequence for Java field public open val id: kotlin.String defined in
+    // ru.citeck.ecos.SomeClass[JavaForKotlinOverridePropertyDescriptor@3fbf66e7] (source = null)
+    private val idField: String = id
+    private val targetIdField: String = targetId
+    private val processorField: ProxyProcessor? = processor
+
     private val attsProc = processor as? AttsProxyProcessor
     private val mutProc = processor as? MutateProxyProcessor
     private val delProc = processor as? DeleteProxyProcessor
     private val clientMetaProc = processor as? HasClientMeta
     private lateinit var recordsResolver: LocalRemoteResolver
 
-    protected val sourceIdMapping = mapOf(targetId to id)
+    protected val sourceIdMapping = mapOf(targetIdField to idField)
 
     override fun getRecordsAtts(recordsId: List<String>): List<*>? {
 
@@ -67,13 +74,13 @@ open class RecordsDaoProxy(
         if (postProcAtts.size != attsFromTarget.size) {
             error(
                 "Post process additional attributes should has " +
-                    "the same size with records from argument. Id: $id Records: ${attsFromTarget.map { it.getId() }}"
+                    "the same size with records from argument. Id: $idField Records: ${attsFromTarget.map { it.getId() }}"
             )
         }
 
         return postProcAtts.map { proxyAtts ->
             val innerAttValue = InnerAttValue(proxyAtts.atts.getAtts().getData().asJson())
-            val ref = RecordRef.create(id, proxyAtts.atts.getId().id)
+            val ref = RecordRef.create(idField, proxyAtts.atts.getId().id)
             ProxyRecVal(ref, innerAttValue, proxyAtts.additionalAtts)
         }
     }
@@ -83,7 +90,7 @@ open class RecordsDaoProxy(
         val procContext = ProxyProcContext()
         val contextAtts = getContextAtts(procContext)
 
-        val targetQuery = recsQuery.copy().withSourceId(targetId).build()
+        val targetQuery = recsQuery.copy().withSourceId(targetIdField).build()
 
         return if (contextAtts.isEmpty()) {
             val result = doWithSourceIdMapping {
@@ -91,7 +98,7 @@ open class RecordsDaoProxy(
             }
             result.setRecords(
                 result.getRecords().map {
-                    RecordRef.create(id, it.id)
+                    RecordRef.create(idField, it.id)
                 }
             )
             result
@@ -158,7 +165,7 @@ open class RecordsDaoProxy(
     }
 
     protected open fun toTargetRef(recordId: String): RecordRef {
-        return RecordRef.valueOf("$targetId@$recordId")
+        return RecordRef.valueOf("$targetIdField@$recordId")
     }
 
     protected open fun getContextAtts(procContext: ProxyProcContext): Map<String, String> {
@@ -177,24 +184,24 @@ open class RecordsDaoProxy(
     }
 
     fun getProcessor(): ProxyProcessor? {
-        return processor
+        return processorField
     }
 
     override fun getId(): String {
-        return id
+        return idField
     }
 
     fun getTargetId(): String {
-        return targetId
+        return targetIdField
     }
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         super.setRecordsServiceFactory(serviceFactory)
-        if (processor is ServiceFactoryAware) {
-            processor.setRecordsServiceFactory(serviceFactory)
+        if (processorField is ServiceFactoryAware) {
+            processorField.setRecordsServiceFactory(serviceFactory)
         }
         recordsResolver = serviceFactory.recordsResolver
-        processor?.init(this)
+        processorField?.init(this)
     }
 
     override fun getClientMeta(): ClientMeta? {
@@ -210,7 +217,7 @@ open class RecordsDaoProxy(
     }
 
     override fun isTransactional(): Boolean {
-        return recordsResolver.isSourceTransactional(targetId)
+        return recordsResolver.isSourceTransactional(targetIdField)
     }
 
     private class ProxyRecVal(

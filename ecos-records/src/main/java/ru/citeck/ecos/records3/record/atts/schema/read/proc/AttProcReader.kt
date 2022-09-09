@@ -2,9 +2,9 @@ package ru.citeck.ecos.records3.record.atts.schema.read.proc
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
-import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records3.record.atts.proc.AttOrElseProcessor
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern

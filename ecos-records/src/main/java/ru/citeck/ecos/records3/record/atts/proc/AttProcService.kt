@@ -82,7 +82,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
         }
         val dataMap: MutableMap<String, Any?> = LinkedHashMap()
         data.forEach {
-            key, value ->
+                key, value ->
             dataMap[key] = value
         }
         return ObjectData.create(applyProcessors(dataMap, processors))
@@ -95,7 +95,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
 
         data.forEach { (k, v) ->
             if (k.startsWith(PROC_ATT_ALIAS_PREFIX)) {
-                procData.set(k.replaceFirst(PROC_ATT_ALIAS_PREFIX.toRegex(), ""), v)
+                procData[k.replaceFirst(PROC_ATT_ALIAS_PREFIX.toRegex(), "")] = v
             } else {
                 resultData[k] = v
             }

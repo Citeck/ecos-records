@@ -3,6 +3,7 @@ package ru.citeck.ecos.records2.predicate.element.raw
 import ru.citeck.ecos.records2.predicate.element.Elements
 import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 
 class RawElements<T : Any>(
     private val recordsService: RecordsService,
@@ -17,7 +18,15 @@ class RawElements<T : Any>(
         return IterableRawRecords(records, attributes)
     }
 
-    inner class Iter(val impl: Iterator<T?>, val attributes: List<String>) : Iterator<RecordAttsElement<T>> {
+    inner class Iter(val impl: Iterator<T?>, attributes: List<String>) : Iterator<RecordAttsElement<T>> {
+
+        private val attsToRequest = attributes.associate {
+            if (it.contains('?') || it.contains('}')) {
+                it to it
+            } else {
+                it to "$it${ScalarType.RAW.schema}"
+            }
+        }
 
         var recordsBatch: List<RecordAttsElement<T>> = emptyList()
         var batchIdx = -1
@@ -29,7 +38,7 @@ class RawElements<T : Any>(
                     val next = impl.next() ?: continue
                     batch.add(next)
                 }
-                val atts = recordsService.getAtts(batch, attributes)
+                val atts = recordsService.getAtts(batch, attsToRequest)
                 val newBatch = mutableListOf<RecordAttsElement<T>>()
                 for (i in 0 until batch.size) {
                     newBatch.add(RecordAttsElement(batch[i], atts[i]))

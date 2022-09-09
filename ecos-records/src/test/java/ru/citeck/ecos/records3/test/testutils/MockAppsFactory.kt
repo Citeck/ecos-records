@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.testutils
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
@@ -33,7 +34,7 @@ class MockAppsFactory {
     private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
 
         val defaultCtxAtts = HashMap<String, Any?>()
-        val webAppContext = WebAppContextMock(name)
+        val webAppContext = EcosWebAppContextMock(appName = name, gatewayMode = gatewayMode)
         webAppContext.webClientExecuteImpl = { targetApp, path, request ->
             jsonPost(targetApp, path, request)
         }
@@ -41,10 +42,8 @@ class MockAppsFactory {
         val factory = object : RecordsServiceFactory() {
 
             override fun createProperties(): RecordsProperties {
-                val props = super.createProperties()
-                props.gatewayMode = gatewayMode
-                props.defaultApp = defaultApp
-                return props
+                return super.createProperties()
+                    .withDefaultApp(defaultApp)
             }
 
             override fun getEcosWebAppContext(): EcosWebAppContext {
@@ -72,7 +71,7 @@ class MockAppsFactory {
 
         val response = if (path.contains(RemoteRecordsResolver.QUERY_PATH)) {
             val query = mapper.convert(reqObjData, QueryBody::class.java) ?: error("Incorrect QueryBody. Url: $path")
-            val mockApp = apps[targetApp] ?: error("Application doesn't found: $targetApp")
+            val mockApp = apps[targetApp] ?: error("Application doesn't found: '$targetApp'")
             mockApp.factory.restHandlerAdapter.queryRecords(query)
         } else if (path.contains(RemoteRecordsResolver.MUTATE_PATH)) {
             val query = mapper.convert(reqObjData, MutateBody::class.java) ?: error("Incorrect MutateBody. Url: $path")

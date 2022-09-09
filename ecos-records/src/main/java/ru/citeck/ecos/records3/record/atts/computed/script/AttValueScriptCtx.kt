@@ -11,4 +11,10 @@ interface AttValueScriptCtx {
     fun getLocalId(): String
 
     fun load(attributes: Any?): Any?
+
+    fun save(): AttValueScriptCtx
+
+    fun att(attribute: String, value: Any?)
+
+    fun reset()
 }

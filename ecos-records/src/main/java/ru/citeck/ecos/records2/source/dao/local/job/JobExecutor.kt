@@ -10,7 +10,7 @@ import ru.citeck.ecos.webapp.api.task.scheduler.EcosTaskScheduler
 import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.function.Consumer
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
 
 class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
@@ -20,12 +20,14 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
         private const val SCHEDULER_ID = "records"
 
         private val log = KotlinLogging.logger {}
+
+        private val systemJobsCounter = AtomicInteger()
     }
 
     private val jobs: MutableList<JobInstance> = CopyOnWriteArrayList()
     private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()
         ?.getTasksApi()
-        ?.getTaskScheduler(SCHEDULER_ID)
+        ?.getScheduler(SCHEDULER_ID)
 
     @Volatile
     private var initialized = false
@@ -59,13 +61,13 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
         val scheduler = this.scheduler ?: return
         instance.task = if (instance.job is PeriodicJob) {
             scheduler.scheduleWithFixedDelay(
-                { "records-job" },
+                instance.getId(),
                 Duration.ofMillis(instance.job.getInitDelay()),
                 Duration.ofMillis(instance.job.period)
             ) { execute(instance) }
         } else {
             scheduler.schedule(
-                { "records-job" },
+                instance.getId(),
                 Duration.ofMillis(instance.job.initDelay)
             ) { execute(instance) }
         }
@@ -73,17 +75,17 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
 
     @Synchronized
     fun addJobs(sourceId: String, jobs: List<Job>) {
-        jobs.forEach(Consumer { j: Job -> addJob(sourceId, j) })
+        jobs.forEachIndexed { idx, job -> addJob(idx, sourceId, job) }
     }
 
     @Synchronized
     fun addSystemJob(job: Job) {
-        addJob(SYSTEM_JOBS_SOURCE_ID, job)
+        addJob(systemJobsCounter.getAndIncrement(), SYSTEM_JOBS_SOURCE_ID, job)
     }
 
     @Synchronized
-    fun addJob(sourceId: String, job: Job) {
-        val instance = JobInstance(sourceId, job)
+    fun addJob(idx: Int, sourceId: String, job: Job) {
+        val instance = JobInstance(idx, sourceId, job)
         synchronized(jobs) {
             jobs.add(instance)
             if (initialized) {
@@ -148,11 +150,13 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     }
 
     @Data
-    private class JobInstance(val sourceId: String, val job: Job) {
+    private class JobInstance(val idx: Int, val sourceId: String, val job: Job) {
         @Transient
         var enabled = true
         var task: EcosScheduledTask? = null
         @Transient
         var running = false
+
+        fun getId(): String = "records_${sourceId}_$idx"
     }
 }

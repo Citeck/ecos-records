@@ -55,7 +55,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             if (value.isTextual()) {
                 return value.asText()
             } else if (value.isObject() && value.has("id")) {
-                return value.get("id").asText().ifEmpty { null }
+                return value["id"].asText().ifEmpty { null }
             }
             return null
         }
@@ -69,7 +69,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
         }
 
         override fun getAtt(name: String): Any? {
-            val res = value.get(name)
+            val res = value[name]
             return if (res.isObject()) {
                 getValue(res)
             } else {
@@ -100,7 +100,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             return null
         }
 
-        override fun asBin(): Any? {
+        override fun asBin(): Any {
             return value
         }
 
@@ -121,6 +121,10 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
 
         override fun asJson(): Any {
             return value
+        }
+
+        override fun toString(): String {
+            return value.toString()
         }
     }
 }

@@ -4,8 +4,11 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.dao.HasSourceIdAliases
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -13,25 +16,22 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import kotlin.collections.ArrayList
 
-class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService() {
+class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService(), ServiceFactoryAware {
 
     companion object {
         val log = KotlinLogging.logger {}
     }
 
-    private val recordsResolver = services.recordsResolver
-    private val dtoSchemaReader = services.dtoSchemaReader
-    private val attSchemaWriter = services.attSchemaWriter
+    private lateinit var recordsResolver: LocalRemoteResolver
+    private lateinit var dtoSchemaReader: DtoSchemaReader
+    private lateinit var attSchemaWriter: AttSchemaWriter
 
-    private val isGatewayMode = services.properties.gatewayMode
-    private val currentAppName = services.properties.appName
-
-    init {
-        recordsResolver.setRecordsService(this)
-    }
+    private val isGatewayMode = services.webappProps.gatewayMode
+    private val currentAppName = services.webappProps.appName
 
     /* QUERY */
 
@@ -66,7 +66,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                     ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
 
                     val emptyAtts = ObjectData.create()
-                    attributes.keys.forEach { emptyAtts.set(it, DataValue.NULL) }
+                    attributes.keys.forEach { emptyAtts[it] = DataValue.NULL }
 
                     val result = ArrayList<RecordAtts>(records.size)
                     for (record in records) {
@@ -126,28 +126,28 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 val sourceIdMapping = context.ctxData.sourceIdMapping
                 val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
 
-                addTxnMutatedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
+                addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
 
-                result
+                result.map { it.withDefaultAppName(currentAppName) }
             }
         }
     }
 
-    private inline fun <T> addTxnMutatedRecords(
+    private inline fun <T> addTxnChangedRecords(
         txnChangedRecords: MutableSet<RecordRef>?,
         sourceIdMapping: Map<String, String>,
         records: List<T>,
-        getRef: (T) -> RecordRef
+        crossinline getRef: (T) -> RecordRef
     ) {
         if (isGatewayMode || txnChangedRecords == null) {
             return
         }
         records.forEach {
-            addTxnMutatedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
+            addTxnChangedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
         }
     }
 
-    private fun addTxnMutatedRecord(
+    private fun addTxnChangedRecord(
         txnChangedRecords: MutableSet<RecordRef>?,
         sourceIdMapping: Map<String, String>,
         recordRef: RecordRef?
@@ -156,9 +156,14 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
             return
         }
+        val normalizedRef = if (recordRef.appName == currentAppName) {
+            recordRef.withoutAppName()
+        } else {
+            recordRef
+        }
         txnChangedRecords.add(
             RecordRefUtils.mapAppIdAndSourceId(
-                recordRef,
+                normalizedRef,
                 currentAppName,
                 sourceIdMapping
             )
@@ -177,7 +182,12 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
             error("Deletion is not allowed in read-only mode. Records: $records")
         }
         val status = recordsResolver.delete(records)
-        context.getTxnChangedRecords()?.addAll(records)
+
+        val txnChangedRecords = context.getTxnChangedRecords()
+        val sourceIdMapping = context.ctxData.sourceIdMapping
+
+        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { it }
+
         return status
     }
 
@@ -223,5 +233,19 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     override fun getRecordsDao(sourceId: String): RecordsDao? {
         return getRecordsDao(sourceId, RecordsDao::class.java)
+    }
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+
+        recordsResolver = serviceFactory.recordsResolver
+        dtoSchemaReader = serviceFactory.dtoSchemaReader
+        attSchemaWriter = serviceFactory.attSchemaWriter
+        recordsResolver.setRecordsService(this)
+
+        for (dao in serviceFactory.defaultRecordsDao) {
+            if (dao is RecordsDao) {
+                register(dao)
+            }
+        }
     }
 }

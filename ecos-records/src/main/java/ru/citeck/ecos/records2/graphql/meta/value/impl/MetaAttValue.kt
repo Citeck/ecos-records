@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
@@ -13,7 +14,14 @@ import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
+/**
+ * Adapter from legacy MetaValue to AttValue
+ */
 class MetaAttValue(private val attValue: AttValue) : MetaValue {
+
+    override fun <T : QueryContext> init(context: T, field: MetaField) {
+        attValue.init()?.get()
+    }
 
     override fun getString(): String? = attValue.asText()
 

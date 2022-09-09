@@ -54,7 +54,7 @@ class CtxAttributesTest {
             RecordRef.valueOf("test@record"), "\$now|fmt('MM')"
         ).asText()
 
-        val expectedMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+        val expectedMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.MONTH) + 1
         assertEquals(
             if (expectedMonth < 10) {
                 "0$expectedMonth"

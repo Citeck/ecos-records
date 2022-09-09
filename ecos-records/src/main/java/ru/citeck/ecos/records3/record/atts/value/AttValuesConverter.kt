@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.AttValueFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.meta.AttMetaValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class AttValuesConverter(private val services: RecordsServiceFactory) {
 
@@ -41,16 +42,26 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         if (value == null || value is RecordRef && RecordRef.isEmpty(value)) {
             return null
         }
-        if (value is AttValue) {
-            return value
+        var valueToConvert = value
+        if (valueToConvert is EntityRef && value !is RecordRef) {
+            if (valueToConvert.isEmpty()) {
+                return null
+            }
+            valueToConvert = RecordRef.create(
+                valueToConvert.getAppName(),
+                valueToConvert.getSourceId(),
+                valueToConvert.getLocalId()
+            )
         }
-        if (value is MetaValue) {
-            return AttMetaValue(value)
+
+        if (valueToConvert is AttValue) {
+            return valueToConvert
         }
-        val valueToConvert = if (value is AttValueCtx) {
-            value.getValue()
-        } else {
-            value
+        if (valueToConvert is MetaValue) {
+            return AttMetaValue(valueToConvert)
+        }
+        if (valueToConvert is AttValueCtx) {
+            valueToConvert = valueToConvert.getValue()
         }
 
         val factory: AttValueFactory<Any> = valueFactories[valueToConvert.javaClass]

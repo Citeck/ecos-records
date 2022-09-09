@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
-import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import kotlin.collections.LinkedHashMap
 
 class AttContext {

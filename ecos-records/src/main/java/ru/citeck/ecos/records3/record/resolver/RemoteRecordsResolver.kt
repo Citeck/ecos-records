@@ -1,11 +1,10 @@
 package ru.citeck.ecos.records3.record.resolver
 
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.exception.RecordsException
-import ru.citeck.ecos.records2.exception.RemoteRecordsException
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
@@ -13,8 +12,11 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.cache.Cache
 import ru.citeck.ecos.records3.cache.CacheConfig
+import ru.citeck.ecos.records3.exception.RecordsException
+import ru.citeck.ecos.records3.exception.RemoteRecordsException
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaLegacyWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -56,6 +58,11 @@ class RemoteRecordsResolver(
 
     private var defaultAppName: String = services.properties.defaultApp
     private val sourceIdMapping = services.properties.sourceIdMapping
+    private val attSchemaReader = services.attSchemaReader
+
+    private val legacyApiMode = services.properties.legacyApiMode
+    private val legacyAttsWriter = AttSchemaLegacyWriter()
+
     private lateinit var recordsService: RecordsService
     private val txnActionManager = services.txnActionManager
 
@@ -393,7 +400,22 @@ class RemoteRecordsResolver(
         context: RequestContext
     ): T {
 
-        val result = webClient.execute(appName, requestPath, body, respType.java).get()
+        val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
+            val data = DataValue.create(body)
+            data.remove("$.query.page.afterId")
+            val atts = data["attributes"]
+            if (atts.isObject() && atts.size() > 0) {
+                val attsMap = legacyAttsWriter.writeToMap(
+                    attSchemaReader.read(atts.asMap(String::class.java, Any::class.java))
+                )
+                data["attributes"] = attsMap
+            }
+            data
+        } else {
+            body
+        }
+
+        val result = webClient.execute(appName, requestPath, convertedBody, respType.java).get()
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

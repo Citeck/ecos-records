@@ -29,6 +29,7 @@ import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.exception.LanguageNotSupportedException
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -55,12 +56,14 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.interceptor.*
 import ru.citeck.ecos.records3.utils.V1ConvUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
 import kotlin.math.max
 
-open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) : LocalRecordsResolver {
+open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) :
+    LocalRecordsResolver, ServiceFactoryAware {
 
     companion object {
 
@@ -93,14 +96,16 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val localRecordsResolverV0 = services.localRecordsResolverV0
     private lateinit var recordsTemplateService: RecordsTemplateService
 
-    private val converter: RecsDaoConverter = RecsDaoConverter()
+    private val currentApp = services.webappProps.appName
+    private val converter: RecsDaoConverter = RecsDaoConverter(currentApp)
 
-    private val currentApp = services.properties.appName
     private val jobExecutor = services.jobExecutor
 
     private var interceptors: List<LocalRecordsInterceptor> = emptyList()
 
     private var hasDaoWithEmptyId = false
+
+    private val virtualRecords = ConcurrentHashMap<EntityRef, Any>()
 
     override fun query(
         queryArg: RecordsQuery,
@@ -208,7 +213,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 }
             } else {
 
-                recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
+                recordsResult = queryRecordsFromDao(sourceId, dao, query, attributes, rawAtts, context)
             }
         } else {
 
@@ -261,7 +266,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     return queryRes
                 } else {
 
-                    recordsResult = queryRecordsFromDao(dao, query, attributes, rawAtts, context)
+                    recordsResult = queryRecordsFromDao(sourceId, dao, query, attributes, rawAtts, context)
                 }
             }
         }
@@ -272,6 +277,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     private fun queryRecordsFromDao(
+        sourceId: String,
         dao: Pair<RecordsDao, RecordsQueryResDao>,
         extQuery: RecordsQuery,
         attributes: List<SchemaAtt>,
@@ -280,7 +286,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     ): RecsQueryRes<RecordAtts> {
 
         val recordsResult = RecsQueryRes<RecordAtts>()
-        val query = updateQueryLanguage(extQuery, dao) ?: error("Query language is not supported. $extQuery")
+        val query = updateQueryLanguage(extQuery, dao)
+            ?: throw LanguageNotSupportedException(sourceId, extQuery.language)
 
         val queryStartMs = System.currentTimeMillis()
         val queryRes = dao.second.queryRecords(query)
@@ -462,11 +469,16 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
         for ((idx, rec) in records.withIndex()) {
             if (rec is RecordRef) {
-                var ref = rec
-                if (ref.appName == currentApp) {
-                    ref = ref.removeAppName()
+                val virtualRec = virtualRecords[rec.withDefaultAppName(currentApp)]
+                if (virtualRec != null) {
+                    recordObjs.add(ValWithIdx(virtualRec, idx))
+                } else {
+                    var ref = rec
+                    if (ref.appName == currentApp) {
+                        ref = ref.removeAppName()
+                    }
+                    recordRefs.add(ValWithIdx(ref, idx))
                 }
-                recordRefs.add(ValWithIdx(ref, idx))
             } else {
                 recordObjs.add(ValWithIdx(rec, idx))
             }
@@ -839,8 +851,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         if (recordsDao is JobsProvider) {
             val jobs: List<Job> = (recordsDao as JobsProvider).jobs
-            for (job in jobs) {
-                jobExecutor.addJob(sourceId, job)
+            for ((idx, job) in jobs.withIndex()) {
+                jobExecutor.addJob(idx, sourceId, job)
             }
         }
     }
@@ -912,8 +924,13 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     }
 
     private fun <T : RecordsDao> getRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T>? {
+        val mapByType = daoMapByType[type]
+        var result = mapByType?.get(sourceId)
+        if (result == null && sourceId.indexOf('/') == -1) {
+            result = mapByType?.get("$currentApp/$sourceId")
+        }
         @Suppress("UNCHECKED_CAST")
-        return daoMapByType[type]?.get(sourceId) as? Pair<RecordsDao, T>?
+        return result as? Pair<RecordsDao, T>?
     }
 
     private fun <T : RecordsDao> needRecordsDaoPair(sourceId: String, type: Class<T>): Pair<RecordsDao, T> {
@@ -955,7 +972,19 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         this.interceptors = interceptors
     }
 
-    fun setRecordsTemplateService(recordsTemplateService: RecordsTemplateService) {
-        this.recordsTemplateService = recordsTemplateService
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsTemplateService = serviceFactory.recordsTemplateService
+    }
+
+    override fun containsVirtualRecord(ref: EntityRef): Boolean {
+        return virtualRecords.contains(ref.withDefaultAppName(currentApp))
+    }
+
+    override fun registerVirtualRecord(ref: EntityRef, value: Any) {
+        virtualRecords[ref.withDefaultAppName(currentApp)] = value
+    }
+
+    override fun unregisterVirtualRecord(ref: EntityRef) {
+        virtualRecords.remove(ref.withDefaultAppName(currentApp))
     }
 }

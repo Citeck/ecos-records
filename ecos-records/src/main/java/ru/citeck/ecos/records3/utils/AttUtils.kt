@@ -19,12 +19,14 @@ object AttUtils {
         return attributesMap
     }
 
-    fun isValidComputedAtt(att: String?): Boolean {
+    fun isValidComputedAtt(att: String?, isMixin: Boolean): Boolean {
         if (att.isNullOrBlank()) {
             return false
         }
-        return att != RecordConstants.ATT_TYPE &&
-            att.length > 1 &&
+        if (att == RecordConstants.ATT_TYPE) {
+            return isMixin
+        }
+        return att.length > 1 &&
             !att.contains('?') &&
             att[0] != '.' &&
             att[0] != ' '

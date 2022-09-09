@@ -3,13 +3,15 @@ package ru.citeck.ecos.records2.meta
 import ru.citeck.ecos.commons.utils.TmplUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordRef.Companion.isEmpty
+import ru.citeck.ecos.records2.ServiceFactoryAware
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
 
-class RecordsTemplateService(services: RecordsServiceFactory) {
+class RecordsTemplateService : ServiceFactoryAware {
 
-    private val recordsService = services.recordsServiceV1
+    private lateinit var recordsService: RecordsService
 
     fun <T> resolve(template: T, recordRef: RecordRef?): T {
         return if (isEmpty(recordRef)) {
@@ -35,5 +37,9 @@ class RecordsTemplateService(services: RecordsServiceFactory) {
         val attsRes = valueCtx.getAtts(atts)
         return TmplUtils.applyAtts(template, attsRes)
             ?: error("Apply atts can't be performed. Template: $template Record: $record")
+    }
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsService = serviceFactory.recordsServiceV1
     }
 }

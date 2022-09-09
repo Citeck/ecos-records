@@ -9,6 +9,7 @@ import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.resolver.interceptor.LocalRecordsInterceptor
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 interface LocalRecordsResolver {
 
@@ -47,4 +48,10 @@ interface LocalRecordsResolver {
     fun addInterceptor(interceptor: LocalRecordsInterceptor)
 
     fun setInterceptors(interceptors: List<LocalRecordsInterceptor>)
+
+    fun containsVirtualRecord(ref: EntityRef): Boolean
+
+    fun registerVirtualRecord(ref: EntityRef, value: Any)
+
+    fun unregisterVirtualRecord(ref: EntityRef)
 }

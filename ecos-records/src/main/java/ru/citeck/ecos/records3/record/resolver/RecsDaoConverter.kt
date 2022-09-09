@@ -25,7 +25,9 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
 
-class RecsDaoConverter {
+class RecsDaoConverter(
+    private val currentAppName: String
+) {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -76,10 +78,18 @@ class RecsDaoConverter {
             ?: error("Generic type <T> is not found for class ${dao::class.java}")
 
         val convert: (LocalRecordAtts) -> Any = when (valueType) {
-            RecordRef::class.java -> { { it.id } }
-            LocalRecordAtts::class.java -> { { it } }
-            ObjectData::class.java -> { { it.attributes } }
-            DataValue::class.java -> { { it.attributes.getData() } }
+            RecordRef::class.java -> {
+                { it.id }
+            }
+            LocalRecordAtts::class.java -> {
+                { it }
+            }
+            ObjectData::class.java -> {
+                { it.attributes }
+            }
+            DataValue::class.java -> {
+                { it.attributes.getData() }
+            }
             else -> {
                 {
                     it.attributes.getAs(valueType)
@@ -113,16 +123,30 @@ class RecsDaoConverter {
         return object : RecordsQueryResDao {
 
             override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
-                var records = dao.queryRecords(recsQuery) ?: return null
+                val records = dao.queryRecords(recsQuery) ?: return null
                 if (records is RecsQueryRes<*>) {
                     return records
                 }
-                if (records is Set<*>) {
-                    records = ArrayList(records)
-                }
-                if (records is List<*>) {
+                if (records is Collection<*>) {
+                    val daoId = dao.getId()
+                    val (appName, sourceId) = if (daoId.contains('/')) {
+                        val appWithSrc = daoId.split("/")
+                        appWithSrc[0] to appWithSrc[1]
+                    } else {
+                        currentAppName to daoId
+                    }
+                    val resRecs = records.mapNotNull {
+                        if (it is String) {
+                            RecordRef.valueOf(it).withDefault(
+                                appName = appName,
+                                sourceId = sourceId
+                            )
+                        } else {
+                            it
+                        }
+                    }
                     val result = RecsQueryRes<Any>()
-                    result.setRecords(records)
+                    result.setRecords(resRecs)
                     return result
                 }
                 if (records is DataValue && records.isArray()) {

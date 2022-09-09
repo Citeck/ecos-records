@@ -5,13 +5,14 @@ import ecos.com.fasterxml.jackson210.annotation.JsonValue
 import ru.citeck.ecos.commons.utils.StringUtils.containsOnly
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.commons.utils.StringUtils.isNotBlank
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.io.Serializable
 import java.util.*
 
 /**
  * Unique identifier of a record.
  */
-class RecordRef : Serializable {
+class RecordRef : EntityRef, Serializable {
 
     companion object {
 
@@ -51,42 +52,18 @@ class RecordRef : Serializable {
 
         @JvmStatic
         fun isEmpty(ref: RecordRef?): Boolean {
-            return ref == null || ref === EMPTY ||
-                (
-                    isBlank(ref.id) &&
-                        isBlank(ref.sourceId) &&
-                        isBlank(ref.appName)
-                    )
+            return EntityRef.isEmpty(ref)
         }
 
         @JvmStatic
         @JsonCreator
         @com.fasterxml.jackson.annotation.JsonCreator
         fun valueOf(recordRefStr: String?): RecordRef {
-            if (recordRefStr == null || isBlankId(recordRefStr)) {
-                return EMPTY
+            val ref = EntityRef.valueOf(recordRefStr)
+            if (ref is RecordRef) {
+                return ref
             }
-            val id: String
-            val appName: String
-            val sourceId: String
-            val sourceDelimIdx = recordRefStr.indexOf(SOURCE_DELIMITER)
-            if (sourceDelimIdx != -1) {
-                id = recordRefStr.substring(sourceDelimIdx + 1)
-                val source = recordRefStr.substring(0, sourceDelimIdx)
-                val appNameDelimIdx = source.indexOf(APP_NAME_DELIMITER)
-                if (appNameDelimIdx > -1) {
-                    appName = source.substring(0, appNameDelimIdx)
-                    sourceId = source.substring(appNameDelimIdx + 1)
-                } else {
-                    appName = ""
-                    sourceId = source
-                }
-            } else {
-                id = recordRefStr
-                sourceId = ""
-                appName = ""
-            }
-            return create(appName, sourceId, id)
+            return create(ref.getAppName(), ref.getSourceId(), ref.getLocalId())
         }
 
         @JvmStatic
@@ -105,7 +82,9 @@ class RecordRef : Serializable {
         }
     }
 
+    @JvmField
     val appName: String
+    @JvmField
     val sourceId: String
     val id: String
 
@@ -121,24 +100,62 @@ class RecordRef : Serializable {
         this.sourceId = if (isNotBlank(sourceId)) sourceId else ""
     }
 
+    override fun getAppName(): String {
+        return appName
+    }
+    override fun getLocalId(): String {
+        return id
+    }
+
+    override fun getSourceId(): String {
+        return sourceId
+    }
+
     fun addAppName(appName: String): RecordRef {
-        val current = toString()
-        return if (current.contains("@")) {
-            valueOf("$appName/$current")
+        return withAppName(appName)
+    }
+
+    override fun withDefault(
+        appName: String,
+        sourceId: String,
+        localId: String
+    ): RecordRef {
+        val newAppName = this.appName.ifEmpty { appName }
+        val newSourceId = this.sourceId.ifEmpty { sourceId }
+        val newId = this.id.ifEmpty { localId }
+        if (newAppName === this.appName &&
+            newSourceId === this.sourceId &&
+            newId === this.id
+        ) {
+            return this
+        }
+        return create(newAppName, newSourceId, newId)
+    }
+
+    override fun withDefaultSourceId(sourceId: String): RecordRef {
+        if (isBlank(sourceId)) {
+            return this
+        }
+        return if (this.sourceId.isNotEmpty()) {
+            this
         } else {
-            valueOf("$appName/@$current")
+            withSourceId(sourceId)
         }
     }
 
-    fun withDefaultAppName(appName: String): RecordRef {
+    override fun withDefaultAppName(appName: String): RecordRef {
         if (isBlank(appName)) {
             return this
         }
         return if (this.appName.isNotEmpty()) {
             this
         } else {
-            addAppName(appName)
+            withAppName(appName)
         }
+    }
+
+    override fun withoutAppName(): RecordRef {
+        return withAppName("")
     }
 
     fun removeAppName(): RecordRef {
@@ -153,14 +170,14 @@ class RecordRef : Serializable {
         return appName.isNotEmpty()
     }
 
-    fun withSourceId(sourceId: String): RecordRef {
+    override fun withSourceId(sourceId: String): RecordRef {
         if (this.sourceId == sourceId) {
             return this
         }
         return create(appName, sourceId, id)
     }
 
-    fun withAppName(appName: String): RecordRef {
+    override fun withAppName(appName: String): RecordRef {
         if (this.appName == appName) {
             return this
         }
@@ -197,16 +214,6 @@ class RecordRef : Serializable {
     @JsonValue
     @com.fasterxml.jackson.annotation.JsonValue
     override fun toString(): String {
-        if (this === EMPTY) {
-            return ""
-        }
-        if (appName.isNotEmpty()) {
-            return appName + APP_NAME_DELIMITER + sourceId + SOURCE_DELIMITER + id
-        }
-        return if (sourceId.isNotEmpty()) {
-            sourceId + SOURCE_DELIMITER + id
-        } else {
-            id
-        }
+        return getAsString()
     }
 }

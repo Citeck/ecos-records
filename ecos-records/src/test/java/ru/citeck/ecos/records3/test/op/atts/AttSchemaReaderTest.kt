@@ -38,7 +38,7 @@ class AttSchemaReaderTest {
 
         val check = { atts: RecordAtts ->
             assertThat(atts.getAtt("correct").asText()).isEqualTo("value")
-            assertThat(atts.getAtt("incorrect").isNull()).isTrue()
+            assertThat(atts.getAtt("incorrect").isNull()).isTrue
         }
 
         val ref = RecordRef.valueOf("test@test")

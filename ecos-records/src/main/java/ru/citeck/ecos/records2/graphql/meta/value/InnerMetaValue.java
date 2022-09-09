@@ -14,6 +14,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Replace with InnerAttValue
+ */
+@Deprecated
 public class InnerMetaValue implements MetaValue, HasListView<InnerMetaValue> {
 
     private final JsonNode value;

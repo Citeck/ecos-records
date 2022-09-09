@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator;
+import ru.citeck.ecos.records2.predicate.comparator.ValueComparator;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
@@ -48,7 +49,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
     protected RecordsServiceFactory serviceFactory;
     protected RecordAttsService recordsMetaService;
     protected ru.citeck.ecos.records2.RecordsService recordsServiceV0;
-    protected DefaultValueComparator comparator = new DefaultValueComparator();
+    protected ValueComparator comparator = DefaultValueComparator.INSTANCE;
 
     @NotNull
     @Override

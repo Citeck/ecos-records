@@ -5,6 +5,7 @@ import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes;
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ public class RecordElement implements Element {
         Map<String, String> attributesMap = new HashMap<>();
         for (String att : attributes) {
             if (att.indexOf('?') == -1) {
-                attributesMap.put(att, att + "?str");
+                attributesMap.put(att, att + ScalarType.RAW.getSchema());
             } else {
                 attributesMap.put(att, att);
             }

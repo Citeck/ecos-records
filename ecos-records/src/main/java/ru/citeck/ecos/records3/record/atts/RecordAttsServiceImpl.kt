@@ -117,6 +117,10 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
         recordRefs: List<RecordRef>
     ): List<RecordAtts> {
 
+        if (values.isEmpty()) {
+            return emptyList()
+        }
+
         var rootAtts: List<SchemaAtt> = attributes
         val valueRefsProvided = recordRefs.size == values.size
         rootAtts = ArrayList(rootAtts)

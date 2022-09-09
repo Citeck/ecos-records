@@ -5,9 +5,9 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
-import ru.citeck.ecos.records2.evaluator.evaluators.*
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValuesConverter
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -20,7 +20,6 @@ import ru.citeck.ecos.records2.querylang.QueryLangService
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl
 import ru.citeck.ecos.records2.request.rest.RestHandler
 import ru.citeck.ecos.records2.resolver.LocalRecordsResolverV0
-import ru.citeck.ecos.records2.source.dao.RecordsDao
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
@@ -46,6 +45,8 @@ import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValu
 import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
+import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProviderImpl
+import ru.citeck.ecos.records3.record.mixin.provider.MutableAttMixinsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
@@ -61,7 +62,9 @@ import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.properties.EcosWebAppProperties
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 import java.util.function.Supplier
 
@@ -72,65 +75,69 @@ open class RecordsServiceFactory {
         val log = KotlinLogging.logger {}
     }
 
-    val restHandlerAdapter: RestHandlerAdapter by lazy { createRestHandlerAdapter() }
-    val restHandler: RestHandler by lazy { createRestHandler() }
-    val recordsService: ru.citeck.ecos.records2.RecordsService by lazy { createRecordsService() }
-    val recordsServiceV1: RecordsService by lazy { createRecordsServiceV1() }
-    val dtoSchemaReader: DtoSchemaReader by lazy { createDtoSchemaReader() }
-    val recordsResolver: LocalRemoteResolver by lazy { createRecordsResolver() }
-    val predicateService: PredicateService by lazy { createPredicateService() }
-    val queryLangService: QueryLangService by lazy { createQueryLangService() }
-    val recordsAttsService: RecordAttsService by lazy { createRecordsAttsService() }
-    val remoteRecordsResolver: RemoteRecordsResolver? by lazy { createRemoteRecordsResolver() }
-    val attValuesConverter: AttValuesConverter by lazy { createAttValuesConverter() }
-    val recordEvaluatorService: RecordEvaluatorService by lazy { createRecordEvaluatorService() }
-    val predicateJsonDeserializer: PredicateJsonDeserializer by lazy { createPredicateJsonDeserializer() }
-    val predicateTypes: PredicateTypes by lazy { createPredicateTypes() }
-    val recordsTemplateService: RecordsTemplateService by lazy { createRecordsTemplateService() }
-    val recordTypeService: RecordTypeService by lazy { createRecordTypeService() }
-    val attProcService: AttProcService by lazy { createAttProcService() }
-    val attSchemaReader: AttSchemaReader by lazy { createAttSchemaReader() }
-    val attSchemaWriter: AttSchemaWriter by lazy { createAttSchemaWriter() }
-    val attSchemaResolver: AttSchemaResolver by lazy { createAttSchemaResolver() }
-    val metaValuesConverter: MetaValuesConverter by lazy { createMetaValuesConverter() }
-    val attProcReader: AttProcReader by lazy { createAttProcReader() }
-    val recordComputedAttsService: RecordComputedAttsService by lazy { createRecordComputedAttsService() }
-    val recordsTxnService: RecordsTxnService by lazy { createRecordsTxnService() }
-    val ctxAttsProviders: List<CtxAttsProvider> by lazy { createCtxAttsProviders() }
-    val ctxAttsService: CtxAttsService by lazy { CtxAttsService(this) }
-    val jobExecutor: JobExecutor by lazy { createJobExecutor() }
-    val txnActionManager: TxnActionManager by lazy { createTxnActionManager() }
+    val restHandlerAdapter: RestHandlerAdapter by lazySingleton { createRestHandlerAdapter() }
+    val restHandler: RestHandler by lazySingleton { createRestHandler() }
+    val recordsService: ru.citeck.ecos.records2.RecordsService by lazySingleton { createRecordsService() }
+    val recordsServiceV1: RecordsService by lazySingleton { createRecordsServiceV1() }
+    val dtoSchemaReader: DtoSchemaReader by lazySingleton { createDtoSchemaReader() }
+    val recordsResolver: LocalRemoteResolver by lazySingleton { createRecordsResolver() }
+    val predicateService: PredicateService by lazySingleton { createPredicateService() }
+    val queryLangService: QueryLangService by lazySingleton { createQueryLangService() }
+    val recordsAttsService: RecordAttsService by lazySingleton { createRecordsAttsService() }
+    val remoteRecordsResolver: RemoteRecordsResolver? by lazySingleton { createRemoteRecordsResolver() }
+    val attValuesConverter: AttValuesConverter by lazySingleton { createAttValuesConverter() }
+    val recordEvaluatorService: RecordEvaluatorService by lazySingleton { createRecordEvaluatorService() }
+    val predicateJsonDeserializer: PredicateJsonDeserializer by lazySingleton { createPredicateJsonDeserializer() }
+    val predicateTypes: PredicateTypes by lazySingleton { createPredicateTypes() }
+    val recordsTemplateService: RecordsTemplateService by lazySingleton { createRecordsTemplateService() }
+    val recordTypeService: RecordTypeService by lazySingleton { createRecordTypeService() }
+    val attProcService: AttProcService by lazySingleton { createAttProcService() }
+    val attSchemaReader: AttSchemaReader by lazySingleton { createAttSchemaReader() }
+    val attSchemaWriter: AttSchemaWriter by lazySingleton { createAttSchemaWriter() }
+    val attSchemaResolver: AttSchemaResolver by lazySingleton { createAttSchemaResolver() }
+    val metaValuesConverter: MetaValuesConverter by lazySingleton { createMetaValuesConverter() }
+    val attProcReader: AttProcReader by lazySingleton { createAttProcReader() }
+    val recordComputedAttsService: RecordComputedAttsService by lazySingleton { createRecordComputedAttsService() }
+    val recordsTxnService: RecordsTxnService by lazySingleton { createRecordsTxnService() }
+    val ctxAttsProviders: List<CtxAttsProvider> by lazySingleton { createCtxAttsProviders() }
+    val ctxAttsService: CtxAttsService by lazySingleton { CtxAttsService(this) }
+    val jobExecutor: JobExecutor by lazySingleton { createJobExecutor() }
+    val txnActionManager: TxnActionManager by lazySingleton { createTxnActionManager() }
+    val globalAttMixinsProvider: MutableAttMixinsProvider by lazySingleton { createGlobalAttMixinsProvider() }
 
-    internal val cacheManager: CacheManager by lazy { CacheManager(this) }
-
-    @Deprecated("")
-    val queryContextSupplier: Supplier<out QueryContext> by lazy { createQueryContextSupplier() }
-
-    val attValueFactories: List<AttValueFactory<*>> by lazy { createAttValueFactories() }
+    internal val cacheManager: CacheManager by lazySingleton { CacheManager(this) }
 
     @Deprecated("")
-    val localRecordsResolverV0: LocalRecordsResolverV0 by lazy { createLocalRecordsResolverV0() }
-    val localRecordsResolver: LocalRecordsResolver by lazy { createLocalRecordsResolver() }
+    val queryContextSupplier: Supplier<out QueryContext> by lazySingleton { createQueryContextSupplier() }
 
-    val metaRecordsDaoAttsProvider: MetaRecordsDaoAttsProvider by lazy { createMetaRecordsDaoAttsProvider() }
+    val attValueFactories: List<AttValueFactory<*>> by lazySingleton { createAttValueFactories() }
 
-    val properties: RecordsProperties by lazy {
+    @Deprecated("")
+    val localRecordsResolverV0: LocalRecordsResolverV0 by lazySingleton { createLocalRecordsResolverV0() }
+    val localRecordsResolver: LocalRecordsResolver by lazySingleton { createLocalRecordsResolver() }
+
+    val metaRecordsDaoAttsProvider: MetaRecordsDaoAttsProvider by lazySingleton { createMetaRecordsDaoAttsProvider() }
+
+    val properties: RecordsProperties by lazySingleton {
         val props = createProperties()
-        if (!props.gatewayMode && props.defaultApp.isNotEmpty()) {
+        val webappProps = this.webappProps
+        if (!webappProps.gatewayMode && props.defaultApp.isNotEmpty()) {
             log.warn { "DefaultApp can't be used without gatewayMode. DefaultApp: ${props.defaultApp}" }
-            props.defaultApp = ""
+            props.withDefaultApp("")
+        } else {
+            props
         }
-        val ctx = getEcosWebAppContext()
-        props.appName = ctx?.getProperties()?.appName ?: ""
-        props.appInstanceId = ctx?.getProperties()?.appInstanceId ?: ""
-        props
     }
-    private val defaultRecordsDao: List<*> by lazy { createDefaultRecordsDao() }
+
+    val webappProps by lazySingleton {
+        getEcosWebAppContext()?.getProperties() ?: EcosWebAppProperties("", "")
+    }
+
+    val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
 
     private var tmpEvaluatorsService: RecordEvaluatorService? = null
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
-    private var tmpLocalRecordsResolver: LocalRecordsResolver? = null
 
     private var recordTypeServiceImpl: RecordTypeService? = null
 
@@ -173,49 +180,15 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRecordEvaluatorService(): RecordEvaluatorService {
-        if (tmpEvaluatorsService != null) {
-            return tmpEvaluatorsService!!
-        }
-        val service: RecordEvaluatorService = RecordEvaluatorServiceImpl(this)
-        tmpEvaluatorsService = service
-        service.register(GroupEvaluator())
-        service.register(PredicateEvaluator())
-        service.register(AlwaysTrueEvaluator())
-        service.register(AlwaysFalseEvaluator())
-        service.register(HasAttributeEvaluator())
-        service.register(HasPermissionEvaluator())
-        tmpEvaluatorsService = null
-        return service
+        return RecordEvaluatorServiceImpl()
     }
 
     protected open fun createRecordsService(): ru.citeck.ecos.records2.RecordsService {
-        if (tmpRecordsServiceV0 != null) {
-            return tmpRecordsServiceV0!!
-        }
-        tmpRecordsServiceV0 = ru.citeck.ecos.records2.RecordsServiceImpl(this)
-        for (dao in defaultRecordsDao) {
-            if (dao is RecordsDao) {
-                tmpRecordsServiceV0!!.register(dao)
-            }
-        }
-        val result: ru.citeck.ecos.records2.RecordsService = tmpRecordsServiceV0!!
-        tmpRecordsServiceV0 = null
-        return result
+        return ru.citeck.ecos.records2.RecordsServiceImpl(this)
     }
 
     protected open fun createRecordsServiceV1(): RecordsService {
-        if (tmpRecordsService != null) {
-            return tmpRecordsService!!
-        }
-        val recordsService = RecordsServiceImpl(this)
-        tmpRecordsService = recordsService
-        for (dao in defaultRecordsDao) {
-            if (dao is ru.citeck.ecos.records3.record.dao.RecordsDao) {
-                recordsService.register(dao)
-            }
-        }
-        tmpRecordsService = null
-        return recordsService
+        return RecordsServiceImpl(this)
     }
 
     protected open fun createDefaultRecordsDao(): List<*> {
@@ -234,28 +207,21 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-        val webClient = this.getEcosWebAppContext()?.getWebClient()
+        val ctx = this.getEcosWebAppContext()
+        val webClient = ctx?.getWebClient()
         return if (webClient != null) {
             RemoteRecordsResolver(this)
         } else {
-            check(!properties.gatewayMode) {
-                ("WebAppContext should be not null in gateway mode! Props: $properties")
+            check(!webappProps.gatewayMode) {
+                "WebAppContext should not be null in gateway mode! Props: $properties"
             }
-            log.warn("EcosWebAppContext is not exists. Remote records requests wont be allowed")
+            log.warn("EcosWebAppContext does not exists. Remote records requests wont be allowed")
             null
         }
     }
 
     protected open fun createLocalRecordsResolver(): LocalRecordsResolver {
-        val tmp = tmpLocalRecordsResolver
-        if (tmp != null) {
-            return tmp
-        }
-        val newResolver = LocalRecordsResolverImpl(this)
-        tmpLocalRecordsResolver = newResolver
-        newResolver.setRecordsTemplateService(recordsTemplateService)
-        tmpLocalRecordsResolver = null
-        return newResolver
+        return LocalRecordsResolverImpl(this)
     }
 
     protected open fun createLocalRecordsResolverV0(): LocalRecordsResolverV0 {
@@ -271,7 +237,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createPredicateService(): PredicateService {
-        return PredicateServiceImpl(this)
+        return PredicateServiceImpl()
     }
 
     protected open fun createAttValuesConverter(): AttValuesConverter {
@@ -310,6 +276,7 @@ open class RecordsServiceFactory {
         metaValueFactories.add(OffsetDateTimeValueFactory())
         metaValueFactories.add(JsonNodeValueFactory())
         metaValueFactories.add(RecordRefValueFactory())
+        metaValueFactories.add(EntityWithMetaValueFactory())
         if (isJacksonPresent()) {
             metaValueFactories.add(JacksonJsonNodeValueFactory())
         }
@@ -340,7 +307,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createProperties(): RecordsProperties {
-        return RecordsProperties()
+        return RecordsProperties.DEFAULT
     }
 
     protected open fun createMetaRecordsDaoAttsProvider(): MetaRecordsDaoAttsProvider {
@@ -348,7 +315,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRecordsTemplateService(): RecordsTemplateService {
-        return RecordsTemplateService(this)
+        return RecordsTemplateService()
     }
 
     protected open fun createAttSchemaReader(): AttSchemaReader {
@@ -399,11 +366,32 @@ open class RecordsServiceFactory {
         return DefaultRecordsTxnService()
     }
 
+    protected open fun createGlobalAttMixinsProvider(): MutableAttMixinsProvider {
+        return AttMixinsProviderImpl()
+    }
+
     open fun getEcosWebAppContext(): EcosWebAppContext? {
         return null
     }
 
     fun setRecordTypeService(recordTypeService: RecordTypeService) {
         this.recordTypeServiceImpl = recordTypeService
+    }
+
+    private fun <T> lazySingleton(initializer: () -> T): Lazy<T> {
+        val initializationInProgress = AtomicBoolean()
+        var createdValue: T? = null
+        return lazy {
+            if (initializationInProgress.compareAndSet(false, true)) {
+                val value = initializer()
+                createdValue = value
+                if (value is ServiceFactoryAware) {
+                    value.setRecordsServiceFactory(this)
+                }
+                value
+            } else {
+                createdValue ?: error("Cyclic reference")
+            }
+        }
     }
 }

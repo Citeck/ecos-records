@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.func.UncheckedRunnable
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordRef
@@ -301,7 +302,7 @@ class RequestContext {
 
         try {
             if (success) {
-                invokeActionsList(beforeCommitActions, BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS) {
+                invokeActionsList(false, beforeCommitActions, BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS) {
                     error(
                         "Before commit actions iterations limit was exceeded: " +
                             "$BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
@@ -316,10 +317,12 @@ class RequestContext {
                 }
             }
             if (success) {
-                invokeActionsList(afterCommitActions, AFTER_COMMIT_ACTIONS_MAX_ITERATIONS) {
-                    log.warn {
-                        "After commit actions iterations limit was exceeded: " +
-                            "$AFTER_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
+                AuthContext.runAsSystem {
+                    invokeActionsList(true, afterCommitActions, AFTER_COMMIT_ACTIONS_MAX_ITERATIONS) {
+                        log.warn {
+                            "After commit actions iterations limit was exceeded: " +
+                                "$AFTER_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
+                        }
                     }
                 }
             }
@@ -331,6 +334,7 @@ class RequestContext {
     }
 
     private fun invokeActionsList(
+        allowErrors: Boolean,
         actionsList: MutableList<OrderedAction>,
         maxIterations: Int,
         onMaxIterations: () -> Unit
@@ -344,8 +348,17 @@ class RequestContext {
                 val actionsToExecute = ArrayList(actionsList)
                 actionsList.clear()
                 actionsToExecute.sortBy { it.order }
+
                 for (action in actionsToExecute) {
-                    action.action.invoke()
+                    if (allowErrors) {
+                        try {
+                            action.action.invoke()
+                        } catch (e: Throwable) {
+                            log.error("Error while action execution", e)
+                        }
+                    } else {
+                        action.action.invoke()
+                    }
                 }
             }
             if (iterations == 0) {

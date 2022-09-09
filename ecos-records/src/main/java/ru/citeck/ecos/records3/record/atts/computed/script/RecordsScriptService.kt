@@ -14,6 +14,14 @@ class RecordsScriptService(services: RecordsServiceFactory) {
 
     private val recordsService = services.recordsServiceV1
 
+    private lateinit var implCreator: ValueScriptContextCreator
+
+    init {
+        implCreator = { ref ->
+            AttValueScriptCtxImpl(Record(ref), recordsService, implCreator)
+        }
+    }
+
     fun get(record: Any): AttValueScriptCtx {
         if (record is AttValueScriptCtx) {
             return record
@@ -23,7 +31,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
             is String -> RecordRef.valueOf(record)
             else -> error("Incorrect record: $record")
         }
-        return AttValueScriptCtxImpl(Record(recordRef))
+        return AttValueScriptCtxImpl(Record(recordRef), recordsService, implCreator)
     }
 
     private fun getEmptyRes(): Any {

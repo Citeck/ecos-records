@@ -17,7 +17,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
         private val authCtxAtt = AuthContextValue()
     }
 
-    private val props = services.properties
+    private val props = services.webappProps
 
     override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
 

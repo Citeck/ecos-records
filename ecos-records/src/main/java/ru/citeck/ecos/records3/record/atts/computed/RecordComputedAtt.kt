@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 
 @JsonDeserialize(builder = RecordComputedAtt.Builder::class)
 @JackJsonDeserialize(builder = RecordComputedAtt.Builder::class)
-data class RecordComputedAtt constructor (
+data class RecordComputedAtt constructor(
     val id: String,
     val type: RecordComputedAttType,
     val config: ObjectData

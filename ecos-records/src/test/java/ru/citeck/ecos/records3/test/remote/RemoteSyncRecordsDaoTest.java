@@ -11,6 +11,7 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.promise.Promises;
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -27,7 +28,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.records3.test.testutils.WebAppContextMock;
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
 import ru.citeck.ecos.webapp.api.promise.Promise;
 import ru.citeck.ecos.webapp.api.web.EcosWebClient;
@@ -54,7 +54,7 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
-        EcosWebAppContext webAppContext = new WebAppContextMock() {
+        EcosWebAppContext webAppContext = new EcosWebAppContextMock() {
             @NotNull
             @Override
             public EcosWebClient getWebClient() {

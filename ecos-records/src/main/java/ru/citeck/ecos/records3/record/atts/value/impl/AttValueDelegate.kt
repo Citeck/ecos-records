@@ -13,6 +13,7 @@ open class AttValueDelegate(val impl: AttValue) : AttValue {
     override fun asBoolean() = impl.asBoolean()
     override fun asJson() = impl.asJson()
     override fun asRaw() = impl.asRaw()
+    override fun asBin() = impl.asBin()
     override fun has(name: String) = impl.has(name)
     override fun getAtt(name: String) = impl.getAtt(name)
     override fun getEdge(name: String) = impl.getEdge(name)

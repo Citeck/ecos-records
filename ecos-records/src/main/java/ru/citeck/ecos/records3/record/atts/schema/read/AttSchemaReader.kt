@@ -4,13 +4,13 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.meta.util.AttStrUtils
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.exception.AttSchemaException
+import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
@@ -339,8 +339,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             innerAttsStr = att.substring(openBraceIdx + 1, closeBraceIdx)
         }
 
-        val resInnerAtts: List<SchemaAtt>
-        resInnerAtts = if (innerAttsStr == null) {
+        val resInnerAtts: List<SchemaAtt> = if (innerAttsStr == null) {
             if (lastInnerAtts.isNotEmpty()) {
                 lastInnerAtts
             } else {
@@ -352,7 +351,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             }
         } else {
             readInnerRawAtts(innerAttsStr, false) {
-                al, innerAtt, proc ->
+                    al, innerAtt, proc ->
                 readInner(al, innerAtt, proc, lastInnerAtts)
             }
         }
@@ -479,7 +478,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     .withName(attName)
                     .withInner(
                         readInnerRawAtts(attInner, true) {
-                            al, att, proc ->
+                                al, att, proc ->
                             readInner(al, att, proc, lastInnerAtts)
                         }
                     )
@@ -590,7 +589,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     .withMultiple(multiple)
                     .withInner(
                         readInnerRawAtts(attInnerAtts, true) {
-                            al, att, proc ->
+                                al, att, proc ->
                             this.readInner(al, att, proc, innerAtts)
                         }
                     )
@@ -624,7 +623,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         } else {
             attName = matcher.group(2)
             gqlInnerAtts = readInnerRawAtts(matcher.group(3), true) {
-                al, att, proc ->
+                    al, att, proc ->
                 readInner(al, att, proc, innerAtts)
             }
         }

@@ -14,14 +14,14 @@ class ValuePredicate : AttributePredicate {
 
         @JsonValue
         fun asString(): String {
-            return name.toLowerCase()
+            return name.lowercase()
         }
 
         companion object {
             @JvmStatic
             @JsonCreator
             fun fromString(type: String): Type {
-                return valueOf(type.toUpperCase())
+                return valueOf(type.uppercase())
             }
         }
     }

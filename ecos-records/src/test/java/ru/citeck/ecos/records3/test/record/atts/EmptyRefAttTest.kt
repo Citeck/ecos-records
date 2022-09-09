@@ -2,10 +2,10 @@ package ru.citeck.ecos.records3.test.record.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.test.testutils.WebAppContextMock
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
 class EmptyRefAttTest {
@@ -19,7 +19,7 @@ class EmptyRefAttTest {
 
         val services = object : RecordsServiceFactory() {
             override fun getEcosWebAppContext(): EcosWebAppContext {
-                return WebAppContextMock(APP_NAME)
+                return EcosWebAppContextMock(APP_NAME)
             }
         }
         val records = services.recordsServiceV1

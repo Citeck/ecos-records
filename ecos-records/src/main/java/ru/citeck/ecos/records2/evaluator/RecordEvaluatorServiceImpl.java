@@ -1,11 +1,13 @@
 package ru.citeck.ecos.records2.evaluator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetails;
 import ru.citeck.ecos.records2.evaluator.details.EvalDetailsImpl;
+import ru.citeck.ecos.records2.evaluator.evaluators.*;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
@@ -17,22 +19,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
+public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, ServiceFactoryAware {
 
-    private final RecordsService recordsService;
-    private final DtoSchemaReader dtoSchemaReader;
-    private final AttSchemaWriter attSchemaWriter;
+    private RecordsService recordsService;
+    private DtoSchemaReader dtoSchemaReader;
+    private AttSchemaWriter attSchemaWriter;
+    private RecordsServiceFactory factory;
 
     private final Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
-
-    private final RecordsServiceFactory factory;
-
-    public RecordEvaluatorServiceImpl(RecordsServiceFactory factory) {
-        this.factory = factory;
-        recordsService = factory.getRecordsServiceV1();
-        attSchemaWriter = factory.getAttSchemaWriter();
-        dtoSchemaReader = factory.getDtoSchemaReader();
-    }
 
     @Override
     public boolean evaluate(RecordRef recordRef, RecordEvaluatorDto evaluator) {
@@ -246,5 +240,20 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService {
         if (evaluator instanceof ServiceFactoryAware) {
             ((ServiceFactoryAware) evaluator).setRecordsServiceFactory(factory);
         }
+    }
+
+    @Override
+    public void setRecordsServiceFactory(@NotNull RecordsServiceFactory factory) {
+        this.factory = factory;
+        recordsService = factory.getRecordsServiceV1();
+        attSchemaWriter = factory.getAttSchemaWriter();
+        dtoSchemaReader = factory.getDtoSchemaReader();
+
+        register(new GroupEvaluator());
+        register(new PredicateEvaluator());
+        register(new AlwaysTrueEvaluator());
+        register(new AlwaysFalseEvaluator());
+        register(new HasAttributeEvaluator());
+        register(new HasPermissionEvaluator());
     }
 }

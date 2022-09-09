@@ -2,7 +2,10 @@ package ru.citeck.ecos.records3.record.mixin
 
 import mu.KotlinLogging
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProvider
 import ru.citeck.ecos.records3.utils.AttUtils
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MixinContextImpl() : MixinContext {
 
@@ -13,7 +16,10 @@ class MixinContextImpl() : MixinContext {
     private lateinit var exactMixins: Map<String, MixinAttContext>
     private lateinit var endsWithMixins: Map<String, MixinAttContext>
 
-    private var initialized = false
+    private val mixins: MutableList<AttMixin> = CopyOnWriteArrayList()
+    private val providers: MutableList<AttMixinsProvider> = CopyOnWriteArrayList()
+
+    private val dirty = AtomicBoolean(true)
 
     constructor(vararg mixins: AttMixin) : this() {
         addMixins(mixins.toList())
@@ -24,8 +30,8 @@ class MixinContextImpl() : MixinContext {
     }
 
     override fun getMixin(path: String): MixinAttContext? {
-        if (!initialized) {
-            return null
+        if (dirty.get()) {
+            updateMixins()
         }
         val exactMixin = exactMixins[path]
         if (exactMixin != null) {
@@ -39,32 +45,29 @@ class MixinContextImpl() : MixinContext {
         return null
     }
 
-    fun addMixin(mixin: AttMixin) {
-        addMixins(listOf(mixin))
-    }
-
-    fun addMixins(vararg mixins: AttMixin) {
-        addMixins(mixins.toList())
-    }
-
-    fun addMixins(mixins: Iterable<AttMixin>) {
-
-        val newExactMixins: MutableMap<String, MixinAttContext>
-        val newEndsWithMixins: MutableMap<String, MixinAttContext>
-
-        if (initialized) {
-            newExactMixins = HashMap(exactMixins)
-            newEndsWithMixins = HashMap(endsWithMixins)
-        } else {
-            newExactMixins = HashMap()
-            newEndsWithMixins = HashMap()
+    @Synchronized
+    private fun updateMixins() {
+        if (!dirty.get()) {
+            return
         }
+        updateMixinsImpl()
+        dirty.set(false)
+    }
+
+    @Synchronized
+    private fun updateMixinsImpl() {
+
+        val mixins = ArrayList(providers.flatMap { it.getMixins() })
+        mixins.addAll(this.mixins)
+
+        val newExactMixins: MutableMap<String, MixinAttContext> = HashMap()
+        val newEndsWithMixins: MutableMap<String, MixinAttContext> = HashMap()
 
         for (mixin in mixins) {
 
             mixin.getProvidedAtts().forEach { att ->
 
-                if (AttUtils.isValidComputedAtt(att)) {
+                if (AttUtils.isValidComputedAtt(att, true)) {
 
                     val mixinAttCtx = MixinAttContext(mixin, att)
 
@@ -96,6 +99,28 @@ class MixinContextImpl() : MixinContext {
 
         this.exactMixins = newExactMixins
         this.endsWithMixins = newEndsWithMixins
-        initialized = true
+    }
+
+    @Synchronized
+    fun addMixin(mixin: AttMixin) {
+        addMixins(listOf(mixin))
+    }
+
+    @Synchronized
+    fun addMixins(vararg mixins: AttMixin) {
+        addMixins(mixins.toList())
+    }
+
+    @Synchronized
+    fun addMixins(mixins: Iterable<AttMixin>) {
+        this.mixins.addAll(mixins)
+        dirty.set(true)
+    }
+
+    @Synchronized
+    fun addMixinsProvider(provider: AttMixinsProvider) {
+        provider.onChanged { dirty.set(true) }
+        providers.add(provider)
+        dirty.set(true)
     }
 }

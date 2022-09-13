@@ -602,7 +602,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         fun getRawRef() = computedRawRef
 
-        fun getLocalId() = getRef().id
+        fun getLocalId() = getRawRef().getLocalId()
 
         private fun getScalar(scalar: ScalarType, attribute: String): Any? {
             return when (scalar) {

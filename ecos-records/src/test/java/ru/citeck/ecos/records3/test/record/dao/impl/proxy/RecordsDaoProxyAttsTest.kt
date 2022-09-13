@@ -161,7 +161,7 @@ class RecordsDaoProxyAttsTest {
         compareAtts(listOf("strField", "unknownField"), getAtts, listOf("unknownField"))
         compareAtts(listOf("unknownField"), getAtts, listOf("unknownField"))
         compareAtts(listOf("linkedDto"), getAtts)
-        compareAtts(listOf("mixin-ref"), getAtts)
+        compareAtts(listOf("mixin-ref?id"), getAtts)
 
         compareAtts(
             listOf(
@@ -208,9 +208,9 @@ class RecordsDaoProxyAttsTest {
             val newValue = DataValue.createObj()
             value.forEach { key, objValue ->
                 if (key.contains("?id") || key.contains("?assoc")) {
-                    newValue.set(key, replaceIdAttsSourceIdToProxySourceId(objValue))
+                    newValue[key] = replaceIdAttsSourceIdToProxySourceId(objValue)
                 } else {
-                    newValue.set(key, objValue)
+                    newValue[key] = objValue
                 }
             }
             return newValue

@@ -246,6 +246,10 @@ class RequestContext {
                 ctxAtts.putAll(builder.ctxAtts)
                 builder.ctxAtts = ctxAtts
 
+                val mergedSrcIdMapping = HashMap(prevCtxData.sourceIdMapping)
+                mergedSrcIdMapping.putAll(builder.sourceIdMapping)
+                builder.withSourceIdMapping(mergedSrcIdMapping)
+
                 current.ctxData = builder.build()
             }
 

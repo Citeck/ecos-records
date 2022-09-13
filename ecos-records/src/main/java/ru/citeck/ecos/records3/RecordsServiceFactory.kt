@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.records2.QueryContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorServiceImpl
@@ -27,7 +26,6 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderI
 import ru.citeck.ecos.records3.cache.CacheManager
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
-import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttsService
 import ru.citeck.ecos.records3.record.atts.proc.*
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
@@ -55,6 +53,8 @@ import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.record.type.RecordTypeComponent
+import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
@@ -62,6 +62,7 @@ import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.properties.EcosWebAppProperties
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -139,7 +140,7 @@ open class RecordsServiceFactory {
     private var tmpRecordsService: RecordsService? = null
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
-    private var recordTypeServiceImpl: RecordTypeService? = null
+    private var recordTypeComponent: RecordTypeComponent? = null
 
     init {
         Json.context.addDeserializer(predicateJsonDeserializer)
@@ -160,8 +161,12 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordTypeService(): RecordTypeService {
         return object : RecordTypeService {
-            override fun getComputedAtts(typeRef: RecordRef): List<RecordComputedAtt> {
-                return recordTypeServiceImpl?.getComputedAtts(typeRef) ?: emptyList()
+
+            override fun getRecordType(typeRef: EntityRef): RecordTypeInfo {
+                if (typeRef.isEmpty()) {
+                    return RecordTypeInfo.EMPTY
+                }
+                return recordTypeComponent?.getRecordType(typeRef) ?: RecordTypeInfo.EMPTY
             }
         }
     }
@@ -374,8 +379,8 @@ open class RecordsServiceFactory {
         return null
     }
 
-    fun setRecordTypeService(recordTypeService: RecordTypeService) {
-        this.recordTypeServiceImpl = recordTypeService
+    fun setRecordTypeComponent(recordTypeComponent: RecordTypeComponent) {
+        this.recordTypeComponent = recordTypeComponent
     }
 
     private fun <T> lazySingleton(initializer: () -> T): Lazy<T> {

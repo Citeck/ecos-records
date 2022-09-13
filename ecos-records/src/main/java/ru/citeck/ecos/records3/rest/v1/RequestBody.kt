@@ -9,6 +9,7 @@ abstract class RequestBody() {
     var requestId = ""
     var msgLevel: MsgLevel = MsgLevel.WARN
     var txnId: UUID? = null
+    var sourceIdMapping: Map<String, String> = emptyMap()
 
     private var requestTrace: List<String> = emptyList()
 

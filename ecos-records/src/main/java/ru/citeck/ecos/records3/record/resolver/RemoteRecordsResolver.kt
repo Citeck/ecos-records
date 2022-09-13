@@ -389,6 +389,7 @@ class RemoteRecordsResolver(
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
         body.txnId = ctxData.txnId
+        body.sourceIdMapping = ctxData.sourceIdMapping
         body.setRequestTrace(ctxData.requestTrace)
     }
 

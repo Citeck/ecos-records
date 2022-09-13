@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.record.type
 
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-interface RecordTypeService {
+interface RecordTypeComponent {
 
-    fun getRecordType(typeRef: EntityRef): RecordTypeInfo
+    fun getRecordType(typeRef: EntityRef): RecordTypeInfo?
 }

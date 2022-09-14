@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 interface LocalRecordsInterceptor {
 
@@ -32,7 +32,7 @@ interface LocalRecordsInterceptor {
     ): List<RecordAtts>
 
     fun delete(
-        records: List<RecordRef>,
+        records: List<EntityRef>,
         chain: DeleteInterceptorsChain
     ): List<DelStatus>
 }
@@ -96,7 +96,7 @@ class DeleteInterceptorsChain(
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
     fun invoke(
-        records: List<RecordRef>
+        records: List<EntityRef>
     ): List<DelStatus> {
 
         return if (interceptors.hasNext()) {

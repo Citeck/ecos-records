@@ -457,7 +457,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         return value
     }
 
-    fun delete(records: List<RecordRef>): List<DelStatus> {
+    fun delete(records: List<EntityRef>): List<DelStatus> {
         if (records.isEmpty()) {
             return emptyList()
         }
@@ -543,8 +543,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         return isRemoteRef(meta.getId())
     }
 
-    private fun isRemoteRef(ref: RecordRef?): Boolean {
-        return ref != null && ref.isRemote() && isRemoteSourceId(ref.appName + "/" + ref.sourceId)
+    private fun isRemoteRef(ref: EntityRef?): Boolean {
+        return ref != null &&
+            ref.getAppName().isNotEmpty() &&
+            isRemoteSourceId(ref.getAppName() + "/" + ref.getSourceId())
     }
 
     private fun isRemoteSourceId(sourceId: String?): Boolean {

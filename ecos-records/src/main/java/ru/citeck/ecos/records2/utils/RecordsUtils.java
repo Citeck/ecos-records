@@ -10,6 +10,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -172,7 +173,7 @@ public class RecordsUtils {
     }
 
     public static Map<String, List<ValWithIdx<RecordRef>>> groupRefBySource(Collection<RecordRef> records) {
-        return groupBySource(records, r -> r, RecordsUtils::getSourceWithApp, (r, d) -> r);
+        return groupBySource(records, r -> r, RecordsUtils::getSourceWithApp, (r, d) -> RecordRef.valueOf(r));
     }
 
     public static Map<String, List<ValWithIdx<RecordRef>>> groupRefBySourceWithIdx(
@@ -206,28 +207,32 @@ public class RecordsUtils {
     }
 
     public static Map<String, List<ValWithIdx<RecordRef>>> groupByApp(Collection<RecordRef> records) {
-        return groupBySource(records, r -> r, RecordRef::getAppName, (r, o) -> r);
+        return groupBySource(records, r -> r, EntityRef::getAppName, (r, o) -> RecordRef.valueOf(r));
+    }
+
+    public static Map<String, List<ValWithIdx<EntityRef>>> entityGroupByApp(Collection<EntityRef> records) {
+        return groupBySource(records, r -> r, EntityRef::getAppName, (r, o) -> r);
     }
 
     public static Map<String, List<ValWithIdx<RecordAtts>>> groupAttsByApp(Collection<RecordAtts> records) {
-        return groupBySource(records, RecordAtts::getId, RecordRef::getAppName, (r, o) -> o);
+        return groupBySource(records, RecordAtts::getId, EntityRef::getAppName, (r, o) -> o);
     }
 
-    private static String getSourceWithApp(RecordRef recordRef) {
+    private static String getSourceWithApp(EntityRef recordRef) {
         String appName = recordRef.getAppName();
         String sourceId = recordRef.getSourceId();
         return StringUtils.isNotBlank(appName) ? appName + "/" + sourceId : sourceId;
     }
 
     private static <I, O> Map<String, List<ValWithIdx<O>>> groupBySource(Collection<I> records,
-                                                                         Function<I, RecordRef> getRecordRef,
-                                                                         Function<RecordRef, String> getGroupKey,
-                                                                         BiFunction<RecordRef, I, O> toOutput) {
+                                                                         Function<I, EntityRef> getRecordRef,
+                                                                         Function<EntityRef, String> getGroupKey,
+                                                                         BiFunction<EntityRef, I, O> toOutput) {
 
         Map<String, List<ValWithIdx<O>>> result = new HashMap<>();
         int idx = 0;
         for (I recordData : records) {
-            RecordRef record = getRecordRef.apply(recordData);
+            EntityRef record = getRecordRef.apply(recordData);
             String groupKey = getGroupKey.apply(record);
             List<ValWithIdx<O>> outList = result.computeIfAbsent(groupKey, key -> new ArrayList<>());
             outList.add(new ValWithIdx<>(toOutput.apply(record, recordData),  idx++));

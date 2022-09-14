@@ -18,6 +18,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.utils.RecordRefUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 
 class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService(), ServiceFactoryAware {
@@ -172,11 +173,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* DELETE */
 
-    override fun delete(records: List<RecordRef>): List<DelStatus> {
+    override fun delete(records: List<EntityRef>): List<DelStatus> {
         return RequestContext.doWithCtx(services) { deleteImpl(records) }
     }
 
-    private fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
+    private fun deleteImpl(records: List<EntityRef>): List<DelStatus> {
         val context = RequestContext.getCurrentNotNull()
         if (context.ctxData.readOnly) {
             error("Deletion is not allowed in read-only mode. Records: $records")
@@ -186,7 +187,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         val txnChangedRecords = context.getTxnChangedRecords()
         val sourceIdMapping = context.ctxData.sourceIdMapping
 
-        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { it }
+        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { RecordRef.valueOf(it) }
 
         return status
     }

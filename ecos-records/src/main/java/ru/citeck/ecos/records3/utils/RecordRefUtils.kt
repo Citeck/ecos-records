@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.utils
 
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object RecordRefUtils {
 
@@ -9,31 +10,39 @@ object RecordRefUtils {
         currentAppName: String,
         mapping: Map<String, String>?
     ): RecordRef {
-        if (RecordRef.isEmpty(recordRef) || mapping.isNullOrEmpty()) {
+        return RecordRef.valueOf(mapAppIdAndSourceId(recordRef as EntityRef, currentAppName, mapping))
+    }
+
+    fun mapAppIdAndSourceId(
+        recordRef: EntityRef,
+        currentAppName: String,
+        mapping: Map<String, String>?
+    ): EntityRef {
+        if (EntityRef.isEmpty(recordRef) || mapping.isNullOrEmpty()) {
             return recordRef
         }
         var targetId = ""
-        if (recordRef.appName.isNotBlank()) {
-            targetId = mapping[recordRef.appName + "/" + recordRef.sourceId] ?: ""
+        if (recordRef.getAppName().isNotBlank()) {
+            targetId = mapping[recordRef.getAppName() + "/" + recordRef.getSourceId()] ?: ""
         }
-        if (targetId.isBlank() && (recordRef.appName == currentAppName || recordRef.appName.isEmpty())) {
-            targetId = mapping[recordRef.sourceId] ?: ""
+        if (targetId.isBlank() && (recordRef.getAppName() == currentAppName || recordRef.getAppName().isEmpty())) {
+            targetId = mapping[recordRef.getSourceId()] ?: ""
         }
         if (targetId.isBlank()) {
             return recordRef
         }
         val appDelimIdx = targetId.indexOf('/')
         return if (appDelimIdx >= 0 && appDelimIdx < targetId.length - 1) {
-            RecordRef.create(
+            EntityRef.create(
                 targetId.substring(0, appDelimIdx),
                 targetId.substring(appDelimIdx + 1),
-                recordRef.id
+                recordRef.getLocalId()
             )
         } else {
-            RecordRef.create(
-                recordRef.appName,
+            EntityRef.create(
+                recordRef.getAppName(),
                 targetId,
-                recordRef.id
+                recordRef.getLocalId()
             )
         }
     }

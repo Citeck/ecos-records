@@ -18,6 +18,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 /**
  * Service to work with some abstract "records" from any source.
@@ -303,11 +304,13 @@ interface RecordsService {
     /**
      * Delete records.
      */
-    fun delete(records: List<RecordRef>): List<DelStatus>
+    fun delete(records: List<EntityRef>): List<DelStatus>
 
     fun delete(record: String): DelStatus
 
     fun delete(record: RecordRef): DelStatus
+
+    fun delete(record: EntityRef): DelStatus
 
     /* OTHER */
 

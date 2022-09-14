@@ -36,6 +36,7 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.web.EcosWebClient
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
@@ -244,11 +245,11 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    fun delete(records: List<RecordRef>): List<DelStatus> {
+    fun delete(records: List<EntityRef>): List<DelStatus> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result: MutableList<ValWithIdx<DelStatus>> = ArrayList()
-        val attsByApp: Map<String, MutableList<ValWithIdx<RecordRef>>> = RecordsUtils.groupByApp(records)
+        val attsByApp: Map<String, MutableList<ValWithIdx<EntityRef>>> = RecordsUtils.entityGroupByApp(records)
 
         attsByApp.forEach { (appArg, refs) ->
 
@@ -259,7 +260,7 @@ class RemoteRecordsResolver(
             }
 
             val deleteBody = DeleteBody()
-            deleteBody.setRecords(refs.map { it.value.removeAppName() })
+            deleteBody.setRecords(refs.map { it.value.withoutAppName() })
             setContextProps(deleteBody, context)
 
             val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_PATH, deleteBody, DeleteResp::class, context)
@@ -273,7 +274,7 @@ class RemoteRecordsResolver(
                 )
             }
             for (i in refs.indices) {
-                val refAtts: ValWithIdx<RecordRef> = refs[i]
+                val refAtts: ValWithIdx<EntityRef> = refs[i]
                 result.add(ValWithIdx(statuses[i], refAtts.idx))
             }
         }

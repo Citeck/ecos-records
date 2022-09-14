@@ -768,7 +768,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result
     }
 
-    override fun delete(records: List<RecordRef>): List<DelStatus> {
+    override fun delete(records: List<EntityRef>): List<DelStatus> {
         if (records.isEmpty()) {
             return emptyList()
         }
@@ -779,18 +779,18 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    internal fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
+    internal fun deleteImpl(records: List<EntityRef>): List<DelStatus> {
 
         val daoResult = ArrayList<DelStatus>()
 
         records.forEach { recordArg ->
 
             var record = recordArg
-            val appName = recordArg.appName
-            var sourceId = recordArg.sourceId
+            val appName = recordArg.getAppName()
+            var sourceId = recordArg.getSourceId()
 
             if (currentApp == appName) {
-                record = recordArg.removeAppName()
+                record = recordArg.withoutAppName()
             } else if (appName.isNotBlank()) {
                 sourceId = "$appName/$sourceId"
             }
@@ -798,11 +798,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             val dao = getRecordsDaoPair(sourceId, RecordsDeleteDao::class.java)
             if (dao == null) {
                 val deletion = RecordsDeletion()
-                deletion.records = listOf(record)
+                deletion.records = listOf(RecordRef.valueOf(record))
                 localRecordsResolverV0.delete(deletion)
                 daoResult.add(DelStatus.OK)
             } else {
-                val delResult = dao.second.delete(listOf(record.id))
+                val delResult = dao.second.delete(listOf(record.getLocalId()))
                 daoResult.add(delResult[0])
             }
         }

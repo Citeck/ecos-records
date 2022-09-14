@@ -10,6 +10,7 @@ import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.utils.AttUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 abstract class AbstractRecordsService : RecordsService {
@@ -147,6 +148,10 @@ abstract class AbstractRecordsService : RecordsService {
     }
 
     override fun delete(record: RecordRef): DelStatus {
+        return delete(record as EntityRef)
+    }
+
+    override fun delete(record: EntityRef): DelStatus {
         val result: List<DelStatus> = delete(listOf(record))
         if (result.size != 1) {
             log.warn("Unexpected result. Expected 1 record, but found " + result.size)

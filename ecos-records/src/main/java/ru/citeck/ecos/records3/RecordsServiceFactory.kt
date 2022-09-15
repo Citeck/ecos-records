@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records3
 
 import mu.KotlinLogging
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
@@ -12,9 +11,6 @@ import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl
 import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords
-import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonDeserializer
-import ru.citeck.ecos.records2.predicate.json.std.PredicateJsonSerializer
-import ru.citeck.ecos.records2.predicate.json.std.PredicateTypes
 import ru.citeck.ecos.records2.querylang.QueryLangService
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl
 import ru.citeck.ecos.records2.request.rest.RestHandler
@@ -88,8 +84,6 @@ open class RecordsServiceFactory {
     val remoteRecordsResolver: RemoteRecordsResolver? by lazySingleton { createRemoteRecordsResolver() }
     val attValuesConverter: AttValuesConverter by lazySingleton { createAttValuesConverter() }
     val recordEvaluatorService: RecordEvaluatorService by lazySingleton { createRecordEvaluatorService() }
-    val predicateJsonDeserializer: PredicateJsonDeserializer by lazySingleton { createPredicateJsonDeserializer() }
-    val predicateTypes: PredicateTypes by lazySingleton { createPredicateTypes() }
     val recordsTemplateService: RecordsTemplateService by lazySingleton { createRecordsTemplateService() }
     val recordTypeService: RecordTypeService by lazySingleton { createRecordTypeService() }
     val attProcService: AttProcService by lazySingleton { createAttProcService() }
@@ -143,9 +137,6 @@ open class RecordsServiceFactory {
     private var recordTypeComponent: RecordTypeComponent? = null
 
     init {
-        Json.context.addDeserializer(predicateJsonDeserializer)
-        Json.context.addSerializer(PredicateJsonSerializer())
-
         RequestContext.setLastCreatedServices(this)
     }
 
@@ -173,15 +164,6 @@ open class RecordsServiceFactory {
 
     protected open fun createMetaValuesConverter(): MetaValuesConverter {
         return MetaValuesConverter(this)
-    }
-
-    protected open fun createPredicateTypes(): PredicateTypes {
-        return PredicateTypes()
-    }
-
-    @Synchronized
-    protected open fun createPredicateJsonDeserializer(): PredicateJsonDeserializer {
-        return PredicateJsonDeserializer(predicateTypes)
     }
 
     protected open fun createRecordEvaluatorService(): RecordEvaluatorService {

@@ -7,6 +7,10 @@ import ru.citeck.ecos.records3.record.mixin.MixinContext
 
 interface RecordAttsService {
 
+    fun <T> doWithSchema(attributes: Map<String, *>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T
+
+    fun <T> doWithSchema(atts: List<SchemaAtt>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T
+
     fun <T : Any> getAtts(value: Any?, attributes: Class<T>): T
 
     fun getAtts(value: Any?, attributes: Map<String, String>): RecordAtts

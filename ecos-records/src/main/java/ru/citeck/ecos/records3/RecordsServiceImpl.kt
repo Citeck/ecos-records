@@ -93,7 +93,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
         val schema = dtoSchemaReader.read(attributes)
         if (schema.isEmpty()) {
-            log.warn("Attributes is empty. Query will return empty meta. MetaClass: $attributes")
+            log.warn("Attributes is empty. Query will return empty meta. AttsClass: $attributes")
         }
         val attsValues = getAtts(records, attSchemaWriter.writeToMap(schema))
         return attsValues.map {
@@ -104,17 +104,22 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* MUTATE */
 
-    override fun <T : Any> mutate(record: Any, attributes: Any, attsToLoad: Class<T>): T {
+    override fun <T : Any> mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Class<T>): T {
         val schema = dtoSchemaReader.read(attsToLoad)
         require(schema.isNotEmpty()) {
             "Attributes class doesn't have any fields with setter. Class: $attributes"
         }
-        val meta = mutate(record, attributes, attSchemaWriter.writeToMap(schema))
+        val meta = mutateAndGetAtts(record, attributes, attSchemaWriter.writeToMap(schema))
         return dtoSchemaReader.instantiate(attsToLoad, meta.getAtts())
             ?: error("Attributes class can't be instantiated. Class: $attsToLoad Schema: $schema")
     }
 
-    override fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    override fun mutateAndGetAtts(
+        records: List<RecordAtts>,
+        attsToLoad: List<Map<String, *>>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
+
         return RequestContext.doWithCtx(services) {
             if (records.isEmpty()) {
                 emptyList()

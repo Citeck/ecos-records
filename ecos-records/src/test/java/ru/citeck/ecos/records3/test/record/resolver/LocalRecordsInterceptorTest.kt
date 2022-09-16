@@ -56,7 +56,7 @@ class LocalRecordsInterceptorTest {
 
             override fun mutate(
                 records: List<RecordAtts>,
-                attsToLoad: List<SchemaAtt>,
+                attsToLoad: List<List<SchemaAtt>>,
                 rawAtts: Boolean,
                 chain: MutateInterceptorsChain
             ): List<RecordAtts> {

@@ -6,6 +6,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
 import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
@@ -19,7 +20,7 @@ import kotlin.collections.emptyList
 import kotlin.collections.indices
 import kotlin.collections.listOf
 
-class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService {
+class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : RecordAttsService {
 
     companion object {
         private const val REF_ATT_ALIAS: String = "___ref___"
@@ -32,6 +33,33 @@ class RecordAttsServiceImpl(services: RecordsServiceFactory) : RecordAttsService
     private val schemaReader = services.attSchemaReader
     private val dtoSchemaReader = services.dtoSchemaReader
     private val schemaResolver = services.attSchemaResolver
+
+    override fun <T> doWithSchema(attributes: Map<String, *>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
+        return doWithSchema(schemaReader.read(attributes), rawAtts, action)
+    }
+
+    override fun <T> doWithSchema(atts: List<SchemaAtt>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
+        return AttContext.doWithCtx(services) { attContext ->
+            val schemaAttBefore = attContext.getSchemaAtt()
+            val attPathBefore = attContext.getAttPath()
+            if (atts.isNotEmpty()) {
+                val flatAtts = schemaResolver.getFlatAttributes(atts, !rawAtts)
+                attContext.setSchemaAtt(
+                    SchemaAtt.create()
+                        .withName(SchemaAtt.ROOT_NAME)
+                        .withInner(flatAtts)
+                        .build()
+                )
+                attContext.setAttPath("")
+            }
+            try {
+                action.invoke(atts)
+            } finally {
+                attContext.setSchemaAtt(schemaAttBefore)
+                attContext.setAttPath(attPathBefore)
+            }
+        }
+    }
 
     override fun <T : Any> getAtts(value: Any?, attributes: Class<T>): T {
         return getAtts(listOf(value), attributes)[0]

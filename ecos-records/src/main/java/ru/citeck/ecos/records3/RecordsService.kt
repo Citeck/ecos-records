@@ -245,19 +245,9 @@ interface RecordsService {
     fun mutate(record: RecordAtts): RecordRef
 
     /**
-     * Create or change record and load attributes from result
-     */
-    fun mutate(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
      * Create or change records.
      */
     fun mutate(records: List<RecordAtts>): List<RecordRef>
-
-    /**
-     * Create or change records and load attributes from result.
-     */
-    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts>
 
     /**
      * Create or change record.
@@ -265,29 +255,9 @@ interface RecordsService {
     fun mutate(record: Any, attributes: ObjectData): RecordRef
 
     /**
-     * Create or change records and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: ObjectData, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
      * Create or change record.
      */
     fun mutate(record: Any, attributes: Any): RecordRef
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun <T : Any> mutate(record: Any, attributes: Any, attsToLoad: Class<T>): T
 
     /**
      * Create or change records.
@@ -298,6 +268,52 @@ interface RecordsService {
      * Create or change record with single attribute
      */
     fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun <T : Any> mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Class<T>): T
+
+    /**
+     * Create or change record and load attributes from result
+     */
+    fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts
+
+    fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Collection<String>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun <T : Any> mutateAndGetAtts(record: RecordAtts, attsToLoad: Class<T>): T
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: Map<String, *>): List<RecordAtts>
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>): List<RecordAtts>
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(
+        records: List<RecordAtts>,
+        attsToLoad: List<Map<String, *>>,
+        rawAtts: Boolean
+    ): List<RecordAtts>
 
     /* DELETE */
 

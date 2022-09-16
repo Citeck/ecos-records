@@ -9,6 +9,7 @@ class AttContext {
 
     companion object {
 
+        private val EMPTY = SchemaAtt.create().withName("?id").build()
         private const val CONTEXT_UNDEFINED_MSG = "Current context is null"
 
         private val current: ThreadLocal<AttContext> = ThreadLocal()
@@ -84,8 +85,6 @@ class AttContext {
                 }
             }
         }
-
-        private val EMPTY = SchemaAtt.create().withName("?id").build()
     }
 
     private lateinit var serviceFactory: RecordsServiceFactory

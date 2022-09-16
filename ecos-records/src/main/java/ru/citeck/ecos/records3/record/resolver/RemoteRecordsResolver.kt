@@ -55,6 +55,8 @@ class RemoteRecordsResolver(
         const val MUTATE_PATH: String = BASE_PATH + "mutate"
         const val DELETE_PATH: String = BASE_PATH + "delete"
         const val TXN_PATH: String = BASE_PATH + "txn"
+
+        private const val ATTS_KEY = "attributes"
     }
 
     private var defaultAppName: String = services.properties.defaultApp
@@ -188,7 +190,7 @@ class RemoteRecordsResolver(
     }
 
     // todo: records grouping by appName performed on RecordsService level and this method should be refactored
-    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    fun mutate(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>, rawAtts: Boolean): List<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result: MutableList<ValWithIdx<RecordAtts>> = ArrayList()
@@ -405,14 +407,25 @@ class RemoteRecordsResolver(
         val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
             val data = DataValue.create(body)
             data.remove("$.query.page.afterId")
-            val atts = data["attributes"]
+            val atts = data[ATTS_KEY]
             if (atts.isObject() && atts.size() > 0) {
                 val attsMap = legacyAttsWriter.writeToMap(
                     attSchemaReader.read(atts.asMap(String::class.java, Any::class.java))
                 )
-                data["attributes"] = attsMap
+                data[ATTS_KEY] = attsMap
             }
             data
+        } else if (body is MutateBody) {
+            if (body.attributes.size != 1) {
+                body
+            } else {
+                val data = DataValue.create(body)
+                val atts = data[ATTS_KEY]
+                if (atts.isArray() && atts.size() == 1) {
+                    data[ATTS_KEY] = atts[0]
+                }
+                data
+            }
         } else {
             body
         }

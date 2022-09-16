@@ -26,7 +26,7 @@ interface LocalRecordsInterceptor {
 
     fun mutate(
         records: List<RecordAtts>,
-        attsToLoad: List<SchemaAtt>,
+        attsToLoad: List<List<SchemaAtt>>,
         rawAtts: Boolean,
         chain: MutateInterceptorsChain
     ): List<RecordAtts>
@@ -79,7 +79,7 @@ class MutateInterceptorsChain(
 ) {
     fun invoke(
         records: List<RecordAtts>,
-        attsToLoad: List<SchemaAtt>,
+        attsToLoad: List<List<SchemaAtt>>,
         rawAtts: Boolean,
     ): List<RecordAtts> {
 

@@ -19,6 +19,7 @@ abstract class AbstractRecordsService : RecordsService {
         private val log = KotlinLogging.logger {}
 
         private val EMPTY_ATTS_MAP = emptyMap<String, Any>()
+        private val EMPTY_ATTS_LIST_OF_MAP = emptyList<Map<String, Any>>()
     }
 
     /* QUERY */
@@ -104,41 +105,54 @@ abstract class AbstractRecordsService : RecordsService {
     }
 
     override fun mutate(record: Any, attributes: ObjectData): RecordRef {
-        return mutate(record, attributes, EMPTY_ATTS_MAP).getId()
-    }
-
-    override fun mutate(record: Any, attributes: ObjectData, attsToLoad: Map<String, *>): RecordAtts {
-        val ref = when (record) {
-            is String -> RecordRef.valueOf(record)
-            is RecordRef -> record
-            else -> error("Mutation of custom objects is not supported yet")
-        }
-        return mutate(RecordAtts(ref, attributes), attsToLoad)
+        return mutateAndGetAtts(record, attributes, EMPTY_ATTS_MAP).getId()
     }
 
     override fun mutate(record: RecordAtts): RecordRef {
-        return mutate(record, EMPTY_ATTS_MAP).getId()
+        return mutateAndGetAtts(record, EMPTY_ATTS_MAP).getId()
     }
 
-    override fun mutate(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts {
+    override fun mutate(records: List<RecordAtts>): List<RecordRef> {
+        return mutateAndGetAtts(records, EMPTY_ATTS_LIST_OF_MAP, false).map { it.getId() }
+    }
+
+    override fun <T : Any> mutateAndGetAtts(record: RecordAtts, attsToLoad: Class<T>): T {
+        return mutateAndGetAtts(record.getId(), record.getAtts(), attsToLoad)
+    }
+
+    override fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Collection<String>): RecordAtts {
+        return mutateAndGetAtts(record, AttUtils.toMap(attsToLoad))
+    }
+
+    override fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: Map<String, *>): List<RecordAtts> {
+        return mutateAndGetAtts(records, listOf(attsToLoad), false)
+    }
+
+    override fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>): List<RecordAtts> {
+        return mutateAndGetAtts(records, attsToLoad, false)
+    }
+
+    override fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts {
         val records: List<RecordAtts> = listOf(record)
-        val recordAtts: List<RecordAtts> = this.mutate(records, attsToLoad, false)
+        val recordAtts: List<RecordAtts> = this.mutateAndGetAtts(records, listOf(attsToLoad), false)
         if (recordAtts.size != 1) {
             error("Unexpected result. Expected 1 record, but found ${recordAtts.size}. Ref: ${record.getId()}")
         }
         return recordAtts[0]
     }
 
-    override fun mutate(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts {
-        return mutate(record, attributes, AttUtils.toMap(attsToLoad))
+    override fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts {
+        return mutateAndGetAtts(record, attributes, AttUtils.toMap(attsToLoad))
     }
 
-    override fun mutate(records: List<RecordAtts>): List<RecordRef> {
-        return mutate(records, EMPTY_ATTS_MAP, false).map { it.getId() }
-    }
-
-    override fun mutate(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts {
-        return mutate(record, ObjectData.create(attributes), attsToLoad)
+    override fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts {
+        val ref = when (record) {
+            is String -> RecordRef.valueOf(record)
+            is RecordRef -> record
+            is EntityRef -> RecordRef.valueOf(record)
+            else -> error("Mutation of custom objects is not supported yet")
+        }
+        return mutateAndGetAtts(RecordAtts(ref, ObjectData.create(attributes)), attsToLoad)
     }
 
     /* DELETE */

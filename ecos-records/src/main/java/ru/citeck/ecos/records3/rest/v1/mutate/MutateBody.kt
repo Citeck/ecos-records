@@ -10,7 +10,7 @@ import java.util.*
 class MutateBody : RequestBody, HasSensitiveData<MutateBody> {
 
     private var records: MutableList<RecordAtts> = ArrayList()
-    var attributes: Map<String, Any?> = emptyMap()
+    var attributes: List<Map<String, Any?>> = emptyList()
     var rawAtts = false
 
     constructor() : super()
@@ -42,7 +42,7 @@ class MutateBody : RequestBody, HasSensitiveData<MutateBody> {
     @JsonSetter
     @com.fasterxml.jackson.annotation.JsonSetter
     fun setAttributes(attributes: Any?) {
-        this.attributes = RestUtils.prepareReqAttsAsMap(attributes)
+        this.attributes = RestUtils.prepareReqAttsAsListOfMap(attributes)
     }
 
     override fun withoutSensitiveData(): MutateBody {

@@ -112,10 +112,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): RecsQueryRes<RecordAtts> {
-        return if (interceptors.isEmpty()) {
-            queryImpl(queryArg, attributes, rawAtts)
-        } else {
-            QueryInterceptorsChain(this, interceptors.iterator()).invoke(queryArg, attributes, rawAtts)
+        return recordsAttsService.doWithSchema(attributes, rawAtts) { schema ->
+            if (interceptors.isEmpty()) {
+                queryImpl(queryArg, schema, rawAtts)
+            } else {
+                QueryInterceptorsChain(this, interceptors.iterator()).invoke(queryArg, schema, rawAtts)
+            }
         }
     }
 
@@ -437,10 +439,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         if (records.isEmpty()) {
             return emptyList()
         }
-        return if (interceptors.isEmpty()) {
-            getAttsImpl(records, attributes, rawAtts)
-        } else {
-            GetAttsInterceptorsChain(this, interceptors.iterator()).invoke(records, attributes, rawAtts)
+        return recordsAttsService.doWithSchema(attributes, rawAtts) { schema ->
+            if (interceptors.isEmpty()) {
+                getAttsImpl(records, schema, rawAtts)
+            } else {
+                GetAttsInterceptorsChain(this, interceptors.iterator()).invoke(records, schema, rawAtts)
+            }
         }
     }
 
@@ -643,7 +647,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return results
     }
 
-    override fun mutate(records: List<RecordAtts>, attsToLoad: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts> {
+    override fun mutate(
+        records: List<RecordAtts>,
+        attsToLoad: List<List<SchemaAtt>>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
         if (records.isEmpty()) {
             return emptyList()
         }
@@ -656,10 +664,10 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 it.getAttributes().forEach { key, value ->
                     if (key == RecordConstants.ATT_SELF) {
                         selfAttValue.forEach { selfKey, selfValue ->
-                            newAtts.set(selfKey, selfValue)
+                            newAtts[selfKey] = selfValue
                         }
                     } else {
-                        newAtts.set(key, value)
+                        newAtts[key] = value
                     }
                 }
                 RecordAtts(it.getId(), newAtts)
@@ -678,12 +686,12 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             value
         } else if (value.isArray()) {
             if (value.size() > 0) {
-                readSelfAttribute(value.get(0))
+                readSelfAttribute(value[0])
             } else {
                 DataValue.NULL
             }
         } else if (value.isObject()) {
-            val url = value.get("url")
+            val url = value["url"]
             if (url.isTextual() && url.asText().startsWith(DataUriUtil.DATA_PREFIX)) {
                 Json.mapper.read(url.asText(), ObjectData::class.java)?.getData() ?: DataValue.NULL
             } else {
@@ -694,16 +702,21 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    internal fun mutateImpl(records: List<RecordAtts>, attsToLoad: List<SchemaAtt>, rawAtts: Boolean): List<RecordAtts> {
+    internal fun mutateImpl(
+        records: List<RecordAtts>,
+        attsToLoad: List<List<SchemaAtt>>,
+        rawAtts: Boolean
+    ): List<RecordAtts> {
 
         val daoResult = ArrayList<RecordAtts>()
         val refsMapping = HashMap<RecordRef, RecordRef>()
 
-        records.forEach { recordArg: RecordAtts ->
+        records.forEachIndexed { recordIdx, recordArg: RecordAtts ->
 
             var record = recordArg
             val appName: String = record.getId().appName
             var sourceId: String = record.getId().sourceId
+            val recAttsToLoad = attsToLoad.getOrNull(recordIdx) ?: emptyList()
 
             if (currentApp == appName) {
                 val newId: RecordRef = record.getId().removeAppName()
@@ -731,12 +744,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 val mutResValues = dao.second.mutateForAnyRes(listOf(LocalRecordAtts(localId, record.getAtts())))
                 val mutRes = mutableListOf<RecordAtts>()
 
-                if (attsToLoad.isEmpty()) {
+                if (recAttsToLoad.isEmpty()) {
                     mutResValues.forEach {
                         mutRes.add(RecordAtts(recordsAttsService.getId(it, record.getId())))
                     }
                 } else {
-                    mutRes.addAll(getAtts(mutResValues, attsToLoad, rawAtts))
+                    recordsAttsService.doWithSchema(recAttsToLoad, rawAtts) { schema ->
+                        mutRes.addAll(getAtts(mutResValues, schema, rawAtts))
+                    }
                 }
 
                 mutRes.forEach { atts ->
@@ -768,7 +783,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return result
     }
 
-    override fun delete(records: List<RecordRef>): List<DelStatus> {
+    override fun delete(records: List<EntityRef>): List<DelStatus> {
         if (records.isEmpty()) {
             return emptyList()
         }
@@ -779,18 +794,18 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    internal fun deleteImpl(records: List<RecordRef>): List<DelStatus> {
+    internal fun deleteImpl(records: List<EntityRef>): List<DelStatus> {
 
         val daoResult = ArrayList<DelStatus>()
 
         records.forEach { recordArg ->
 
             var record = recordArg
-            val appName = recordArg.appName
-            var sourceId = recordArg.sourceId
+            val appName = recordArg.getAppName()
+            var sourceId = recordArg.getSourceId()
 
             if (currentApp == appName) {
-                record = recordArg.removeAppName()
+                record = recordArg.withoutAppName()
             } else if (appName.isNotBlank()) {
                 sourceId = "$appName/$sourceId"
             }
@@ -798,11 +813,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             val dao = getRecordsDaoPair(sourceId, RecordsDeleteDao::class.java)
             if (dao == null) {
                 val deletion = RecordsDeletion()
-                deletion.records = listOf(record)
+                deletion.records = listOf(RecordRef.valueOf(record))
                 localRecordsResolverV0.delete(deletion)
                 daoResult.add(DelStatus.OK)
             } else {
-                val delResult = dao.second.delete(listOf(record.id))
+                val delResult = dao.second.delete(listOf(record.getLocalId()))
                 daoResult.add(delResult[0])
             }
         }

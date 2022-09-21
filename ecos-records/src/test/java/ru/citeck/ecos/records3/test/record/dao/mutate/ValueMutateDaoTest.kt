@@ -13,7 +13,7 @@ class ValueMutateDaoTest {
         val records = RecordsServiceFactory().recordsServiceV1
         records.register(TestDao())
 
-        val atts = records.mutate(
+        val atts = records.mutateAndGetAtts(
             "test@",
             mapOf(
                 "argValue" to "someValue"

@@ -22,6 +22,7 @@ import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttWithProc
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.beans.PropertyDescriptor
 import java.lang.reflect.*
 import java.time.Instant
@@ -84,6 +85,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(ObjectData::class.java, ScalarType.JSON),
             ScalarField(DataValue::class.java, ScalarType.RAW),
             ScalarField(RecordRef::class.java, ScalarType.ID),
+            ScalarField(EntityRef::class.java, ScalarType.ID),
             ScalarField(Map::class.java, ScalarType.JSON),
             ScalarField(Predicate::class.java, ScalarType.JSON)
         ).forEach(

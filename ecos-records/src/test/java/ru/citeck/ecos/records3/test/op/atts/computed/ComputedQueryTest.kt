@@ -9,7 +9,10 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.type.RecordTypeService
+import ru.citeck.ecos.records3.record.type.RecordTypeComponent
+import ru.citeck.ecos.records3.record.type.RecordTypeInfo
+import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class ComputedQueryTest {
@@ -103,12 +106,14 @@ class ComputedQueryTest {
         )
 
         val services = RecordsServiceFactory()
-        services.setRecordTypeService(object : RecordTypeService {
-            override fun getComputedAtts(typeRef: RecordRef): List<RecordComputedAtt> {
+        services.setRecordTypeComponent(object : RecordTypeComponent {
+            override fun getRecordType(typeRef: EntityRef): RecordTypeInfo? {
                 return if (typeRef == type0) {
-                    type0Atts
+                    object : RecordTypeInfoAdapter() {
+                        override fun getComputedAtts(): List<RecordComputedAtt> = type0Atts
+                    }
                 } else {
-                    emptyList()
+                    null
                 }
             }
         })

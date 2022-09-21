@@ -18,6 +18,7 @@ import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -47,23 +48,26 @@ public class InnerMixinTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        factory.setRecordTypeService(type -> {
-            if (type.equals(TEST_TYPE0)) {
-                RecordComputedAtt att = new RecordComputedAtt(
-                    "computed",
-                    RecordComputedAttType.ATTRIBUTE,
-                    ObjectData.create("{\"attribute\":\"computedAtt0\"}")
-                );
-                return Collections.singletonList(att);
-            } else if (type.equals(TEST_TYPE1)) {
-                RecordComputedAtt att = new RecordComputedAtt(
-                    "computed",
-                    RecordComputedAttType.ATTRIBUTE,
-                    ObjectData.create("{\"attribute\":\"computedAtt1\"}")
-                );
-                return Collections.singletonList(att);
+        factory.setRecordTypeComponent(type -> new RecordTypeInfoAdapter() {
+            @NotNull
+            public List<RecordComputedAtt> getComputedAtts() {
+                if (type.equals(TEST_TYPE0)) {
+                    RecordComputedAtt att = new RecordComputedAtt(
+                        "computed",
+                        RecordComputedAttType.ATTRIBUTE,
+                        ObjectData.create("{\"attribute\":\"computedAtt0\"}")
+                    );
+                    return Collections.singletonList(att);
+                } else if (type.equals(TEST_TYPE1)) {
+                    RecordComputedAtt att = new RecordComputedAtt(
+                        "computed",
+                        RecordComputedAttType.ATTRIBUTE,
+                        ObjectData.create("{\"attribute\":\"computedAtt1\"}")
+                    );
+                    return Collections.singletonList(att);
+                }
+                return Collections.emptyList();
             }
-            return Collections.emptyList();
         });
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);

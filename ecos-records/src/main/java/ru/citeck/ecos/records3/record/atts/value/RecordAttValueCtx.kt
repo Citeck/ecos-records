@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordAttValueCtx(
     val record: Any,
@@ -20,6 +21,10 @@ class RecordAttValueCtx(
     }
 
     override fun getRef(): RecordRef {
+        return recordRef
+    }
+
+    override fun getRawRef(): EntityRef {
         return recordRef
     }
 

@@ -8,6 +8,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.security.HasSensitiveData
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.function.BiConsumer
@@ -49,6 +50,15 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
         setAtts(attributes)
     }
 
+    constructor(id: EntityRef?) : this() {
+        setId(id)
+    }
+
+    constructor(id: EntityRef?, attributes: ObjectData?) : this() {
+        setId(id)
+        setAtts(attributes)
+    }
+
     fun getId(): RecordRef {
         return id
     }
@@ -85,6 +95,10 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
     @JsonProperty
     @JackJsonProperty
     fun setId(id: String?) {
+        this.id = RecordRef.valueOf(id)
+    }
+
+    fun setId(id: EntityRef?) {
         this.id = RecordRef.valueOf(id)
     }
 

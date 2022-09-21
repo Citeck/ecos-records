@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.dao.query
 
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import kotlin.jvm.Throws
 
 /**
  * You can return:
@@ -15,5 +16,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
  */
 interface RecordsQueryDao : RecordsDao {
 
+    @Throws(Exception::class)
     fun queryRecords(recsQuery: RecordsQuery): Any?
 }

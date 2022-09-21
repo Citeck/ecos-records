@@ -8,7 +8,6 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
 import ecos.com.fasterxml.jackson210.databind.ObjectReader;
 import ecos.com.fasterxml.jackson210.databind.deser.std.StdDeserializer;
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;

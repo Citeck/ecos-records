@@ -72,6 +72,16 @@ class RecordRef : EntityRef, Serializable {
         }
 
         @JvmStatic
+        fun valueOf(ref: EntityRef?): RecordRef {
+            ref ?: return EMPTY
+            return if (ref is RecordRef) {
+                ref
+            } else {
+                create(ref.getAppName(), ref.getSourceId(), ref.getLocalId())
+            }
+        }
+
+        @JvmStatic
         private fun isBlankId(id: String?): Boolean {
             return isBlank(id) || containsOnly(id!!, '@')
         }

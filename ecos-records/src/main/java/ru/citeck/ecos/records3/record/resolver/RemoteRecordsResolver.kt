@@ -36,6 +36,7 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.web.EcosWebClient
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
@@ -54,6 +55,8 @@ class RemoteRecordsResolver(
         const val MUTATE_PATH: String = BASE_PATH + "mutate"
         const val DELETE_PATH: String = BASE_PATH + "delete"
         const val TXN_PATH: String = BASE_PATH + "txn"
+
+        private const val ATTS_KEY = "attributes"
     }
 
     private var defaultAppName: String = services.properties.defaultApp
@@ -187,7 +190,7 @@ class RemoteRecordsResolver(
     }
 
     // todo: records grouping by appName performed on RecordsService level and this method should be refactored
-    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    fun mutate(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>, rawAtts: Boolean): List<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result: MutableList<ValWithIdx<RecordAtts>> = ArrayList()
@@ -244,11 +247,11 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    fun delete(records: List<RecordRef>): List<DelStatus> {
+    fun delete(records: List<EntityRef>): List<DelStatus> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result: MutableList<ValWithIdx<DelStatus>> = ArrayList()
-        val attsByApp: Map<String, MutableList<ValWithIdx<RecordRef>>> = RecordsUtils.groupByApp(records)
+        val attsByApp: Map<String, MutableList<ValWithIdx<EntityRef>>> = RecordsUtils.entityGroupByApp(records)
 
         attsByApp.forEach { (appArg, refs) ->
 
@@ -259,7 +262,7 @@ class RemoteRecordsResolver(
             }
 
             val deleteBody = DeleteBody()
-            deleteBody.setRecords(refs.map { it.value.removeAppName() })
+            deleteBody.setRecords(refs.map { it.value.withoutAppName() })
             setContextProps(deleteBody, context)
 
             val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_PATH, deleteBody, DeleteResp::class, context)
@@ -273,7 +276,7 @@ class RemoteRecordsResolver(
                 )
             }
             for (i in refs.indices) {
-                val refAtts: ValWithIdx<RecordRef> = refs[i]
+                val refAtts: ValWithIdx<EntityRef> = refs[i]
                 result.add(ValWithIdx(statuses[i], refAtts.idx))
             }
         }
@@ -389,6 +392,7 @@ class RemoteRecordsResolver(
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
         body.txnId = ctxData.txnId
+        body.sourceIdMapping = ctxData.sourceIdMapping
         body.setRequestTrace(ctxData.requestTrace)
     }
 
@@ -403,14 +407,25 @@ class RemoteRecordsResolver(
         val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
             val data = DataValue.create(body)
             data.remove("$.query.page.afterId")
-            val atts = data["attributes"]
+            val atts = data[ATTS_KEY]
             if (atts.isObject() && atts.size() > 0) {
                 val attsMap = legacyAttsWriter.writeToMap(
                     attSchemaReader.read(atts.asMap(String::class.java, Any::class.java))
                 )
-                data["attributes"] = attsMap
+                data[ATTS_KEY] = attsMap
             }
             data
+        } else if (body is MutateBody) {
+            if (body.attributes.size != 1) {
+                body
+            } else {
+                val data = DataValue.create(body)
+                val atts = data[ATTS_KEY]
+                if (atts.isArray() && atts.size() == 1) {
+                    data[ATTS_KEY] = atts[0]
+                }
+                data
+            }
         } else {
             body
         }

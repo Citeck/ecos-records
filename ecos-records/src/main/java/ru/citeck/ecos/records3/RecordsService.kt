@@ -18,6 +18,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 /**
  * Service to work with some abstract "records" from any source.
@@ -244,19 +245,9 @@ interface RecordsService {
     fun mutate(record: RecordAtts): RecordRef
 
     /**
-     * Create or change record and load attributes from result
-     */
-    fun mutate(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
      * Create or change records.
      */
     fun mutate(records: List<RecordAtts>): List<RecordRef>
-
-    /**
-     * Create or change records and load attributes from result.
-     */
-    fun mutate(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts>
 
     /**
      * Create or change record.
@@ -264,29 +255,9 @@ interface RecordsService {
     fun mutate(record: Any, attributes: ObjectData): RecordRef
 
     /**
-     * Create or change records and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: ObjectData, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
      * Create or change record.
      */
     fun mutate(record: Any, attributes: Any): RecordRef
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun mutate(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts
-
-    /**
-     * Create or change record and load attributes from result.
-     */
-    fun <T : Any> mutate(record: Any, attributes: Any, attsToLoad: Class<T>): T
 
     /**
      * Create or change records.
@@ -298,16 +269,64 @@ interface RecordsService {
      */
     fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef
 
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Collection<String>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun <T : Any> mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Class<T>): T
+
+    /**
+     * Create or change record and load attributes from result
+     */
+    fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Map<String, *>): RecordAtts
+
+    fun mutateAndGetAtts(record: RecordAtts, attsToLoad: Collection<String>): RecordAtts
+
+    /**
+     * Create or change record and load attributes from result.
+     */
+    fun <T : Any> mutateAndGetAtts(record: RecordAtts, attsToLoad: Class<T>): T
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: Map<String, *>): List<RecordAtts>
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>): List<RecordAtts>
+
+    /**
+     * Create or change records and load attributes from result.
+     */
+    fun mutateAndGetAtts(
+        records: List<RecordAtts>,
+        attsToLoad: List<Map<String, *>>,
+        rawAtts: Boolean
+    ): List<RecordAtts>
+
     /* DELETE */
 
     /**
      * Delete records.
      */
-    fun delete(records: List<RecordRef>): List<DelStatus>
+    fun delete(records: List<EntityRef>): List<DelStatus>
 
     fun delete(record: String): DelStatus
 
     fun delete(record: RecordRef): DelStatus
+
+    fun delete(record: EntityRef): DelStatus
 
     /* OTHER */
 

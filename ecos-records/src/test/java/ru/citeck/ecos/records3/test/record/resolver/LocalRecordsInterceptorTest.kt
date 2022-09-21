@@ -13,6 +13,7 @@ import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.resolver.interceptor.*
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class LocalRecordsInterceptorTest {
 
@@ -30,7 +31,7 @@ class LocalRecordsInterceptorTest {
         val queryCalls = ArrayList<RecordsQuery>()
         val getAttsCalls = ArrayList<List<*>>()
         val mutateCalls = ArrayList<List<RecordAtts>>()
-        val deleteCalls = ArrayList<List<RecordRef>>()
+        val deleteCalls = ArrayList<List<EntityRef>>()
 
         services.localRecordsResolver.addInterceptor(object : LocalRecordsInterceptor {
             override fun query(
@@ -55,7 +56,7 @@ class LocalRecordsInterceptorTest {
 
             override fun mutate(
                 records: List<RecordAtts>,
-                attsToLoad: List<SchemaAtt>,
+                attsToLoad: List<List<SchemaAtt>>,
                 rawAtts: Boolean,
                 chain: MutateInterceptorsChain
             ): List<RecordAtts> {
@@ -63,7 +64,7 @@ class LocalRecordsInterceptorTest {
                 return chain.invoke(records, attsToLoad, rawAtts)
             }
 
-            override fun delete(records: List<RecordRef>, chain: DeleteInterceptorsChain): List<DelStatus> {
+            override fun delete(records: List<EntityRef>, chain: DeleteInterceptorsChain): List<DelStatus> {
                 deleteCalls.add(records)
                 return chain.invoke(records)
             }

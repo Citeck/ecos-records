@@ -16,7 +16,6 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.read.AttReadException
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
-import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -30,7 +29,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class LocalRemoteResolver(private val services: RecordsServiceFactory) : ServiceFactoryAware {
+class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware {
 
     companion object {
         private val REFS_CACHE_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-raw"
@@ -55,40 +54,9 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         val sourceId = query.sourceId
         val remote = this.remote
         return if (remote == null || !isGatewayMode && !isRemoteSourceId(sourceId)) {
-            doWithSchema(attributes, rawAtts) { schema -> local.query(query, schema, rawAtts) }
+            local.query(query, reader.read(attributes), rawAtts)
         } else {
             remote.query(query, attributes, rawAtts)
-        }
-    }
-
-    private fun <T> doWithSchema(attributes: Map<String, *>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
-        return doWithSchema(reader.read(attributes), rawAtts, action)
-    }
-
-    private fun <T> doWithSchema(attributes: AttsMap, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
-        return doWithSchema(attributes.getParsedAtts(), rawAtts, action)
-    }
-
-    private fun <T> doWithSchema(atts: List<SchemaAtt>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
-        return AttContext.doWithCtx(services) { attContext ->
-            val schemaAttBefore = attContext.getSchemaAtt()
-            val attPathBefore = attContext.getAttPath()
-            if (atts.isNotEmpty()) {
-                val flatAtts = services.attSchemaResolver.getFlatAttributes(atts, !rawAtts)
-                attContext.setSchemaAtt(
-                    SchemaAtt.create()
-                        .withName(SchemaAtt.ROOT_NAME)
-                        .withInner(flatAtts)
-                        .build()
-                )
-                attContext.setAttPath("")
-            }
-            try {
-                action.invoke(atts)
-            } finally {
-                attContext.setSchemaAtt(schemaAttBefore)
-                attContext.setAttPath(attPathBefore)
-            }
         }
     }
 
@@ -111,10 +79,12 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         if (!isGatewayMode) {
             val globalCtxAtts = attsMap.extractGlobalCtxAtts(context)
             if (globalCtxAtts.getParsedAtts().isNotEmpty()) {
-                doWithSchema(globalCtxAtts, rawAtts) { atts ->
-                    val evaluatedAtts = local.getAtts(listOf(NullAttValue.INSTANCE), atts, rawAtts)
-                    evaluatedGlobalCtxAtts = evaluatedAtts[0].getAtts()
-                }
+                val evaluatedAtts = local.getAtts(
+                    listOf(NullAttValue.INSTANCE),
+                    globalCtxAtts.getParsedAtts(),
+                    rawAtts
+                )
+                evaluatedGlobalCtxAtts = evaluatedAtts[0].getAtts()
             }
         }
 
@@ -146,9 +116,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
 
         if (recordObjs.isNotEmpty()) {
             val recordsObjValue = recordObjs.map { it.value }
-            val objAtts = doWithSchema(attsMap, rawAtts) { atts ->
-                local.getAtts(recordsObjValue, atts, rawAtts)
-            }
+            val objAtts = local.getAtts(recordsObjValue, attsMap.getParsedAtts(), rawAtts)
             if (objAtts.size == recordsObjValue.size) {
                 for (i in objAtts.indices) {
                     results.add(ValWithIdx(objAtts[i], recordObjs[i].idx))
@@ -290,11 +258,11 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
 
         val remote = this.remote
         val atts: List<RecordAtts> = if (!isGatewayMode && !isRemoteSourceId(sourceId)) {
-            doWithSchema(attsMap, rawAtts) { schema -> local.getAtts(refs, schema, rawAtts) }
+            local.getAtts(refs, attsMap.getParsedAtts(), rawAtts)
         } else if (remote != null && (isGatewayMode || isRemoteRef(recs.map { it.value }.firstOrNull()))) {
             remote.getAtts(refs, attsMap.getAttributes(), rawAtts)
         } else {
-            doWithSchema(attsMap, rawAtts) { schema -> local.getAtts(refs, schema, rawAtts) }
+            local.getAtts(refs, attsMap.getParsedAtts(), rawAtts)
         }
         return if (atts.size != refs.size) {
             context.addMsg(MsgLevel.ERROR) {
@@ -307,13 +275,15 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         }
     }
 
-    fun mutateForAllApps(records: List<RecordAtts>, attsToLoad: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    fun mutateForAllApps(records: List<RecordAtts>, attsToLoad: List<Map<String, *>>, rawAtts: Boolean): List<RecordAtts> {
 
         if (records.isEmpty()) {
             return emptyList()
         }
 
         val recsToMutate = ArrayList<ValWithIdx<RecordAtts>>()
+        val recsAttsToLoad = ArrayList<Map<String, *>>()
+
         val allRecsAfterMutate = ArrayList<ValWithIdx<RecordAtts>>()
         val refsByAliases = HashMap<String, RecordRef>()
 
@@ -325,10 +295,11 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
                 convertAssocValues(record.value, refsByAliases)
             }
             recsToMutate.reverse()
+            recsAttsToLoad.reverse()
             val recsAfterMutate = mutateForApp(
                 appToMutate == currentAppName,
                 recsToMutate.map { it.value },
-                attsToLoad,
+                recsAttsToLoad,
                 rawAtts
             )
 
@@ -342,6 +313,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
             }
             appToMutate = ""
             recsToMutate.clear()
+            recsAttsToLoad.clear()
         }
 
         for (i in records.indices.reversed()) {
@@ -350,6 +322,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
             if (appToMutate.isEmpty() || (appName == appToMutate && !legacyApiMode)) {
                 appToMutate = appName
                 recsToMutate.add(ValWithIdx(record, i))
+                recsAttsToLoad.add(attsToLoad.getOrNull(i) ?: emptyMap<String, Any>())
                 // we should not batch local records for correct
                 // working of convertAssocValues function
                 if (appToMutate == currentAppName) {
@@ -359,6 +332,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
                 flushRecords()
                 appToMutate = appName
                 recsToMutate.add(ValWithIdx(record, i))
+                recsAttsToLoad.add(attsToLoad.getOrNull(i) ?: emptyMap<String, Any>())
             }
         }
         if (recsToMutate.isNotEmpty()) {
@@ -372,7 +346,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
     private fun mutateForApp(
         isLocalApp: Boolean,
         records: List<RecordAtts>,
-        attsToLoad: Map<String, *>,
+        attsToLoad: List<Map<String, *>>,
         rawAtts: Boolean
     ): List<RecordAtts> {
 
@@ -387,7 +361,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
             )
             remote.mutate(records, attsToLoad, rawAtts)
         } else {
-            doWithSchema(attsToLoad, rawAtts) { schema -> local.mutate(records, schema, rawAtts) }
+            local.mutate(records, attsToLoad.map { reader.read(it) }, rawAtts)
         }
         return result
     }
@@ -457,7 +431,7 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         return value
     }
 
-    fun delete(records: List<RecordRef>): List<DelStatus> {
+    fun delete(records: List<EntityRef>): List<DelStatus> {
         if (records.isEmpty()) {
             return emptyList()
         }
@@ -543,8 +517,10 @@ class LocalRemoteResolver(private val services: RecordsServiceFactory) : Service
         return isRemoteRef(meta.getId())
     }
 
-    private fun isRemoteRef(ref: RecordRef?): Boolean {
-        return ref != null && ref.isRemote() && isRemoteSourceId(ref.appName + "/" + ref.sourceId)
+    private fun isRemoteRef(ref: EntityRef?): Boolean {
+        return ref != null &&
+            ref.getAppName().isNotEmpty() &&
+            isRemoteSourceId(ref.getAppName() + "/" + ref.getSourceId())
     }
 
     private fun isRemoteSourceId(sourceId: String?): Boolean {

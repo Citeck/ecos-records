@@ -452,7 +452,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             )
         }
 
-        private val computedRef: RecordRef by lazy {
+        private val computedRawRef: RecordRef by lazy {
             var result = if (RecordRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
@@ -492,13 +492,17 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 if (result.appName.isBlank() && currentAppName.isNotBlank()) {
                     result = result.withDefaultAppName(currentAppName)
                 }
-                result = RecordRefUtils.mapAppIdAndSourceId(
-                    result,
-                    currentAppName,
-                    context?.ctxData?.sourceIdMapping
-                )
                 result
             }
+        }
+
+        private val computedRef: RecordRef by lazy {
+            val currentAppName = resolver?.currentAppName ?: ""
+            RecordRefUtils.mapAppIdAndSourceId(
+                computedRawRef,
+                currentAppName,
+                context?.ctxData?.sourceIdMapping
+            )
         }
 
         /**
@@ -596,7 +600,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         fun getRef() = computedRef
 
-        fun getLocalId() = getRef().id
+        fun getRawRef() = computedRawRef
+
+        fun getLocalId() = getRawRef().getLocalId()
 
         private fun getScalar(scalar: ScalarType, attribute: String): Any? {
             return when (scalar) {
@@ -743,7 +749,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
             try {
                 val typeRef = RecTypeUtils.anyTypeToRef(value?.type)
                 if (RecordRef.isNotEmpty(typeRef)) {
-                    for (att in recordTypeService.getComputedAtts(typeRef)) {
+                    for (att in recordTypeService.getRecordType(typeRef).getComputedAtts()) {
                         if (AttUtils.isValidComputedAtt(att.id, false)) {
                             val scalar = ScalarType.getBySchemaOrMirrorAtt(att.id)
                             if (scalar != null) {
@@ -776,6 +782,10 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
         override fun getRef(): RecordRef {
             return valueCtx.getRef()
+        }
+
+        override fun getRawRef(): RecordRef {
+            return valueCtx.getRawRef()
         }
 
         override fun getLocalId(): String {

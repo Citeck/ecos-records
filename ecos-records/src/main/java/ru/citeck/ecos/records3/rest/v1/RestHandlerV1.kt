@@ -142,7 +142,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         try {
             doInWriteTxn(body.txnId) {
                 resp.setRecords(
-                    recordsService.mutate(body.getRecords(), body.attributes, body.rawAtts).map {
+                    recordsService.mutateAndGetAtts(body.getRecords(), body.attributes, body.rawAtts).map {
                         it.withDefaultAppName(currentAppName)
                     }
                 )
@@ -211,6 +211,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 val trace: MutableList<String> = ArrayList(body.getRequestTrace())
                 trace.add(currentAppId)
                 ctxData.withRequestTrace(trace)
+                ctxData.withSourceIdMapping(body.sourceIdMapping)
             },
             action
         )

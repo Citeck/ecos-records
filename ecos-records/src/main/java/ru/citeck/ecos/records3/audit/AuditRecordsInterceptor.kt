@@ -20,14 +20,13 @@ class AuditRecordsInterceptor(
     private val recordsServiceFactory: RecordsServiceFactory
 ) : LocalRecordsInterceptor {
 
-    private val auditService: EcosAuditService by lazy {
-        recordsServiceFactory.getEcosWebAppContext()?.getAuditService() ?: error("EcosWebAppContext is null")
-    }
+    private val auditService: EcosAuditService = recordsServiceFactory.getEcosWebAppContext()?.getAuditService()
+        ?: error("EcosWebAppContext is null")
 
-    private val queryEmitter by lazy { auditService.getEmitter<QueryRecordEvent>(QueryRecordEvent::class.java) }
-    private val getAttsEmitter by lazy { auditService.getEmitter<GetAttsEvent>(GetAttsEvent::class.java) }
-    private val mutateEmitter by lazy { auditService.getEmitter<MutateRecordEvent>(MutateRecordEvent::class.java) }
-    private val deleteEmitter by lazy { auditService.getEmitter<DeleteRecordEvent>(DeleteRecordEvent::class.java) }
+    private val queryEmitter = auditService.getEmitter<QueryRecordEvent>(QueryRecordEvent::class.java)
+    private val getAttsEmitter = auditService.getEmitter<GetAttsEvent>(GetAttsEvent::class.java)
+    private val mutateEmitter = auditService.getEmitter<MutateRecordEvent>(MutateRecordEvent::class.java)
+    private val deleteEmitter = auditService.getEmitter<DeleteRecordEvent>(DeleteRecordEvent::class.java)
 
     @PostConstruct
     fun register() {

@@ -6,6 +6,7 @@ import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.json.serialization.annotation.IncludeNonDefault
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
+@IncludeNonDefault
 @JsonDeserialize(builder = RecordsQuery.Builder::class)
 @JackJsonDeserialize(builder = RecordsQuery.Builder::class)
 data class RecordsQuery(

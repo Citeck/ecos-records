@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.impl.auth
 
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.context.lib.auth.data.AuthData
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 
@@ -21,10 +22,15 @@ class AuthContextValue : AttValue {
         return AuthAttValue(AuthContext.getCurrentFullAuth()).has(name)
     }
 
-    class AuthAttValue(val auth: AuthData) : AttValue {
+    class AuthAttValue(private val auth: AuthData) : AttValue {
 
         override fun getAtt(name: String): Any? {
             return when (name) {
+                "isAdmin" -> auth.getAuthorities().contains(AuthRole.ADMIN)
+                "isGuest" -> auth.getAuthorities().contains(AuthRole.GUEST)
+                "isSystem" -> auth.getAuthorities().contains(AuthRole.SYSTEM)
+                "isAnonymous" -> auth.getAuthorities().contains(AuthRole.ANONYMOUS)
+                "isUser" -> auth.getAuthorities().contains(AuthRole.USER)
                 "user" -> auth.getUser()
                 "authorities" -> auth.getAuthorities()
                 "userWithAuthorities" -> getUserWithAuthorities()

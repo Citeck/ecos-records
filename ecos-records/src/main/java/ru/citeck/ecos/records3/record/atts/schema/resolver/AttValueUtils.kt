@@ -4,8 +4,8 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.LibsUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.HasListView
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.reflect.Array
 
 object AttValueUtils {
@@ -136,7 +136,7 @@ object AttValueUtils {
     fun isNull(rawValue: Any?): Boolean {
 
         if (rawValue == null ||
-            rawValue is RecordRef && RecordRef.isEmpty(rawValue) ||
+            rawValue is EntityRef && EntityRef.isEmpty(rawValue) ||
             rawValue is DataValue && rawValue.isNull()
         ) {
 

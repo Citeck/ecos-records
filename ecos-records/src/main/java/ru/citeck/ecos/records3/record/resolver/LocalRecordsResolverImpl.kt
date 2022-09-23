@@ -466,9 +466,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         val context = RequestContext.getCurrentNotNull()
 
-        if (log.isDebugEnabled) {
-            log.debug("getMeta start.\nRecords: $records attributes: $attributes")
-        }
+        log.trace { "getMeta start.\nRecords: $records attributes: $attributes" }
+
         val recordObjs = ArrayList<ValWithIdx<Any?>>()
         val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
         for ((idx, rec) in records.withIndex()) {
@@ -533,9 +532,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     "requested. atts: " + atts + " recordObjs: " + recordObjs
             }
         }
-        if (log.isDebugEnabled) {
-            log.debug("getMeta end.\nRecords: $records attributes: $attributes")
-        }
+
+        log.trace { "getMeta end.\nRecords: $records attributes: $attributes" }
+
         result.sortBy { it.idx }
         return result.map { it.value }
     }

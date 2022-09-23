@@ -161,6 +161,7 @@ class TxnActionsTest {
                             override fun <R : Any> execute(
                                 targetApp: String,
                                 path: String,
+                                version: Int,
                                 request: Any,
                                 respType: Class<R>
                             ): Promise<R> {

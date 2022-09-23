@@ -66,6 +66,16 @@ object Predicates {
     }
 
     @JvmStatic
+    fun notEq(attribute: String?, value: Any?): NotPredicate {
+        return not(eq(attribute, value))
+    }
+
+    @JvmStatic
+    fun notContains(attribute: String?, value: String?): NotPredicate {
+        return not(contains(attribute, value))
+    }
+
+    @JvmStatic
     fun empty(attribute: String?): EmptyPredicate {
         return EmptyPredicate(attribute)
     }

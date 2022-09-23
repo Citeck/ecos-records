@@ -32,6 +32,7 @@ import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.records3.utils.RecordRefUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.stream.Collectors
 import kotlin.collections.ArrayList
@@ -465,6 +466,8 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                     }
                 } else if (id is RecordRef) {
                     id
+                } else if (id is EntityRef) {
+                    RecordRef.valueOf(id)
                 } else if (id is DataValue) {
                     RecordRef.create(ctxSourceId, id.asText())
                 } else if (id is String) {

@@ -49,6 +49,7 @@ import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -109,7 +110,14 @@ open class RecordsServiceFactory {
 
     @Deprecated("")
     val localRecordsResolverV0: LocalRecordsResolverV0 by lazySingleton { createLocalRecordsResolverV0() }
-    val localRecordsResolver: LocalRecordsResolver by lazySingleton { createLocalRecordsResolver() }
+    val localRecordsResolver: LocalRecordsResolver by lazySingleton {
+        val resolver = createLocalRecordsResolver()
+        val auditInterceptor = AuditRecordsInterceptor(this)
+        if (auditInterceptor.isValid()) {
+            resolver.addInterceptor(auditInterceptor)
+        }
+        resolver
+    }
 
     val metaRecordsDaoAttsProvider: MetaRecordsDaoAttsProvider by lazySingleton { createMetaRecordsDaoAttsProvider() }
 
@@ -202,7 +210,7 @@ open class RecordsServiceFactory {
             check(!webappProps.gatewayMode) {
                 "WebAppContext should not be null in gateway mode! Props: $properties"
             }
-            log.warn("EcosWebAppContext does not exists. Remote records requests wont be allowed")
+            log.trace("EcosWebAppContext does not exists. Remote records requests wont be allowed")
             null
         }
     }

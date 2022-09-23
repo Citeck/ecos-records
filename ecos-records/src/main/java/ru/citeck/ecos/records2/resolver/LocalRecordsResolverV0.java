@@ -205,16 +205,16 @@ public class LocalRecordsResolverV0 {
         DaoWithConvQuery<RecordsQueryWithMetaDao> daoWithQuery = getDaoWithQuery(query,
                                                                                  RecordsQueryWithMetaDao.class);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
+        if (log.isTraceEnabled()) {
+            log.trace("Start records with meta query: " + daoWithQuery.query.getQuery() + "\n" + schema);
         }
 
         long queryStart = System.currentTimeMillis();
         RecordsQueryResult<RecordAtts> records = daoWithQuery.dao.queryRecords(daoWithQuery.query, schema, rawAtts);
         long queryDuration = System.currentTimeMillis() - queryStart;
 
-        if (log.isDebugEnabled()) {
-            log.debug("Stop records with meta query. Duration: " + queryDuration);
+        if (log.isTraceEnabled()) {
+            log.trace("Stop records with meta query. Duration: " + queryDuration);
         }
 
         if (query.isDebug()) {
@@ -248,8 +248,8 @@ public class LocalRecordsResolverV0 {
                                              List<SchemaAtt> schema,
                                              boolean rawAtts) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("getMeta start.\nRecords: " + records + " schema: " + schema);
+        if (log.isTraceEnabled()) {
+            log.trace("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
         Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
@@ -265,8 +265,8 @@ public class LocalRecordsResolverV0 {
 
         RecordsResult<RecordAtts> results = getMetaImpl(records, schema, rawAtts);
 
-        if (log.isDebugEnabled()) {
-            log.debug("getMeta end.\nRecords: " + records + " schema: " + schema);
+        if (log.isTraceEnabled()) {
+            log.trace("getMeta end.\nRecords: " + records + " schema: " + schema);
         }
 
         results.setRecords(results.getRecords()

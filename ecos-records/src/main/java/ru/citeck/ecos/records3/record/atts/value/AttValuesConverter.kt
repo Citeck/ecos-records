@@ -39,7 +39,7 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
 
     fun toAttValue(value: Any?): AttValue? {
 
-        if (value == null || value is RecordRef && RecordRef.isEmpty(value)) {
+        if (value == null || value is EntityRef && EntityRef.isEmpty(value)) {
             return null
         }
         var valueToConvert = value

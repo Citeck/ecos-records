@@ -57,6 +57,11 @@ class RemoteRecordsResolver(
         const val TXN_PATH: String = BASE_PATH + "txn"
 
         private const val ATTS_KEY = "attributes"
+
+        const val QUERY_VERSION = 2
+        const val MUTATE_VERSION = 1
+        const val DELETE_VERSION = 1
+        const val TXN_VERSION = 1
     }
 
     private var defaultAppName: String = services.properties.defaultApp
@@ -106,7 +111,8 @@ class RemoteRecordsResolver(
             .withSourceId(sourceId.substring(appDelimIdx + 1))
             .build()
 
-        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH) >= 2) {
+        val apiVersion = webClient.getApiVersion(appName, QUERY_PATH)
+        val queryBody = if (apiVersion >= 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -116,7 +122,14 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp = exchangeRemoteRequest(appName, QUERY_PATH, queryBody, QueryResp::class, context)
+        val queryResp = exchangeRemoteRequest(
+            appName,
+            QUERY_PATH,
+            apiVersion,
+            queryBody,
+            QueryResp::class,
+            context
+        )
 
         val result = RecsQueryRes<RecordAtts>()
 
@@ -176,7 +189,14 @@ class RemoteRecordsResolver(
         queryBody.rawAtts = rawAtts
         setContextProps(queryBody, context)
 
-        val queryResp = exchangeRemoteRequest(appName, QUERY_PATH, queryBody, QueryResp::class, context)
+        val queryResp = exchangeRemoteRequest(
+            appName,
+            QUERY_PATH,
+            QUERY_VERSION,
+            queryBody,
+            QueryResp::class,
+            context
+        )
 
         if (queryResp.records.size != records.size) {
             throw RecordsException(
@@ -224,6 +244,7 @@ class RemoteRecordsResolver(
             val mutateResp: MutateResp = exchangeRemoteRequest(
                 appName,
                 MUTATE_PATH,
+                MUTATE_VERSION,
                 mutateBody,
                 MutateResp::class,
                 context
@@ -265,7 +286,14 @@ class RemoteRecordsResolver(
             deleteBody.setRecords(refs.map { it.value.withoutAppName() })
             setContextProps(deleteBody, context)
 
-            val resp: DeleteResp = exchangeRemoteRequest(app, DELETE_PATH, deleteBody, DeleteResp::class, context)
+            val resp: DeleteResp = exchangeRemoteRequest(
+                app,
+                DELETE_PATH,
+                DELETE_VERSION,
+                deleteBody,
+                DeleteResp::class,
+                context
+            )
 
             val statuses = resp.statuses
             if (statuses.size != deleteBody.records.size) {
@@ -354,7 +382,7 @@ class RemoteRecordsResolver(
         var exception: Exception? = null
         for (i in 1..4) {
             try {
-                exchangeRemoteRequest(appName, TXN_PATH, body, TxnResp::class, context)
+                exchangeRemoteRequest(appName, TXN_PATH, TXN_VERSION, body, TxnResp::class, context)
                 if (exception != null) {
                     log.info {
                         "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
@@ -399,6 +427,7 @@ class RemoteRecordsResolver(
     private fun <T : RequestResp> exchangeRemoteRequest(
         appName: String,
         requestPath: String,
+        version: Int,
         body: RequestBody,
         respType: KClass<T>,
         context: RequestContext
@@ -430,7 +459,7 @@ class RemoteRecordsResolver(
             body
         }
 
-        val result = webClient.execute(appName, requestPath, convertedBody, respType.java).get()
+        val result = webClient.execute(appName, requestPath, version, convertedBody, respType.java).get()
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

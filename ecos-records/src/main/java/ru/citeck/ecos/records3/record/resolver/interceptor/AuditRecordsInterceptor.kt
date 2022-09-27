@@ -57,6 +57,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             true
         }) {
             BeforeQueryEvent(
+                queryArg.sourceId,
                 queryArg,
                 writeSchemaForEvent(attributes)
             )
@@ -69,6 +70,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             true
         }) {
             AfterQueryEvent(
+                queryArg.sourceId,
                 queryArg,
                 result.getRecords().map { it.getId() },
                 writeSchemaForEvent(attributes),
@@ -95,7 +97,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
                 null
             }
         }) { ctx, record ->
-            BeforeGetAttsEvent(record, ctx.attributes)
+            BeforeGetAttsEvent(record.getSourceId(), record, ctx.attributes)
         }
         return chain.invoke(records, attributes, rawAtts)
     }
@@ -114,6 +116,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         }) { _, idx ->
             val record = records[idx].withoutSensitiveData()
             BeforeMutateRecordEvent(
+                record.getId().getSourceId(),
                 record.getId(),
                 record.getAtts(),
                 writeSchemaForEvent(attsToLoad.getOrNull(idx))
@@ -130,7 +133,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             headers[SOURCE_ID] = record.getSourceId()
             headers[LOCAL_ID] = record.getLocalId()
             record
-        }) { _, record -> BeforeDeleteRecordEvent(record) }
+        }) { _, record -> BeforeDeleteRecordEvent(record.getSourceId(), record) }
         return chain.invoke(records)
     }
 
@@ -145,12 +148,14 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
 
     @AuditEventType("records.query.before")
     class BeforeQueryEvent(
+        val sourceId: String,
         val query: RecordsQuery,
         val attributes: Map<String, String>
     )
 
     @AuditEventType("records.query.after")
     class AfterQueryEvent(
+        val sourceId: String,
         val query: RecordsQuery,
         val records: List<EntityRef>,
         val attributes: Map<String, String>,
@@ -159,12 +164,14 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
 
     @AuditEventType("records.get-atts.before")
     class BeforeGetAttsEvent(
+        val sourceId: String,
         val record: EntityRef,
         val attributes: Map<String, String>
     )
 
     @AuditEventType("records.mutate.before")
     class BeforeMutateRecordEvent(
+        val sourceId: String,
         val record: EntityRef,
         val attributes: ObjectData,
         val attsToLoad: Map<String, String>
@@ -172,6 +179,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
 
     @AuditEventType("records.delete.before")
     class BeforeDeleteRecordEvent(
+        val sourceId: String,
         val record: EntityRef
     )
 

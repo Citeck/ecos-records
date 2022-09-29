@@ -31,13 +31,13 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     private var interceptorValid = false
 
     init {
-        val auditService = services.getEcosWebAppContext()?.getAuditService()
-        if (auditService != null) {
-            beforeQueryEmitter = auditService.createEmitter(BeforeQueryEvent::class.java).build()
-            afterQueryEmitter = auditService.createEmitter(AfterQueryEvent::class.java).build()
-            beforeGetAttsEmitter = auditService.createEmitter(BeforeGetAttsEvent::class.java).build()
-            beforeMutateEmitter = auditService.createEmitter(BeforeMutateRecordEvent::class.java).build()
-            beforeDeleteEmitter = auditService.createEmitter(BeforeDeleteRecordEvent::class.java).build()
+        val auditApi = services.getEcosWebAppContext()?.getAuditApi()
+        if (auditApi != null) {
+            beforeQueryEmitter = auditApi.createEmitter(BeforeQueryEvent::class.java).build()
+            afterQueryEmitter = auditApi.createEmitter(AfterQueryEvent::class.java).build()
+            beforeGetAttsEmitter = auditApi.createEmitter(BeforeGetAttsEvent::class.java).build()
+            beforeMutateEmitter = auditApi.createEmitter(BeforeMutateRecordEvent::class.java).build()
+            beforeDeleteEmitter = auditApi.createEmitter(BeforeDeleteRecordEvent::class.java).build()
             interceptorValid = true
         }
     }

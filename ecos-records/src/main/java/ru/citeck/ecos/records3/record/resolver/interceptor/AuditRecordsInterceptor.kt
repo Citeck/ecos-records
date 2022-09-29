@@ -6,6 +6,8 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.audit.AuditEventEmitter
@@ -18,6 +20,11 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     companion object {
         private const val SOURCE_ID = "sourceId"
         private const val LOCAL_ID = "localId"
+
+        private val SYSTEM_SOURCES = setOf(
+            RecordsSourceRecordsDao.ID,
+            RecordsApiRecordsDao.ID
+        )
     }
 
     private val attsWriter: AttSchemaWriter = services.attSchemaWriter
@@ -53,8 +60,11 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         chain: QueryInterceptorsChain
     ): RecsQueryRes<RecordAtts> {
         beforeQueryEmitter.emit({ headers ->
-            headers[SOURCE_ID] = queryArg.sourceId
-            true
+            if (isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
+                null
+            } else {
+                headers[SOURCE_ID] = queryArg.sourceId
+            }
         }) {
             BeforeQueryEvent(
                 queryArg.sourceId,
@@ -66,8 +76,11 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         val result = chain.invoke(queryArg, attributes, rawAtts)
         val queryDurationMs = System.currentTimeMillis() - queryStartMs
         afterQueryEmitter.emit({ headers ->
-            headers[SOURCE_ID] = queryArg.sourceId
-            true
+            if (isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
+                null
+            } else {
+                headers[SOURCE_ID] = queryArg.sourceId
+            }
         }) {
             AfterQueryEvent(
                 queryArg.sourceId,
@@ -90,9 +103,13 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             AttsCtx(writeSchemaForEvent(attributes))
         }, { _, record, headers ->
             if (record is EntityRef) {
-                headers[SOURCE_ID] = record.getSourceId()
-                headers[LOCAL_ID] = record.getLocalId()
-                record
+                if (isEventShouldBeSkipped(record.getSourceId(), attributes)) {
+                    null
+                } else {
+                    headers[SOURCE_ID] = record.getSourceId()
+                    headers[LOCAL_ID] = record.getLocalId()
+                    record
+                }
             } else {
                 null
             }
@@ -135,6 +152,13 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             record
         }) { _, record -> BeforeDeleteRecordEvent(record.getSourceId(), record) }
         return chain.invoke(records)
+    }
+
+    private fun isEventShouldBeSkipped(sourceId: String, attsToLoad: List<SchemaAtt>): Boolean {
+        if (!SYSTEM_SOURCES.contains(sourceId)) {
+            return false
+        }
+        return attsToLoad.all { !it.name.startsWith("$") }
     }
 
     private fun writeSchemaForEvent(schema: List<SchemaAtt>?): Map<String, String> {

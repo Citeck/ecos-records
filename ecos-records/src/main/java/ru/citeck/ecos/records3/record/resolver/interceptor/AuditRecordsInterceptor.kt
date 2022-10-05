@@ -18,6 +18,8 @@ import java.util.LinkedHashMap
 open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecordsInterceptor {
 
     companion object {
+        private const val APP_NAME = "appName"
+        private const val APP_INSTANCE_ID = "appInstanceId"
         private const val SOURCE_ID = "sourceId"
         private const val LOCAL_ID = "localId"
 
@@ -28,6 +30,8 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     }
 
     private val attsWriter: AttSchemaWriter = services.attSchemaWriter
+    private val currentAppName = services.webappProps.appName
+    private val currentAppInstanceId = services.webappProps.appInstanceId
 
     private lateinit var beforeQueryEmitter: AuditEventEmitter<BeforeQueryEvent>
     private lateinit var afterQueryEmitter: AuditEventEmitter<AfterQueryEvent>
@@ -64,10 +68,12 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
                 null
             } else {
                 headers[SOURCE_ID] = queryArg.sourceId
+                headers[APP_NAME] = currentAppName
+                headers[APP_INSTANCE_ID] = currentAppInstanceId
             }
         }) {
             BeforeQueryEvent(
-                queryArg.sourceId,
+                getGlobalSourceId(queryArg.sourceId),
                 queryArg,
                 writeSchemaForEvent(attributes)
             )
@@ -79,13 +85,15 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             if (isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
                 null
             } else {
-                headers[SOURCE_ID] = queryArg.sourceId
+                headers[SOURCE_ID] = queryArg.sourceId.substringAfter(EntityRef.APP_NAME_DELIMITER)
+                headers[APP_NAME] = currentAppName
+                headers[APP_INSTANCE_ID] = currentAppInstanceId
             }
         }) {
             AfterQueryEvent(
-                queryArg.sourceId,
+                getGlobalSourceId(queryArg.sourceId),
                 queryArg,
-                result.getRecords().map { it.getId() },
+                result.getRecords().map { it.getId().withDefaultAppName(currentAppName) },
                 writeSchemaForEvent(attributes),
                 queryDurationMs
             )
@@ -108,13 +116,19 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
                 } else {
                     headers[SOURCE_ID] = record.getSourceId()
                     headers[LOCAL_ID] = record.getLocalId()
+                    headers[APP_NAME] = currentAppName
+                    headers[APP_INSTANCE_ID] = currentAppInstanceId
                     record
                 }
             } else {
                 null
             }
         }) { ctx, record ->
-            BeforeGetAttsEvent(record.getSourceId(), record, ctx.attributes)
+            BeforeGetAttsEvent(
+                getGlobalSourceId(record.getSourceId()),
+                record.withDefaultAppName(currentAppName),
+                ctx.attributes
+            )
         }
         return chain.invoke(records, attributes, rawAtts)
     }
@@ -129,12 +143,14 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             val record = records[idx]
             headers[SOURCE_ID] = record.getId().getSourceId()
             headers[LOCAL_ID] = record.getId().getLocalId()
+            headers[APP_NAME] = currentAppName
+            headers[APP_INSTANCE_ID] = currentAppInstanceId
             idx
         }) { _, idx ->
             val record = records[idx].withoutSensitiveData()
             BeforeMutateRecordEvent(
-                record.getId().getSourceId(),
-                record.getId(),
+                getGlobalSourceId(record.getId()),
+                record.getId().withDefaultAppName(currentAppName),
                 record.getAtts(),
                 writeSchemaForEvent(attsToLoad.getOrNull(idx))
             )
@@ -149,9 +165,29 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         beforeDeleteEmitter.emitForEach(records, {}, { _, record, headers ->
             headers[SOURCE_ID] = record.getSourceId()
             headers[LOCAL_ID] = record.getLocalId()
+            headers[APP_NAME] = currentAppName
+            headers[APP_INSTANCE_ID] = currentAppInstanceId
             record
-        }) { _, record -> BeforeDeleteRecordEvent(record.getSourceId(), record) }
+        }) { _, record ->
+            BeforeDeleteRecordEvent(
+                getGlobalSourceId(record),
+                record.withDefaultAppName(currentAppName)
+            )
+        }
         return chain.invoke(records)
+    }
+
+    private fun getGlobalSourceId(sourceId: String): String {
+        return if (sourceId.contains(EntityRef.APP_NAME_DELIMITER)) {
+            sourceId
+        } else {
+            currentAppName + EntityRef.APP_NAME_DELIMITER + sourceId
+        }
+    }
+
+    private fun getGlobalSourceId(ref: EntityRef): String {
+        val appName = ref.getAppName().ifBlank { currentAppName }
+        return appName + EntityRef.APP_NAME_DELIMITER + ref.getSourceId()
     }
 
     private fun isEventShouldBeSkipped(sourceId: String, attsToLoad: List<SchemaAtt>): Boolean {

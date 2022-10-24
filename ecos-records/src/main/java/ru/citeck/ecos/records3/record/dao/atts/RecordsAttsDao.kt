@@ -5,6 +5,11 @@ import kotlin.jvm.Throws
 
 interface RecordsAttsDao : RecordsDao {
 
+    /**
+     * Get attributes for records
+     * @param recordsId - ids of records
+     * @return attributes. Order of atts objects must be the same as order of recordsId.
+     */
     @Throws(Exception::class)
     fun getRecordsAtts(recordsId: List<String>): List<*>?
 }

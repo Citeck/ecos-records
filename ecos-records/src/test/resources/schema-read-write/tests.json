@@ -1,6 +1,35 @@
 {
   "tests": [
     {
+      "att": "field0\\.field1",
+      "expAfterWrite": "field0\\.field1",
+      "exp": {
+        "name": "field0.field1",
+        "inner": [
+          {
+            "name": "?disp"
+          }
+        ]
+      }
+    },
+    {
+      "att": "field0 { inn0\\.inn2 }",
+      "expAfterWrite": "field0.inn0\\.inn2",
+      "exp": {
+        "name": "field0",
+        "inner": [
+          {
+            "name": "inn0.inn2",
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "att": "strDvListWithNullElem[]?disp![]",
       "expAfterWrite": "strDvListWithNullElem[]|or([])",
       "exp": {
@@ -214,4 +243,3 @@
     }
   ]
 }
-

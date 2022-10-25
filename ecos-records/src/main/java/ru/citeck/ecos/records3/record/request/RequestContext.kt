@@ -397,9 +397,6 @@ class RequestContext {
 
     fun getTxnChangedRecords(): MutableSet<RecordRef>? {
         val txnId = ctxData.txnId ?: return null
-        if (getVar<Boolean>(TXN_OWNED_KEY) != true) {
-            return null
-        }
         return getMap<UUID, MutableSet<RecordRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
     }
 

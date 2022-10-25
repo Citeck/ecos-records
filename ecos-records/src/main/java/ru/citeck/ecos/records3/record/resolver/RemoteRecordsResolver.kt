@@ -71,6 +71,8 @@ class RemoteRecordsResolver(
     private val webClient: EcosWebClient = services.getEcosWebAppContext()?.getWebClient()
         ?: error("EcosWebAppContext or WebClient is null")
 
+    private val currentAppName = services.webappProps.appName
+
     init {
         sourceIdMeta = services.cacheManager.create(
             CacheConfig(
@@ -239,6 +241,15 @@ class RemoteRecordsResolver(
                     val newAtts = recsAtts[i].withDefaultAppName(appName)
                     result.add(ValWithIdx(newAtts, refAtts.idx))
                 }
+                context.getTxnChangedRecords()?.addAll(
+                    mutateResp.txnChangedRecords.map {
+                        if (it.appName == currentAppName) {
+                            it.withoutAppName()
+                        } else {
+                            it
+                        }
+                    }
+                )
             }
         }
         result.sortBy { it.idx }

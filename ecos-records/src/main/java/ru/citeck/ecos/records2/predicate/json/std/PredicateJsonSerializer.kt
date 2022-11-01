@@ -1,31 +1,67 @@
-package ru.citeck.ecos.records2.predicate.json.std;
+package ru.citeck.ecos.records2.predicate.json.std
 
-import ecos.com.fasterxml.jackson210.core.JsonGenerator;
-import ecos.com.fasterxml.jackson210.databind.SerializerProvider;
-import ecos.com.fasterxml.jackson210.databind.ser.std.StdSerializer;
-import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.json.JsonMapper;
-import ru.citeck.ecos.commons.json.JsonOptions;
-import ru.citeck.ecos.records2.predicate.PredicateUtils;
-import ru.citeck.ecos.records2.predicate.model.Predicate;
+import ecos.com.fasterxml.jackson210.core.JsonGenerator
+import ecos.com.fasterxml.jackson210.databind.SerializerProvider
+import ecos.com.fasterxml.jackson210.databind.ser.std.StdSerializer
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.*
 
-import java.io.IOException;
-
-public class PredicateJsonSerializer extends StdSerializer<Predicate> {
-
-    private final JsonMapper mapper = Json.newMapper(new JsonOptions.Builder()
-        .excludeSerializers(Predicate.class)
-        .build());
-
-    public PredicateJsonSerializer() {
-        super(Predicate.class);
+class PredicateJsonSerializer : StdSerializer<Predicate>(
+    Predicate::class.java
+) {
+    companion object {
+        private const val FIELD_TYPE = "t"
+        private const val FIELD_ATT = "att"
+        private const val FIELD_VAL = "val"
     }
 
-    @Override
-    public void serialize(Predicate predicate,
-                          JsonGenerator jsonGenerator,
-                          SerializerProvider serializerProvider) throws IOException {
+    override fun serialize(
+        predicate: Predicate,
+        generator: JsonGenerator,
+        serializerProvider: SerializerProvider
+    ) {
+        serializeImpl(PredicateUtils.optimize(predicate), generator)
+    }
 
-        jsonGenerator.writeTree(mapper.toJson(PredicateUtils.optimize(predicate)));
+    private fun writeType(generator: JsonGenerator, type: String) {
+        generator.writeStringField(FIELD_TYPE, type)
+    }
+
+    private fun serializeImpl(predicate: Predicate, generator: JsonGenerator) {
+        generator.writeStartObject()
+        when (predicate) {
+            is ValuePredicate -> {
+                writeType(generator, predicate.getType().asString())
+                generator.writeStringField(FIELD_ATT, predicate.getAttribute())
+                generator.writeFieldName(FIELD_VAL)
+                generator.writeTree(predicate.getValue().asJson())
+            }
+            is EmptyPredicate -> {
+                writeType(generator, EmptyPredicate.TYPE)
+                generator.writeStringField(FIELD_ATT, predicate.getAttribute())
+            }
+            is ComposedPredicate -> {
+                val type = when (predicate) {
+                    is AndPredicate -> AndPredicate.TYPE
+                    is OrPredicate -> OrPredicate.TYPE
+                    else -> error("unknown composed type: ${predicate::class}")
+                }
+                writeType(generator, type)
+                generator.writeArrayFieldStart(FIELD_VAL)
+                val predicates = predicate.getPredicates()
+                for (innerPred in predicates) {
+                    serializeImpl(innerPred, generator)
+                }
+                generator.writeEndArray()
+            }
+            is NotPredicate -> {
+                writeType(generator, NotPredicate.TYPE)
+                generator.writeFieldName(FIELD_VAL)
+                serializeImpl(predicate.getPredicate(), generator)
+            }
+            is VoidPredicate -> {} // empty object
+            else -> error("Unknown predicate type: " + predicate::class)
+        }
+        generator.writeEndObject()
     }
 }

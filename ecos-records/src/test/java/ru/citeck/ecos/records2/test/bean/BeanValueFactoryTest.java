@@ -12,6 +12,8 @@ import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -73,6 +75,7 @@ public class BeanValueFactoryTest extends LocalRecordsDao
 
     public static class ValueDto1 {
         @Override
+        @AttName(ScalarType.STR_SCHEMA)
         public String toString() {
             return "ValueDto2{}";
         }

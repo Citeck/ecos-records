@@ -8,12 +8,12 @@ import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs;
-import ru.citeck.ecos.records3.record.mixin.MixinContext;
 import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
@@ -187,6 +187,7 @@ public class ResolverTest {
         }
 
         @Override
+        @AttName(ScalarType.STR_SCHEMA)
         public String toString() {
             return "TestClass{\"" + field0 + "\"}";
         }

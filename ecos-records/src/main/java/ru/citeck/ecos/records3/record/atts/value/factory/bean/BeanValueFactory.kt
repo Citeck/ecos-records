@@ -60,10 +60,7 @@ class BeanValueFactory : AttValueFactory<Any> {
         }
 
         override fun asText(): String? {
-            if (typeCtx.hasProperty(ScalarType.STR.schema)) {
-                return getAttWithType(ScalarType.STR.schema, String::class.java)
-            }
-            return bean.toString()
+            return typeCtx.beanGetAsText(bean)
         }
 
         @Throws(Exception::class)
@@ -106,7 +103,7 @@ class BeanValueFactory : AttValueFactory<Any> {
         private fun <T : Any> getAttWithType(name: String, type: Class<T>): T? {
             val value = getAtt(name)
             return if (type != Any::class.java) {
-                Json.mapper.convert(getAtt(name), type)
+                Json.mapper.convert(value, type)
             } else {
                 @Suppress("UNCHECKED_CAST")
                 value as? T

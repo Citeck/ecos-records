@@ -62,6 +62,20 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
 
     companion object {
 
+        /*
+         * Constants required to use in annotations
+         * because @AttName(SchemaType.STR.schema) doesn't work
+         */
+        const val ID_SCHEMA = "?id"
+        const val STR_SCHEMA = "?str"
+        const val DISP_SCHEMA = "?disp"
+        const val NUM_SCHEMA = "?num"
+        const val LOCAL_ID_SCHEMA = "?localId"
+        const val BOOL_SCHEMA = "?bool"
+        const val JSON_SCHEMA = "?json"
+        const val RAW_SCHEMA = "?raw"
+        const val BIN_SCHEMA = "?bin"
+
         @JvmStatic
         fun getBySchema(schema: String): ScalarType? {
             if (schema.isEmpty() || schema[0] != '?') {

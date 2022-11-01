@@ -10,6 +10,7 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
@@ -79,6 +80,7 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
 
     public static class ValueDto1 {
         @Override
+        @AttName(ScalarType.STR_SCHEMA)
         public String toString() {
             return "ValueDto2{}";
         }

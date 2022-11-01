@@ -9,6 +9,16 @@ import ru.citeck.ecos.records3.record.atts.value.HasListView
 
 class DataValueAttFactory : AttValueFactory<DataValue> {
 
+    companion object {
+        fun getAsText(value: DataValue): String? {
+            return if (value.isValueNode()) {
+                value.asText()
+            } else {
+                Json.mapper.toString(value)
+            }
+        }
+    }
+
     private lateinit var valuesConverter: AttValuesConverter
 
     override fun init(attValuesConverter: AttValuesConverter) {
@@ -61,11 +71,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
         }
 
         override fun asText(): String? {
-            return if (value.isValueNode()) {
-                value.asText()
-            } else {
-                Json.mapper.toString(value)
-            }
+            return getAsText(value)
         }
 
         override fun getAtt(name: String): Any? {

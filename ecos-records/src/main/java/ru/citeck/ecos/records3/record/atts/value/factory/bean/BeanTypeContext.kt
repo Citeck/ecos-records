@@ -14,7 +14,8 @@ class BeanTypeContext(
     private val getAsMethod: ((Any, String) -> Any?)?,
     private val hasMethod: ((Any, String) -> Boolean)?,
     private val getEdgeMethod: ((Any, String) -> AttEdge?)?,
-    private val getAttMethod: ((Any, String) -> Any?)?
+    private val getAttMethod: ((Any, String) -> Any?)?,
+    private val getAsTextMethod: (Any) -> String?
 ) {
 
     companion object {
@@ -25,16 +26,28 @@ class BeanTypeContext(
         return getters.containsKey(name)
     }
 
+    fun beanGetAsText(value: Any): String? {
+        return doWithoutInvocationTargetException {
+            getAsTextMethod.invoke(value)
+        }
+    }
+
     fun beanGetAs(value: Any, arg: String): Any? {
-        return getAsMethod?.invoke(value, arg)
+        return doWithoutInvocationTargetException {
+            getAsMethod?.invoke(value, arg)
+        }
     }
 
     fun beanHas(value: Any, name: String): Boolean {
-        return hasMethod?.invoke(value, name) ?: hasProperty(name)
+        return doWithoutInvocationTargetException {
+            hasMethod?.invoke(value, name) ?: hasProperty(name)
+        }
     }
 
     fun beanGetEdge(value: Any, name: String): AttEdge? {
-        return getEdgeMethod?.invoke(value, name)
+        return doWithoutInvocationTargetException {
+            getEdgeMethod?.invoke(value, name)
+        }
     }
 
     fun applyData(bean: Any, data: ObjectData) {
@@ -65,7 +78,7 @@ class BeanTypeContext(
     fun getProperty(bean: Any?, name: String): Any? {
         bean ?: return null
         val getter = getters[name]
-        return try {
+        return doWithoutInvocationTargetException {
             if (getter != null) {
                 getter.invoke(bean)
             } else {
@@ -76,6 +89,12 @@ class BeanTypeContext(
                 }
                 null
             }
+        }
+    }
+
+    private inline fun <T> doWithoutInvocationTargetException(action: () -> T): T {
+        return try {
+            action.invoke()
         } catch (e: InvocationTargetException) {
             throw e.cause ?: e
         }

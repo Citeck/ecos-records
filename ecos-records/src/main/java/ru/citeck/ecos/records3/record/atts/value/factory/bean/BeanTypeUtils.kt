@@ -1,30 +1,83 @@
 package ru.citeck.ecos.records3.record.atts.value.factory.bean
 
 import org.apache.commons.beanutils.PropertyUtils
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.factory.DataValueAttFactory
 import java.beans.PropertyDescriptor
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.*
 
 object BeanTypeUtils {
 
     private val typeCtxCache = ConcurrentHashMap<Class<*>, BeanTypeContext>()
+    private val GET_AS_AUTO_SCALARS = listOf(
+        ScalarType.STR,
+        ScalarType.NUM,
+        ScalarType.BOOL,
+        ScalarType.JSON,
+        ScalarType.RAW,
+        ScalarType.BIN
+    ).map { it.schema }
 
     @JvmStatic
     fun getTypeContext(type: Class<*>): BeanTypeContext {
         return typeCtxCache.computeIfAbsent(type) {
+            val getters = getGetters(it)
             BeanTypeContext(
-                getGetters(it),
+                getters,
                 getPropsPath(it),
                 getMethodWithStrArg(it, "getAs"),
                 getMethodWithStrArg(it, "has"),
                 getMethodWithStrArg(it, "getEdge"),
-                getMethodWithStrArg(it, "getAtt")
+                getMethodWithStrArg(it, "getAtt"),
+                getGetAsTextMethod(type, getters)
             )
+        }
+    }
+
+    private fun getGetAsTextMethod(type: Class<*>, getters: Map<String, (Any) -> Any?>): (Any) -> String? {
+        val getStrMethod = getters[ScalarType.STR.schema]
+        if (getStrMethod != null) {
+            return { bean: Any -> Json.mapper.convert(getStrMethod.invoke(bean), String::class.java) }
+        }
+        if (Map::class.java.isAssignableFrom(type)) {
+            return { bean -> Json.mapper.toNonDefaultJson(bean).toString() }
+        }
+        if (type.isAssignableFrom(DataValue::class.java)) {
+            return { bean: Any ->
+                if (bean is DataValue) {
+                    DataValueAttFactory.getAsText(bean)
+                } else {
+                    bean.toString()
+                }
+            }
+        }
+        val packageName = type.`package`.name
+        if (type.isAssignableFrom(ObjectData::class.java) ||
+            packageName.startsWith("java.") ||
+            packageName.startsWith("javax.") ||
+            type.isEnum
+        ) {
+            return { bean -> bean.toString() }
+        }
+        val getJsonMethod = getters[ScalarType.JSON.schema]
+        return if (getJsonMethod != null) {
+            { bean -> Json.mapper.toString(getJsonMethod.invoke(bean)) }
+        } else {
+            { bean ->
+                val json = Json.mapper.toNonDefaultJson(bean)
+                if (json.isNull || json.isMissingNode) {
+                    null
+                } else {
+                    json.toString()
+                }
+            }
         }
     }
 
@@ -39,7 +92,6 @@ object BeanTypeUtils {
             return null
         }
         return { value, arg ->
-            @Suppress("UNCHECKED_CAST")
             getAsMethod.invoke(value, arg) as T
         }
     }
@@ -131,6 +183,22 @@ object BeanTypeUtils {
                 getters[descriptor.name] = getter
             }
         }
+
+        if (!type.isSynthetic && !type.isAnonymousClass) {
+            type.kotlin.memberFunctions.mapNotNull { func ->
+                if (func.name.startsWith("set") || func.name.startsWith("get")) {
+                    null
+                } else {
+                    func.findAnnotation<AttName>()?.let { func to it }
+                }
+            }.forEach { funcToAttName ->
+                if (!getters.containsKey(funcToAttName.second.value)) {
+                    val getter: (Any) -> Any? = { bean -> funcToAttName.first.call(bean) }
+                    getters[funcToAttName.second.value] = getter
+                }
+            }
+        }
+
         if (!getters.containsKey(ScalarType.DISP.schema)) {
             var dispNameGetter = getters["displayName"]
             if (dispNameGetter == null) {
@@ -158,6 +226,18 @@ object BeanTypeUtils {
                 getters["_type"] = typeGetter
             }
         }
+
+        for (scalar in GET_AS_AUTO_SCALARS) {
+            if (!getters.containsKey(scalar)) {
+                val methodName = "as" + scalar.substring(1)
+                    .replaceFirstChar { it.uppercaseChar() }
+                val getAsMethod = getters[methodName]
+                if (getAsMethod != null) {
+                    getters[scalar] = getAsMethod
+                }
+            }
+        }
+
         return getters
     }
 

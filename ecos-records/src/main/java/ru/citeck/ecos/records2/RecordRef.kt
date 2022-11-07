@@ -31,6 +31,16 @@ class RecordRef : EntityRef, Serializable {
 
         @JvmStatic
         fun create(sourceId: String?, id: String?): RecordRef {
+            if (sourceId != null) {
+                val appDelimIdx = sourceId.indexOf(APP_NAME_DELIMITER)
+                if (appDelimIdx > -1) {
+                    create(
+                        sourceId.substring(0, appDelimIdx),
+                        sourceId.substring(appDelimIdx + 1),
+                        id
+                    )
+                }
+            }
             return create("", sourceId, id)
         }
 
@@ -181,10 +191,22 @@ class RecordRef : EntityRef, Serializable {
     }
 
     override fun withSourceId(sourceId: String): RecordRef {
-        if (this.sourceId == sourceId) {
-            return this
+        val appNameDelim = sourceId.indexOf(APP_NAME_DELIMITER)
+        return if (appNameDelim != -1) {
+            val newAppName = sourceId.substring(0, appNameDelim)
+            val newSourceId = sourceId.substring(appNameDelim + 1)
+            if (this.appName == newAppName && this.sourceId == newSourceId) {
+                this
+            } else {
+                create(newAppName, newSourceId, id)
+            }
+        } else {
+            if (this.sourceId == sourceId) {
+                this
+            } else {
+                create(appName, sourceId, id)
+            }
         }
-        return create(appName, sourceId, id)
     }
 
     override fun withAppName(appName: String): RecordRef {

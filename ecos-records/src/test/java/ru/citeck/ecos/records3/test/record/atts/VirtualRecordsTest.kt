@@ -17,7 +17,7 @@ class VirtualRecordsTest {
         val records = services.recordsServiceV1
         records.register(recordsDao)
 
-        val resolver = services.localRecordsResolver
+        val resolver = services.recordsResolver
 
         recordsDao.setRecord("realRec", TestDto("abc"))
 

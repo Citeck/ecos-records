@@ -65,6 +65,9 @@ data class RecordsQuery(
     }
 
     fun withSourceId(sourceId: String): RecordsQuery {
+        if (this.sourceId == sourceId) {
+            return this
+        }
         return copy().withSourceId(sourceId).build()
     }
 

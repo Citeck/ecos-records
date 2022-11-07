@@ -56,13 +56,17 @@ data class LocalRecordAtts(
         if (name == null) {
             return
         }
-        attributes.set(name, value)
+        attributes[name] = value
+    }
+
+    fun getAtts(): ObjectData {
+        return attributes
     }
 
     override fun withoutSensitiveData(): LocalRecordAtts {
         val newAtts = attributes.deepCopy()
         newAtts.fieldNamesList().forEach { name ->
-            newAtts.set(name, "?")
+            newAtts[name] = "?"
         }
         return LocalRecordAtts(id, newAtts)
     }

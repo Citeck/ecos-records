@@ -1,23 +1,62 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
-import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
-import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
-import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
-import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.webapp.api.audit.AuditEventEmitter
-import ru.citeck.ecos.webapp.api.audit.AuditEventType
-import ru.citeck.ecos.webapp.api.entity.EntityRef
-import java.util.LinkedHashMap
 
 open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecordsInterceptor {
 
-    companion object {
+    override fun query(
+        queryArg: RecordsQuery,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: QueryInterceptorsChain
+    ): RecsQueryRes<RecordAtts> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getValueAtts(
+        values: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: GetValueAttsInterceptorsChain
+    ): List<RecordAtts> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRecordAtts(
+        sourceId: String,
+        recordsId: List<String>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: GetRecordAttsInterceptorsChain
+    ): List<RecordAtts> {
+        TODO("Not yet implemented")
+    }
+
+    override fun mutateRecords(
+        sourceId: String,
+        records: List<LocalRecordAtts>,
+        attsToLoad: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: MutateRecordsInterceptorsChain
+    ): List<RecordAtts> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteRecords(
+        sourceId: String,
+        recordsId: List<String>,
+        chain: DeleteInterceptorsChain
+    ): List<DelStatus> {
+        TODO("Not yet implemented")
+    }
+
+    /*    companion object {
         private const val APP_NAME = "appName"
         private const val APP_INSTANCE_ID = "appInstanceId"
         private const val SOURCE_ID = "sourceId"
@@ -34,10 +73,10 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     private val currentAppInstanceId = services.webappProps.appInstanceId
 
     private lateinit var beforeQueryEmitter: AuditEventEmitter<BeforeQueryEvent>
-    private lateinit var afterQueryEmitter: AuditEventEmitter<AfterQueryEvent>
-    private lateinit var beforeGetAttsEmitter: AuditEventEmitter<BeforeGetAttsEvent>
-    private lateinit var beforeMutateEmitter: AuditEventEmitter<BeforeMutateRecordEvent>
-    private lateinit var beforeDeleteEmitter: AuditEventEmitter<BeforeDeleteRecordEvent>
+    private lateinit var afterQueryEmitter: AuditEventEmitter<QueryEvent>
+    private lateinit var beforeGetAttsEmitter: AuditEventEmitter<GetAttsEvent>
+    private lateinit var beforeMutateEmitter: AuditEventEmitter<MutateRecordEvent>
+    private lateinit var beforeDeleteEmitter: AuditEventEmitter<DeleteRecordEvent>
 
     private var interceptorValid = false
 
@@ -45,10 +84,10 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         val auditApi = services.getEcosWebAppContext()?.getAuditApi()
         if (auditApi != null) {
             beforeQueryEmitter = auditApi.createEmitter(BeforeQueryEvent::class.java).build()
-            afterQueryEmitter = auditApi.createEmitter(AfterQueryEvent::class.java).build()
-            beforeGetAttsEmitter = auditApi.createEmitter(BeforeGetAttsEvent::class.java).build()
-            beforeMutateEmitter = auditApi.createEmitter(BeforeMutateRecordEvent::class.java).build()
-            beforeDeleteEmitter = auditApi.createEmitter(BeforeDeleteRecordEvent::class.java).build()
+            afterQueryEmitter = auditApi.createEmitter(QueryEvent::class.java).build()
+            beforeGetAttsEmitter = auditApi.createEmitter(GetAttsEvent::class.java).build()
+            beforeMutateEmitter = auditApi.createEmitter(MutateRecordEvent::class.java).build()
+            beforeDeleteEmitter = auditApi.createEmitter(DeleteRecordEvent::class.java).build()
             interceptorValid = true
         }
     }
@@ -90,7 +129,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
                 headers[APP_INSTANCE_ID] = currentAppInstanceId
             }
         }) {
-            AfterQueryEvent(
+            QueryEvent(
                 getGlobalSourceId(queryArg.sourceId),
                 queryArg,
                 result.getRecords().map { it.getId().withDefaultAppName(currentAppName) },
@@ -105,7 +144,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         records: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetAttsInterceptorsChain
+        chain: GetRecordAttsInterceptorsChain
     ): List<RecordAtts> {
         beforeGetAttsEmitter.emitForEach(records, {
             AttsCtx(writeSchemaForEvent(attributes))
@@ -124,7 +163,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
                 null
             }
         }) { ctx, record ->
-            BeforeGetAttsEvent(
+            GetAttsEvent(
                 getGlobalSourceId(record.getSourceId()),
                 record.withDefaultAppName(currentAppName),
                 ctx.attributes
@@ -137,7 +176,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         records: List<RecordAtts>,
         attsToLoad: List<List<SchemaAtt>>,
         rawAtts: Boolean,
-        chain: MutateInterceptorsChain
+        chain: MutateRecordsInterceptorsChain
     ): List<RecordAtts> {
         beforeMutateEmitter.emitForEach(records.indices, {}, { _, idx, headers ->
             val record = records[idx]
@@ -148,7 +187,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             idx
         }) { _, idx ->
             val record = records[idx].withoutSensitiveData()
-            BeforeMutateRecordEvent(
+            MutateRecordEvent(
                 getGlobalSourceId(record.getId()),
                 record.getId().withDefaultAppName(currentAppName),
                 record.getAtts(),
@@ -169,7 +208,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             headers[APP_INSTANCE_ID] = currentAppInstanceId
             record
         }) { _, record ->
-            BeforeDeleteRecordEvent(
+            DeleteRecordEvent(
                 getGlobalSourceId(record),
                 record.withDefaultAppName(currentAppName)
             )
@@ -206,44 +245,32 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         return result
     }
 
-    @AuditEventType("records.query.before")
-    class BeforeQueryEvent(
-        val sourceId: String,
-        val query: RecordsQuery,
-        val attributes: Map<String, String>
-    )
-
-    @AuditEventType("records.query.after")
-    class AfterQueryEvent(
+    @AuditEventType("records.query")
+    class QueryEvent(
         val sourceId: String,
         val query: RecordsQuery,
         val records: List<EntityRef>,
-        val attributes: Map<String, String>,
-        val queryDurationMs: Long
-    )
-
-    @AuditEventType("records.get-atts.before")
-    class BeforeGetAttsEvent(
-        val sourceId: String,
-        val record: EntityRef,
         val attributes: Map<String, String>
     )
 
-    @AuditEventType("records.mutate.before")
-    class BeforeMutateRecordEvent(
+    @AuditEventType("records.get-atts")
+    class GetAttsEvent(
         val sourceId: String,
-        val record: EntityRef,
+        val records: List<EntityRef>,
+        val attributes: Map<String, String>
+    )
+
+    @AuditEventType("records.mutate")
+    class MutateRecordEvent(
+        val sourceId: String,
+        val records: List<EntityRef>,
         val attributes: ObjectData,
         val attsToLoad: Map<String, String>
     )
 
-    @AuditEventType("records.delete.before")
-    class BeforeDeleteRecordEvent(
+    @AuditEventType("records.delete")
+    class DeleteRecordEvent(
         val sourceId: String,
-        val record: EntityRef
-    )
-
-    private class AttsCtx(
-        val attributes: Map<String, String>
-    )
+        val records: List<EntityRef>
+    )*/
 }

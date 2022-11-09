@@ -75,8 +75,8 @@ class ObjectDataAndDataValueTest : AbstractRecordsDao(), RecordsAttsDao {
         assertEquals(expected, dtoValue)
     }
 
-    override fun getRecordsAtts(recordsId: List<String>): List<*> {
-        return recordsId.stream()
+    override fun getRecordsAtts(recordIds: List<String>): List<*> {
+        return recordIds.stream()
             .map { ref: String? -> TestData(ref) }
             .collect(Collectors.toList())
     }

@@ -24,5 +24,13 @@ class RecordRefTestV2 {
         assertThat(emptyRef.withDefault(appName = "app").toString()).isEqualTo("app/@")
         assertThat(emptyRef.withDefault(appName = "app", sourceId = "src").toString()).isEqualTo("app/src@")
         assertThat(emptyRef.withDefault(appName = "app", sourceId = "src", localId = "local-id").toString()).isEqualTo("app/src@local-id")
+
+        val withGlobalSourceId = RecordRef.EMPTY.withSourceId("app/source")
+        assertThat(withGlobalSourceId.appName).isEqualTo("app")
+        assertThat(withGlobalSourceId.sourceId).isEqualTo("source")
+
+        val withGlobalSourceId2 = RecordRef.EMPTY.withSourceId("app/")
+        assertThat(withGlobalSourceId2.appName).isEqualTo("app")
+        assertThat(withGlobalSourceId2.sourceId).isEqualTo("")
     }
 }

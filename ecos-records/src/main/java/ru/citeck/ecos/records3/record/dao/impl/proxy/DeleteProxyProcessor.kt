@@ -5,15 +5,15 @@ import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 interface DeleteProxyProcessor : ProxyProcessor {
 
     fun deletePreProcess(
-        recordsId: List<String>,
+        recordIds: List<String>,
         context: ProxyProcContext
     )
 
     /**
-     * recordsId and status always has same size.
+     * recordIds and statuses always has same size.
      */
     fun deletePostProcess(
-        recordsId: List<String>,
+        recordIds: List<String>,
         statuses: List<DelStatus>,
         context: ProxyProcContext
     )

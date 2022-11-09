@@ -32,7 +32,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
 
     private val recordsService = services.recordsServiceV1
     private val recordsTxnService = services.recordsTxnService
-    private val recordsResolver = services.localRecordsResolver
+    private val recordsResolver = services.recordsResolver
     private val txnActionManager = services.txnActionManager
 
     private val currentAppId: String
@@ -189,8 +189,8 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
             try {
                 recordsTxnService.doInTransaction(false) {
                     when (body.action) {
-                        TxnBody.TxnAction.COMMIT -> recordsResolver.commit(body.records)
-                        TxnBody.TxnAction.ROLLBACK -> recordsResolver.rollback(body.records)
+                        TxnBody.TxnAction.COMMIT -> recordsResolver.commit(body.records, true)
+                        TxnBody.TxnAction.ROLLBACK -> recordsResolver.rollback(body.records, true)
                     }
                 }
             } catch (e: Throwable) {

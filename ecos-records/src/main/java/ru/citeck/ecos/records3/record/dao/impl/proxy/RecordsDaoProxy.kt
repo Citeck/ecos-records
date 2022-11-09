@@ -55,12 +55,12 @@ open class RecordsDaoProxy(
 
     protected val sourceIdMapping = mapOf(targetIdField to idField)
 
-    override fun getRecordsAtts(recordsId: List<String>): List<*>? {
+    override fun getRecordsAtts(recordIds: List<String>): List<*>? {
 
         val procContext = ProxyProcContext()
         val contextAtts = getContextAtts(procContext)
         val attsFromTarget = doWithSourceIdMapping {
-            recordsService.getAtts(toTargetRefs(recordsId), contextAtts, true)
+            recordsService.getAtts(toTargetRefs(recordIds), contextAtts, true)
         }
 
         return postProcessAtts(attsFromTarget, procContext)
@@ -122,16 +122,16 @@ open class RecordsDaoProxy(
         }
     }
 
-    override fun delete(recordsId: List<String>): List<DelStatus> {
+    override fun delete(recordIds: List<String>): List<DelStatus> {
 
         val procContext = ProxyProcContext()
-        delProc?.deletePreProcess(recordsId, procContext)
+        delProc?.deletePreProcess(recordIds, procContext)
 
         val statuses = doWithSourceIdMapping {
-            recordsService.delete(toTargetRefs(recordsId))
+            recordsService.delete(toTargetRefs(recordIds))
         }
 
-        delProc?.deletePostProcess(recordsId, statuses, procContext)
+        delProc?.deletePostProcess(recordIds, statuses, procContext)
 
         return statuses
     }
@@ -160,8 +160,8 @@ open class RecordsDaoProxy(
         }
     }
 
-    protected open fun toTargetRefs(recordsId: List<String>): List<RecordRef> {
-        return recordsId.map { toTargetRef(it) }
+    protected open fun toTargetRefs(recordIds: List<String>): List<RecordRef> {
+        return recordIds.map { toTargetRef(it) }
     }
 
     protected open fun toTargetRef(recordId: String): RecordRef {
@@ -208,12 +208,12 @@ open class RecordsDaoProxy(
         return clientMetaProc?.getClientMeta()
     }
 
-    override fun commit(txnId: UUID, recordsId: List<String>) {
-        recordsResolver.commit(recordsId.map { toTargetRef(it) })
+    override fun commit(txnId: UUID, recordIds: List<String>) {
+        recordsResolver.commit(recordIds.map { toTargetRef(it) })
     }
 
-    override fun rollback(txnId: UUID, recordsId: List<String>) {
-        recordsResolver.rollback(recordsId.map { toTargetRef(it) })
+    override fun rollback(txnId: UUID, recordIds: List<String>) {
+        recordsResolver.rollback(recordIds.map { toTargetRef(it) })
     }
 
     override fun isTransactional(): Boolean {

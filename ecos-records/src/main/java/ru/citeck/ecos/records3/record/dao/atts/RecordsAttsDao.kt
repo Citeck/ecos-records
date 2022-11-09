@@ -11,5 +11,5 @@ interface RecordsAttsDao : RecordsDao {
      * @return attributes. Size and order of atts objects must be the same as order of recordsId.
      */
     @Throws(Exception::class)
-    fun getRecordsAtts(recordsId: List<String>): List<*>?
+    fun getRecordsAtts(recordIds: List<String>): List<*>?
 }

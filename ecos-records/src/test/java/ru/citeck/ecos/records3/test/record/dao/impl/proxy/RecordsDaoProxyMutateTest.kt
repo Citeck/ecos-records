@@ -34,9 +34,9 @@ class RecordsDaoProxyMutateTest {
                 records.forEach { recordsMap[it.id] = it.attributes }
                 return records.map { it.id }
             }
-            override fun delete(recordsId: List<String>): List<DelStatus> {
-                recordsId.forEach { recordsMap.remove(it) }
-                return recordsId.map { DelStatus.OK }
+            override fun delete(recordIds: List<String>): List<DelStatus> {
+                recordIds.forEach { recordsMap.remove(it) }
+                return recordIds.map { DelStatus.OK }
             }
         })
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))

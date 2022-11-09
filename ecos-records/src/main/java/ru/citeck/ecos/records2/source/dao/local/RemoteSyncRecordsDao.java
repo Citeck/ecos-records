@@ -223,7 +223,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             Map<String, String> attributes = attSchemaWriter.writeToMap(schemaAtts);
             queryImpl = query -> remoteRecordsResolver.query(query, attributes, false);
         } else {
-            queryImpl = query -> localRecordsResolver.query(query, schemaAtts, false);
+            queryImpl = query -> localRecordsResolver.queryRecords(query, schemaAtts, false);
         }
     }
 }

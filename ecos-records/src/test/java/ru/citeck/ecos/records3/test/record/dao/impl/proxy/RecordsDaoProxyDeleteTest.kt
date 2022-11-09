@@ -31,9 +31,9 @@ class RecordsDaoProxyDeleteTest {
 
         records.register(object : RecordsDeleteDao {
             override fun getId() = TARGET_ID
-            override fun delete(recordsId: List<String>): List<DelStatus> {
-                recordsId.forEach { recordsMap.remove(it) }
-                return recordsId.map { DelStatus.OK }
+            override fun delete(recordIds: List<String>): List<DelStatus> {
+                recordIds.forEach { recordsMap.remove(it) }
+                return recordIds.map { DelStatus.OK }
             }
         })
 
@@ -41,15 +41,15 @@ class RecordsDaoProxyDeleteTest {
         val postDeleteList = mutableListOf<List<String>>()
 
         val proc = object : DeleteProxyProcessor {
-            override fun deletePreProcess(recordsId: List<String>, context: ProxyProcContext) {
-                preDeleteList.add(recordsId)
+            override fun deletePreProcess(recordIds: List<String>, context: ProxyProcContext) {
+                preDeleteList.add(recordIds)
             }
             override fun deletePostProcess(
-                recordsId: List<String>,
+                recordIds: List<String>,
                 statuses: List<DelStatus>,
                 context: ProxyProcContext
             ) {
-                postDeleteList.add(recordsId)
+                postDeleteList.add(recordIds)
             }
         }
 

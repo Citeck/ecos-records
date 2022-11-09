@@ -1,43 +1,53 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
+import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 interface LocalRecordsInterceptor {
 
-    fun query(
+    fun queryRecords(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: QueryInterceptorsChain
+        chain: QueryRecordsInterceptorsChain
     ): RecsQueryRes<RecordAtts>
 
-    fun getAtts(
-        records: List<*>,
+    fun getValueAtts(
+        values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetAttsInterceptorsChain
+        chain: GetValueAttsInterceptorsChain
     ): List<RecordAtts>
 
-    fun mutate(
-        records: List<RecordAtts>,
-        attsToLoad: List<List<SchemaAtt>>,
+    fun getRecordAtts(
+        sourceId: String,
+        recordIds: List<String>,
+        attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: MutateInterceptorsChain
+        chain: GetRecordAttsInterceptorsChain
     ): List<RecordAtts>
 
-    fun delete(
-        records: List<EntityRef>,
-        chain: DeleteInterceptorsChain
+    fun mutateRecord(
+        sourceId: String,
+        record: LocalRecordAtts,
+        attsToLoad: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: MutateRecordsInterceptorsChain
+    ): RecordAtts
+
+    fun deleteRecords(
+        sourceId: String,
+        recordIds: List<String>,
+        chain: DeleteRecordsInterceptorsChain
     ): List<DelStatus>
 }
 
-class QueryInterceptorsChain(
+class QueryRecordsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
@@ -48,61 +58,82 @@ class QueryInterceptorsChain(
     ): RecsQueryRes<RecordAtts> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().query(queryArg, attributes, rawAtts, this)
+            interceptors.next().queryRecords(queryArg, attributes, rawAtts, this)
         } else {
             resolver.queryImpl(queryArg, attributes, rawAtts)
         }
     }
 }
 
-class GetAttsInterceptorsChain(
+class GetValueAttsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
     fun invoke(
-        records: List<*>,
+        values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().getAtts(records, attributes, rawAtts, this)
+            interceptors.next().getValueAtts(values, attributes, rawAtts, this)
         } else {
-            resolver.getAttsImpl(records, attributes, rawAtts)
+            resolver.getValueAttsImpl(values, attributes, rawAtts)
         }
     }
 }
 
-class MutateInterceptorsChain(
+class GetRecordAttsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
     fun invoke(
-        records: List<RecordAtts>,
-        attsToLoad: List<List<SchemaAtt>>,
-        rawAtts: Boolean,
+        sourceId: String,
+        recordIds: List<String>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean
     ): List<RecordAtts> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().mutate(records, attsToLoad, rawAtts, this)
+            interceptors.next().getRecordAtts(sourceId, recordIds, attributes, rawAtts, this)
         } else {
-            resolver.mutateImpl(records, attsToLoad, rawAtts)
+            resolver.getRecordAttsImpl(sourceId, recordIds, attributes, rawAtts)
         }
     }
 }
 
-class DeleteInterceptorsChain(
+class MutateRecordsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
     fun invoke(
-        records: List<EntityRef>
+        sourceId: String,
+        record: LocalRecordAtts,
+        attsToLoad: List<SchemaAtt>,
+        rawAtts: Boolean,
+    ): RecordAtts {
+
+        return if (interceptors.hasNext()) {
+            interceptors.next().mutateRecord(sourceId, record, attsToLoad, rawAtts, this)
+        } else {
+            resolver.mutateRecordImpl(sourceId, record, attsToLoad, rawAtts)
+        }
+    }
+}
+
+class DeleteRecordsInterceptorsChain(
+    private val resolver: LocalRecordsResolverImpl,
+    private val interceptors: Iterator<LocalRecordsInterceptor>
+) {
+    fun invoke(
+        sourceId: String,
+        recordIds: List<String>
     ): List<DelStatus> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().delete(records, this)
+            interceptors.next().deleteRecords(sourceId, recordIds, this)
         } else {
-            resolver.deleteImpl(records)
+            resolver.deleteRecordsImpl(sourceId, recordIds)
         }
     }
 }

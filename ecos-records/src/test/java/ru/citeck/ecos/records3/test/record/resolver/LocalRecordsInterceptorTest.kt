@@ -7,6 +7,7 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.exception.RecordsSourceNotFoundException
+import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -29,44 +30,57 @@ class LocalRecordsInterceptorTest {
         )
 
         val queryCalls = ArrayList<RecordsQuery>()
-        val getAttsCalls = ArrayList<List<*>>()
-        val mutateCalls = ArrayList<List<RecordAtts>>()
+        val getValueAttsCalls = ArrayList<List<*>>()
+        val getRecordAttsCalls = ArrayList<List<EntityRef>>()
+        val mutateCalls = ArrayList<RecordAtts>()
         val deleteCalls = ArrayList<List<EntityRef>>()
 
         services.localRecordsResolver.addInterceptor(object : LocalRecordsInterceptor {
-            override fun query(
+            override fun queryRecords(
                 queryArg: RecordsQuery,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: QueryInterceptorsChain
+                chain: QueryRecordsInterceptorsChain
             ): RecsQueryRes<RecordAtts> {
                 queryCalls.add(queryArg)
                 return chain.invoke(queryArg, attributes, rawAtts)
             }
 
-            override fun getAtts(
-                records: List<*>,
+            override fun getValueAtts(
+                values: List<*>,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: GetAttsInterceptorsChain
+                chain: GetValueAttsInterceptorsChain
             ): List<RecordAtts> {
-                getAttsCalls.add(records)
-                return chain.invoke(records, attributes, rawAtts)
+                getValueAttsCalls.add(values)
+                return chain.invoke(values, attributes, rawAtts)
             }
 
-            override fun mutate(
-                records: List<RecordAtts>,
-                attsToLoad: List<List<SchemaAtt>>,
+            override fun getRecordAtts(
+                sourceId: String,
+                recordIds: List<String>,
+                attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: MutateInterceptorsChain
+                chain: GetRecordAttsInterceptorsChain
             ): List<RecordAtts> {
-                mutateCalls.add(records)
-                return chain.invoke(records, attsToLoad, rawAtts)
+                getRecordAttsCalls.add(recordIds.map { EntityRef.create(sourceId, it) })
+                return chain.invoke(sourceId, recordIds, attributes, rawAtts)
             }
 
-            override fun delete(records: List<EntityRef>, chain: DeleteInterceptorsChain): List<DelStatus> {
-                deleteCalls.add(records)
-                return chain.invoke(records)
+            override fun mutateRecord(
+                sourceId: String,
+                record: LocalRecordAtts,
+                attsToLoad: List<SchemaAtt>,
+                rawAtts: Boolean,
+                chain: MutateRecordsInterceptorsChain
+            ): RecordAtts {
+                mutateCalls.add(RecordAtts(RecordRef.create(sourceId, record.id), record.attributes))
+                return chain.invoke(sourceId, record, attsToLoad, rawAtts)
+            }
+
+            override fun deleteRecords(sourceId: String, recordIds: List<String>, chain: DeleteRecordsInterceptorsChain): List<DelStatus> {
+                deleteCalls.add(recordIds.map { RecordRef.create(sourceId, it) })
+                return chain.invoke(sourceId, recordIds)
             }
         })
 
@@ -86,15 +100,16 @@ class LocalRecordsInterceptorTest {
                 RecordRef.create("test", it)
             }
         )
-        assertThat(getAttsCalls).isEmpty()
+        assertThat(getRecordAttsCalls).isEmpty()
+        assertThat(getValueAttsCalls).isEmpty()
         assertThat(mutateCalls).isEmpty()
         assertThat(deleteCalls).isEmpty()
 
         val getAttRes = records.getAtt("test@test", "str").asText()
         assertThat(getAttRes).isEqualTo("abc")
 
-        assertThat(getAttsCalls).hasSize(1)
-        assertThat(getAttsCalls).containsExactly(listOf(RecordRef.valueOf("test@test")))
+        assertThat(getRecordAttsCalls).hasSize(1)
+        assertThat(getRecordAttsCalls).containsExactly(listOf(RecordRef.valueOf("test@test")))
 
         try {
             records.delete("test@test")

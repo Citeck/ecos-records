@@ -45,10 +45,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
 import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
-import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolver
-import ru.citeck.ecos.records3.record.resolver.LocalRecordsResolverImpl
-import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
-import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.records3.record.resolver.*
 import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo

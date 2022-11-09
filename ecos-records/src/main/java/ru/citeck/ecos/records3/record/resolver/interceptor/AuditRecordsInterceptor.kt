@@ -34,8 +34,8 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     private val currentAppInstanceId = services.webappProps.appInstanceId
 
     private lateinit var queryRecordsEmitter: AuditEventEmitter<QueryRecordsEvent>
-    private lateinit var getRecordAttsEmitter: AuditEventEmitter<GetRecordAttsEvent>
-    private lateinit var mutateRecordEmitter: AuditEventEmitter<MutateRecordsEvent>
+    private lateinit var getRecordAttsEmitter: AuditEventEmitter<GetRecordsAttsEvent>
+    private lateinit var mutateRecordEmitter: AuditEventEmitter<MutateRecordEvent>
     private lateinit var deleteRecordsEmitter: AuditEventEmitter<DeleteRecordsEvent>
 
     private var interceptorValid = false
@@ -44,8 +44,8 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         val auditApi = services.getEcosWebAppContext()?.getAuditApi()
         if (auditApi != null) {
             queryRecordsEmitter = auditApi.createEmitter(QueryRecordsEvent::class.java).build()
-            getRecordAttsEmitter = auditApi.createEmitter(GetRecordAttsEvent::class.java).build()
-            mutateRecordEmitter = auditApi.createEmitter(MutateRecordsEvent::class.java).build()
+            getRecordAttsEmitter = auditApi.createEmitter(GetRecordsAttsEvent::class.java).build()
+            mutateRecordEmitter = auditApi.createEmitter(MutateRecordEvent::class.java).build()
             deleteRecordsEmitter = auditApi.createEmitter(DeleteRecordsEvent::class.java).build()
             interceptorValid = true
         }
@@ -97,12 +97,12 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         return actionResult.getResult()
     }
 
-    override fun getRecordAtts(
+    override fun getRecordsAtts(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetRecordAttsInterceptorsChain
+        chain: GetRecordsAttsInterceptorsChain
     ): List<RecordAtts> {
         if (!getRecordAttsEmitter.isEnabled() || isEventShouldBeSkipped(sourceId, attributes)) {
             return chain.invoke(sourceId, recordIds, attributes, rawAtts)
@@ -116,7 +116,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         headers[APP_INSTANCE_ID] = currentAppInstanceId
         if (context.isEventRequired()) {
             context.sendEvent(
-                GetRecordAttsEvent(
+                GetRecordsAttsEvent(
                     getGlobalSourceId(sourceId),
                     recordIds.map {
                         EntityRef.create(sourceId, it).withDefaultAppName(currentAppName)
@@ -128,11 +128,11 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         return context.getActionResult().getResult()
     }
 
-    override fun getValueAtts(
+    override fun getValuesAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetValueAttsInterceptorsChain
+        chain: GetValuesAttsInterceptorsChain
     ): List<RecordAtts> {
         return chain.invoke(values, attributes, rawAtts)
     }
@@ -142,7 +142,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: MutateRecordsInterceptorsChain
+        chain: MutateRecordInterceptorsChain
     ): RecordAtts {
         if (!mutateRecordEmitter.isEnabled()) {
             return chain.invoke(sourceId, record, attsToLoad, rawAtts)
@@ -159,7 +159,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             val recordRef = EntityRef.create(sourceId, record.id).withDefaultAppName(currentAppName)
             val attributes = record.withoutSensitiveData().attributes
             context.sendEvent(
-                MutateRecordsEvent(
+                MutateRecordEvent(
                     globalSrcId,
                     recordRef,
                     attributes,
@@ -239,15 +239,15 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         val attributes: Map<String, String>
     )
 
-    @AuditEventType("records.get-record-atts")
-    class GetRecordAttsEvent(
+    @AuditEventType("records.get-records-atts")
+    class GetRecordsAttsEvent(
         val sourceId: String,
         val records: List<EntityRef>,
         val attributes: Map<String, String>
     )
 
     @AuditEventType("records.mutate-record")
-    class MutateRecordsEvent(
+    class MutateRecordEvent(
         val sourceId: String,
         val record: EntityRef,
         val attributes: ObjectData,

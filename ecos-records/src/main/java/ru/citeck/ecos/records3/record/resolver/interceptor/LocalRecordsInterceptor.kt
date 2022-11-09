@@ -17,19 +17,19 @@ interface LocalRecordsInterceptor {
         chain: QueryRecordsInterceptorsChain
     ): RecsQueryRes<RecordAtts>
 
-    fun getValueAtts(
+    fun getValuesAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetValueAttsInterceptorsChain
+        chain: GetValuesAttsInterceptorsChain
     ): List<RecordAtts>
 
-    fun getRecordAtts(
+    fun getRecordsAtts(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: GetRecordAttsInterceptorsChain
+        chain: GetRecordsAttsInterceptorsChain
     ): List<RecordAtts>
 
     fun mutateRecord(
@@ -37,7 +37,7 @@ interface LocalRecordsInterceptor {
         record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: MutateRecordsInterceptorsChain
+        chain: MutateRecordInterceptorsChain
     ): RecordAtts
 
     fun deleteRecords(
@@ -65,7 +65,7 @@ class QueryRecordsInterceptorsChain(
     }
 }
 
-class GetValueAttsInterceptorsChain(
+class GetValuesAttsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
@@ -76,14 +76,14 @@ class GetValueAttsInterceptorsChain(
     ): List<RecordAtts> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().getValueAtts(values, attributes, rawAtts, this)
+            interceptors.next().getValuesAtts(values, attributes, rawAtts, this)
         } else {
             resolver.getValueAttsImpl(values, attributes, rawAtts)
         }
     }
 }
 
-class GetRecordAttsInterceptorsChain(
+class GetRecordsAttsInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {
@@ -95,14 +95,14 @@ class GetRecordAttsInterceptorsChain(
     ): List<RecordAtts> {
 
         return if (interceptors.hasNext()) {
-            interceptors.next().getRecordAtts(sourceId, recordIds, attributes, rawAtts, this)
+            interceptors.next().getRecordsAtts(sourceId, recordIds, attributes, rawAtts, this)
         } else {
-            resolver.getRecordAttsImpl(sourceId, recordIds, attributes, rawAtts)
+            resolver.getRecordsAttsImpl(sourceId, recordIds, attributes, rawAtts)
         }
     }
 }
 
-class MutateRecordsInterceptorsChain(
+class MutateRecordInterceptorsChain(
     private val resolver: LocalRecordsResolverImpl,
     private val interceptors: Iterator<LocalRecordsInterceptor>
 ) {

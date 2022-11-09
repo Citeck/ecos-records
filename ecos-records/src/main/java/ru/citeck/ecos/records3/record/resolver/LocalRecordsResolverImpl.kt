@@ -428,7 +428,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return null
     }
 
-    override fun getValueAtts(
+    override fun getValuesAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -437,7 +437,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             if (interceptors.isEmpty()) {
                 getValueAttsImpl(values, attributes, rawAtts)
             } else {
-                GetValueAttsInterceptorsChain(this, interceptors.iterator())
+                GetValuesAttsInterceptorsChain(this, interceptors.iterator())
                     .invoke(values, schema, rawAtts)
             }
         }
@@ -490,7 +490,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    override fun getRecordAtts(
+    override fun getRecordsAtts(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
@@ -501,15 +501,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         return recordsAttsService.doWithSchema(attributes, rawAtts) { schema ->
             if (interceptors.isEmpty()) {
-                getRecordAttsImpl(sourceId, recordIds, schema, rawAtts)
+                getRecordsAttsImpl(sourceId, recordIds, schema, rawAtts)
             } else {
-                GetRecordAttsInterceptorsChain(this, interceptors.iterator())
+                GetRecordsAttsInterceptorsChain(this, interceptors.iterator())
                     .invoke(sourceId, recordIds, schema, rawAtts)
             }
         }
     }
 
-    internal fun getRecordAttsImpl(
+    internal fun getRecordsAttsImpl(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
@@ -657,7 +657,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return if (interceptors.isEmpty()) {
             mutateRecordImpl(sourceId, recordToMutate, attsToLoad, rawAtts)
         } else {
-            MutateRecordsInterceptorsChain(this, interceptors.iterator())
+            MutateRecordInterceptorsChain(this, interceptors.iterator())
                 .invoke(sourceId, recordToMutate, attsToLoad, rawAtts)
         }
     }
@@ -714,7 +714,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 RecordAtts(recordsAttsService.getId(mutAnyRes, defaultRef))
             } else {
                 recordsAttsService.doWithSchema(attsToLoad, rawAtts) { schema ->
-                    getValueAtts(listOf(mutAnyRes), schema, rawAtts).first()
+                    getValuesAtts(listOf(mutAnyRes), schema, rawAtts).first()
                 }
             }
             val ref = mutRes.getId()

@@ -46,22 +46,22 @@ class LocalRecordsInterceptorTest {
                 return chain.invoke(queryArg, attributes, rawAtts)
             }
 
-            override fun getValueAtts(
+            override fun getValuesAtts(
                 values: List<*>,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: GetValueAttsInterceptorsChain
+                chain: GetValuesAttsInterceptorsChain
             ): List<RecordAtts> {
                 getValueAttsCalls.add(values)
                 return chain.invoke(values, attributes, rawAtts)
             }
 
-            override fun getRecordAtts(
+            override fun getRecordsAtts(
                 sourceId: String,
                 recordIds: List<String>,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: GetRecordAttsInterceptorsChain
+                chain: GetRecordsAttsInterceptorsChain
             ): List<RecordAtts> {
                 getRecordAttsCalls.add(recordIds.map { EntityRef.create(sourceId, it) })
                 return chain.invoke(sourceId, recordIds, attributes, rawAtts)
@@ -72,7 +72,7 @@ class LocalRecordsInterceptorTest {
                 record: LocalRecordAtts,
                 attsToLoad: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: MutateRecordsInterceptorsChain
+                chain: MutateRecordInterceptorsChain
             ): RecordAtts {
                 mutateCalls.add(RecordAtts(RecordRef.create(sourceId, record.id), record.attributes))
                 return chain.invoke(sourceId, record, attsToLoad, rawAtts)

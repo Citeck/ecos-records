@@ -116,7 +116,7 @@ class MutateRecordsInterceptorsChain(
         return if (interceptors.hasNext()) {
             interceptors.next().mutateRecord(sourceId, record, attsToLoad, rawAtts, this)
         } else {
-            resolver.mutateRecordsImpl(sourceId, record, attsToLoad, rawAtts)
+            resolver.mutateRecordImpl(sourceId, record, attsToLoad, rawAtts)
         }
     }
 }

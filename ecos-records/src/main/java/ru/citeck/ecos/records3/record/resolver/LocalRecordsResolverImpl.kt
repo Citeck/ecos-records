@@ -655,7 +655,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             LocalRecordAtts(record.id, newAtts)
         }
         return if (interceptors.isEmpty()) {
-            mutateRecordsImpl(sourceId, recordToMutate, attsToLoad, rawAtts)
+            mutateRecordImpl(sourceId, recordToMutate, attsToLoad, rawAtts)
         } else {
             MutateRecordsInterceptorsChain(this, interceptors.iterator())
                 .invoke(sourceId, recordToMutate, attsToLoad, rawAtts)
@@ -683,11 +683,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    internal fun mutateRecordsImpl(
+    internal fun mutateRecordImpl(
         sourceId: String,
         record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
-        rawAtts: Boolean,
+        rawAtts: Boolean
     ): RecordAtts {
 
         val dao = getRecordsDaoPair(sourceId, RecordsMutateWithAnyResDao::class.java)

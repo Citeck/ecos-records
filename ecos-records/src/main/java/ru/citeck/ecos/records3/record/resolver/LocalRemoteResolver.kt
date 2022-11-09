@@ -446,7 +446,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         record.forEach { name, valueArg ->
             try {
                 val parsedAtt = reader.read("", name)
-                recAtts.set(parsedAtt.name, convertAssocValue(valueArg, assocsMapping))
+                recAtts[parsedAtt.name] = convertAssocValue(valueArg, assocsMapping)
             } catch (e: AttReadException) {
                 RecordsServiceImpl.log.error("Attribute read failed", e)
             }

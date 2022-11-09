@@ -34,7 +34,7 @@ class RecordRef : EntityRef, Serializable {
             if (sourceId != null) {
                 val appDelimIdx = sourceId.indexOf(APP_NAME_DELIMITER)
                 if (appDelimIdx > -1) {
-                    create(
+                    return create(
                         sourceId.substring(0, appDelimIdx),
                         sourceId.substring(appDelimIdx + 1),
                         id

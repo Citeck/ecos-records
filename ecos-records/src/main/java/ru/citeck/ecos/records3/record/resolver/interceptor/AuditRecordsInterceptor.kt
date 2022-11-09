@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -119,7 +118,9 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             context.sendEvent(
                 GetRecordAttsEvent(
                     getGlobalSourceId(sourceId),
-                    recordIds.map { EntityRef.create(currentAppName, sourceId, it) },
+                    recordIds.map {
+                        EntityRef.create(sourceId, it).withDefaultAppName(currentAppName)
+                    },
                     writeSchemaForEvent(attributes)
                 )
             )
@@ -155,8 +156,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         headers[APP_NAME] = currentAppName
         headers[APP_INSTANCE_ID] = currentAppInstanceId
         if (context.isEventRequired()) {
-            val recordRef = EntityRef.create(sourceId, record.id)
-                .withDefaultAppName(currentAppName)
+            val recordRef = EntityRef.create(sourceId, record.id).withDefaultAppName(currentAppName)
             val attributes = record.withoutSensitiveData().attributes
             context.sendEvent(
                 MutateRecordsEvent(
@@ -195,7 +195,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             context.sendEvent(
                 DeleteRecordsEvent(
                     globalSrcId,
-                    recordIds.map { RecordRef.create(sourceId, it).withDefaultAppName(currentAppName) }
+                    recordIds.map { EntityRef.create(sourceId, it).withDefaultAppName(currentAppName) }
                 )
             )
         }

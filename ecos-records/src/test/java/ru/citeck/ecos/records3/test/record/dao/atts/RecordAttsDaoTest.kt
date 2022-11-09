@@ -90,8 +90,8 @@ class RecordAttsDaoTest {
 
         val recordsAttsDao = object : RecordsAttsDao {
             override fun getId() = "test2"
-            override fun getRecordsAtts(recordsId: List<String>): List<Any?> {
-                return recordsId.map {
+            override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
+                return recordIds.map {
                     if (it == "null") {
                         null
                     } else {

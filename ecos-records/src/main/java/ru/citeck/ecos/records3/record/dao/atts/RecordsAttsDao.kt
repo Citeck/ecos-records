@@ -6,5 +6,5 @@ import kotlin.jvm.Throws
 interface RecordsAttsDao : RecordsDao {
 
     @Throws(Exception::class)
-    fun getRecordsAtts(recordsId: List<String>): List<*>?
+    fun getRecordsAtts(recordIds: List<String>): List<*>?
 }

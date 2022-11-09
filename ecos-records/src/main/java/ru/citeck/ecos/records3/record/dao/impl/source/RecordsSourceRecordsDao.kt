@@ -22,9 +22,9 @@ class RecordsSourceRecordsDao(services: RecordsServiceFactory) :
 
     private val recordsResolver = services.recordsResolver
 
-    override fun getRecordsAtts(recordsId: List<String>): List<*> {
+    override fun getRecordsAtts(recordIds: List<String>): List<*> {
 
-        return recordsId.stream().map { rec: String ->
+        return recordIds.stream().map { rec: String ->
             val info = recordsResolver.getSourceInfo(rec) ?: return@map EmptyAttValue.INSTANCE
             info
         }.collect(Collectors.toList())

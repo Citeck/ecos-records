@@ -104,7 +104,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private var hasDaoWithEmptyId = false
 
-    override fun query(
+    override fun queryRecords(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -113,7 +113,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             if (interceptors.isEmpty()) {
                 queryImpl(queryArg, schema, rawAtts)
             } else {
-                QueryInterceptorsChain(this, interceptors.iterator()).invoke(queryArg, schema, rawAtts)
+                QueryRecordsInterceptorsChain(this, interceptors.iterator()).invoke(queryArg, schema, rawAtts)
             }
         }
     }
@@ -369,7 +369,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 .withQuery(fullPredicate)
                 .withSkipCount(skipCount)
                 .build()
-            val queryResult: RecsQueryRes<RecordAtts> = query(recordsQuery, distinctAttSchema, true)
+            val queryResult: RecsQueryRes<RecordAtts> = queryRecords(recordsQuery, distinctAttSchema, true)
 
             found = queryResult.getRecords().size
 
@@ -492,36 +492,36 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     override fun getRecordAtts(
         sourceId: String,
-        recordsId: List<String>,
+        recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts> {
-        if (recordsId.isEmpty()) {
+        if (recordIds.isEmpty()) {
             return emptyList()
         }
         return recordsAttsService.doWithSchema(attributes, rawAtts) { schema ->
             if (interceptors.isEmpty()) {
-                getRecordAttsImpl(sourceId, recordsId, schema, rawAtts)
+                getRecordAttsImpl(sourceId, recordIds, schema, rawAtts)
             } else {
                 GetRecordAttsInterceptorsChain(this, interceptors.iterator())
-                    .invoke(sourceId, recordsId, schema, rawAtts)
+                    .invoke(sourceId, recordIds, schema, rawAtts)
             }
         }
     }
 
     internal fun getRecordAttsImpl(
         sourceId: String,
-        recordsId: List<String>,
+        recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts> {
 
         val context = RequestContext.getCurrentNotNull()
 
-        log.trace { "getMeta start.\nSourceId: '$sourceId' Records: $recordsId attributes: $attributes" }
+        log.trace { "getMeta start.\nSourceId: '$sourceId' Records: $recordIds attributes: $attributes" }
 
         val refsStartMs = System.currentTimeMillis()
-        val refsAtts: List<RecordAtts> = getRefsAttsImpl(sourceId, recordsId, attributes, rawAtts)
+        val refsAtts: List<RecordAtts> = getRefsAttsImpl(sourceId, recordIds, attributes, rawAtts)
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             context.addMsg(
                 MsgLevel.DEBUG,
@@ -529,33 +529,33 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             )
         }
 
-        if (refsAtts.size != recordsId.size) {
+        if (refsAtts.size != recordIds.size) {
             context.addMsg(MsgLevel.ERROR) {
                 "Results count doesn't match with " +
-                    "requested. refsAtts: " + refsAtts + " records: " + recordsId
+                    "requested. refsAtts: " + refsAtts + " records: " + recordIds
             }
         }
 
-        log.trace { "getMeta end.\nSourceId: '$sourceId' Records: $recordsId attributes: $attributes" }
+        log.trace { "getMeta end.\nSourceId: '$sourceId' Records: $recordIds attributes: $attributes" }
 
         return refsAtts
     }
 
     private fun getRefsAttsImpl(
         sourceId: String,
-        recordsId: List<String>,
+        recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts> {
 
-        if (recordsId.isEmpty()) {
+        if (recordIds.isEmpty()) {
             return emptyList()
         }
         val context: RequestContext = RequestContext.getCurrentNotNull()
         if (attributes.isEmpty()) {
-            return recordsId.map { id: String -> RecordAtts(RecordRef.create(sourceId, id)) }
+            return recordIds.map { id: String -> RecordAtts(RecordRef.create(sourceId, id)) }
         }
-        return getAttsFromSource(sourceId, recordsId, attributes, rawAtts, context)
+        return getAttsFromSource(sourceId, recordIds, attributes, rawAtts, context)
     }
 
     private fun getAttsFromSource(
@@ -631,38 +631,34 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    override fun mutateRecords(
+    override fun mutateRecord(
         sourceId: String,
-        records: List<LocalRecordAtts>,
+        record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
         rawAtts: Boolean
-    ): List<RecordAtts> {
-        if (records.isEmpty()) {
-            return emptyList()
-        }
-        val preProcessedRecords = records.map {
-            val selfAttValue = readSelfAttribute(it.getAtt(RecordConstants.ATT_SELF))
-            if (!selfAttValue.isObject()) {
-                it
-            } else {
-                val newAtts = ObjectData.create()
-                it.attributes.forEach { key, value ->
-                    if (key == RecordConstants.ATT_SELF) {
-                        selfAttValue.forEach { selfKey, selfValue ->
-                            newAtts[selfKey] = selfValue
-                        }
-                    } else {
-                        newAtts[key] = value
+    ): RecordAtts {
+
+        val selfAttValue = readSelfAttribute(record.getAtt(RecordConstants.ATT_SELF))
+        val recordToMutate = if (!selfAttValue.isObject()) {
+            record
+        } else {
+            val newAtts = ObjectData.create()
+            record.attributes.forEach { key, value ->
+                if (key == RecordConstants.ATT_SELF) {
+                    selfAttValue.forEach { selfKey, selfValue ->
+                        newAtts[selfKey] = selfValue
                     }
+                } else {
+                    newAtts[key] = value
                 }
-                LocalRecordAtts(it.id, newAtts)
             }
+            LocalRecordAtts(record.id, newAtts)
         }
         return if (interceptors.isEmpty()) {
-            mutateRecordsImpl(sourceId, preProcessedRecords, attsToLoad, rawAtts)
+            mutateRecordsImpl(sourceId, recordToMutate, attsToLoad, rawAtts)
         } else {
             MutateRecordsInterceptorsChain(this, interceptors.iterator())
-                .invoke(sourceId, preProcessedRecords, attsToLoad, rawAtts)
+                .invoke(sourceId, recordToMutate, attsToLoad, rawAtts)
         }
     }
 
@@ -689,82 +685,73 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     internal fun mutateRecordsImpl(
         sourceId: String,
-        records: List<LocalRecordAtts>,
+        record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
-        rawAtts: Boolean
-    ): List<RecordAtts> {
+        rawAtts: Boolean,
+    ): RecordAtts {
 
-        val daoResult = ArrayList<RecordAtts>()
         val dao = getRecordsDaoPair(sourceId, RecordsMutateWithAnyResDao::class.java)
 
         if (dao == null) {
 
+            val ref = RecordRef.create(sourceId, record.id)
             val mutation = RecordsMutation()
-            mutation.records = records.map {
-                val ref = RecordRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER + it.id)
-                RecordMeta(ref, it.attributes)
-            }
+            mutation.records = listOf(RecordMeta(ref, record.attributes))
             val mutateRes: RecordsMutResult = localRecordsResolverV0.mutate(mutation)
+
             return if (mutateRes.records == null || mutateRes.records.isEmpty()) {
-                records.map { RecordAtts(it.id) }
+                RecordAtts(RecordRef.create(sourceId, record.id))
             } else {
-                mutateRes.records
+                mutateRes.records.first()
             }
         } else {
 
-            val mutResValues = dao.second.mutateForAnyRes(records)
-            val mutRes = mutableListOf<RecordAtts>()
+            val mutAnyRes = dao.second.mutateForAnyRes(listOf(record)).firstOrNull()
+                ?: return RecordAtts(RecordRef.create(sourceId, record.id))
 
-            mutResValues.forEachIndexed { recordIdx, mutateRes: Any ->
-
-                if (attsToLoad.isEmpty()) {
-                    val defaultRef = RecordRef.create(sourceId, records[recordIdx].id)
-                    mutRes.add(RecordAtts(recordsAttsService.getId(mutateRes, defaultRef)))
-                } else {
-                    recordsAttsService.doWithSchema(attsToLoad, rawAtts) { schema ->
-                        mutRes.addAll(getValueAtts(listOf(mutateRes), schema, rawAtts))
-                    }
+            var mutRes = if (attsToLoad.isEmpty()) {
+                val defaultRef = RecordRef.create(sourceId, record.id)
+                RecordAtts(recordsAttsService.getId(mutAnyRes, defaultRef))
+            } else {
+                recordsAttsService.doWithSchema(attsToLoad, rawAtts) { schema ->
+                    getValueAtts(listOf(mutAnyRes), schema, rawAtts).first()
                 }
             }
-            mutRes.forEach { atts ->
-                val ref = atts.getId()
-                if (StringUtils.isBlank(ref.sourceId)) {
-                    daoResult.add(RecordAtts(atts, RecordRef.create(sourceId, ref.id)))
-                } else {
-                    daoResult.add(atts)
-                }
+            val ref = mutRes.getId()
+            if (StringUtils.isBlank(ref.sourceId)) {
+                mutRes = RecordAtts(mutRes, RecordRef.create(sourceId, ref.id))
             }
             return mutRes
         }
     }
 
-    override fun deleteRecords(sourceId: String, recordsId: List<String>): List<DelStatus> {
-        if (recordsId.isEmpty()) {
+    override fun deleteRecords(sourceId: String, recordIds: List<String>): List<DelStatus> {
+        if (recordIds.isEmpty()) {
             return emptyList()
         }
         return if (interceptors.isEmpty()) {
-            deleteRecordsImpl(sourceId, recordsId)
+            deleteRecordsImpl(sourceId, recordIds)
         } else {
-            DeleteInterceptorsChain(this, interceptors.iterator()).invoke(sourceId, recordsId)
+            DeleteRecordsInterceptorsChain(this, interceptors.iterator()).invoke(sourceId, recordIds)
         }
     }
 
-    internal fun deleteRecordsImpl(sourceId: String, recordsId: List<String>): List<DelStatus> {
+    internal fun deleteRecordsImpl(sourceId: String, recordIds: List<String>): List<DelStatus> {
 
         val dao = getRecordsDaoPair(sourceId, RecordsDeleteDao::class.java)
 
         return if (dao == null) {
             val deletion = RecordsDeletion()
             val refsToDelete = if (sourceId.contains("/")) {
-                recordsId.map { RecordRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER + it) }
+                recordIds.map { RecordRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER + it) }
             } else {
-                recordsId.map { RecordRef.create(sourceId, it) }
+                recordIds.map { RecordRef.create(sourceId, it) }
             }
             deletion.records = refsToDelete
             localRecordsResolverV0.delete(deletion)
-            recordsId.map { DelStatus.OK }
+            recordIds.map { DelStatus.OK }
         } else {
-            dao.second.delete(recordsId)
+            dao.second.delete(recordIds)
         }
     }
 
@@ -772,19 +759,19 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return txnDao[sourceId]?.second?.isTransactional() == true
     }
 
-    override fun commit(sourceId: String, recordsId: List<String>) {
+    override fun commit(sourceId: String, recordIds: List<String>) {
         val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
         val dao = txnDao[sourceId]
         if (dao != null && dao.second.isTransactional()) {
-            dao.second.commit(txnId, recordsId)
+            dao.second.commit(txnId, recordIds)
         }
     }
 
-    override fun rollback(sourceId: String, recordsId: List<String>) {
+    override fun rollback(sourceId: String, recordIds: List<String>) {
         val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: return
         val dao = txnDao[sourceId]
         if (dao != null && dao.second.isTransactional()) {
-            dao.second.rollback(txnId, recordsId)
+            dao.second.rollback(txnId, recordIds)
         }
     }
 

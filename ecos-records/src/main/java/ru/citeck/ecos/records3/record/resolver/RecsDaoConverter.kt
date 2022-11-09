@@ -170,9 +170,9 @@ class RecsDaoConverter(
 
         return object : RecordsAttsDao {
 
-            override fun getRecordsAtts(recordsId: List<String>): List<*> {
+            override fun getRecordsAtts(recordIds: List<String>): List<*> {
                 return mapElements(
-                    recordsId,
+                    recordIds,
                     { dao.getRecordAtts(it) },
                     { EmptyAttValue.INSTANCE },
                     { _, _ -> ObjectData.create() }
@@ -186,9 +186,9 @@ class RecsDaoConverter(
 
         return object : RecordsDeleteDao {
 
-            override fun delete(recordsId: List<String>): List<DelStatus> {
+            override fun delete(recordIds: List<String>): List<DelStatus> {
                 return mapElements(
-                    recordsId,
+                    recordIds,
                     { dao.delete(it) },
                     { DelStatus.OK },
                     { _, e -> throw e }

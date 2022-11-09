@@ -58,7 +58,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val sourceId = query.sourceId
         val remote = this.remote
         return if (remote == null || !isGatewayMode && !isRemoteSourceId(sourceId)) {
-            local.query(query.withSourceId(getLocalSourceId(sourceId)), reader.read(attributes), rawAtts)
+            local.queryRecords(query.withSourceId(getLocalSourceId(sourceId)), reader.read(attributes), rawAtts)
         } else {
             remote.query(query, attributes, rawAtts)
         }
@@ -369,30 +369,21 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             remote.mutate(records, attsToLoad, rawAtts)
         } else {
             val parsedAttsToLoad = attsToLoad.map { reader.read(it) }
-            doWithGroupsInSameOrder(records, { rec0, rec1, idx0, idx1 ->
+            val result = mutableListOf<RecordAtts>()
 
-                val ref0 = rec0.getId()
-                val ref1 = rec1.getId()
-
-                if (ref0.sourceId == ref1.sourceId) {
-                    val atts0 = parsedAttsToLoad.getOrNull(idx0) ?: emptyList()
-                    val atts1 = parsedAttsToLoad.getOrNull(idx1) ?: emptyList()
-                    atts0 == atts1
-                } else {
-                    false
-                }
-            }) { groupedRecords, offset ->
-                val sourceId = getLocalSourceId(groupedRecords[0].getId())
-                val attsToLoadForGroup = parsedAttsToLoad.getOrNull(offset) ?: emptyList()
-                local.mutateRecords(
-                    sourceId,
-                    groupedRecords.map {
-                        LocalRecordAtts(it.getId().getLocalId(), it.getAtts())
-                    },
-                    attsToLoadForGroup,
-                    rawAtts
+            for ((idx, record) in records.withIndex()) {
+                val sourceId = getLocalSourceId(record.getId())
+                val attsToLoadForRecord = parsedAttsToLoad.getOrNull(idx) ?: emptyList()
+                result.add(
+                    local.mutateRecord(
+                        sourceId,
+                        LocalRecordAtts(record.getId().id, record.getAtts()),
+                        attsToLoadForRecord,
+                        rawAtts
+                    )
                 )
             }
+            result
         }
         return result
     }

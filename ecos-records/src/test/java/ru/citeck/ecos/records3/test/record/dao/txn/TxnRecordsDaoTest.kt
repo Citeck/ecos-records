@@ -48,11 +48,11 @@ class TxnRecordsDaoTest {
             override fun getRecordAtts(recordId: String): Any? {
                 return null
             }
-            override fun commit(txnId: UUID, recordsId: List<String>) {
-                commitRecs.addAll(recordsId)
+            override fun commit(txnId: UUID, recordIds: List<String>) {
+                commitRecs.addAll(recordIds)
             }
-            override fun rollback(txnId: UUID, recordsId: List<String>) {
-                rollbackRecs.addAll(recordsId)
+            override fun rollback(txnId: UUID, recordIds: List<String>) {
+                rollbackRecs.addAll(recordIds)
             }
             override fun delete(recordId: String) = DelStatus.OK
             override fun mutate(record: LocalRecordAtts) = record.id
@@ -296,32 +296,32 @@ class TxnRecordsDaoTest {
             return id
         }
 
-        override fun commit(txnId: UUID, recordsId: List<String>) {
+        override fun commit(txnId: UUID, recordIds: List<String>) {
             txnRecords[txnId]?.forEach { (id, atts) ->
-                if (recordsId.contains(id)) {
+                if (recordIds.contains(id)) {
                     records[id] = atts
                 } else {
                     error(
                         "Record $id was changed in transaction " +
-                            "but not received in commit method. Records: $recordsId"
+                            "but not received in commit method. Records: $recordIds"
                     )
                 }
             }
             txnRecords.remove(txnId)
             txnDelRecords[txnId]?.forEach {
-                if (recordsId.contains(it)) {
+                if (recordIds.contains(it)) {
                     records.remove(it)
                 } else {
                     error(
                         "Record $it was deleted in transaction " +
-                            "but not received in commit method. Records: $recordsId"
+                            "but not received in commit method. Records: $recordIds"
                     )
                 }
             }
             txnDelRecords.remove(txnId)
         }
 
-        override fun rollback(txnId: UUID, recordsId: List<String>) {
+        override fun rollback(txnId: UUID, recordIds: List<String>) {
             txnRecords.remove(txnId)
             txnDelRecords.remove(txnId)
         }

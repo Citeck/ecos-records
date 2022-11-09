@@ -32,15 +32,15 @@ class LocalRecordsInterceptorTest {
         val queryCalls = ArrayList<RecordsQuery>()
         val getValueAttsCalls = ArrayList<List<*>>()
         val getRecordAttsCalls = ArrayList<List<EntityRef>>()
-        val mutateCalls = ArrayList<List<RecordAtts>>()
+        val mutateCalls = ArrayList<RecordAtts>()
         val deleteCalls = ArrayList<List<EntityRef>>()
 
         services.localRecordsResolver.addInterceptor(object : LocalRecordsInterceptor {
-            override fun query(
+            override fun queryRecords(
                 queryArg: RecordsQuery,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
-                chain: QueryInterceptorsChain
+                chain: QueryRecordsInterceptorsChain
             ): RecsQueryRes<RecordAtts> {
                 queryCalls.add(queryArg)
                 return chain.invoke(queryArg, attributes, rawAtts)
@@ -58,29 +58,29 @@ class LocalRecordsInterceptorTest {
 
             override fun getRecordAtts(
                 sourceId: String,
-                recordsId: List<String>,
+                recordIds: List<String>,
                 attributes: List<SchemaAtt>,
                 rawAtts: Boolean,
                 chain: GetRecordAttsInterceptorsChain
             ): List<RecordAtts> {
-                getRecordAttsCalls.add(recordsId.map { EntityRef.create(sourceId, it) })
-                return chain.invoke(sourceId, recordsId, attributes, rawAtts)
+                getRecordAttsCalls.add(recordIds.map { EntityRef.create(sourceId, it) })
+                return chain.invoke(sourceId, recordIds, attributes, rawAtts)
             }
 
-            override fun mutateRecords(
+            override fun mutateRecord(
                 sourceId: String,
-                records: List<LocalRecordAtts>,
+                record: LocalRecordAtts,
                 attsToLoad: List<SchemaAtt>,
                 rawAtts: Boolean,
                 chain: MutateRecordsInterceptorsChain
-            ): List<RecordAtts> {
-                mutateCalls.add(records.map { RecordAtts(RecordRef.create(sourceId, it.id), it.attributes) })
-                return chain.invoke(sourceId, records, attsToLoad, rawAtts)
+            ): RecordAtts {
+                mutateCalls.add(RecordAtts(RecordRef.create(sourceId, record.id), record.attributes))
+                return chain.invoke(sourceId, record, attsToLoad, rawAtts)
             }
 
-            override fun deleteRecords(sourceId: String, recordsId: List<String>, chain: DeleteInterceptorsChain): List<DelStatus> {
-                deleteCalls.add(recordsId.map { RecordRef.create(sourceId, it) })
-                return chain.invoke(sourceId, recordsId)
+            override fun deleteRecords(sourceId: String, recordIds: List<String>, chain: DeleteRecordsInterceptorsChain): List<DelStatus> {
+                deleteCalls.add(recordIds.map { RecordRef.create(sourceId, it) })
+                return chain.invoke(sourceId, recordIds)
             }
         })
 

@@ -1,66 +1,28 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
+import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
+import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.audit.AuditEventEmitter
+import ru.citeck.ecos.webapp.api.audit.AuditEventType
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecordsInterceptor {
 
-    override fun query(
-        queryArg: RecordsQuery,
-        attributes: List<SchemaAtt>,
-        rawAtts: Boolean,
-        chain: QueryInterceptorsChain
-    ): RecsQueryRes<RecordAtts> {
-        TODO("Not yet implemented")
-    }
+    companion object {
 
-    override fun getValueAtts(
-        values: List<*>,
-        attributes: List<SchemaAtt>,
-        rawAtts: Boolean,
-        chain: GetValueAttsInterceptorsChain
-    ): List<RecordAtts> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getRecordAtts(
-        sourceId: String,
-        recordsId: List<String>,
-        attributes: List<SchemaAtt>,
-        rawAtts: Boolean,
-        chain: GetRecordAttsInterceptorsChain
-    ): List<RecordAtts> {
-        TODO("Not yet implemented")
-    }
-
-    override fun mutateRecords(
-        sourceId: String,
-        records: List<LocalRecordAtts>,
-        attsToLoad: List<SchemaAtt>,
-        rawAtts: Boolean,
-        chain: MutateRecordsInterceptorsChain
-    ): List<RecordAtts> {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteRecords(
-        sourceId: String,
-        recordsId: List<String>,
-        chain: DeleteInterceptorsChain
-    ): List<DelStatus> {
-        TODO("Not yet implemented")
-    }
-
-    /*    companion object {
         private const val APP_NAME = "appName"
         private const val APP_INSTANCE_ID = "appInstanceId"
         private const val SOURCE_ID = "sourceId"
-        private const val LOCAL_ID = "localId"
 
         private val SYSTEM_SOURCES = setOf(
             RecordsSourceRecordsDao.ID,
@@ -72,22 +34,20 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     private val currentAppName = services.webappProps.appName
     private val currentAppInstanceId = services.webappProps.appInstanceId
 
-    private lateinit var beforeQueryEmitter: AuditEventEmitter<BeforeQueryEvent>
-    private lateinit var afterQueryEmitter: AuditEventEmitter<QueryEvent>
-    private lateinit var beforeGetAttsEmitter: AuditEventEmitter<GetAttsEvent>
-    private lateinit var beforeMutateEmitter: AuditEventEmitter<MutateRecordEvent>
-    private lateinit var beforeDeleteEmitter: AuditEventEmitter<DeleteRecordEvent>
+    private lateinit var queryRecordsEmitter: AuditEventEmitter<QueryRecordsEvent>
+    private lateinit var getRecordAttsEmitter: AuditEventEmitter<GetRecordAttsEvent>
+    private lateinit var mutateRecordEmitter: AuditEventEmitter<MutateRecordsEvent>
+    private lateinit var deleteRecordsEmitter: AuditEventEmitter<DeleteRecordsEvent>
 
     private var interceptorValid = false
 
     init {
         val auditApi = services.getEcosWebAppContext()?.getAuditApi()
         if (auditApi != null) {
-            beforeQueryEmitter = auditApi.createEmitter(BeforeQueryEvent::class.java).build()
-            afterQueryEmitter = auditApi.createEmitter(QueryEvent::class.java).build()
-            beforeGetAttsEmitter = auditApi.createEmitter(GetAttsEvent::class.java).build()
-            beforeMutateEmitter = auditApi.createEmitter(MutateRecordEvent::class.java).build()
-            beforeDeleteEmitter = auditApi.createEmitter(DeleteRecordEvent::class.java).build()
+            queryRecordsEmitter = auditApi.createEmitter(QueryRecordsEvent::class.java).build()
+            getRecordAttsEmitter = auditApi.createEmitter(GetRecordAttsEvent::class.java).build()
+            mutateRecordEmitter = auditApi.createEmitter(MutateRecordsEvent::class.java).build()
+            deleteRecordsEmitter = auditApi.createEmitter(DeleteRecordsEvent::class.java).build()
             interceptorValid = true
         }
     }
@@ -96,124 +56,150 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         return interceptorValid
     }
 
-    override fun query(
+    override fun queryRecords(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
-        chain: QueryInterceptorsChain
+        chain: QueryRecordsInterceptorsChain
     ): RecsQueryRes<RecordAtts> {
-        beforeQueryEmitter.emit({ headers ->
-            if (isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
-                null
+        if (!queryRecordsEmitter.isEnabled() || isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
+            return chain.invoke(queryArg, attributes, rawAtts)
+        }
+        val context = queryRecordsEmitter.createContext {
+            chain.invoke(queryArg, attributes, rawAtts)
+        }
+        val headers = context.getHeaders()
+        headers[SOURCE_ID] = queryArg.sourceId.substringAfter(EntityRef.APP_NAME_DELIMITER)
+        headers[APP_NAME] = currentAppName
+        headers[APP_INSTANCE_ID] = currentAppInstanceId
+
+        val actionResult = context.getActionResult()
+        if (context.isEventRequired()) {
+            val records = if (!actionResult.isCompletedExceptionally()) {
+                actionResult.getResult().getRecords().map {
+                    var id = it.getId()
+                    if (id.sourceId.isEmpty()) {
+                        id = id.withSourceId(queryArg.sourceId)
+                    }
+                    id.withDefaultAppName(currentAppName)
+                }
             } else {
-                headers[SOURCE_ID] = queryArg.sourceId
-                headers[APP_NAME] = currentAppName
-                headers[APP_INSTANCE_ID] = currentAppInstanceId
+                emptyList()
             }
-        }) {
-            BeforeQueryEvent(
-                getGlobalSourceId(queryArg.sourceId),
-                queryArg,
-                writeSchemaForEvent(attributes)
+            context.sendEvent(
+                QueryRecordsEvent(
+                    getGlobalSourceId(queryArg.sourceId),
+                    queryArg,
+                    records,
+                    writeSchemaForEvent(attributes)
+                )
             )
         }
-        val queryStartMs = System.currentTimeMillis()
-        val result = chain.invoke(queryArg, attributes, rawAtts)
-        val queryDurationMs = System.currentTimeMillis() - queryStartMs
-        afterQueryEmitter.emit({ headers ->
-            if (isEventShouldBeSkipped(queryArg.sourceId, attributes)) {
-                null
-            } else {
-                headers[SOURCE_ID] = queryArg.sourceId.substringAfter(EntityRef.APP_NAME_DELIMITER)
-                headers[APP_NAME] = currentAppName
-                headers[APP_INSTANCE_ID] = currentAppInstanceId
-            }
-        }) {
-            QueryEvent(
-                getGlobalSourceId(queryArg.sourceId),
-                queryArg,
-                result.getRecords().map { it.getId().withDefaultAppName(currentAppName) },
-                writeSchemaForEvent(attributes),
-                queryDurationMs
-            )
-        }
-        return result
+        return actionResult.getResult()
     }
 
-    override fun getAtts(
-        records: List<*>,
+    override fun getRecordAtts(
+        sourceId: String,
+        recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
         chain: GetRecordAttsInterceptorsChain
     ): List<RecordAtts> {
-        beforeGetAttsEmitter.emitForEach(records, {
-            AttsCtx(writeSchemaForEvent(attributes))
-        }, { _, record, headers ->
-            if (record is EntityRef) {
-                if (isEventShouldBeSkipped(record.getSourceId(), attributes)) {
-                    null
-                } else {
-                    headers[SOURCE_ID] = record.getSourceId()
-                    headers[LOCAL_ID] = record.getLocalId()
-                    headers[APP_NAME] = currentAppName
-                    headers[APP_INSTANCE_ID] = currentAppInstanceId
-                    record
-                }
-            } else {
-                null
-            }
-        }) { ctx, record ->
-            GetAttsEvent(
-                getGlobalSourceId(record.getSourceId()),
-                record.withDefaultAppName(currentAppName),
-                ctx.attributes
+        if (!getRecordAttsEmitter.isEnabled() || isEventShouldBeSkipped(sourceId, attributes)) {
+            return chain.invoke(sourceId, recordIds, attributes, rawAtts)
+        }
+        val context = getRecordAttsEmitter.createContext {
+            chain.invoke(sourceId, recordIds, attributes, rawAtts)
+        }
+        val headers = context.getHeaders()
+        headers[SOURCE_ID] = getGlobalSourceId(sourceId)
+        headers[APP_NAME] = currentAppName
+        headers[APP_INSTANCE_ID] = currentAppInstanceId
+        if (context.isEventRequired()) {
+            context.sendEvent(
+                GetRecordAttsEvent(
+                    getGlobalSourceId(sourceId),
+                    recordIds.map { EntityRef.create(currentAppName, sourceId, it) },
+                    writeSchemaForEvent(attributes)
+                )
             )
         }
-        return chain.invoke(records, attributes, rawAtts)
+        return context.getActionResult().getResult()
     }
 
-    override fun mutate(
-        records: List<RecordAtts>,
-        attsToLoad: List<List<SchemaAtt>>,
+    override fun getValueAtts(
+        values: List<*>,
+        attributes: List<SchemaAtt>,
+        rawAtts: Boolean,
+        chain: GetValueAttsInterceptorsChain
+    ): List<RecordAtts> {
+        return chain.invoke(values, attributes, rawAtts)
+    }
+
+    override fun mutateRecord(
+        sourceId: String,
+        record: LocalRecordAtts,
+        attsToLoad: List<SchemaAtt>,
         rawAtts: Boolean,
         chain: MutateRecordsInterceptorsChain
-    ): List<RecordAtts> {
-        beforeMutateEmitter.emitForEach(records.indices, {}, { _, idx, headers ->
-            val record = records[idx]
-            headers[SOURCE_ID] = record.getId().getSourceId()
-            headers[LOCAL_ID] = record.getId().getLocalId()
-            headers[APP_NAME] = currentAppName
-            headers[APP_INSTANCE_ID] = currentAppInstanceId
-            idx
-        }) { _, idx ->
-            val record = records[idx].withoutSensitiveData()
-            MutateRecordEvent(
-                getGlobalSourceId(record.getId()),
-                record.getId().withDefaultAppName(currentAppName),
-                record.getAtts(),
-                writeSchemaForEvent(attsToLoad.getOrNull(idx))
+    ): RecordAtts {
+        if (!mutateRecordEmitter.isEnabled()) {
+            return chain.invoke(sourceId, record, attsToLoad, rawAtts)
+        }
+        val context = mutateRecordEmitter.createContext {
+            chain.invoke(sourceId, record, attsToLoad, rawAtts)
+        }
+        val globalSrcId = getGlobalSourceId(sourceId)
+        val headers = context.getHeaders()
+        headers[SOURCE_ID] = globalSrcId
+        headers[APP_NAME] = currentAppName
+        headers[APP_INSTANCE_ID] = currentAppInstanceId
+        if (context.isEventRequired()) {
+            val recordRef = EntityRef.create(sourceId, record.id)
+                .withDefaultAppName(currentAppName)
+            val attributes = record.withoutSensitiveData().attributes
+            context.sendEvent(
+                MutateRecordsEvent(
+                    globalSrcId,
+                    recordRef,
+                    attributes,
+                    writeSchemaForEvent(attsToLoad)
+                )
             )
         }
-        return chain.invoke(records, attsToLoad, rawAtts)
+        return context.getActionResult().getResult()
     }
 
-    override fun delete(
-        records: List<EntityRef>,
-        chain: DeleteInterceptorsChain
+    override fun deleteRecords(
+        sourceId: String,
+        recordIds: List<String>,
+        chain: DeleteRecordsInterceptorsChain
     ): List<DelStatus> {
-        beforeDeleteEmitter.emitForEach(records, {}, { _, record, headers ->
-            headers[SOURCE_ID] = record.getSourceId()
-            headers[LOCAL_ID] = record.getLocalId()
-            headers[APP_NAME] = currentAppName
-            headers[APP_INSTANCE_ID] = currentAppInstanceId
-            record
-        }) { _, record ->
-            DeleteRecordEvent(
-                getGlobalSourceId(record),
-                record.withDefaultAppName(currentAppName)
+
+        if (!deleteRecordsEmitter.isEnabled()) {
+            return chain.invoke(sourceId, recordIds)
+        }
+
+        val context = deleteRecordsEmitter.createContext {
+            chain.invoke(sourceId, recordIds)
+        }
+
+        val globalSrcId = getGlobalSourceId(sourceId)
+
+        val headers = context.getHeaders()
+        headers[SOURCE_ID] = globalSrcId
+        headers[APP_NAME] = currentAppName
+        headers[APP_INSTANCE_ID] = currentAppInstanceId
+
+        if (context.isEventRequired()) {
+            context.sendEvent(
+                DeleteRecordsEvent(
+                    globalSrcId,
+                    recordIds.map { RecordRef.create(sourceId, it).withDefaultAppName(currentAppName) }
+                )
             )
         }
-        return chain.invoke(records)
+        return context.getActionResult().getResult()
     }
 
     private fun getGlobalSourceId(sourceId: String): String {
@@ -245,32 +231,32 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         return result
     }
 
-    @AuditEventType("records.query")
-    class QueryEvent(
+    @AuditEventType("records.query-records")
+    class QueryRecordsEvent(
         val sourceId: String,
         val query: RecordsQuery,
         val records: List<EntityRef>,
         val attributes: Map<String, String>
     )
 
-    @AuditEventType("records.get-atts")
-    class GetAttsEvent(
+    @AuditEventType("records.get-record-atts")
+    class GetRecordAttsEvent(
         val sourceId: String,
         val records: List<EntityRef>,
         val attributes: Map<String, String>
     )
 
-    @AuditEventType("records.mutate")
-    class MutateRecordEvent(
+    @AuditEventType("records.mutate-record")
+    class MutateRecordsEvent(
         val sourceId: String,
-        val records: List<EntityRef>,
+        val record: EntityRef,
         val attributes: ObjectData,
         val attsToLoad: Map<String, String>
     )
 
-    @AuditEventType("records.delete")
-    class DeleteRecordEvent(
+    @AuditEventType("records.delete-records")
+    class DeleteRecordsEvent(
         val sourceId: String,
         val records: List<EntityRef>
-    )*/
+    )
 }

@@ -14,7 +14,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 
-class RecordsIdAttTest {
+class recordIdsAttTest {
 
     @Test
     fun test() {

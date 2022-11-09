@@ -6,5 +6,5 @@ import kotlin.jvm.Throws
 interface RecordsDeleteDao : RecordsDao {
 
     @Throws(Exception::class)
-    fun delete(recordsId: List<String>): List<DelStatus>
+    fun delete(recordIds: List<String>): List<DelStatus>
 }

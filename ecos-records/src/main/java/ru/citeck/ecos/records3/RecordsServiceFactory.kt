@@ -46,6 +46,7 @@ import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
 import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.*
+import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -108,10 +109,10 @@ open class RecordsServiceFactory {
     val localRecordsResolverV0: LocalRecordsResolverV0 by lazySingleton { createLocalRecordsResolverV0() }
     val localRecordsResolver: LocalRecordsResolver by lazySingleton {
         val resolver = createLocalRecordsResolver()
-/*        val auditInterceptor = AuditRecordsInterceptor(this)
+        val auditInterceptor = AuditRecordsInterceptor(this)
         if (auditInterceptor.isValid()) {
             resolver.addInterceptor(auditInterceptor)
-        }*/
+        }
         resolver
     }
 

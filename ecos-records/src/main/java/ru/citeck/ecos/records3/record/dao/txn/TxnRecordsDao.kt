@@ -7,10 +7,10 @@ import kotlin.jvm.Throws
 interface TxnRecordsDao : RecordsDao {
 
     @Throws(Exception::class)
-    fun commit(txnId: UUID, recordsId: List<String>)
+    fun commit(txnId: UUID, recordIds: List<String>)
 
     @Throws(Exception::class)
-    fun rollback(txnId: UUID, recordsId: List<String>)
+    fun rollback(txnId: UUID, recordIds: List<String>)
 
     fun isTransactional(): Boolean = true
 }

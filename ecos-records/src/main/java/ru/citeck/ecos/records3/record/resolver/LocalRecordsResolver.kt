@@ -12,7 +12,7 @@ import ru.citeck.ecos.records3.record.resolver.interceptor.LocalRecordsIntercept
 
 interface LocalRecordsResolver {
 
-    fun query(
+    fun queryRecords(
         queryArg: RecordsQuery,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -26,28 +26,28 @@ interface LocalRecordsResolver {
 
     fun getRecordAtts(
         sourceId: String,
-        recordsId: List<String>,
+        recordIds: List<String>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts>
 
-    fun mutateRecords(
+    fun mutateRecord(
         sourceId: String,
-        records: List<LocalRecordAtts>,
+        record: LocalRecordAtts,
         attsToLoad: List<SchemaAtt>,
         rawAtts: Boolean
-    ): List<RecordAtts>
+    ): RecordAtts
 
     fun deleteRecords(
         sourceId: String,
-        recordsId: List<String>
+        recordIds: List<String>
     ): List<DelStatus>
 
     fun isSourceTransactional(sourceId: String): Boolean
 
-    fun commit(sourceId: String, recordsId: List<String>)
+    fun commit(sourceId: String, recordIds: List<String>)
 
-    fun rollback(sourceId: String, recordsId: List<String>)
+    fun rollback(sourceId: String, recordIds: List<String>)
 
     fun register(sourceId: String, recordsDao: RecordsDao)
 

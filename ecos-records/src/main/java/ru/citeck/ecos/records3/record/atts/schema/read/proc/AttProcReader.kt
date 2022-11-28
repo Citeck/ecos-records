@@ -4,6 +4,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records3.record.atts.proc.AttOrElseProcessor
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import java.util.*
 import java.util.regex.Matcher
@@ -35,11 +36,22 @@ class AttProcReader {
                 nextDelim = att.length
             }
 
+            val beforeOrElsePart = att.substring(0, orElseDelimIdx)
             var orElsePart = att.substring(orElseDelimIdx + 1, nextDelim)
 
             if (!AttStrUtils.isInQuotes(orElsePart)) {
                 if (orElsePart.isEmpty()) {
-                    orElsePart = "''"
+                    val scalarDelimIdx = beforeOrElsePart.indexOf('?')
+                    orElsePart = if (scalarDelimIdx > -1) {
+                        when (beforeOrElsePart.substring(scalarDelimIdx)) {
+                            ScalarType.JSON_SCHEMA -> "{}"
+                            ScalarType.BOOL_SCHEMA -> "false"
+                            ScalarType.NUM_SCHEMA -> "0"
+                            else -> "''"
+                        }
+                    } else {
+                        "''"
+                    }
                 } else if (orElsePart != "null" &&
                     orElsePart != "true" &&
                     orElsePart != "false" &&
@@ -56,10 +68,11 @@ class AttProcReader {
                 }
             }
 
-            att = (
-                att.substring(0, orElseDelimIdx) + "|or(" + orElsePart + ")" +
-                    if (att.length > nextDelim) att.substring(nextDelim) else ""
-                )
+            att = "$beforeOrElsePart|or($orElsePart)" + if (att.length > nextDelim) {
+                att.substring(nextDelim)
+            } else {
+                ""
+            }
 
             orElseDelimIdx = AttStrUtils.indexOf(att, '!')
         }

@@ -7,8 +7,30 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 
 class OrElseProcTest {
+
+    @Test
+    fun autoOrElseTest() {
+        val records = RecordsServiceFactory().recordsServiceV1
+        assertThat(records.getAtt(null, "abc?bool!")).isEqualTo(DataValue.FALSE)
+        assertThat(records.getAtt(null, "abc?num!")).isEqualTo(DataValue.create(0.0))
+        assertThat(records.getAtt(null, "abc?json!")).isEqualTo(DataValue.createObj())
+        listOf(
+            ScalarType.STR,
+            ScalarType.RAW,
+            ScalarType.BIN,
+            ScalarType.ID,
+            ScalarType.DISP,
+            ScalarType.ASSOC,
+            ScalarType.LOCAL_ID
+        ).forEach {
+            assertThat(records.getAtt(null, "abc${it.schema}!"))
+                .describedAs(it.schema)
+                .isEqualTo(DataValue.create(""))
+        }
+    }
 
     @Test
     fun orElseTest() {

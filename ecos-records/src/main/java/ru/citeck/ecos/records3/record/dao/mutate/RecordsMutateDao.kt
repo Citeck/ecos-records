@@ -4,6 +4,12 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import kotlin.jvm.Throws
 
+@Deprecated(
+    "Records can't be mutated as list." +
+        "mutate method of this interface always called for every record separately " +
+        "and for optimization and reducing of code complexity " +
+        "please use RecordMutateDao instead of using this interface"
+)
 interface RecordsMutateDao : RecordsDao {
 
     @Throws(Exception::class)

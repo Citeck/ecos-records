@@ -48,13 +48,16 @@ class RecsDaoConverter(
         if (dao is RecordDeleteDao && targetType == RecordsDeleteDao::class.java) {
             return mapToMultiDao(dao)
         }
-        if (targetType == RecordsMutateWithAnyResDao::class.java) {
+        if (targetType == RecordMutateWithAnyResDao::class.java) {
             when (dao) {
                 is RecordMutateDao -> {
-                    return mapToMutateWithAnyResDao(mapToMultiDao(dao))
+                    return mapToMutateWithAnyResDao(dao)
+                }
+                is RecordsMutateWithAnyResDao -> {
+                    return mapToMutateWithAnyResDao(dao)
                 }
                 is RecordsMutateDao -> {
-                    return mapToMutateWithAnyResDao(mapToMultiDao(dao))
+                    return mapToMutateWithAnyResDao(dao)
                 }
                 is RecordMutateDtoDao<*> -> {
                     @Suppress("UNCHECKED_CAST")
@@ -72,12 +75,12 @@ class RecsDaoConverter(
         return dao
     }
 
-    private fun mapValueMutateDaoToAnyResDao(dao: ValueMutateDao<Any>): RecordsMutateWithAnyResDao {
+    private fun mapValueMutateDaoToAnyResDao(dao: ValueMutateDao<Any>): RecordMutateWithAnyResDao {
 
         val valueType = ReflectUtils.getGenericArg(dao::class.java, ValueMutateDao::class.java)
             ?: error("Generic type <T> is not found for class ${dao::class.java}")
 
-        val convert: (LocalRecordAtts) -> Any = when (valueType) {
+        val prepareArgument: (LocalRecordAtts) -> Any = when (valueType) {
             RecordRef::class.java -> {
                 { it.id }
             }
@@ -98,23 +101,46 @@ class RecsDaoConverter(
             }
         }
 
-        return object : RecordsMutateWithAnyResDao {
+        return object : RecordMutateWithAnyResDao {
             override fun getId() = dao.getId()
-            override fun mutateForAnyRes(records: List<LocalRecordAtts>): List<Any> {
-                if (records.isEmpty()) {
-                    return emptyList()
-                }
-                val arg = convert.invoke(records[0])
-                return listOf(dao.mutate(arg) ?: EmptyAttValue.INSTANCE)
+            override fun mutateForAnyRes(record: LocalRecordAtts): Any? {
+                return dao.mutate(prepareArgument.invoke(record))
             }
         }
     }
 
-    private fun mapToMutateWithAnyResDao(dao: RecordsMutateCrossSrcDao): RecordsMutateWithAnyResDao {
-        return object : RecordsMutateWithAnyResDao {
+    private fun mapToMutateWithAnyResDao(dao: RecordsMutateCrossSrcDao): RecordMutateWithAnyResDao {
+        return object : RecordMutateWithAnyResDao {
             override fun getId() = dao.getId()
-            override fun mutateForAnyRes(records: List<LocalRecordAtts>): List<Any> {
-                return dao.mutate(records)
+            override fun mutateForAnyRes(record: LocalRecordAtts): Any? {
+                return dao.mutate(listOf(record)).firstOrNull()
+            }
+        }
+    }
+
+    private fun mapToMutateWithAnyResDao(dao: RecordsMutateWithAnyResDao): RecordMutateWithAnyResDao {
+        return object : RecordMutateWithAnyResDao {
+            override fun getId() = dao.getId()
+            override fun mutateForAnyRes(record: LocalRecordAtts): Any? {
+                return dao.mutateForAnyRes(listOf(record)).firstOrNull()
+            }
+        }
+    }
+
+    private fun mapToMutateWithAnyResDao(dao: RecordMutateDao): RecordMutateWithAnyResDao {
+        return object : RecordMutateWithAnyResDao {
+            override fun getId() = dao.getId()
+            override fun mutateForAnyRes(record: LocalRecordAtts): Any {
+                return dao.mutate(record)
+            }
+        }
+    }
+
+    private fun mapToMutateWithAnyResDao(dao: RecordsMutateDao): RecordMutateWithAnyResDao {
+        return object : RecordMutateWithAnyResDao {
+            override fun getId() = dao.getId()
+            override fun mutateForAnyRes(record: LocalRecordAtts): Any? {
+                return dao.mutate(listOf(record)).firstOrNull()
             }
         }
     }
@@ -193,35 +219,6 @@ class RecsDaoConverter(
                     { DelStatus.OK },
                     { _, e -> throw e }
                 )
-            }
-
-            override fun getId(): String = dao.getId()
-        }
-    }
-
-    fun mapToMultiDao(dao: RecordMutateDao): RecordsMutateCrossSrcDao {
-
-        return object : RecordsMutateCrossSrcDao {
-
-            override fun mutate(records: List<LocalRecordAtts>): List<RecordRef> {
-                return mapElements(
-                    records,
-                    { RecordRef.create(dao.getId(), dao.mutate(it)) },
-                    { RecordRef.create(dao.getId(), it.id) },
-                    { _, e -> throw e }
-                )
-            }
-
-            override fun getId(): String = dao.getId()
-        }
-    }
-
-    fun mapToMultiDao(dao: RecordsMutateDao): RecordsMutateCrossSrcDao {
-
-        return object : RecordsMutateCrossSrcDao {
-
-            override fun mutate(records: List<LocalRecordAtts>): List<RecordRef> {
-                return dao.mutate(records).map { RecordRef.create(dao.getId(), it) }
             }
 
             override fun getId(): String = dao.getId()

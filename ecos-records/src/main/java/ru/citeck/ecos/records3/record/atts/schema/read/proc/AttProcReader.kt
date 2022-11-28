@@ -41,16 +41,27 @@ class AttProcReader {
 
             if (!AttStrUtils.isInQuotes(orElsePart)) {
                 if (orElsePart.isEmpty()) {
-                    val scalarDelimIdx = beforeOrElsePart.indexOf('?')
-                    orElsePart = if (scalarDelimIdx > -1) {
-                        when (beforeOrElsePart.substring(scalarDelimIdx)) {
-                            ScalarType.JSON_SCHEMA -> "{}"
-                            ScalarType.BOOL_SCHEMA -> "false"
-                            ScalarType.NUM_SCHEMA -> "0"
-                            else -> "''"
-                        }
+                    orElsePart = if (beforeOrElsePart.endsWith("}")) {
+                        "{}"
                     } else {
-                        "''"
+                        val scalarDelimIdx = beforeOrElsePart.indexOf('?')
+                        if (scalarDelimIdx > -1) {
+                            if (scalarDelimIdx > 2 &&
+                                beforeOrElsePart[scalarDelimIdx - 1] == ']' &&
+                                beforeOrElsePart[scalarDelimIdx - 2] == '['
+                            ) {
+                                "[]"
+                            } else {
+                                when (beforeOrElsePart.substring(scalarDelimIdx)) {
+                                    ScalarType.JSON_SCHEMA -> "{}"
+                                    ScalarType.BOOL_SCHEMA -> "false"
+                                    ScalarType.NUM_SCHEMA -> "0"
+                                    else -> "''"
+                                }
+                            }
+                        } else {
+                            "''"
+                        }
                     }
                 } else if (orElsePart != "null" &&
                     orElsePart != "true" &&

@@ -30,6 +30,8 @@ class OrElseProcTest {
                 .describedAs(it.schema)
                 .isEqualTo(DataValue.create(""))
         }
+        assertThat(records.getAtt(null, "abc[]?bool!")).isEqualTo(DataValue.createArr())
+        assertThat(records.getAtt(null, "abc{def,hij}!")).isEqualTo(DataValue.createObj())
     }
 
     @Test

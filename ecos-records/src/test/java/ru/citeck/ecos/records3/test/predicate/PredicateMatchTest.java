@@ -210,13 +210,12 @@ public class PredicateMatchTest implements Element, ElementAttributes {
             "    \"val\": \"testUser\"\n" +
             "}", Predicate.class);
 
-        RecordAttsElement element = RecordAttsElement.create(new RecordAtts(RecordRef.EMPTY, atts));
         Predicate resolvedFilter = recordsTemplateService.resolve(
             predicate,
             RecordRef.create("meta", "")
         );
 
-        assertTrue(service.isMatch(element, resolvedFilter));
+        assertTrue(service.isMatch(atts, resolvedFilter));
     }
 
     @Test

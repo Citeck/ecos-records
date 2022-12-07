@@ -41,7 +41,7 @@ import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
 import ru.citeck.ecos.records3.record.dao.impl.source.client.HasClientMeta
-import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateWithAnyResDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateWithAnyResDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages
@@ -78,14 +78,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val allDao = ConcurrentHashMap<String, RecordsDao>()
     private val attsDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsAttsDao>>()
     private val queryDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsQueryResDao>>()
-    private val mutateDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsMutateWithAnyResDao>>()
+    private val mutateDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordMutateWithAnyResDao>>()
     private val deleteDao = ConcurrentHashMap<String, Pair<RecordsDao, RecordsDeleteDao>>()
     private val txnDao = ConcurrentHashMap<String, Pair<RecordsDao, TxnRecordsDao>>()
 
     private val daoMapByType = mapOf<Class<*>, Map<String, Pair<RecordsDao, RecordsDao>>>(
         Pair(RecordsAttsDao::class.java, attsDao),
         Pair(RecordsQueryResDao::class.java, queryDao),
-        Pair(RecordsMutateWithAnyResDao::class.java, mutateDao),
+        Pair(RecordMutateWithAnyResDao::class.java, mutateDao),
         Pair(RecordsDeleteDao::class.java, deleteDao),
         Pair(TxnRecordsDao::class.java, txnDao)
     )
@@ -428,7 +428,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return null
     }
 
-    override fun getValueAtts(
+    override fun getValuesAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
@@ -437,7 +437,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             if (interceptors.isEmpty()) {
                 getValueAttsImpl(values, attributes, rawAtts)
             } else {
-                GetValueAttsInterceptorsChain(this, interceptors.iterator())
+                GetValuesAttsInterceptorsChain(this, interceptors.iterator())
                     .invoke(values, schema, rawAtts)
             }
         }
@@ -490,7 +490,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
     }
 
-    override fun getRecordAtts(
+    override fun getRecordsAtts(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
@@ -501,15 +501,15 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         return recordsAttsService.doWithSchema(attributes, rawAtts) { schema ->
             if (interceptors.isEmpty()) {
-                getRecordAttsImpl(sourceId, recordIds, schema, rawAtts)
+                getRecordsAttsImpl(sourceId, recordIds, schema, rawAtts)
             } else {
-                GetRecordAttsInterceptorsChain(this, interceptors.iterator())
+                GetRecordsAttsInterceptorsChain(this, interceptors.iterator())
                     .invoke(sourceId, recordIds, schema, rawAtts)
             }
         }
     }
 
-    internal fun getRecordAttsImpl(
+    internal fun getRecordsAttsImpl(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,
@@ -657,7 +657,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return if (interceptors.isEmpty()) {
             mutateRecordImpl(sourceId, recordToMutate, attsToLoad, rawAtts)
         } else {
-            MutateRecordsInterceptorsChain(this, interceptors.iterator())
+            MutateRecordInterceptorsChain(this, interceptors.iterator())
                 .invoke(sourceId, recordToMutate, attsToLoad, rawAtts)
         }
     }
@@ -690,7 +690,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         rawAtts: Boolean
     ): RecordAtts {
 
-        val dao = getRecordsDaoPair(sourceId, RecordsMutateWithAnyResDao::class.java)
+        val dao = getRecordsDaoPair(sourceId, RecordMutateWithAnyResDao::class.java)
 
         if (dao == null) {
 
@@ -706,15 +706,20 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             }
         } else {
 
-            val mutAnyRes = dao.second.mutateForAnyRes(listOf(record)).firstOrNull()
+            var mutAnyRes = dao.second.mutateForAnyRes(record)
                 ?: return RecordAtts(RecordRef.create(sourceId, record.id))
+
+            if (mutAnyRes is String && mutAnyRes.isNotEmpty()) {
+                mutAnyRes = RecordRef.valueOf(mutAnyRes).withDefaultSourceId(sourceId)
+            }
 
             var mutRes = if (attsToLoad.isEmpty()) {
                 val defaultRef = RecordRef.create(sourceId, record.id)
                 RecordAtts(recordsAttsService.getId(mutAnyRes, defaultRef))
             } else {
+
                 recordsAttsService.doWithSchema(attsToLoad, rawAtts) { schema ->
-                    getValueAtts(listOf(mutAnyRes), schema, rawAtts).first()
+                    getValuesAtts(listOf(mutAnyRes), schema, rawAtts).first()
                 }
             }
             val ref = mutRes.getId()
@@ -780,7 +785,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         allDao[sourceId] = recordsDao
         register(sourceId, attsDao, RecordsAttsDao::class.java, recordsDao)
         register(sourceId, queryDao, RecordsQueryResDao::class.java, recordsDao)
-        register(sourceId, mutateDao, RecordsMutateWithAnyResDao::class.java, recordsDao)
+        register(sourceId, mutateDao, RecordMutateWithAnyResDao::class.java, recordsDao)
         register(sourceId, deleteDao, RecordsDeleteDao::class.java, recordsDao)
         register(sourceId, txnDao, TxnRecordsDao::class.java, recordsDao)
 

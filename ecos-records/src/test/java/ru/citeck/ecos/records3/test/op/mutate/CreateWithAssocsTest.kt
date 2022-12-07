@@ -4,14 +4,42 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.test.testutils.MockAppsFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class CreateWithAssocsTest {
+
+    @Test
+    fun mutationTestWithLink() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val recordsToMutate = listOf(
+            RecordAtts(
+                EntityRef.valueOf("test@"),
+                ObjectData.create("""{"link":"alias-1","links":["alias-1","alias-1"]}""")
+            ),
+            RecordAtts(
+                EntityRef.valueOf("test@"),
+                ObjectData.create("""{"_alias":"alias-1"}""")
+            )
+        )
+
+        val mutRes = records.mutate(recordsToMutate)
+        assertThat(mutRes).hasSize(2)
+        assertThat(records.getAtt(mutRes[0], "link?id").asText()).isEqualTo(mutRes[1].toString())
+        assertThat(records.getAtt(mutRes[0], "links[]?id").asStrList()).containsExactly(
+            mutRes[1].toString(),
+            mutRes[1].toString()
+        )
+    }
 
     @ParameterizedTest
     @ValueSource(strings = ["?assoc", "?str", ""])

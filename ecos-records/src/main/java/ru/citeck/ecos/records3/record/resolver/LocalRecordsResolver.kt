@@ -18,13 +18,13 @@ interface LocalRecordsResolver {
         rawAtts: Boolean
     ): RecsQueryRes<RecordAtts>
 
-    fun getValueAtts(
+    fun getValuesAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean
     ): List<RecordAtts>
 
-    fun getRecordAtts(
+    fun getRecordsAtts(
         sourceId: String,
         recordIds: List<String>,
         attributes: List<SchemaAtt>,

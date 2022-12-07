@@ -72,7 +72,16 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         return when (value) {
             is RecordRef -> value
             is RecordAtts -> value.getId()
-            is String -> RecordRef.valueOf(value)
+            is String -> {
+                val ref = RecordRef.valueOf(value)
+                if (ref.isEmpty()) {
+                    return defaultRef
+                }
+                return ref.withDefault(
+                    appName = defaultRef.appName,
+                    sourceId = defaultRef.sourceId
+                )
+            }
             else -> {
                 val atts = getAtts(listOf(value), listOf(REF_ATT), false, EmptyMixinContext, emptyList())
                 val strId = atts[0].getStringOrNull(REF_ATT_ALIAS) ?: return defaultRef

@@ -26,7 +26,7 @@ class AttOrElseProcessor : AttProcessor {
             newValue = if (orElseAtt.isTextual()) {
                 val txtAtt: String = orElseAtt.asText()
                 if (txtAtt.startsWith(ATT_PREFIX)) {
-                    attributes.get(txtAtt.substring(ATT_PREFIX.length))
+                    attributes[txtAtt.substring(ATT_PREFIX.length)]
                 } else {
                     orElseAtt
                 }

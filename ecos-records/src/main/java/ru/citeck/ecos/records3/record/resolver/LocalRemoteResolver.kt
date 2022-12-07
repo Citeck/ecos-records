@@ -83,7 +83,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         if (!isGatewayMode) {
             val globalCtxAtts = attsMap.extractGlobalCtxAtts(context)
             if (globalCtxAtts.getParsedAtts().isNotEmpty()) {
-                val evaluatedAtts = local.getValueAtts(
+                val evaluatedAtts = local.getValuesAtts(
                     listOf(NullAttValue.INSTANCE),
                     globalCtxAtts.getParsedAtts(),
                     rawAtts
@@ -125,7 +125,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
 
         if (recordObjs.isNotEmpty()) {
             val recordsObjValue = recordObjs.map { it.value }
-            val objAtts = local.getValueAtts(recordsObjValue, attsMap.getParsedAtts(), rawAtts)
+            val objAtts = local.getValuesAtts(recordsObjValue, attsMap.getParsedAtts(), rawAtts)
             if (objAtts.size == recordsObjValue.size) {
                 for (i in objAtts.indices) {
                     results.add(ValWithIdx(objAtts[i], recordObjs[i].idx))
@@ -269,7 +269,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val atts: List<RecordAtts> = if (remote != null && (isGatewayMode || isRemoteSourceId(sourceId))) {
             remote.getAtts(refs, attsMap.getAttributes(), rawAtts)
         } else {
-            local.getRecordAtts(getLocalSourceId(sourceId), refs.map { it.id }, attsMap.getParsedAtts(), rawAtts)
+            local.getRecordsAtts(getLocalSourceId(sourceId), refs.map { it.id }, attsMap.getParsedAtts(), rawAtts)
         }
         return if (atts.size != refs.size) {
             context.addMsg(MsgLevel.ERROR) {

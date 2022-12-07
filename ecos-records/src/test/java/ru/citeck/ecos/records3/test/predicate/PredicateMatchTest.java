@@ -2,12 +2,19 @@ package ru.citeck.ecos.records3.test.predicate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.data.DataValue;
+import ru.citeck.ecos.commons.data.ObjectData;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.meta.RecordsTemplateService;
+import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes;
 import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -161,6 +168,109 @@ public class PredicateMatchTest implements Element, ElementAttributes {
 
         pred = Predicates.eq("a", "Some long string");
         assertFalse(service.isMatch(this, pred));
+    }
+
+    @Test
+    void predicateMatchWithNestedAttributes() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        PredicateService service = factory.getPredicateService();
+
+        ObjectData atts = ObjectData.create("{\n" +
+            "    \"text\": \"test comment\",\n" +
+            "    \"_meta\": {\n" +
+            "        \"user\": \"testUser\"\n" +
+            "    }\n" +
+            "}");
+
+        Predicate predicate = Json.getMapper().convert("{\n" +
+            "    \"t\": \"eq\",\n" +
+            "    \"att\": \"_meta.user\",\n" +
+            "    \"val\": \"testUser\"\n" +
+            "}", Predicate.class);
+
+        assertTrue(service.isMatch(atts, predicate));
+    }
+
+    @Test
+    void predicateMatchWithNestedAttributesAndResolvedTemplate() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        PredicateService service = factory.getPredicateService();
+        RecordsTemplateService recordsTemplateService = factory.getRecordsTemplateService();
+
+        ObjectData atts = ObjectData.create("{\n" +
+            "    \"text\": \"test comment\",\n" +
+            "    \"_meta\": {\n" +
+            "        \"user\": \"testUser\"\n" +
+            "    }\n" +
+            "}");
+
+        Predicate predicate = Json.getMapper().convert("{\n" +
+            "    \"t\": \"eq\",\n" +
+            "    \"att\": \"_meta.user\",\n" +
+            "    \"val\": \"testUser\"\n" +
+            "}", Predicate.class);
+
+        Predicate resolvedFilter = recordsTemplateService.resolve(
+            predicate,
+            RecordRef.create("meta", "")
+        );
+
+        assertTrue(service.isMatch(atts, resolvedFilter));
+    }
+
+    @Test
+    void predicateMatchWithNestedAttributesAndResolvedTemplateWithExpression() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        PredicateService service = factory.getPredicateService();
+        RecordsTemplateService recordsTemplateService = factory.getRecordsTemplateService();
+
+        ObjectData atts = ObjectData.create("{\n" +
+            "    \"text\": \"testUser\",\n" +
+            "    \"_meta\": {\n" +
+            "        \"user\": \"testUser\"\n" +
+            "    }\n" +
+            "}");
+
+        Predicate predicate = Json.getMapper().convert("{\n" +
+            "    \"t\": \"eq\",\n" +
+            "    \"att\": \"_meta.user\",\n" +
+            "    \"val\": \"{{text}}\"\n" +
+            "}", Predicate.class);
+
+        Predicate resolvedFilter = recordsTemplateService.resolve(
+            predicate,
+            atts
+        );
+
+        assertTrue(service.isMatch(atts, resolvedFilter));
+    }
+
+    @Test
+    void predicateMatchWithRootAttributesAndResolvedTemplate() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        PredicateService service = factory.getPredicateService();
+        RecordsTemplateService recordsTemplateService = factory.getRecordsTemplateService();
+
+        ObjectData atts = ObjectData.create("{\n" +
+            "    \"text\": \"test comment\",\n" +
+            "    \"_meta\": {\n" +
+            "        \"user\": \"testUser\"\n" +
+            "    }\n" +
+            "}");
+
+        Predicate predicate = Json.getMapper().convert("{\n" +
+            "    \"t\": \"eq\",\n" +
+            "    \"att\": \"text\",\n" +
+            "    \"val\": \"test comment\"\n" +
+            "}", Predicate.class);
+
+        RecordAttsElement element = RecordAttsElement.create(new RecordAtts(RecordRef.EMPTY, atts));
+        Predicate resolvedFilter = recordsTemplateService.resolve(
+            predicate,
+            RecordRef.create("meta", "")
+        );
+
+        assertTrue(service.isMatch(element, resolvedFilter));
     }
 
     @Override

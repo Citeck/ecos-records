@@ -219,6 +219,33 @@ public class PredicateMatchTest implements Element, ElementAttributes {
     }
 
     @Test
+    void predicateMatchWithNestedAttributesAndResolvedTemplateWithExpression() {
+        RecordsServiceFactory factory = new RecordsServiceFactory();
+        PredicateService service = factory.getPredicateService();
+        RecordsTemplateService recordsTemplateService = factory.getRecordsTemplateService();
+
+        ObjectData atts = ObjectData.create("{\n" +
+            "    \"text\": \"testUser\",\n" +
+            "    \"_meta\": {\n" +
+            "        \"user\": \"testUser\"\n" +
+            "    }\n" +
+            "}");
+
+        Predicate predicate = Json.getMapper().convert("{\n" +
+            "    \"t\": \"eq\",\n" +
+            "    \"att\": \"_meta.user\",\n" +
+            "    \"val\": \"{{text}}\"\n" +
+            "}", Predicate.class);
+
+        Predicate resolvedFilter = recordsTemplateService.resolve(
+            predicate,
+            atts
+        );
+
+        assertTrue(service.isMatch(atts, resolvedFilter));
+    }
+
+    @Test
     void predicateMatchWithRootAttributesAndResolvedTemplate() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         PredicateService service = factory.getPredicateService();

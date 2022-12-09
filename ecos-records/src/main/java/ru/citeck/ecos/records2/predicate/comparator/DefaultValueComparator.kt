@@ -118,7 +118,7 @@ object DefaultValueComparator : ValueComparator {
                 } else {
                     CompareResult.FALSE
                 }
-            } else if (intRes == 1) {
+            } else if (intRes > 0) {
                 if (isGreater) {
                     CompareResult.TRUE
                 } else {

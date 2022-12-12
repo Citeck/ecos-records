@@ -41,7 +41,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     private var interceptorValid = false
 
     init {
-        val auditApi = services.getEcosWebAppContext()?.getAuditApi()
+        val auditApi = services.getEcosWebAppApi()?.getAuditApi()
         if (auditApi != null) {
             queryRecordsEmitter = auditApi.createEmitter(QueryRecordsEvent::class.java).build()
             getRecordAttsEmitter = auditApi.createEmitter(GetRecordsAttsEvent::class.java).build()

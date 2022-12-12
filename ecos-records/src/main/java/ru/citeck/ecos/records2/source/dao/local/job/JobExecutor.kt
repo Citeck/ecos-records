@@ -2,11 +2,12 @@ package ru.citeck.ecos.records2.source.dao.local.job
 
 import lombok.Data
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.task.schedule.Schedules
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.task.scheduler.EcosScheduledTask
-import ru.citeck.ecos.webapp.api.task.scheduler.EcosTaskScheduler
+import ru.citeck.ecos.webapp.api.task.scheduler.EcosTaskSchedulerApi
 import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
@@ -25,7 +26,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     }
 
     private val jobs: MutableList<JobInstance> = CopyOnWriteArrayList()
-    private val scheduler: EcosTaskScheduler? = serviceFactory.getEcosWebAppContext()
+    private val scheduler: EcosTaskSchedulerApi? = serviceFactory.getEcosWebAppApi()
         ?.getTasksApi()
         ?.getScheduler(SCHEDULER_ID)
 
@@ -33,7 +34,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     private var initialized = false
 
     init {
-        serviceFactory.getEcosWebAppContext()?.doWhenAppReady { init() }
+        serviceFactory.getEcosWebAppApi()?.doWhenAppReady { init() }
     }
 
     fun init() {
@@ -60,15 +61,17 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
     private fun scheduleJob(instance: JobInstance) {
         val scheduler = this.scheduler ?: return
         instance.task = if (instance.job is PeriodicJob) {
-            scheduler.scheduleWithFixedDelay(
+            scheduler.schedule(
                 instance.getId(),
-                Duration.ofMillis(instance.job.getInitDelay()),
-                Duration.ofMillis(instance.job.period)
+                Schedules.fixedDelay(
+                    Duration.ofMillis(instance.job.getInitDelay()),
+                    Duration.ofMillis(instance.job.period)
+                )
             ) { execute(instance) }
         } else {
             scheduler.schedule(
                 instance.getId(),
-                Duration.ofMillis(instance.job.initDelay)
+                Schedules.once(Duration.ofMillis(instance.job.initDelay))
             ) { execute(instance) }
         }
     }

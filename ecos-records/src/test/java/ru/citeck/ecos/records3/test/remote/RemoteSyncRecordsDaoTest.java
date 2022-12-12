@@ -11,7 +11,7 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.promise.Promises;
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock;
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -28,9 +28,9 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
+import ru.citeck.ecos.webapp.api.EcosWebAppApi;
 import ru.citeck.ecos.webapp.api.promise.Promise;
-import ru.citeck.ecos.webapp.api.web.EcosWebClient;
+import ru.citeck.ecos.webapp.api.web.EcosWebClientApi;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -54,11 +54,11 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
-        EcosWebAppContext webAppContext = new EcosWebAppContextMock() {
+        EcosWebAppApi webAppContext = new EcosWebAppApiMock() {
             @NotNull
             @Override
-            public EcosWebClient getWebClient() {
-                return new EcosWebClient() {
+            public EcosWebClientApi getWebClientApi() {
+                return new EcosWebClientApi() {
                     @NotNull
                     @Override
                     public <R> Promise<R> execute(
@@ -83,7 +83,7 @@ public class RemoteSyncRecordsDaoTest {
 
         RecordsServiceFactory localFactory = new RecordsServiceFactory() {
             @Override
-            public EcosWebAppContext getEcosWebAppContext() {
+            public EcosWebAppApi getEcosWebAppApi() {
                 return webAppContext;
             }
         };

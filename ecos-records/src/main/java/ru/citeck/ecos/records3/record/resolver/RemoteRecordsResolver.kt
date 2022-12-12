@@ -37,7 +37,7 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import ru.citeck.ecos.webapp.api.web.EcosWebClient
+import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -75,8 +75,8 @@ class RemoteRecordsResolver(
     private val txnActionManager = services.txnActionManager
 
     private val sourceIdMeta: Cache<String, RecSrcMeta>
-    private val webClient: EcosWebClient = services.getEcosWebAppContext()?.getWebClient()
-        ?: error("EcosWebAppContext or WebClient is null")
+    private val webClient: EcosWebClientApi = services.getEcosWebAppApi()?.getWebClientApi()
+        ?: error("EcosWebAppApi or EcosWebClientApi is null")
 
     private val currentAppName = services.webappProps.appName
 

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock;
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
@@ -23,7 +23,7 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteResp;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext;
+import ru.citeck.ecos.webapp.api.EcosWebAppApi;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,8 +42,8 @@ class RemoteRecordsResolverTest {
 
         @Nullable
         @Override
-        public EcosWebAppContext getEcosWebAppContext() {
-            EcosWebAppContextMock ctx = new EcosWebAppContextMock("test", true);
+        public EcosWebAppApi getEcosWebAppApi() {
+            EcosWebAppApiMock ctx = new EcosWebAppApiMock("test", true);
             ctx.setWebClientExecuteImpl(RemoteRecordsResolverTest.this::jsonPost);
             return ctx;
         }

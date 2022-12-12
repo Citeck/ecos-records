@@ -2,7 +2,7 @@ package ru.citeck.ecos.records2.test.local
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult
@@ -12,7 +12,7 @@ import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
 class recordIdsAttTest {
 
@@ -20,8 +20,8 @@ class recordIdsAttTest {
     fun test() {
 
         val services = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext {
-                return EcosWebAppContextMock("app0")
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                return EcosWebAppApiMock("app0")
             }
         }
         val props = services.webappProps

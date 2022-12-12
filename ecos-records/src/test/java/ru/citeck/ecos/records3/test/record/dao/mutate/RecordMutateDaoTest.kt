@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.test.record.dao.mutate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
@@ -18,7 +18,7 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
 class RecordMutateDaoTest {
 
@@ -27,8 +27,8 @@ class RecordMutateDaoTest {
     @Test
     fun appNameTest() {
         val services = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext {
-                return EcosWebAppContextMock("test")
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                return EcosWebAppApiMock("test")
             }
         }
         val records = services.recordsServiceV1
@@ -42,8 +42,8 @@ class RecordMutateDaoTest {
     fun test() {
 
         val services = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext? {
-                return EcosWebAppContextMock("test-app")
+            override fun getEcosWebAppApi(): EcosWebAppApi? {
+                return EcosWebAppApiMock("test-app")
             }
         }
         val records = services.recordsServiceV1

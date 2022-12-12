@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -106,7 +106,7 @@ class QueryErrorTest {
     private fun createRecordsFactoryWithRemote(remoteFactory: RecordsServiceFactory): RecordsServiceFactory {
 
         val restAdapter = remoteFactory.restHandlerAdapter
-        val context = EcosWebAppContextMock()
+        val context = EcosWebAppApiMock()
         context.webClientExecuteImpl = { _, path, request ->
             when {
                 path.contains("/query") -> {
@@ -125,7 +125,7 @@ class QueryErrorTest {
         }
 
         return object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext() = context
+            override fun getEcosWebAppApi() = context
         }
     }
 

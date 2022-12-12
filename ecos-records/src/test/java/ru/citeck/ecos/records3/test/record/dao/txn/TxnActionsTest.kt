@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.promise.Promises
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -16,9 +16,9 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.promise.Promise
-import ru.citeck.ecos.webapp.api.web.EcosWebClient
+import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
@@ -154,10 +154,10 @@ class TxnActionsTest {
 
         val services = object : RecordsServiceFactory() {
 
-            override fun getEcosWebAppContext(): EcosWebAppContext {
-                val context = object : EcosWebAppContextMock(appId) {
-                    override fun getWebClient(): EcosWebClient {
-                        return object : EcosWebClient {
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                val context = object : EcosWebAppApiMock(appId) {
+                    override fun getWebClientApi(): EcosWebClientApi {
+                        return object : EcosWebClientApi {
                             override fun <R : Any> execute(
                                 targetApp: String,
                                 path: String,

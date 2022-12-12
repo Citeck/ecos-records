@@ -59,7 +59,7 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
 
     private val recordTypeService by lazy { factory.recordTypeService }
 
-    private val currentAppName = factory.getEcosWebAppContext()?.getProperties()?.appName ?: ""
+    private val currentAppName = factory.getEcosWebAppApi()?.getProperties()?.appName ?: ""
 
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()

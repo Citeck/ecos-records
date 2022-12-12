@@ -15,7 +15,7 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
-import ru.citeck.ecos.webapp.api.web.EcosWebController
+import ru.citeck.ecos.webapp.api.web.EcosWebControllerApi
 import ru.citeck.ecos.webapp.api.web.EcosWebExecutor
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
@@ -30,10 +30,10 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     private val mapper = Json.mapper
 
     init {
-        registerWebExecutors(services.getEcosWebAppContext()?.getWebController())
+        registerWebExecutors(services.getEcosWebAppApi()?.getWebControllerApi())
     }
 
-    private fun registerWebExecutors(controller: EcosWebController?) {
+    private fun registerWebExecutors(controller: EcosWebControllerApi?) {
         controller ?: return
         controller.registerExecutor(
             RemoteRecordsResolver.QUERY_PATH,

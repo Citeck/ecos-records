@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.promise.Promises
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
@@ -22,9 +22,9 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.promise.Promise
-import ru.citeck.ecos.webapp.api.web.EcosWebClient
+import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
@@ -92,8 +92,8 @@ class TxnRecordsDaoTest {
     fun deleteTest() {
 
         val services = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext? {
-                return EcosWebAppContextMock("test")
+            override fun getEcosWebAppApi(): EcosWebAppApi? {
+                return EcosWebAppApiMock("test")
             }
         }
         val records = services.recordsServiceV1
@@ -166,17 +166,17 @@ class TxnRecordsDaoTest {
 
         val remoteAppName = "remoteApp"
         val remoteServices = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext {
-                return EcosWebAppContextMock(remoteAppName)
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                return EcosWebAppApiMock(remoteAppName)
             }
         }
         remoteServices.recordsServiceV1.register(TxnDao())
 
         val localServices = object : RecordsServiceFactory() {
-            override fun getEcosWebAppContext(): EcosWebAppContext {
-                val context = object : EcosWebAppContextMock("test") {
-                    override fun getWebClient(): EcosWebClient {
-                        return object : EcosWebClient {
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                val context = object : EcosWebAppApiMock("test") {
+                    override fun getWebClientApi(): EcosWebClientApi {
+                        return object : EcosWebClientApi {
                             override fun <R : Any> execute(
                                 targetApp: String,
                                 path: String,
@@ -289,7 +289,7 @@ class TxnRecordsDaoTest {
 
         override fun mutate(record: LocalRecordAtts): String {
             val txnId = RequestContext.getCurrentNotNull().ctxData.txnId ?: error("txnId is null")
-            val id = record.attributes.get("_localId").asText()
+            val id = record.attributes["_localId"].asText()
                 .ifBlank { record.id }
                 .ifBlank { UUID.randomUUID().toString() }
             txnRecords.computeIfAbsent(txnId) { HashMap() }[id] = record

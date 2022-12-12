@@ -2,7 +2,7 @@ package ru.citeck.ecos.records3.test.testutils
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
@@ -11,7 +11,7 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
 class MockAppsFactory {
 
@@ -34,7 +34,7 @@ class MockAppsFactory {
     private fun createApp(name: String, gatewayMode: Boolean, defaultApp: String = ""): MockApp {
 
         val defaultCtxAtts = HashMap<String, Any?>()
-        val webAppContext = EcosWebAppContextMock(appName = name, gatewayMode = gatewayMode)
+        val webAppContext = EcosWebAppApiMock(appName = name, gatewayMode = gatewayMode)
         webAppContext.webClientExecuteImpl = { targetApp, path, request ->
             jsonPost(targetApp, path, request)
         }
@@ -46,7 +46,7 @@ class MockAppsFactory {
                     .withDefaultApp(defaultApp)
             }
 
-            override fun getEcosWebAppContext(): EcosWebAppContext {
+            override fun getEcosWebAppApi(): EcosWebAppApi {
                 return webAppContext
             }
         }

@@ -55,9 +55,9 @@ import ru.citeck.ecos.records3.txn.DefaultRecordsTxnService
 import ru.citeck.ecos.records3.txn.RecordsTxnService
 import ru.citeck.ecos.records3.txn.ext.TxnActionManager
 import ru.citeck.ecos.records3.txn.ext.TxnActionManagerImpl
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import ru.citeck.ecos.webapp.api.properties.EcosWebAppProperties
+import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
@@ -130,7 +130,7 @@ open class RecordsServiceFactory {
     }
 
     val webappProps by lazySingleton {
-        getEcosWebAppContext()?.getProperties() ?: EcosWebAppProperties("", "")
+        getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps("", "")
     }
 
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
@@ -199,15 +199,15 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRemoteRecordsResolver(): RemoteRecordsResolver? {
-        val ctx = this.getEcosWebAppContext()
-        val webClient = ctx?.getWebClient()
+        val ctx = this.getEcosWebAppApi()
+        val webClient = ctx?.getWebClientApi()
         return if (webClient != null) {
             RemoteRecordsResolver(this)
         } else {
             check(!webappProps.gatewayMode) {
                 "WebAppContext should not be null in gateway mode! Props: $properties"
             }
-            log.trace("EcosWebAppContext does not exists. Remote records requests wont be allowed")
+            log.trace("EcosWebAppApi does not exists. Remote records requests wont be allowed")
             null
         }
     }
@@ -362,7 +362,7 @@ open class RecordsServiceFactory {
         return AttMixinsProviderImpl()
     }
 
-    open fun getEcosWebAppContext(): EcosWebAppContext? {
+    open fun getEcosWebAppApi(): EcosWebAppApi? {
         return null
     }
 

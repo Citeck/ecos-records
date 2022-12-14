@@ -37,29 +37,29 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         controller ?: return
         controller.registerExecutor(
             RemoteRecordsResolver.QUERY_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = queryRecords(request, apiVersion)
+            object : EcosWebExecutor<Unit, ObjectNode> {
+                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = queryRecords(request, apiVersion)
                 override fun getApiVersion() = 2
             }
         )
         controller.registerExecutor(
             RemoteRecordsResolver.MUTATE_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = mutateRecords(request, apiVersion)
+            object : EcosWebExecutor<Unit, ObjectNode> {
+                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = mutateRecords(request, apiVersion)
                 override fun getApiVersion() = 1
             }
         )
         controller.registerExecutor(
             RemoteRecordsResolver.DELETE_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = deleteRecords(request, apiVersion)
+            object : EcosWebExecutor<Unit, ObjectNode> {
+                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = deleteRecords(request, apiVersion)
                 override fun getApiVersion() = 1
             }
         )
         controller.registerExecutor(
             RemoteRecordsResolver.TXN_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = txnAction(request)
+            object : EcosWebExecutor<Unit, ObjectNode> {
+                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = txnAction(request)
                 override fun getApiVersion() = 1
             }
         )

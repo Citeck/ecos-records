@@ -7,19 +7,19 @@ import java.time.Instant
 class InstantValueFactory : AttValueFactory<Instant> {
 
     override fun getValue(value: Instant): AttValue {
-        return DateValue(value)
+        return InstantValue(value)
     }
 
     override fun getValueTypes() = listOf(Instant::class.java)
 
-    class DateValue(private val date: Instant) : AttValue {
+    class InstantValue(private val instant: Instant) : AttValue {
 
         override fun asText(): String {
-            return date.toString()
+            return instant.toString()
         }
 
         override fun asDouble(): Double {
-            return date.toEpochMilli().toDouble()
+            return instant.toEpochMilli().toDouble()
         }
     }
 }

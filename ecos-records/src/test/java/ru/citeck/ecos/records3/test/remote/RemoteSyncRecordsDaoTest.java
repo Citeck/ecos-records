@@ -65,11 +65,12 @@ public class RemoteSyncRecordsDaoTest {
                         @NotNull String targetApp,
                         @NotNull String path,
                         int version,
-                        @NotNull Object request,
+                        @NotNull Map<String, ?> args,
+                        @NotNull Object body,
                         @NotNull Class<R> respType
                     ) {
                         @SuppressWarnings("unchecked")
-                        R res = (R) remoteFactory.getRestHandlerAdapter().queryRecords(request);
+                        R res = (R) remoteFactory.getRestHandlerAdapter().queryRecords(body);
                         return Promises.resolve(Json.getMapper().convert(res, respType));
                     }
 

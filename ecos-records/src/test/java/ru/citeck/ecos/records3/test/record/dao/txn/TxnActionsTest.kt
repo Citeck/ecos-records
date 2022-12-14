@@ -162,7 +162,8 @@ class TxnActionsTest {
                                 targetApp: String,
                                 path: String,
                                 version: Int,
-                                request: Any,
+                                args: Map<String, Any?>,
+                                body: Any,
                                 respType: Class<R>
                             ): Promise<R> {
                                 val services = this@TxnActionsTest.services[targetApp]!!
@@ -171,10 +172,10 @@ class TxnActionsTest {
                                 thread(start = true) {
                                     result.set(
                                         when (path) {
-                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(request)
-                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(request)
-                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(request)
-                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(request)
+                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(body)
+                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(body)
+                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(body)
+                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(body)
                                             else -> error("Unknown path: '$path'")
                                         }
                                     )

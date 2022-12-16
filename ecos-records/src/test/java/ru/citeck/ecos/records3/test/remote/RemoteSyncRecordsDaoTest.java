@@ -54,33 +54,10 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
-        EcosWebAppApi webAppContext = new EcosWebAppApiMock() {
-            @NotNull
-            @Override
-            public EcosWebClientApi getWebClientApi() {
-                return new EcosWebClientApi() {
-                    @NotNull
-                    @Override
-                    public <R> Promise<R> execute(
-                        @NotNull String targetApp,
-                        @NotNull String path,
-                        int version,
-                        @NotNull Map<String, ?> args,
-                        @NotNull Object body,
-                        @NotNull Class<R> respType
-                    ) {
-                        @SuppressWarnings("unchecked")
-                        R res = (R) remoteFactory.getRestHandlerAdapter().queryRecords(body);
-                        return Promises.resolve(Json.getMapper().convert(res, respType));
-                    }
-
-                    @Override
-                    public int getApiVersion(@NotNull String s, @NotNull String s1) {
-                        return 0;
-                    }
-                };
-            }
-        };
+        EcosWebAppApiMock webAppContext = new EcosWebAppApiMock();
+        webAppContext.setWebClientExecuteImpl((targetApp, path, body) ->
+            remoteFactory.getRestHandlerAdapter().queryRecords(body)
+        );
 
         RecordsServiceFactory localFactory = new RecordsServiceFactory() {
             @Override

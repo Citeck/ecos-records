@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.test.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.*;
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
@@ -88,9 +89,9 @@ class RemoteRecordsResolverTest {
 
         urls.add("/" + targetApp + path);
 
-        if (request instanceof QueryBody) {
+        if (path.equals("/records/query")) {
 
-            QueryBody body = (QueryBody) request;
+            QueryBody body = Json.getMapper().readNotNull((byte[]) request, QueryBody.class);
 
             if (body.getRecords() != null) {
 
@@ -116,17 +117,17 @@ class RemoteRecordsResolverTest {
             } else {
                 throw new IllegalStateException("Incorrect query: " + request);
             }
-        } else if (request instanceof MutateBody) {
+        } else if (path.equals("/records/mutate")) {
 
-            MutateBody body = (MutateBody) request;
+            MutateBody body = Json.getMapper().readNotNull((byte[]) request, MutateBody.class);
 
             MutateResp result = new MutateResp();
             result.setRecords(body.getRecords().stream().map(r -> metaByRef.get(r.getId())).collect(Collectors.toList()));
             return result;
 
-        } else if (request instanceof DeleteBody) {
+        } else if (path.equals("/records/delete")) {
 
-            DeleteBody body = (DeleteBody) request;
+            DeleteBody body = Json.getMapper().readNotNull((byte[]) request, DeleteBody.class);
 
             DeleteResp result = new DeleteResp();
             result.setStatuses(body.getRecords().stream().map((v) -> DelStatus.OK).collect(Collectors.toList()));

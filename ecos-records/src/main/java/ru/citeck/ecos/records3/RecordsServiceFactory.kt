@@ -130,7 +130,7 @@ open class RecordsServiceFactory {
     }
 
     val webappProps by lazySingleton {
-        getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps("", "")
+        getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps.EMPTY
     }
 
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }

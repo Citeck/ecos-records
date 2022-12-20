@@ -155,7 +155,8 @@ public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaD
 
         evaluatorDto = toEvaluatorDto(Predicates.le("intField2", 10));
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
-        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+        // null is less than 10 -> true
+        assertTrue(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
 
         evaluatorDto = toEvaluatorDto(Predicates.gt("intField2", 5));
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
@@ -163,7 +164,8 @@ public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaD
 
         evaluatorDto = toEvaluatorDto(Predicates.lt("intField2", 15));
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
-        assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
+        // null is less than 15 -> true
+        assertTrue(evaluatorsService.evaluate(meta1Ref, evaluatorDto));
 
         String cause0 = "cause0";
         evaluatorDto = withDetails(false, cause0);
@@ -283,4 +285,3 @@ public class EvaluatorsTest extends LocalRecordsDao implements LocalRecordsMetaD
         private String field1 = "meta1field1";
     }
 }
-

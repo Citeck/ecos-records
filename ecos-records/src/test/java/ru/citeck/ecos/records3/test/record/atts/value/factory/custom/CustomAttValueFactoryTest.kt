@@ -11,9 +11,11 @@ class CustomAttValueFactoryTest {
     fun test() {
 
         val records = RecordsServiceFactory().recordsServiceV1
-        val customDto = CustomDto(DataValue.createObj()
-            .set("field0", "value0")
-            .set("field1", 123))
+        val customDto = CustomDto(
+            DataValue.createObj()
+                .set("field0", "value0")
+                .set("field1", 123)
+        )
 
         assertThat(records.getAtt(customDto, "field0").asText()).isEqualTo("value0")
         assertThat(records.getAtt(customDto, "field1").asInt()).isEqualTo(123)

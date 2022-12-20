@@ -96,6 +96,13 @@ class BeanValueFactory : AttValueFactory<Any> {
             return Json.mapper.toNonDefaultJson(bean)
         }
 
+        override fun asBin(): Any? {
+            if (typeCtx.hasProperty(ScalarType.BIN.schema)) {
+                return getAttWithType(ScalarType.BIN.schema, Any::class.java)
+            }
+            return Json.mapper.toBytes(Json.mapper.toNonDefaultJson(bean))
+        }
+
         override fun getEdge(name: String): AttEdge {
             return typeCtx.beanGetEdge(bean, name) ?: BeanEdge(name, this)
         }

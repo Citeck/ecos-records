@@ -112,6 +112,10 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValu
         return getScalar(value, ScalarType.RAW.schema) { it }
     }
 
+    override fun asBin(): Any? {
+        return getScalar(value, ScalarType.BIN.schema) { it }
+    }
+
     override fun getType(): RecordRef {
         val type = if (value.has("_type")) {
             value.path("_type")

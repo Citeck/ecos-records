@@ -10,4 +10,6 @@ interface AttValueFactory<T> {
     fun getValue(value: T): AttValue?
 
     fun getValueTypes(): List<Class<*>>
+
+    fun getPriority(): Int = 0
 }

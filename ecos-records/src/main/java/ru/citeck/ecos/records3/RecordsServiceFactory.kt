@@ -238,7 +238,7 @@ open class RecordsServiceFactory {
 
     protected open fun createAttValueFactories(): List<AttValueFactory<*>> {
 
-        val metaValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
+        val attValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
 
         val doubleValueFactory = DoubleValueFactory()
         val floatValueFactory = FloatValueFactory()
@@ -247,32 +247,39 @@ open class RecordsServiceFactory {
         val integerValueFactory = IntegerValueFactory()
         val longValueFactory = LongValueFactory()
 
-        metaValueFactories.add(doubleValueFactory)
-        metaValueFactories.add(floatValueFactory)
-        metaValueFactories.add(booleanValueFactory)
-        metaValueFactories.add(stringValueFactory)
-        metaValueFactories.add(integerValueFactory)
-        metaValueFactories.add(longValueFactory)
+        attValueFactories.add(doubleValueFactory)
+        attValueFactories.add(floatValueFactory)
+        attValueFactories.add(booleanValueFactory)
+        attValueFactories.add(stringValueFactory)
+        attValueFactories.add(integerValueFactory)
+        attValueFactories.add(longValueFactory)
 
         val dataValueFactory = DataValueAttFactory()
         val instantValueFactory = InstantValueFactory()
 
-        metaValueFactories.add(ObjectDataValueFactory())
-        metaValueFactories.add(ByteArrayValueFactory())
-        metaValueFactories.add(dataValueFactory)
-        metaValueFactories.add(MLTextValueFactory())
-        metaValueFactories.add(RecordAttsValueFactory())
-        metaValueFactories.add(BeanValueFactory())
-        metaValueFactories.add(DateValueFactory())
-        metaValueFactories.add(instantValueFactory)
-        metaValueFactories.add(OffsetDateTimeValueFactory())
-        metaValueFactories.add(JsonNodeValueFactory())
-        metaValueFactories.add(RecordRefValueFactory())
-        metaValueFactories.add(EntityWithMetaValueFactory())
+        attValueFactories.add(ObjectDataValueFactory())
+        attValueFactories.add(ByteArrayValueFactory())
+        attValueFactories.add(dataValueFactory)
+        attValueFactories.add(MLTextValueFactory())
+        attValueFactories.add(RecordAttsValueFactory())
+        attValueFactories.add(BeanValueFactory())
+        attValueFactories.add(DateValueFactory())
+        attValueFactories.add(instantValueFactory)
+        attValueFactories.add(OffsetDateTimeValueFactory())
+        attValueFactories.add(JsonNodeValueFactory())
+        attValueFactories.add(RecordRefValueFactory())
+        attValueFactories.add(EntityWithMetaValueFactory())
         if (isJacksonPresent()) {
-            metaValueFactories.add(JacksonJsonNodeValueFactory())
+            attValueFactories.add(JacksonJsonNodeValueFactory())
         }
-        return metaValueFactories
+
+        val customFactories = ServiceLoader.load(AttValueFactory::class.java).iterator()
+        while (customFactories.hasNext()) {
+            attValueFactories.add(customFactories.next())
+        }
+        attValueFactories.sortBy { it.getPriority() }
+
+        return attValueFactories
     }
 
     protected open fun createDtoSchemaReader(): DtoSchemaReader {

@@ -71,9 +71,11 @@ object BeanTypeUtils {
             { bean -> Json.mapper.toString(getJsonMethod.invoke(bean)) }
         } else {
             { bean ->
-                val json = Json.mapper.toNonDefaultJson(bean)
-                if (json.isNull || json.isMissingNode) {
+                val json = Json.mapper.toNonDefaultData(bean)
+                if (json.isNull()) {
                     null
+                } else if (json.isTextual()) {
+                    json.asText()
                 } else {
                     json.toString()
                 }

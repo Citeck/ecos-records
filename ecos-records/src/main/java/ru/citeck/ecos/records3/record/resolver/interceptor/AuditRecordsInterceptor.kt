@@ -156,12 +156,15 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
         headers[APP_NAME] = currentAppName
         headers[APP_INSTANCE_ID] = currentAppInstanceId
         if (context.isEventRequired()) {
-            val recordRef = EntityRef.create(sourceId, record.id).withDefaultAppName(currentAppName)
+            val refToMutate = EntityRef.create(sourceId, record.id).withDefaultAppName(currentAppName)
+            val resultRef = context.getActionResult().getResult().getId().withDefaultAppName(currentAppName)
             val attributes = record.withoutSensitiveData().attributes
             context.sendEvent(
                 MutateRecordEvent(
                     globalSrcId,
-                    recordRef,
+                    resultRef,
+                    refToMutate,
+                    resultRef.getLocalId().isNotEmpty() && refToMutate != resultRef,
                     attributes,
                     writeSchemaForEvent(attsToLoad)
                 )
@@ -250,6 +253,8 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
     class MutateRecordEvent(
         val sourceId: String,
         val record: EntityRef,
+        val recToMutate: EntityRef,
+        val newRecord: Boolean,
         val attributes: ObjectData,
         val attsToLoad: Map<String, String>
     )

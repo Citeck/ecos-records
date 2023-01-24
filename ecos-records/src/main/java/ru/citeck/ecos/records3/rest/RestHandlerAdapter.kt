@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.IntNode
 import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
@@ -15,8 +16,10 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
-import ru.citeck.ecos.webapp.api.web.EcosWebControllerApi
-import ru.citeck.ecos.webapp.api.web.EcosWebExecutor
+import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutor
+import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorReq
+import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorResp
+import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorsApi
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -30,37 +33,64 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     private val mapper = Json.mapper
 
     init {
-        registerWebExecutors(services.getEcosWebAppApi()?.getWebControllerApi())
+        registerWebExecutors(services.getEcosWebAppApi()?.getWebExecutorsApi())
     }
 
-    private fun registerWebExecutors(controller: EcosWebControllerApi?) {
-        controller ?: return
-        controller.registerExecutor(
-            RemoteRecordsResolver.QUERY_PATH,
-            object : EcosWebExecutor<Unit, ObjectNode> {
-                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = queryRecords(request, apiVersion)
+    private fun registerWebExecutors(executors: EcosWebExecutorsApi?) {
+        executors ?: return
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = queryRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion()
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
                 override fun getApiVersion() = 2
+                override fun getPath() = RemoteRecordsResolver.QUERY_PATH
+                override fun isReadOnly(): Boolean = true
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.MUTATE_PATH,
-            object : EcosWebExecutor<Unit, ObjectNode> {
-                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = mutateRecords(request, apiVersion)
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = mutateRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion()
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
                 override fun getApiVersion() = 1
+                override fun getPath() = RemoteRecordsResolver.MUTATE_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.DELETE_PATH,
-            object : EcosWebExecutor<Unit, ObjectNode> {
-                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = deleteRecords(request, apiVersion)
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = deleteRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion()
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
                 override fun getApiVersion() = 1
+                override fun getPath() = RemoteRecordsResolver.DELETE_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.TXN_PATH,
-            object : EcosWebExecutor<Unit, ObjectNode> {
-                override fun execute(apiVersion: Int, args: Unit, request: ObjectNode) = txnAction(request)
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = txnAction(
+                        request.getBodyReader().readDto(DataValue::class.java)
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
                 override fun getApiVersion() = 1
+                override fun getPath() = RemoteRecordsResolver.TXN_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
     }

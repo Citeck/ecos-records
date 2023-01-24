@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.atts.value.HasListView

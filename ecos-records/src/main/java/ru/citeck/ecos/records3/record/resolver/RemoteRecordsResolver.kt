@@ -37,7 +37,7 @@ import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
+import ru.citeck.ecos.webapp.api.web.client.EcosWebClientApi
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -113,8 +113,8 @@ class RemoteRecordsResolver(
             .withSourceId(sourceId.substring(appDelimIdx + 1))
             .build()
 
-        val apiVersion = webClient.getApiVersion(appName, QUERY_PATH)
-        val queryBody = if (apiVersion >= 2) {
+        val apiVersion = webClient.getApiVersion(appName, QUERY_PATH, 2)
+        val queryBody = if (apiVersion == 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -181,7 +181,7 @@ class RemoteRecordsResolver(
         context: RequestContext
     ): List<RecordAtts> {
 
-        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH) >= 2) {
+        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH, 2) == 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -470,11 +470,12 @@ class RemoteRecordsResolver(
             body
         }
 
-        val result = webClient.createRequest(respType.java)
-            .withTargetApp(appName)
-            .withPath(requestPath)
-            .withVersion(version)
-            .execute { it.writeDto(convertedBody) }.get()
+        val result = webClient.newRequest()
+            .targetApp(appName)
+            .path(requestPath)
+            .version(version)
+            .body { it.writeDto(convertedBody) }
+            .execute { it.getBodyReader().readDto(respType.java) }.get()
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

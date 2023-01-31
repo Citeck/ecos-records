@@ -16,10 +16,10 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
-import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutor
-import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorReq
-import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorResp
-import ru.citeck.ecos.webapp.api.web.controller.EcosWebExecutorsApi
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorsApi
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -47,7 +47,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 2
+                override fun getApiVersion() = 0 to 2
                 override fun getPath() = RemoteRecordsResolver.QUERY_PATH
                 override fun isReadOnly(): Boolean = true
             }
@@ -61,7 +61,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1
+                override fun getApiVersion() = 0 to 1
                 override fun getPath() = RemoteRecordsResolver.MUTATE_PATH
                 override fun isReadOnly(): Boolean = false
             }
@@ -75,7 +75,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1
+                override fun getApiVersion() = 0 to 1
                 override fun getPath() = RemoteRecordsResolver.DELETE_PATH
                 override fun isReadOnly(): Boolean = false
             }
@@ -88,7 +88,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1
+                override fun getApiVersion() = 0 to 1
                 override fun getPath() = RemoteRecordsResolver.TXN_PATH
                 override fun isReadOnly(): Boolean = false
             }

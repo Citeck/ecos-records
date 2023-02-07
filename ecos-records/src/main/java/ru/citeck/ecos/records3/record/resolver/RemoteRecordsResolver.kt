@@ -475,7 +475,7 @@ class RemoteRecordsResolver(
             .path(requestPath)
             .version(version)
             .body { it.writeDto(convertedBody) }
-            .execute { it.getBodyReader().readDto(respType.java) }.get()
+            .executeSync { it.getBodyReader().readDto(respType.java) }
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

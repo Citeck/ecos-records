@@ -262,8 +262,9 @@ class RecsDaoConverter(
                 result.add(res)
             } catch (e: Throwable) {
                 log.error("Mapping failed", e)
-                RequestContext.getCurrentNotNull().addMsg(MsgLevel.ERROR) {
-                    ErrorUtils.convertException(e)
+                val context = RequestContext.getCurrentNotNull()
+                context.addMsg(MsgLevel.ERROR) {
+                    ErrorUtils.convertException(e, context.getServices())
                 }
                 result.add(onError.invoke(value, e))
             }

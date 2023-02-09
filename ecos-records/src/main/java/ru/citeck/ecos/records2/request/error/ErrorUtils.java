@@ -1,17 +1,21 @@
 package ru.citeck.ecos.records2.request.error;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.records3.exception.ExceptionMessageExtractor;
 import ru.citeck.ecos.records3.security.HasSensitiveData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class ErrorUtils {
 
-    public static RecordsError convertException(Throwable exception) {
+    public static RecordsError convertException(Throwable exception, @Nullable RecordsServiceFactory services) {
 
         MandatoryParam.check("exception", exception);
 
@@ -31,7 +35,7 @@ public class ErrorUtils {
 
         RecordsError error = new RecordsError();
         error.setType(throwable.getClass().getSimpleName());
-        error.setMsg(throwable.getLocalizedMessage());
+        error.setMsg(extractMessage(throwable, services));
         error.setStackTrace(errorStackTrace);
 
         return error;
@@ -81,5 +85,25 @@ public class ErrorUtils {
             return true;
         }
         return false;
+    }
+
+    private static String extractMessage(Throwable exception, RecordsServiceFactory services) {
+        if (exception == null) {
+            return "null";
+        }
+        if (services != null) {
+            Map<Class<? extends Throwable>, ExceptionMessageExtractor<Throwable>> extractors =
+                services.getExceptionMessageExtractors();
+
+            for (Class<? extends Throwable> type : extractors.keySet()) {
+                if (type.isInstance(exception)) {
+                    String message = extractors.get(type).getMessage(exception);
+                    if (message != null) {
+                        return message;
+                    }
+                }
+            }
+        }
+        return exception.getLocalizedMessage();
     }
 }

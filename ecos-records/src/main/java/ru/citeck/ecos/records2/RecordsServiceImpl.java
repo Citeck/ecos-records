@@ -408,7 +408,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
             }
             log.error(logMsg, e);
             result = orElse.get();
-            result.addError(ErrorUtils.convertException(e));
+            result.addError(ErrorUtils.convertException(e, serviceFactory));
         }
 
         return result;

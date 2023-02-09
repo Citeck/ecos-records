@@ -64,7 +64,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 recordsResolver.getAtts(ArrayList(records), attributes, rawAtts)
             } catch (e: Throwable) {
                 if (ctx.ctxData.omitErrors) {
-                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
 
                     val emptyAtts = ObjectData.create()
                     attributes.keys.forEach { emptyAtts[it] = DataValue.NULL }
@@ -205,7 +205,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
                 supplier.invoke()
             } catch (e: Throwable) {
                 if (ctx.ctxData.omitErrors) {
-                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                    ctx.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
                     RecsQueryRes()
                 } else {
                     throw e

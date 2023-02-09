@@ -18,7 +18,7 @@ import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 
-class AttSchemaReader(services: RecordsServiceFactory) {
+class AttSchemaReader(private val services: RecordsServiceFactory) {
 
     companion object {
 
@@ -83,7 +83,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     readFunc.invoke(k, v)
                 } catch (e: Exception) {
                     schemaAtts.add(ATT_NULL.withAlias(k))
-                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
                 }
             }
         }

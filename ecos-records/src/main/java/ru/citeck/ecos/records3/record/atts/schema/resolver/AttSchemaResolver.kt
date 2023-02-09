@@ -40,7 +40,7 @@ import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
-class AttSchemaResolver(private val factory: RecordsServiceFactory) {
+class AttSchemaResolver(private val services: RecordsServiceFactory) {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -51,20 +51,20 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
         private val ID_SCALARS_SCHEMA = ID_SCALARS.map { it.schema }.toSet()
     }
 
-    private val attValuesConverter = factory.attValuesConverter
-    private val attProcService = factory.attProcService
-    private val attSchemaReader = factory.attSchemaReader
-    private val dtoSchemaReader = factory.dtoSchemaReader
-    private val computedAttsService = factory.recordComputedAttsService
+    private val attValuesConverter = services.attValuesConverter
+    private val attProcService = services.attProcService
+    private val attSchemaReader = services.attSchemaReader
+    private val dtoSchemaReader = services.dtoSchemaReader
+    private val computedAttsService = services.recordComputedAttsService
 
-    private val recordTypeService by lazy { factory.recordTypeService }
+    private val recordTypeService by lazy { services.recordTypeService }
 
-    private val currentAppName = factory.getEcosWebAppApi()?.getProperties()?.appName ?: ""
+    private val currentAppName = services.getEcosWebAppApi()?.getProperties()?.appName ?: ""
 
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()
         return if (context == null) {
-            AttContext.doWithCtx(factory) { resolveInAttCtx(args) }
+            AttContext.doWithCtx(services) { resolveInAttCtx(args) }
         } else {
             resolveInAttCtx(args)
         }
@@ -548,7 +548,9 @@ class AttSchemaResolver(private val factory: RecordsServiceFactory) {
                 if (context == null || !context.ctxData.omitErrors) {
                     throw e
                 }
-                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                context.addMsg(MsgLevel.ERROR) {
+                    ErrorUtils.convertException(e, context.getServices())
+                }
                 null
             }
 

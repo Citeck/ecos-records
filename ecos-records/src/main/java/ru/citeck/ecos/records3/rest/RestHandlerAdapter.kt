@@ -43,7 +43,8 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
                     val result = queryRecords(
                         request.getBodyReader().readDto(DataValue::class.java),
-                        request.getApiVersion()
+                        request.getApiVersion(),
+                        catchError = false
                     )
                     response.getBodyWriter().writeDto(result)
                 }
@@ -57,7 +58,8 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
                     val result = mutateRecords(
                         request.getBodyReader().readDto(DataValue::class.java),
-                        request.getApiVersion()
+                        request.getApiVersion(),
+                        catchError = false
                     )
                     response.getBodyWriter().writeDto(result)
                 }
@@ -71,7 +73,8 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
                     val result = deleteRecords(
                         request.getBodyReader().readDto(DataValue::class.java),
-                        request.getApiVersion()
+                        request.getApiVersion(),
+                        catchError = false
                     )
                     response.getBodyWriter().writeDto(result)
                 }
@@ -84,7 +87,8 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
             object : EcosWebExecutor {
                 override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
                     val result = txnAction(
-                        request.getBodyReader().readDto(DataValue::class.java)
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        catchError = false
                     )
                     response.getBodyWriter().writeDto(result)
                 }
@@ -96,7 +100,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     }
 
     @JvmOverloads
-    fun queryRecords(body: Any, version: Int? = null): Any {
+    fun queryRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -118,7 +122,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     QueryBodyV1::class.java
                 }
                 val v1Body = mapper.convert(bodyData, queryType) ?: QueryBodyV1()
-                restHandlerV1.queryRecords(v1Body)
+                restHandlerV1.queryRecords(v1Body, catchError)
             }
             else -> {
                 error(UNKNOWN_BODY_VERSION_MSG + ": " + bodyWithVersion.version)
@@ -126,13 +130,13 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         }
     }
 
-    fun txnAction(body: Any): Any {
+    fun txnAction(body: Any, catchError: Boolean = true): Any {
         val txnBody = mapper.convert(body, TxnBody::class.java) ?: TxnBody()
-        return restHandlerV1.txnAction(txnBody)
+        return restHandlerV1.txnAction(txnBody, catchError)
     }
 
     @JvmOverloads
-    fun deleteRecords(body: Any, version: Int? = null): Any {
+    fun deleteRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -143,7 +147,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
             }
             1 -> {
                 val v1Body = mapper.convert(bodyWithVersion.body, DeleteBody::class.java) ?: DeleteBody()
-                restHandlerV1.deleteRecords(v1Body)
+                restHandlerV1.deleteRecords(v1Body, catchError)
             }
             else -> {
                 throw IllegalArgumentException("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")
@@ -152,7 +156,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     }
 
     @JvmOverloads
-    fun mutateRecords(body: Any, version: Int? = null): Any {
+    fun mutateRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -163,7 +167,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
             }
             1 -> {
                 val v1Body = mapper.convert(bodyWithVersion.body, MutateBody::class.java) ?: MutateBody()
-                restHandlerV1.mutateRecords(v1Body)
+                restHandlerV1.mutateRecords(v1Body, catchError)
             }
             else -> {
                 error("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")

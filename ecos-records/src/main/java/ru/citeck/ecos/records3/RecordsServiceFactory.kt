@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
+import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
@@ -20,6 +21,7 @@ import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
 import ru.citeck.ecos.records3.cache.CacheManager
+import ru.citeck.ecos.records3.exception.ExceptionMessageExtractor
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttsService
@@ -62,6 +64,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 import java.util.function.Supplier
+import kotlin.collections.LinkedHashMap
 
 @Suppress("LeakingThis")
 open class RecordsServiceFactory {
@@ -97,6 +100,23 @@ open class RecordsServiceFactory {
     val jobExecutor: JobExecutor by lazySingleton { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazySingleton { createTxnActionManager() }
     val globalAttMixinsProvider: MutableAttMixinsProvider by lazySingleton { createGlobalAttMixinsProvider() }
+    val exceptionMessageExtractors: Map<Class<out Throwable>, ExceptionMessageExtractor<Throwable>> by lazySingleton {
+        val extractors = ArrayList(createExceptionMessageExtractors())
+        extractors.sortBy { it.getOrder() }
+        val result = LinkedHashMap<Class<out Throwable>, ExceptionMessageExtractor<Throwable>>()
+        for (extractor in extractors) {
+            @Suppress("UNCHECKED_CAST")
+            val key = ReflectUtils.getGenericArg(
+                extractor::class.java,
+                ExceptionMessageExtractor::class.java
+            ) as Class<out Throwable>
+            if (!result.containsKey(key)) {
+                @Suppress("UNCHECKED_CAST")
+                result[key] = extractor as ExceptionMessageExtractor<Throwable>
+            }
+        }
+        result
+    }
 
     internal val cacheManager: CacheManager by lazySingleton { CacheManager(this) }
 
@@ -363,6 +383,10 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordsTxnService(): RecordsTxnService {
         return DefaultRecordsTxnService()
+    }
+
+    protected open fun createExceptionMessageExtractors(): List<ExceptionMessageExtractor<out Throwable>> {
+        return emptyList()
     }
 
     protected open fun createGlobalAttMixinsProvider(): MutableAttMixinsProvider {

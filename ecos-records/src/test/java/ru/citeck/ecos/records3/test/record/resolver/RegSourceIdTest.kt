@@ -2,9 +2,9 @@ package ru.citeck.ecos.records3.test.record.resolver
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
 class RegSourceIdTest {

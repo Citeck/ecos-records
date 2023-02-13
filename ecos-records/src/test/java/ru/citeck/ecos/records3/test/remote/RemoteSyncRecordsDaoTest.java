@@ -11,7 +11,7 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.promise.Promises;
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock;
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;

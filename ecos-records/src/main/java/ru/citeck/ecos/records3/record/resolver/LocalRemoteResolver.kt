@@ -45,6 +45,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private lateinit var local: LocalRecordsResolver
     private var remote: RemoteRecordsResolver? = null
     private lateinit var reader: AttSchemaReader
+    private val typeService = services.recordTypeService
 
     private val currentAppName = services.webappProps.appName
     private val defaultAppName = services.properties.defaultApp
@@ -55,12 +56,17 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private val virtualRecords = ConcurrentHashMap<EntityRef, Any>()
 
     fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
-        val sourceId = query.sourceId
         val remote = this.remote
-        return if (remote == null || !isGatewayMode && !isRemoteSourceId(sourceId)) {
-            local.queryRecords(query.withSourceId(getLocalSourceId(sourceId)), reader.read(attributes), rawAtts)
+        val adaptedQuery = if (query.sourceId.isEmpty() && query.ecosType.isNotEmpty()) {
+            query.withSourceId(typeService.getSourceId(query.ecosType))
         } else {
-            remote.query(query, attributes, rawAtts)
+            query
+        }
+        val sourceId = adaptedQuery.sourceId
+        return if (remote == null || !isGatewayMode && !isRemoteSourceId(sourceId)) {
+            local.queryRecords(adaptedQuery.withSourceId(getLocalSourceId(sourceId)), reader.read(attributes), rawAtts)
+        } else {
+            remote.query(adaptedQuery, attributes, rawAtts)
         }
     }
 

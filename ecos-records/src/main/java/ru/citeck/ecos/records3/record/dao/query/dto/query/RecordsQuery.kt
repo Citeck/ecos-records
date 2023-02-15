@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 @JackJsonDeserialize(builder = RecordsQuery.Builder::class)
 data class RecordsQuery(
     val sourceId: String,
+    val ecosType: String,
     val sortBy: List<SortBy>,
     val groupBy: List<String>,
     val page: QueryPage,
@@ -88,6 +89,7 @@ data class RecordsQuery(
     class Builder() {
 
         var sourceId: String = ""
+        var ecosType: String = ""
         var sortBy: MutableList<SortBy> = arrayListOf()
         var groupBy: MutableList<String> = arrayListOf()
         var page: QueryPage.Builder = QueryPage.create()
@@ -97,6 +99,7 @@ data class RecordsQuery(
 
         constructor(base: RecordsQuery) : this() {
             sourceId = base.sourceId
+            ecosType = base.ecosType
             sortBy = DataValue.create(base.sortBy).asList(SortBy::class.java)
             groupBy = ArrayList(base.groupBy)
             page = base.page.copy()
@@ -107,6 +110,11 @@ data class RecordsQuery(
 
         fun withSourceId(sourceId: String?): Builder {
             this.sourceId = sourceId ?: ""
+            return this
+        }
+
+        fun withEcosType(ecosType: String?): Builder {
+            this.ecosType = ecosType ?: ""
             return this
         }
 
@@ -171,7 +179,16 @@ data class RecordsQuery(
         }
 
         fun build(): RecordsQuery {
-            return RecordsQuery(sourceId, sortBy, groupBy, page.build(), consistency, language, query)
+            return RecordsQuery(
+                sourceId,
+                ecosType,
+                sortBy,
+                groupBy,
+                page.build(),
+                consistency,
+                language,
+                query
+            )
         }
     }
 }

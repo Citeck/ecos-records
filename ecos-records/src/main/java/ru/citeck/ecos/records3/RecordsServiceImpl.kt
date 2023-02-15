@@ -17,6 +17,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
+import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
@@ -30,6 +31,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     private lateinit var recordsResolver: LocalRemoteResolver
     private lateinit var dtoSchemaReader: DtoSchemaReader
     private lateinit var attSchemaWriter: AttSchemaWriter
+    private lateinit var recordTypeService: RecordTypeService
 
     private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
@@ -103,6 +105,18 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     /* MUTATE */
+
+    override fun create(sourceIdOrType: String, attributes: Any): RecordRef {
+        val sourceId = getSourceIdFromTypeOrSourceId(sourceIdOrType)
+        return mutate(RecordRef.valueOf(sourceId + RecordRef.SOURCE_DELIMITER), attributes)
+    }
+
+    private fun getSourceIdFromTypeOrSourceId(sourceIdOrType: String): String {
+        if (sourceIdOrType.contains("type@")) {
+            return recordTypeService.getSourceId(sourceIdOrType)
+        }
+        return sourceIdOrType
+    }
 
     override fun <T : Any> mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Class<T>): T {
         val schema = dtoSchemaReader.read(attsToLoad)
@@ -246,6 +260,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         recordsResolver = serviceFactory.recordsResolver
         dtoSchemaReader = serviceFactory.dtoSchemaReader
         attSchemaWriter = serviceFactory.attSchemaWriter
+        recordTypeService = serviceFactory.recordTypeService
         recordsResolver.setRecordsService(this)
 
         for (dao in serviceFactory.defaultRecordsDao) {

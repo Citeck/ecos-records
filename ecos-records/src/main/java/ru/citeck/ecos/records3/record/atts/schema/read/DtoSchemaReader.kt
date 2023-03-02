@@ -112,6 +112,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return getAttributes(attsClass, null)
     }
 
+    fun <T : Any> instantiateNotNull(attsClass: Class<T>, attributes: ObjectData): T {
+        return Json.mapper.convertNotNull(attributes, attsClass)
+    }
+
     fun <T : Any> instantiate(attsClass: Class<T>, attributes: ObjectData): T? {
         return Json.mapper.convert(attributes, attsClass)
     }

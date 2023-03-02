@@ -50,8 +50,8 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         require(schema.isNotEmpty()) {
             "Attributes class doesn't have any fields with setter. Class: $attributes"
         }
-        val meta: RecsQueryRes<RecordAtts> = query(query, attSchemaWriter.writeToMap(schema))
-        return meta.withRecords { dtoSchemaReader.instantiate(attributes, it.getAtts()) }
+        val queryRes: RecsQueryRes<RecordAtts> = query(query, attSchemaWriter.writeToMap(schema))
+        return queryRes.withRecords { dtoSchemaReader.instantiateNotNull(attributes, it.getAtts()) }
     }
 
     override fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {

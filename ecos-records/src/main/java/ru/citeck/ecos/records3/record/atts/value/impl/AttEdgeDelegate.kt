@@ -20,6 +20,7 @@ open class AttEdgeDelegate(val impl: AttEdge) : AttEdge {
     }
 
     override fun isProtected() = impl.isProtected
+    override fun isMandatory() = impl.isMandatory
     override fun isMultiple() = impl.isMultiple
     override fun isAssociation() = impl.isAssociation
     override fun isSearchable() = impl.isSearchable

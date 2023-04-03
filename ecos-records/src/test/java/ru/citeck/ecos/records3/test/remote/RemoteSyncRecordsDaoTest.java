@@ -11,7 +11,7 @@ import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.promise.Promises;
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock;
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
@@ -29,8 +29,6 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
 import ru.citeck.ecos.webapp.api.EcosWebAppApi;
-import ru.citeck.ecos.webapp.api.promise.Promise;
-import ru.citeck.ecos.webapp.api.web.EcosWebClientApi;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -54,32 +52,10 @@ public class RemoteSyncRecordsDaoTest {
     void setup() {
 
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
-        EcosWebAppApi webAppContext = new EcosWebAppApiMock() {
-            @NotNull
-            @Override
-            public EcosWebClientApi getWebClientApi() {
-                return new EcosWebClientApi() {
-                    @NotNull
-                    @Override
-                    public <R> Promise<R> execute(
-                        @NotNull String targetApp,
-                        @NotNull String path,
-                        int version,
-                        @NotNull Object request,
-                        @NotNull Class<R> respType
-                    ) {
-                        @SuppressWarnings("unchecked")
-                        R res = (R) remoteFactory.getRestHandlerAdapter().queryRecords(request);
-                        return Promises.resolve(Json.getMapper().convert(res, respType));
-                    }
-
-                    @Override
-                    public int getApiVersion(@NotNull String s, @NotNull String s1) {
-                        return 0;
-                    }
-                };
-            }
-        };
+        EcosWebAppApiMock webAppContext = new EcosWebAppApiMock();
+        webAppContext.setWebClientExecuteImpl((targetApp, path, body) ->
+            remoteFactory.getRestHandlerAdapter().queryRecords(body)
+        );
 
         RecordsServiceFactory localFactory = new RecordsServiceFactory() {
             @Override

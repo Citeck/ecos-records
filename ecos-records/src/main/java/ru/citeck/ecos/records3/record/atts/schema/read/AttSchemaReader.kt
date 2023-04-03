@@ -4,21 +4,18 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.exception.AttSchemaException
 import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
-import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
 import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 
-class AttSchemaReader(services: RecordsServiceFactory) {
+class AttSchemaReader(private val services: RecordsServiceFactory) {
 
     companion object {
 
@@ -66,24 +63,20 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         }
 
         val schemaAtts = ArrayList<SchemaAtt>()
-        val readFunc = { key: String, value: Any? ->
-            if (value is String) {
-                schemaAtts.add(read(key, value))
-            } else {
-                schemaAtts.add(readObjAtt(key, value))
-            }
-        }
-
-        val context = RequestContext.getCurrent()
-        if (context == null) {
-            attributes.forEach { (k, v) -> readFunc.invoke(k, v) }
-        } else {
-            attributes.forEach { (k, v) ->
-                try {
-                    readFunc.invoke(k, v)
-                } catch (e: Exception) {
-                    schemaAtts.add(ATT_NULL.withAlias(k))
-                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+        attributes.forEach { (key: String, value: Any?) ->
+            try {
+                if (value is String) {
+                    schemaAtts.add(read(key, value))
+                } else {
+                    schemaAtts.add(readObjAtt(key, value))
+                }
+            } catch (e: AttSchemaException) {
+                schemaAtts.add(ATT_NULL.withAlias(key))
+                val message = e.message ?: "Error while attribute reading. Alias: '$key' Attribute: '$value'"
+                if (log.isWarnEnabled) {
+                    log.warn { message }
+                } else if (log.isDebugEnabled) {
+                    log.trace(e) { message }
                 }
             }
         }
@@ -159,7 +152,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
             ) { al, att, proc -> readInner(al, att, proc, emptyList()) }
         } catch (error: AttSchemaException) {
             if (readErrorV2 != null) {
-                log.error("AttSchemaException: " + error.message)
+                readErrorV2.addSuppressed(error)
                 throw readErrorV2
             }
             throw error
@@ -340,9 +333,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
         }
 
         val resInnerAtts: List<SchemaAtt> = if (innerAttsStr == null) {
-            if (lastInnerAtts.isNotEmpty()) {
-                lastInnerAtts
-            } else {
+            lastInnerAtts.ifEmpty {
                 listOf(
                     SchemaAtt.create()
                         .withName("?disp")
@@ -561,6 +552,7 @@ class AttSchemaReader(services: RecordsServiceFactory) {
                     .build()
             "protected",
             "unreadable",
+            "mandatory",
             "multiple",
             "isAssoc" ->
                 return attBuilder

@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JsonNode
 import ecos.com.fasterxml.jackson210.databind.node.IntNode
 import ecos.com.fasterxml.jackson210.databind.node.NullNode
 import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.request.rest.DeletionBody
 import ru.citeck.ecos.records2.request.rest.MutationBody
@@ -15,8 +16,10 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
-import ru.citeck.ecos.webapp.api.web.EcosWebControllerApi
-import ru.citeck.ecos.webapp.api.web.EcosWebExecutor
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp
+import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorsApi
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody as QueryBodyV1
 
 class RestHandlerAdapter(services: RecordsServiceFactory) {
@@ -30,43 +33,74 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     private val mapper = Json.mapper
 
     init {
-        registerWebExecutors(services.getEcosWebAppApi()?.getWebControllerApi())
+        registerWebExecutors(services.getEcosWebAppApi()?.getWebExecutorsApi())
     }
 
-    private fun registerWebExecutors(controller: EcosWebControllerApi?) {
-        controller ?: return
-        controller.registerExecutor(
-            RemoteRecordsResolver.QUERY_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = queryRecords(request, apiVersion)
-                override fun getApiVersion() = 2
+    private fun registerWebExecutors(executors: EcosWebExecutorsApi?) {
+        executors ?: return
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = queryRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion(),
+                        catchError = false
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
+                override fun getApiVersion() = 0 to 2
+                override fun getPath() = RemoteRecordsResolver.QUERY_PATH
+                override fun isReadOnly(): Boolean = true
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.MUTATE_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = mutateRecords(request, apiVersion)
-                override fun getApiVersion() = 1
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = mutateRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion(),
+                        catchError = false
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
+                override fun getApiVersion() = 0 to 1
+                override fun getPath() = RemoteRecordsResolver.MUTATE_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.DELETE_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = deleteRecords(request, apiVersion)
-                override fun getApiVersion() = 1
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = deleteRecords(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        request.getApiVersion(),
+                        catchError = false
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
+                override fun getApiVersion() = 0 to 1
+                override fun getPath() = RemoteRecordsResolver.DELETE_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
-        controller.registerExecutor(
-            RemoteRecordsResolver.TXN_PATH,
-            object : EcosWebExecutor<ObjectNode> {
-                override fun execute(apiVersion: Int, request: ObjectNode) = txnAction(request)
-                override fun getApiVersion() = 1
+        executors.register(
+            object : EcosWebExecutor {
+                override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
+                    val result = txnAction(
+                        request.getBodyReader().readDto(DataValue::class.java),
+                        catchError = false
+                    )
+                    response.getBodyWriter().writeDto(result)
+                }
+                override fun getApiVersion() = 0 to 1
+                override fun getPath() = RemoteRecordsResolver.TXN_PATH
+                override fun isReadOnly(): Boolean = false
             }
         )
     }
 
     @JvmOverloads
-    fun queryRecords(body: Any, version: Int? = null): Any {
+    fun queryRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -88,7 +122,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     QueryBodyV1::class.java
                 }
                 val v1Body = mapper.convert(bodyData, queryType) ?: QueryBodyV1()
-                restHandlerV1.queryRecords(v1Body)
+                restHandlerV1.queryRecords(v1Body, catchError)
             }
             else -> {
                 error(UNKNOWN_BODY_VERSION_MSG + ": " + bodyWithVersion.version)
@@ -96,13 +130,13 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
         }
     }
 
-    fun txnAction(body: Any): Any {
+    fun txnAction(body: Any, catchError: Boolean = true): Any {
         val txnBody = mapper.convert(body, TxnBody::class.java) ?: TxnBody()
-        return restHandlerV1.txnAction(txnBody)
+        return restHandlerV1.txnAction(txnBody, catchError)
     }
 
     @JvmOverloads
-    fun deleteRecords(body: Any, version: Int? = null): Any {
+    fun deleteRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -113,7 +147,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
             }
             1 -> {
                 val v1Body = mapper.convert(bodyWithVersion.body, DeleteBody::class.java) ?: DeleteBody()
-                restHandlerV1.deleteRecords(v1Body)
+                restHandlerV1.deleteRecords(v1Body, catchError)
             }
             else -> {
                 throw IllegalArgumentException("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")
@@ -122,7 +156,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
     }
 
     @JvmOverloads
-    fun mutateRecords(body: Any, version: Int? = null): Any {
+    fun mutateRecords(body: Any, version: Int? = null, catchError: Boolean = true): Any {
 
         val bodyWithVersion = getBodyWithVersion(body, version)
 
@@ -133,7 +167,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
             }
             1 -> {
                 val v1Body = mapper.convert(bodyWithVersion.body, MutateBody::class.java) ?: MutateBody()
-                restHandlerV1.mutateRecords(v1Body)
+                restHandlerV1.mutateRecords(v1Body, catchError)
             }
             else -> {
                 error("$UNKNOWN_BODY_VERSION_MSG. Body: $bodyWithVersion")

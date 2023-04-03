@@ -584,7 +584,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             } catch (e: Throwable) {
                 if (context.ctxData.omitErrors) {
                     log.error("Local records resolver v0 error. SourceId: '$sourceId' recs: $recs")
-                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, context.getServices()) }
                 } else {
                     throw e
                 }

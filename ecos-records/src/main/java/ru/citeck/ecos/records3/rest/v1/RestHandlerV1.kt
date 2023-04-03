@@ -50,11 +50,11 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         this.currentAppId = currentAppId
     }
 
-    fun queryRecords(body: QueryBody): QueryResp {
-        return doWithContext(body, true) { ctx -> queryRecordsImpl(body, ctx) }
+    fun queryRecords(body: QueryBody, catchError: Boolean = true): QueryResp {
+        return doWithContext(body, true) { ctx -> queryRecordsImpl(body, ctx, catchError) }
     }
 
-    private fun queryRecordsImpl(body: QueryBody, context: RequestContext): QueryResp {
+    private fun queryRecordsImpl(body: QueryBody, context: RequestContext, catchError: Boolean = true): QueryResp {
 
         if (body.getQuery() != null && body.getRecords() != null) {
             context.addMsg(MsgLevel.WARN) {
@@ -97,9 +97,13 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                     recordsService.query(query, bodyAttsMap, body.rawAtts)
                 }
             } catch (e: Exception) {
-                log.error("Records search query exception. QueryBody: $body", e)
-                result = RecsQueryRes()
-                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                if (catchError) {
+                    log.error("Records search query exception. QueryBody: $body", e)
+                    result = RecsQueryRes()
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
+                } else {
+                    throw e
+                }
             }
             Json.mapper.applyData(resp, result)
         } else {
@@ -116,9 +120,13 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                             recordsService.getAtts(records, bodyAttsMap, body.rawAtts)
                         }
                     } catch (e: Exception) {
-                        log.error("Records attributes query exception. QueryBody: $body", e)
-                        atts = records.map { RecordAtts(it) }
-                        context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                        if (catchError) {
+                            log.error("Records attributes query exception. QueryBody: $body", e)
+                            atts = records.map { RecordAtts(it) }
+                            context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
+                        } else {
+                            throw e
+                        }
                     }
                     resp.setRecords(atts)
                 }
@@ -130,11 +138,11 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
         return resp
     }
 
-    fun mutateRecords(body: MutateBody): MutateResp {
-        return doWithContext(body, false) { ctx -> mutateRecordsImpl(body, ctx) }
+    fun mutateRecords(body: MutateBody, catchError: Boolean): MutateResp {
+        return doWithContext(body, false) { ctx -> mutateRecordsImpl(body, ctx, catchError) }
     }
 
-    private fun mutateRecordsImpl(body: MutateBody, context: RequestContext): MutateResp {
+    private fun mutateRecordsImpl(body: MutateBody, context: RequestContext, catchError: Boolean): MutateResp {
         if (body.getRecords().isEmpty()) {
             return MutateResp()
         }
@@ -152,19 +160,23 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
-            log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
-            resp.setRecords(body.getRecords().map { RecordAtts(it.getId()) })
-            context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+            if (catchError) {
+                log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
+                resp.setRecords(body.getRecords().map { RecordAtts(it.getId()) })
+                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
+            } else {
+                throw e
+            }
         }
         resp.setMessages(context.getMessages())
         return resp
     }
 
-    fun deleteRecords(body: DeleteBody): DeleteResp {
-        return doWithContext(body, false) { ctx -> deleteRecordsImpl(body, ctx) }
+    fun deleteRecords(body: DeleteBody, catchError: Boolean): DeleteResp {
+        return doWithContext(body, false) { ctx -> deleteRecordsImpl(body, ctx, catchError) }
     }
 
-    private fun deleteRecordsImpl(body: DeleteBody, context: RequestContext): DeleteResp {
+    private fun deleteRecordsImpl(body: DeleteBody, context: RequestContext, catchError: Boolean): DeleteResp {
         if (body.records.isEmpty()) {
             return DeleteResp()
         }
@@ -175,15 +187,19 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
-            log.error("Records deletion completed with error. DeleteBody: $body", e)
-            resp.setStatuses(body.records.map { DelStatus.ERROR })
-            context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+            if (catchError) {
+                log.error("Records deletion completed with error. DeleteBody: $body", e)
+                resp.setStatuses(body.records.map { DelStatus.ERROR })
+                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
+            } else {
+                throw e
+            }
         }
         resp.setMessages(context.getMessages())
         return resp
     }
 
-    fun txnAction(body: TxnBody): TxnResp {
+    fun txnAction(body: TxnBody, catchError: Boolean): TxnResp {
         return doWithContext(body, false) { context ->
             val txnResp = TxnResp()
             try {
@@ -194,8 +210,12 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                     }
                 }
             } catch (e: Throwable) {
-                log.error("Records txn action completed with error. TxnBody: $body", e)
-                context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+                if (catchError) {
+                    log.error("Records txn action completed with error. TxnBody: $body", e)
+                    context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
+                } else {
+                    throw e
+                }
             }
             txnResp.setMessages(context.getMessages())
             txnResp

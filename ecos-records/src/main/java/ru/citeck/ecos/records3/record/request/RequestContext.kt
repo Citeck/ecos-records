@@ -264,8 +264,6 @@ class RequestContext {
 
             return try {
                 action.invoke(current)
-            } catch (e: Throwable) {
-                throw e
             } finally {
                 currentMessages.addAll(current.messages)
                 current.messages = currentMessages

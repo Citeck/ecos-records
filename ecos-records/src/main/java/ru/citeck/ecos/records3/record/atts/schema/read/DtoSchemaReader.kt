@@ -23,6 +23,7 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttWithProc
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.mime.MimeType
 import java.beans.PropertyDescriptor
 import java.lang.reflect.*
 import java.time.Instant
@@ -86,6 +87,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(DataValue::class.java, ScalarType.RAW),
             ScalarField(RecordRef::class.java, ScalarType.ID),
             ScalarField(EntityRef::class.java, ScalarType.ID),
+            ScalarField(MimeType::class.java, ScalarType.STR),
             ScalarField(Map::class.java, ScalarType.JSON),
             ScalarField(Predicate::class.java, ScalarType.JSON)
         ).forEach(
@@ -108,6 +110,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
     fun read(attsClass: Class<*>): List<SchemaAtt> {
         return getAttributes(attsClass, null)
+    }
+
+    fun <T : Any> instantiateNotNull(attsClass: Class<T>, attributes: ObjectData): T {
+        return Json.mapper.convertNotNull(attributes, attsClass)
     }
 
     fun <T : Any> instantiate(attsClass: Class<T>, attributes: ObjectData): T? {

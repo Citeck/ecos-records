@@ -29,7 +29,8 @@ class AttSchemaReaderTest {
     @Test
     fun partiallyIncorrectSchemaTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val services = RecordsServiceFactory()
+        val records = services.recordsServiceV1
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("test", mapOf("att" to "value"))
@@ -56,5 +57,10 @@ class AttSchemaReaderTest {
                 attsToReq
             ).getRecords()[0]
         )
+
+        val schemaAtts = services.attSchemaReader.read(attsToReq)
+        assertThat(schemaAtts).hasSize(2)
+        assertThat(schemaAtts[0].name).isEqualTo("att")
+        assertThat(schemaAtts[1].name).isEqualTo("_null")
     }
 }

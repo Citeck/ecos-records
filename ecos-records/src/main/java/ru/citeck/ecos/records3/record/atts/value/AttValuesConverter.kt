@@ -7,6 +7,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.AttValueFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.meta.AttMetaValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.mime.MimeType
 
 class AttValuesConverter(private val services: RecordsServiceFactory) {
 
@@ -62,6 +63,9 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         }
         if (valueToConvert is AttValueCtx) {
             valueToConvert = valueToConvert.getValue()
+        }
+        if (valueToConvert is MimeType) {
+            valueToConvert = valueToConvert.toString()
         }
 
         val factory: AttValueFactory<Any> = valueFactories[valueToConvert.javaClass]

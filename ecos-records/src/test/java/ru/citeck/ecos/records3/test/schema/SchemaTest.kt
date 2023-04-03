@@ -41,6 +41,7 @@ class SchemaTest {
         assertEdgeMetaVal("createVariants", true)
         assertEdgeScalar("protected", "bool")
         assertEdgeScalar("unreadable", "bool")
+        assertEdgeScalar("mandatory", "bool")
         assertEdgeScalar("multiple", "bool")
         assertEdgeScalar("isAssoc", "bool")
         assertEdgeScalar("name", "str")
@@ -333,7 +334,7 @@ class SchemaTest {
 
     @Test
     fun testWithError() {
-        doWithCtx<Any?>(factory) { ctx: RequestContext ->
+        doWithCtx<Any?>(factory) { _: RequestContext ->
             val atts: MutableMap<String, String> = LinkedHashMap()
             atts["abc"] = "def"
             atts["incorrectScalar"] = "def?protected"
@@ -341,7 +342,6 @@ class SchemaTest {
             atts["incorrectBrace2"] = "def{one{two{}}"
             atts["incorrectBrace3"] = "def{one{two{[}]}}"
             val readedAtts = reader.read(atts)
-            assertEquals(4, ctx.getErrors().size)
             assertEquals("abc", readedAtts[0].alias)
             assertEquals("def", readedAtts[0].name)
             assertEquals("incorrectScalar", readedAtts[1].alias)

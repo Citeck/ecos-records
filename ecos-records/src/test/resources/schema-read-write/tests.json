@@ -1,6 +1,24 @@
 {
   "tests": [
     {
+      "att": "a{b\\:c:def}",
+      "expAfterWrite": "a{b\\:c:def}",
+      "exp": {
+        "name": "a",
+        "inner": [
+          {
+            "alias": "b:c",
+            "name": "def",
+            "inner": [
+              {
+                "name": "?disp"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "att": "field0\\.field1",
       "expAfterWrite": "field0\\.field1",
       "exp": {

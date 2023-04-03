@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.atts.value.HasListView
@@ -11,10 +10,12 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
 
     companion object {
         fun getAsText(value: DataValue): String? {
-            return if (value.isValueNode()) {
+            return if (value.isNull()) {
+                null
+            } else if (value.isValueNode()) {
                 value.asText()
             } else {
-                Json.mapper.toString(value)
+                value.toString()
             }
         }
     }

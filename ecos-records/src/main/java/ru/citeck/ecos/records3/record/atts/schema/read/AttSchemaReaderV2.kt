@@ -161,7 +161,10 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
                 }
                 read("", attWithoutEscapedDots)
             } else {
-                val alias = it.substring(0, aliasDelimIdx).trim()
+                var alias = it.substring(0, aliasDelimIdx).trim()
+                if (alias.contains("\\")) {
+                    alias = AttStrUtils.removeEscaping(alias)
+                }
                 val attribute = it.substring(aliasDelimIdx + 1).trim()
                 read(alias, attribute)
             }

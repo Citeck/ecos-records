@@ -237,7 +237,7 @@ interface RecordsService {
     /**
      * Same as mutate but for '{{sourceId}}@' record (RecordRef without local ID)
      */
-    fun create(sourceId: String, attributes: Any): RecordRef
+    fun create(sourceIdOrType: String, attributes: Any): RecordRef
 
     /**
      * Create or change record.

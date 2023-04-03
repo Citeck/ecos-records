@@ -6,7 +6,7 @@ import kotlin.math.abs
 
 object DefaultValueComparator : ValueComparator {
 
-    private const val DOUBLE_THRESHOLD = 0.000001
+    private const val DOUBLE_THRESHOLD = 0.0000001
 
     operator fun invoke(): DefaultValueComparator = this
 
@@ -106,8 +106,8 @@ object DefaultValueComparator : ValueComparator {
         inclusive: Boolean
     ): Boolean {
 
-        if (value0.isNull() || value1.isNull()) {
-            return false
+        if (value0.isNull() && value1.isNull()) {
+            return inclusive
         }
         var result = compareDouble(value0, value1, isGreater, inclusive)
         if (result == CompareResult.UNKNOWN) {
@@ -149,16 +149,27 @@ object DefaultValueComparator : ValueComparator {
             return CompareResult.UNKNOWN
         }
 
-        if (if (isGreater) doubleValue0 > doubleValue1 else doubleValue0 < doubleValue1) {
-            return CompareResult.TRUE
-        } else if (inclusive) {
-            return if (abs(doubleValue0 - doubleValue1) < DOUBLE_THRESHOLD) {
+        return if (abs(doubleValue0 - doubleValue1) < DOUBLE_THRESHOLD) {
+            if (inclusive) {
                 CompareResult.TRUE
             } else {
                 CompareResult.FALSE
             }
+        } else {
+            if (isGreater) {
+                if (doubleValue0 > doubleValue1) {
+                    CompareResult.TRUE
+                } else {
+                    CompareResult.FALSE
+                }
+            } else {
+                if (doubleValue0 < doubleValue1) {
+                    CompareResult.TRUE
+                } else {
+                    CompareResult.FALSE
+                }
+            }
         }
-        return CompareResult.FALSE
     }
 
     private fun toDouble(value: DataValue): Double {
@@ -172,6 +183,9 @@ object DefaultValueComparator : ValueComparator {
                     Double.NaN
                 }
             }
+        }
+        if (value.isNull()) {
+            return Double.MIN_VALUE
         }
         return value.asDouble(Double.NaN)
     }

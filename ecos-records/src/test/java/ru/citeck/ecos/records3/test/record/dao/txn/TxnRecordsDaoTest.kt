@@ -4,9 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.promise.Promises
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
@@ -22,9 +19,8 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
-import ru.citeck.ecos.webapp.api.promise.Promise
-import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
@@ -174,33 +170,22 @@ class TxnRecordsDaoTest {
 
         val localServices = object : RecordsServiceFactory() {
             override fun getEcosWebAppApi(): EcosWebAppApi {
-                val context = object : EcosWebAppApiMock("test") {
-                    override fun getWebClientApi(): EcosWebClientApi {
-                        return object : EcosWebClientApi {
-                            override fun <R : Any> execute(
-                                targetApp: String,
-                                path: String,
-                                version: Int,
-                                request: Any,
-                                respType: Class<R>
-                            ): Promise<R> {
-                                val restHandler = remoteServices.restHandlerAdapter
-                                val result = AtomicReference<Any>()
-                                thread(start = true) {
-                                    result.set(
-                                        when (path) {
-                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(request)
-                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(request)
-                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(request)
-                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(request)
-                                            else -> error("Unknown path: '$path'")
-                                        }
-                                    )
-                                }.join()
-                                return Promises.resolve(Json.mapper.convert(result.get(), respType)!!)
+                val context = EcosWebAppApiMock("test")
+                context.webClientExecuteImpl = { _, path, body ->
+                    val restHandler = remoteServices.restHandlerAdapter
+                    val result = AtomicReference<Any>()
+                    thread(start = true) {
+                        result.set(
+                            when (path) {
+                                RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(body)
+                                RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(body)
+                                RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(body)
+                                RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(body)
+                                else -> error("Unknown path: '$path'")
                             }
-                        }
-                    }
+                        )
+                    }.join()
+                    result.get()
                 }
                 return context
             }

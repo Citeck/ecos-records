@@ -44,7 +44,7 @@ public class AttStrUtils {
         if (str == null || !str.contains("\\")) {
             return str;
         }
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(str.length());
         int idx = 0;
         for (; idx < str.length() - 1; idx++) {
             char ch = str.charAt(idx);

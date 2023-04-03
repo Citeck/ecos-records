@@ -11,6 +11,10 @@ public interface AttEdge {
         return false;
     }
 
+    default boolean isMandatory() throws Exception {
+        return false;
+    }
+
     default boolean isMultiple() throws Exception {
         return false;
     }

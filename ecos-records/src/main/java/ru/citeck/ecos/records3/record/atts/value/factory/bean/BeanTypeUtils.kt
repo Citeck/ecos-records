@@ -4,6 +4,7 @@ import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.json.exception.JsonMapperException
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -47,7 +48,7 @@ object BeanTypeUtils {
             return { bean: Any -> Json.mapper.convert(getStrMethod.invoke(bean), String::class.java) }
         }
         if (Map::class.java.isAssignableFrom(type)) {
-            return { bean -> Json.mapper.toNonDefaultJson(bean).toString() }
+            return { bean -> Json.mapper.toNonDefaultData(bean).toString() }
         }
         if (type.isAssignableFrom(DataValue::class.java)) {
             return { bean: Any ->
@@ -71,11 +72,10 @@ object BeanTypeUtils {
             { bean -> Json.mapper.toString(getJsonMethod.invoke(bean)) }
         } else {
             { bean ->
-                val json = Json.mapper.toNonDefaultJson(bean)
-                if (json.isNull || json.isMissingNode) {
-                    null
-                } else {
-                    json.toString()
+                try {
+                    DataValueAttFactory.getAsText(Json.mapper.toNonDefaultData(bean))
+                } catch (e: JsonMapperException) {
+                    bean.toString()
                 }
             }
         }

@@ -4,9 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.promise.Promises
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -16,9 +13,8 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
-import ru.citeck.ecos.webapp.api.promise.Promise
-import ru.citeck.ecos.webapp.api.web.EcosWebClientApi
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
@@ -155,34 +151,24 @@ class TxnActionsTest {
         val services = object : RecordsServiceFactory() {
 
             override fun getEcosWebAppApi(): EcosWebAppApi {
-                val context = object : EcosWebAppApiMock(appId) {
-                    override fun getWebClientApi(): EcosWebClientApi {
-                        return object : EcosWebClientApi {
-                            override fun <R : Any> execute(
-                                targetApp: String,
-                                path: String,
-                                version: Int,
-                                request: Any,
-                                respType: Class<R>
-                            ): Promise<R> {
-                                val services = this@TxnActionsTest.services[targetApp]!!
-                                val restHandler = services.restHandlerAdapter
-                                val result = AtomicReference<Any>()
-                                thread(start = true) {
-                                    result.set(
-                                        when (path) {
-                                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(request)
-                                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(request)
-                                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(request)
-                                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(request)
-                                            else -> error("Unknown path: '$path'")
-                                        }
-                                    )
-                                }.join()
-                                return Promises.resolve(Json.mapper.convert(result.get(), respType)!!)
+                val context = EcosWebAppApiMock(appId)
+                context.webClientExecuteImpl = { targetApp, path, body ->
+
+                    val services = this@TxnActionsTest.services[targetApp]!!
+                    val restHandler = services.restHandlerAdapter
+                    val result = AtomicReference<Any>()
+                    thread(start = true) {
+                        result.set(
+                            when (path) {
+                                RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(body)
+                                RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(body)
+                                RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(body)
+                                RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(body)
+                                else -> error("Unknown path: '$path'")
                             }
-                        }
-                    }
+                        )
+                    }.join()
+                    result.get()
                 }
                 return context
             }

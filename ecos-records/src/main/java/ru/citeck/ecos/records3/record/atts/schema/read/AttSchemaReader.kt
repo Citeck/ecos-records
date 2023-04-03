@@ -552,6 +552,7 @@ class AttSchemaReader(private val services: RecordsServiceFactory) {
                     .build()
             "protected",
             "unreadable",
+            "mandatory",
             "multiple",
             "isAssoc" ->
                 return attBuilder

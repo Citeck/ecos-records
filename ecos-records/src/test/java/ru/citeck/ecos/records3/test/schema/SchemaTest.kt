@@ -41,6 +41,7 @@ class SchemaTest {
         assertEdgeMetaVal("createVariants", true)
         assertEdgeScalar("protected", "bool")
         assertEdgeScalar("unreadable", "bool")
+        assertEdgeScalar("mandatory", "bool")
         assertEdgeScalar("multiple", "bool")
         assertEdgeScalar("isAssoc", "bool")
         assertEdgeScalar("name", "str")

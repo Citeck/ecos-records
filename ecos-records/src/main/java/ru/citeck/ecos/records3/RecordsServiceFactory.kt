@@ -359,7 +359,9 @@ open class RecordsServiceFactory {
             AttRegexpGroupProcessor(),
             AttHexProcessor(),
             AttYamlProcessor(),
-            AttPlusProcessor()
+            AttPlusProcessor(),
+            AttUpperCaseProcessor(),
+            AttLowerCaseProcessor()
         )
     }
 

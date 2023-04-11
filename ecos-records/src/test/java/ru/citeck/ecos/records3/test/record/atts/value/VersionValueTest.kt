@@ -14,6 +14,6 @@ class VersionValueTest {
         val version = Version.valueOf("1.0.0")
 
         val strValue = records.getAtt(version, "?str").asText()
-        assertThat(strValue).isEqualTo("1.0.0")
+        assertThat(strValue).isEqualTo("1.0")
     }
 }

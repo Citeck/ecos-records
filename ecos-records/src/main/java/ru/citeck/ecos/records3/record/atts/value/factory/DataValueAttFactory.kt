@@ -42,10 +42,8 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             value.isNull() -> null
             value.isTextual() -> value.textValue()
             value.isBoolean() -> value.booleanValue()
-            value.isInt() -> value.intValue()
-            value.isLong() -> value.longValue()
-            value.isFloat() -> value.floatValue()
-            value.isDouble() -> value.doubleValue()
+            value.isIntegralNumber() -> value.longValue()
+            value.isFloatingPointNumber() -> value.doubleValue()
             value.isBinary() -> value.binaryValue()
             value.isArray() -> {
                 val list = ArrayList<Any?>(value.size())

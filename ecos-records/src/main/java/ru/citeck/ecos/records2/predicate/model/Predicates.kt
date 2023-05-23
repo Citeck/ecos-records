@@ -81,6 +81,11 @@ object Predicates {
     }
 
     @JvmStatic
+    fun like(attribute: String?, value: Any?): ValuePredicate {
+        return ValuePredicate.like(attribute, value)
+    }
+
+    @JvmStatic
     fun eq(attribute: String?, value: Any?): ValuePredicate {
         return equal(attribute, value)
     }

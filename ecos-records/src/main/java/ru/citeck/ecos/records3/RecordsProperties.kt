@@ -6,7 +6,12 @@ import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 class RecordsProperties(
     val sourceIdMapping: Map<String, String>,
     val defaultApp: String,
-    val legacyApiMode: Boolean
+    val legacyApiMode: Boolean,
+    /**
+     * If this flag turned on and Records DAO is not groupable,
+     * then API will try to make grouping by multiple sub-queries
+     */
+    val queryAutoGroupingEnabled: Boolean
 ) {
     companion object {
 
@@ -45,6 +50,7 @@ class RecordsProperties(
         var sourceIdMapping: Map<String, String> = emptyMap()
         var defaultApp: String = ""
         var legacyApiMode: Boolean = false
+        var queryAutoGroupingEnabled: Boolean = true
 
         constructor(base: RecordsProperties) : this() {
             sourceIdMapping = base.sourceIdMapping
@@ -67,8 +73,13 @@ class RecordsProperties(
             return this
         }
 
+        fun withQueryAutoGroupingEnabled(queryAutoGroupingEnabled: Boolean?): Builder {
+            this.queryAutoGroupingEnabled = queryAutoGroupingEnabled ?: DEFAULT.queryAutoGroupingEnabled
+            return this
+        }
+
         fun build(): RecordsProperties {
-            return RecordsProperties(sourceIdMapping, defaultApp, legacyApiMode)
+            return RecordsProperties(sourceIdMapping, defaultApp, legacyApiMode, queryAutoGroupingEnabled)
         }
     }
 }

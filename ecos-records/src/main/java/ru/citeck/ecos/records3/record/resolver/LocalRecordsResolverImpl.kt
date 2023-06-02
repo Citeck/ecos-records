@@ -95,6 +95,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
     private val localRecordsResolverV0 = services.localRecordsResolverV0
     private lateinit var recordsTemplateService: RecordsTemplateService
 
+    private val queryAutoGroupingEnabled = services.properties.queryAutoGroupingEnabled
     private val currentApp = services.webappProps.appName
     private val converter: RecsDaoConverter = RecsDaoConverter(currentApp)
 
@@ -181,7 +182,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             val dao = getRecordsDaoPair(sourceId, RecordsQueryResDao::class.java)
 
-            if (dao == null || dao.first !is RecsGroupQueryDao) {
+            if (queryAutoGroupingEnabled && (dao == null || dao.first !is RecsGroupQueryDao)) {
 
                 val groupsSource = needRecordsDaoPair(RecordsGroupDao.ID, RecordsQueryResDao::class.java)
                 val convertedQuery = updateQueryLanguage(query, groupsSource)
@@ -211,7 +212,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     }
                 }
             } else {
-
+                if (dao == null) {
+                    error("Records source is not found: $sourceId")
+                }
                 recordsResult = queryRecordsFromDao(sourceId, dao, query, attributes, rawAtts, context)
             }
         } else {

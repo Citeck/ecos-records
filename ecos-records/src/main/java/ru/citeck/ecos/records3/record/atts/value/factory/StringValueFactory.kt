@@ -33,6 +33,9 @@ class StringValueFactory : AttValueFactory<String> {
             }
 
             override fun asDouble(): Double? {
+                if (value.isEmpty()) {
+                    return null
+                }
                 return try {
                     value.toDouble()
                 } catch (e: NumberFormatException) {

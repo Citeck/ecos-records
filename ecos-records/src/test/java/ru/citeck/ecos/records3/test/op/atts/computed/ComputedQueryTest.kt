@@ -25,14 +25,15 @@ class ComputedQueryTest {
     fun test() {
 
         val type0Atts = listOf(
-            RecordComputedAtt(
-                "attScript0",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair(
-                            "fn",
-                            """
+            RecordComputedAtt.create {
+                withId("attScript0")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair(
+                                "fn",
+                                """
                                 var queryRes = Records.query({
                                     sourceId: 'test',
                                     query: {
@@ -45,19 +46,21 @@ class ComputedQueryTest {
                                     'att': 'attForScript'
                                 });
                                 return queryRes.records[0];
-                            """.trimIndent()
+                                """.trimIndent()
+                            )
                         )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript01",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair(
-                            "fn",
-                            """
+            },
+            RecordComputedAtt.create {
+                withId("attScript01")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair(
+                                "fn",
+                                """
                                 var queryRes = Records.query({
                                     sourceId: 'test',
                                     query: {
@@ -70,39 +73,44 @@ class ComputedQueryTest {
                                     'att': 'attForScript'
                                 });
                                 return queryRes.records.map(function(rec) { return rec.att; });
-                            """.trimIndent()
+                                """.trimIndent()
+                            )
                         )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript1",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair(
-                            "fn",
-                            """
+            },
+            RecordComputedAtt.create {
+                withId("attScript1")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair(
+                                "fn",
+                                """
                                 return Records.get('test@type0Record').load('attAttributeValue');
-                            """.trimIndent()
+                                """.trimIndent()
+                            )
                         )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript2",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair(
-                            "fn",
-                            """
+            },
+            RecordComputedAtt.create {
+                withId("attScript2")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair(
+                                "fn",
+                                """
                                 return Records.get('test@type0Record').load(['attAttributeValue']);
-                            """.trimIndent()
+                                """.trimIndent()
+                            )
                         )
                     )
                 )
-            )
+            }
         )
 
         val services = RecordsServiceFactory()

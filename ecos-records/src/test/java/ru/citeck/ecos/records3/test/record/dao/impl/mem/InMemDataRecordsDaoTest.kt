@@ -10,11 +10,39 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class InMemDataRecordsDaoTest {
 
     companion object {
         private const val ID = "test-id"
+    }
+
+    @Test
+    fun testWithCopyAndUpdateById() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        records.register(InMemDataRecordsDao("test"))
+        val res0 = records.create(
+            "test",
+            mapOf(
+                "id" to "abc",
+                "name" to "ABC"
+            )
+        )
+        assertThat(res0.getLocalId()).isEqualTo("abc")
+        assertThat(records.getAtt(res0, "name").asText()).isEqualTo("ABC")
+
+        val res1 = records.mutate(
+            EntityRef.valueOf("test@"),
+            mapOf(
+                "id" to "abc",
+                "name" to "ABCDEF"
+            )
+        )
+        assertThat(res1).isEqualTo(res0)
+        assertThat(records.getAtt(res0, "name").asText()).isEqualTo("ABCDEF")
     }
 
     @Test

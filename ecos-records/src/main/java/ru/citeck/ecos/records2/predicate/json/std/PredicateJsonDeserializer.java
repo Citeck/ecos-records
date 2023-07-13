@@ -47,7 +47,7 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
 
             String strValue = jp.getValueAsString();
             if (StringUtils.isBlank(strValue) || strValue.equals("{}")) {
-                return VoidPredicate.INSTANCE;
+                return Predicates.alwaysTrue();
             }
 
             JsonNode node;
@@ -75,7 +75,7 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
         String type = predicateNode.path("t").asText();
 
         if (StringUtils.isBlank(type)) {
-            return VoidPredicate.INSTANCE;
+            return Predicates.alwaysTrue();
         }
 
         boolean inverse = false;
@@ -103,12 +103,18 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
         }
 
         if (predicate == null) {
-            throw ctxt.mappingException("Type is unknown: " + type);
+            log.debug("Predicate type is unknown: '" + type + "'");
+            predicate = Predicates.alwaysFalse();
         }
         if (inverse) {
             predicate = new NotPredicate(predicate);
         }
         return predicate;
+    }
+
+    @Override
+    public Predicate getNullValue(DeserializationContext ctxt) {
+        return Predicates.alwaysTrue();
     }
 
     public void register(PredicateResolver resolver) {

@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.json.exception.JsonMapperException
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
@@ -617,8 +618,19 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
 
                     if (disp == null || LibsUtils.isJacksonPresent() && disp is JackNullNode) {
                         null
-                    } else if (disp is DataValue && disp.isNull()) {
-                        null
+                    } else if (disp is DataValue) {
+                        when {
+                            disp.isNull() -> null
+                            disp.isObject() -> {
+                                return try {
+                                    val mlText = disp.getAsNotNull(MLText::class.java)
+                                    mlText.getClosestValue(I18nContext.getLocale())
+                                } catch (e: JsonMapperException) {
+                                    null
+                                }
+                            }
+                            else -> disp.asText()
+                        }
                     } else {
                         when (disp) {
                             is NullNode -> null

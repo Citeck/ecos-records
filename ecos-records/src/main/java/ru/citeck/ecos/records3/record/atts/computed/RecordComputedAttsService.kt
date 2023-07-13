@@ -1,6 +1,10 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ScriptUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.commons.utils.TmplUtils
@@ -9,6 +13,7 @@ import ru.citeck.ecos.records3.record.atts.computed.script.AttValueScriptCtxImpl
 import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordComputedAttsService(services: RecordsServiceFactory) {
 
@@ -18,6 +23,7 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
 
     private val recordsScriptService by lazy { RecordsScriptService(services) }
     private val recordsService by lazy { services.recordsServiceV1 }
+    private val authoritiesApi by lazy { services.getEcosWebAppApi()?.getAuthoritiesApi() }
 
     fun compute(value: Any, att: RecordComputedAtt, orElse: () -> Any? = { null }): Any? {
         val valueCtx = if (value is AttValueCtx) {
@@ -25,20 +31,20 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
         } else {
             RecordAttValueCtx(value, recordsService)
         }
-        return compute(valueCtx, RecordComputedAttValue(att.type, att.config), orElse)
+        return compute(valueCtx, RecordComputedAttValue(att.type, att.config, att.resultType), orElse)
     }
 
     fun compute(context: AttValueCtx, att: RecordComputedAtt, orElse: () -> Any? = { null }): Any? {
-        return compute(context, RecordComputedAttValue(att.type, att.config), orElse)
+        return compute(context, RecordComputedAttValue(att.type, att.config, att.resultType), orElse)
     }
 
     fun compute(context: AttValueCtx, att: RecordComputedAttValue, orElse: () -> Any? = { null }): Any? {
 
-        return when (att.type) {
+        val resultValue = when (att.type) {
 
             RecordComputedAttType.SCRIPT -> {
 
-                val script = att.config.get("fn").asText()
+                val script = att.config["fn"].asText()
 
                 if (StringUtils.isBlank(script)) {
                     log.warn("Script is blank. Def: $att")
@@ -54,11 +60,11 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
             }
             RecordComputedAttType.ATTRIBUTE -> {
 
-                context.getAtt(att.config.get("attribute").asText())
+                context.getAtt(att.config["attribute"].asText())
             }
             RecordComputedAttType.VALUE -> {
 
-                val value = att.config.get("value")
+                val value = att.config["value"]
                 if (value.isTextual()) {
                     val text = value.asText()
                     val lowerText = text.lowercase()
@@ -84,7 +90,7 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
             }
             RecordComputedAttType.TEMPLATE -> {
 
-                val value = att.config.get("template").asText()
+                val value = att.config["template"].asText()
                 val atts = context.getAtts(TmplUtils.getAtts(value))
 
                 TmplUtils.applyAtts(value, atts)
@@ -93,6 +99,60 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
 
                 orElse.invoke()
             }
+        }
+
+        if (att.resultType == RecordComputedAttResType.ANY) {
+            return resultValue
+        }
+        if (resultValue == null || resultValue is DataValue && resultValue.isNull()) {
+            return null
+        }
+        var resType = att.resultType
+        if (resType == RecordComputedAttResType.AUTHORITY && authoritiesApi == null) {
+            resType = RecordComputedAttResType.REF
+        }
+        return when (resType) {
+            RecordComputedAttResType.AUTHORITY -> {
+                authoritiesApi!!.getAuthorityRef(resType)
+            }
+            RecordComputedAttResType.REF -> {
+                convertResult(resultValue) { EntityRef.valueOf(it) }
+            }
+            RecordComputedAttResType.MLTEXT -> {
+                convertResult(resultValue) {
+                    when (it) {
+                        is String -> MLText(it)
+                        is DataValue -> when {
+                            it.isObject() -> Json.mapper.convert(it, MLText::class.java)
+                            else -> MLText(it.asText())
+                        }
+                        is Map<*, *> -> Json.mapper.convert(it, MLText::class.java)
+                        is ObjectData -> Json.mapper.convert(it.getData(), MLText::class.java)
+                        else -> MLText(resType.toString())
+                    }
+                }
+            }
+            RecordComputedAttResType.TEXT -> {
+                convertResult(resultValue) {
+                    when (it) {
+                        is String -> it
+                        is DataValue -> it.asText()
+                        else -> resType.toString()
+                    }
+                }
+            }
+            else -> resultValue
+        }
+    }
+
+    private fun convertResult(value: Any?, action: (Any) -> Any?): Any? {
+        if (value == null) {
+            return null
+        }
+        return if (value is Collection<*>) {
+            value.mapNotNull { convertResult(it, action) }
+        } else {
+            action.invoke(value)
         }
     }
 }

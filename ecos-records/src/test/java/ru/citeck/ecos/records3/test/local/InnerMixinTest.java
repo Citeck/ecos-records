@@ -52,18 +52,18 @@ public class InnerMixinTest extends AbstractRecordsDao
             @NotNull
             public List<RecordComputedAtt> getComputedAtts() {
                 if (type.equals(TEST_TYPE0)) {
-                    RecordComputedAtt att = new RecordComputedAtt(
-                        "computed",
-                        RecordComputedAttType.ATTRIBUTE,
-                        ObjectData.create("{\"attribute\":\"computedAtt0\"}")
-                    );
+                    RecordComputedAtt att = RecordComputedAtt.create()
+                        .withId("computed")
+                        .withType(RecordComputedAttType.ATTRIBUTE)
+                        .withConfig(ObjectData.create("{\"attribute\":\"computedAtt0\"}"))
+                        .build();
                     return Collections.singletonList(att);
                 } else if (type.equals(TEST_TYPE1)) {
-                    RecordComputedAtt att = new RecordComputedAtt(
-                        "computed",
-                        RecordComputedAttType.ATTRIBUTE,
-                        ObjectData.create("{\"attribute\":\"computedAtt1\"}")
-                    );
+                    RecordComputedAtt att = RecordComputedAtt.create()
+                        .withId("computed")
+                        .withType(RecordComputedAttType.ATTRIBUTE)
+                        .withConfig(ObjectData.create("{\"attribute\":\"computedAtt1\"}"))
+                        .build();
                     return Collections.singletonList(att);
                 }
                 return Collections.emptyList();

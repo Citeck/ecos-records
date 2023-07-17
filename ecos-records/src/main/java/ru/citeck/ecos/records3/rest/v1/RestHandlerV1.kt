@@ -146,15 +146,16 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                         it.withDefaultAppName(currentAppName)
                     }
                 )
-                if (body.txnId != null) {
-                    resp.txnChangedRecords = context.getTxnChangedRecords() ?: emptySet()
-                }
                 resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
             log.error("Records mutation completed with error. MutateBody: ${body.withoutSensitiveData()}", e)
             resp.setRecords(body.getRecords().map { RecordAtts(it.getId()) })
             context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e) }
+        } finally {
+            if (body.txnId != null) {
+                resp.txnChangedRecords = context.getTxnChangedRecords() ?: emptySet()
+            }
         }
         resp.setMessages(context.getMessages())
         return resp

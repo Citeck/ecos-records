@@ -226,7 +226,17 @@ class RemoteRecordsResolver(
                 mutateBody,
                 MutateResp::class,
                 context
-            )
+            ) { mutateResp ->
+                context.getTxnChangedRecords()?.addAll(
+                    mutateResp.txnChangedRecords.map {
+                        if (it.appName == currentAppName) {
+                            it.withoutAppName()
+                        } else {
+                            it.withDefaultAppName(appName)
+                        }
+                    }
+                )
+            }
             if (mutateResp.records.size != atts.size) {
                 throw RecordsException(
                     "Incorrect " +
@@ -240,15 +250,6 @@ class RemoteRecordsResolver(
                     val newAtts = recsAtts[i].withDefaultAppName(appName)
                     result.add(ValWithIdx(newAtts, refAtts.idx))
                 }
-                context.getTxnChangedRecords()?.addAll(
-                    mutateResp.txnChangedRecords.map {
-                        if (it.appName == currentAppName) {
-                            it.withoutAppName()
-                        } else {
-                            it
-                        }
-                    }
-                )
             }
         }
         result.sortBy { it.idx }
@@ -408,7 +409,8 @@ class RemoteRecordsResolver(
         requestPath: String,
         body: RequestBody,
         respType: KClass<T>,
-        context: RequestContext
+        context: RequestContext,
+        resultHandlerBeforeProcessing: (T) -> Unit = {}
     ): T {
 
         val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
@@ -427,6 +429,7 @@ class RemoteRecordsResolver(
         }
 
         val result = webClient.execute(appName, requestPath, convertedBody, respType.java).get()
+        resultHandlerBeforeProcessing.invoke(result)
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

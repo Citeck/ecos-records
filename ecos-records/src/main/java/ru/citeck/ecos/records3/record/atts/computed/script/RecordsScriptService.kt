@@ -57,7 +57,11 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         flatResult["hasMore"] = result.getHasMore()
         flatResult["totalCount"] = result.getTotalCount()
         flatResult["records"] = result.getRecords().map {
-            it.getAtts().getData().copy().set("id", it.getId().toString())
+            val data = it.getAtts().getData()
+            if (!data.has("id")) {
+                data["id"] = it.getId().toString()
+            }
+            data
         }
         flatResult["messages"] = NativeArray.construct(true, null)
 

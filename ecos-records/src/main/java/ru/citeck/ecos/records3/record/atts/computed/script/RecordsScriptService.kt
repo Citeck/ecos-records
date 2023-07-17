@@ -44,12 +44,29 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         )
     }
 
-    fun query(query: Any?, attributes: Any?): Any {
+    fun query(query: Any?): Any {
 
         val javaQuery = ScriptUtils.convertToJava(query)
         val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return getEmptyRes()
+
+        val result = recordsService.query(recsQuery)
+        val flatResult = LinkedHashMap<String, Any?>()
+
+        flatResult["hasMore"] = result.getHasMore()
+        flatResult["totalCount"] = result.getTotalCount()
+        flatResult["records"] = result.getRecords().map { it.toString() }
+        flatResult["messages"] = NativeArray.construct(true, null)
+
+        return ScriptUtils.convertToScript(flatResult) ?: error("Conversion error. Result: $flatResult")
+    }
+
+    fun query(query: Any?, attributes: Any?): Any {
+
         val atts = ComputedScriptUtils.toRecordAttsMap(attributes)
-            ?: return getEmptyRes()
+            ?: return query(query)
+
+        val javaQuery = ScriptUtils.convertToJava(query)
+        val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return getEmptyRes()
 
         val result = recordsService.query(recsQuery, atts.first)
         val flatResult = LinkedHashMap<String, Any?>()

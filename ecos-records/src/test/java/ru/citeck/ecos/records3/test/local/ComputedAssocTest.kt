@@ -12,7 +12,6 @@ import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class ComputedAssocTest {
@@ -20,27 +19,11 @@ class ComputedAssocTest {
     @Test
     fun test() {
 
-        val webAppApi = EcosWebAppApiMock()
-        webAppApi.getAuthorityRefsImpl = { values ->
-            values.map { value ->
-                if (value is EntityRef) {
-                    value
-                } else if (value is String) {
-                    if (value.startsWith("GROUP_")) {
-                        EntityRef.create(AppName.EMODEL, "authority-group", value.substring("GROUP_".length))
-                    } else {
-                        EntityRef.create(AppName.EMODEL, "person", value)
-                    }
-                } else {
-                    EntityRef.EMPTY
-                }
-            }
-        }
         val testType = EntityRef.create("emodel", "type", "test")
 
         val services = object : RecordsServiceFactory() {
             override fun getEcosWebAppApi(): EcosWebAppApi {
-                return webAppApi
+                return EcosWebAppApiMock()
             }
         }
         val typeInfo = object : RecordTypeInfo {

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.script
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.data.DataValue
@@ -12,6 +13,34 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
 
     companion object {
         private val arrakisRef = RecordRef.valueOf("dune@$DEFAULT_ARRAKIS_ID")
+    }
+
+    @Test
+    fun `query without attributes`() {
+
+        createArrakis(id = "abcdef", name = "abcdef")
+
+        val result0 = """
+            return Records.query({
+                sourceId: 'dune',
+                language: 'predicate',
+                query: {t: 'eq', a:'name', v: "abcdef" }
+            }).records;
+        """.eval()
+        assertThat(result0.isArray()).isTrue
+        assertThat(result0.size()).isEqualTo(1)
+        assertThat(result0[0].asText()).isEqualTo("dune@abcdef")
+
+        val result1 = """
+            return Records.query({
+                sourceId: 'dune',
+                language: 'predicate',
+                query: {t: 'eq', a:'name', v: "abcdef" }
+            }, null).records;
+        """.eval()
+        assertThat(result1.isArray()).isTrue
+        assertThat(result1.size()).isEqualTo(1)
+        assertThat(result1[0].asText()).isEqualTo("dune@abcdef")
     }
 
     @Test
@@ -202,12 +231,12 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
         assertEquals(2, queryResult["size"].asInt())
     }
 
-    private fun createArrakis(): DataValue {
+    private fun createArrakis(id: String = DEFAULT_ARRAKIS_ID, name: String = DEFAULT_ARRAKIS_NAME): DataValue {
         val script = """
             var arrakis = Records.get("dune@");
 
-            arrakis.att("id", "$DEFAULT_ARRAKIS_ID");
-            arrakis.att("name", "$DEFAULT_ARRAKIS_NAME");
+            arrakis.att("id", "$id");
+            arrakis.att("name", "$name");
             arrakis.att("temp", $DEFAULT_ARRAKIS_TEMP);
 
             return arrakis.save();

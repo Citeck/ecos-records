@@ -10,6 +10,9 @@ import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttType
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class ComputedAssocTest {
@@ -17,9 +20,29 @@ class ComputedAssocTest {
     @Test
     fun test() {
 
+        val webAppApi = EcosWebAppApiMock()
+        webAppApi.getAuthorityRefsImpl = { values ->
+            values.map { value ->
+                if (value is EntityRef) {
+                    value
+                } else if (value is String) {
+                    if (value.startsWith("GROUP_")) {
+                        EntityRef.create(AppName.EMODEL, "authority-group", value.substring("GROUP_".length))
+                    } else {
+                        EntityRef.create(AppName.EMODEL, "person", value)
+                    }
+                } else {
+                    EntityRef.EMPTY
+                }
+            }
+        }
         val testType = EntityRef.create("emodel", "type", "test")
 
-        val services = RecordsServiceFactory()
+        val services = object : RecordsServiceFactory() {
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                return webAppApi
+            }
+        }
         val typeInfo = object : RecordTypeInfo {
             override fun getSourceId() = ""
             override fun getComputedAtts(): List<RecordComputedAtt> {
@@ -32,6 +55,24 @@ class ComputedAssocTest {
                         )
                         withType(RecordComputedAttType.ATTRIBUTE)
                         withResultType(RecordComputedAttResType.REF)
+                    },
+                    RecordComputedAtt.create {
+                        withId("authority-null")
+                        withConfig(
+                            ObjectData.create()
+                                .set("fn", "return null;")
+                        )
+                        withType(RecordComputedAttType.SCRIPT)
+                        withResultType(RecordComputedAttResType.AUTHORITY)
+                    },
+                    RecordComputedAtt.create {
+                        withId("authority-admin")
+                        withConfig(
+                            ObjectData.create()
+                                .set("fn", "return 'admin';")
+                        )
+                        withType(RecordComputedAttType.SCRIPT)
+                        withResultType(RecordComputedAttResType.AUTHORITY)
                     }
                 )
             }
@@ -66,6 +107,11 @@ class ComputedAssocTest {
 
         val result = records.getAtt(ref1, "counterparty{?disp,?id}")
         assertThat(result["?disp"].asText()).isEqualTo("Counterparty Name")
-        assertThat(result["?id"].asText()).isEqualTo("test@counterparty")
+        assertThat(result["?id"].asText()).isEqualTo("test-app/test@counterparty")
+
+        val result1 = records.getAtt(ref1, "authority-null?str")
+        assertThat(result1.asText()).isEqualTo("")
+        val result2 = records.getAtt(ref1, "authority-admin?str")
+        assertThat(result2.asText()).isEqualTo("emodel/person@admin")
     }
 }

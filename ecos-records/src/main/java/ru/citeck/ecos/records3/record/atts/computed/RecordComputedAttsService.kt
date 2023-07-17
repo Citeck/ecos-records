@@ -11,6 +11,7 @@ import ru.citeck.ecos.commons.utils.TmplUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.script.AttValueScriptCtxImpl
 import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -38,6 +39,13 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
         return compute(context, RecordComputedAttValue(att.type, att.config, att.resultType), orElse)
     }
 
+    private fun addDefaultScalarForAtt(attribute: String): String {
+        if (attribute.contains("{") || attribute.contains('?')) {
+            return attribute
+        }
+        return attribute + ScalarType.RAW.schema
+    }
+
     fun compute(context: AttValueCtx, att: RecordComputedAttValue, orElse: () -> Any? = { null }): Any? {
 
         val resultValue = when (att.type) {
@@ -60,7 +68,8 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
             }
             RecordComputedAttType.ATTRIBUTE -> {
 
-                context.getAtt(att.config["attribute"].asText())
+                val attribute = att.config["attribute"].asText()
+                context.getAtt(addDefaultScalarForAtt(attribute))
             }
             RecordComputedAttType.VALUE -> {
 
@@ -91,7 +100,8 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
             RecordComputedAttType.TEMPLATE -> {
 
                 val value = att.config["template"].asText()
-                val atts = context.getAtts(TmplUtils.getAtts(value))
+                val attsToLoad = TmplUtils.getAtts(value).associateWith { addDefaultScalarForAtt(it) }
+                val atts = context.getAtts(attsToLoad)
 
                 TmplUtils.applyAtts(value, atts)
             }
@@ -113,7 +123,18 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
         }
         return when (resType) {
             RecordComputedAttResType.AUTHORITY -> {
-                authoritiesApi!!.getAuthorityRef(resType)
+                convertResult(resultValue) {
+                    var value: Any? = it
+                    if (it is DataValue) {
+                        value = it.asJavaObj()
+                    }
+                    val result = authoritiesApi!!.getAuthorityRef(value)
+                    if (result.isEmpty()) {
+                        null
+                    } else {
+                        result
+                    }
+                }
             }
             RecordComputedAttResType.REF -> {
                 convertResult(resultValue) { EntityRef.valueOf(it) }

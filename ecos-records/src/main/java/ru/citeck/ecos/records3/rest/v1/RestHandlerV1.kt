@@ -154,9 +154,6 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                         it.withDefaultAppName(currentAppName)
                     }
                 )
-                if (body.txnId != null) {
-                    resp.txnChangedRecords = context.getTxnChangedRecords() ?: emptySet()
-                }
                 resp.setTxnActions(txnActionManager.getTxnActions(context))
             }
         } catch (e: Throwable) {
@@ -166,6 +163,10 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 context.addMsg(MsgLevel.ERROR) { ErrorUtils.convertException(e, services) }
             } else {
                 throw e
+            }
+        } finally {
+            if (body.txnId != null) {
+                resp.txnChangedRecords = context.getTxnChangedRecords() ?: emptySet()
             }
         }
         resp.setMessages(context.getMessages())

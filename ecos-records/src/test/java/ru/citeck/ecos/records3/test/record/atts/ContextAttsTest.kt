@@ -13,6 +13,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.test.testutils.MockAppsFactory
+import java.util.*
 
 class ContextAttsTest {
 
@@ -214,5 +215,17 @@ class ContextAttsTest {
         assertThat(contextValueCallsCount).isEqualTo(1)
         assertThat(getAttCallsCount).isEqualTo(0)
         assertThat(getRecordAttsCallsCount).isEqualTo(0)
+    }
+
+    @Test
+    fun postProcTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        val currentYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.YEAR)
+        val year1 = records.getAtt(null, "\$now|fmt('yyyy')").asInt()
+        assertThat(year1).isEqualTo(currentYear)
+        val year2 = records.getAtt(null, "\$now?raw|fmt('yyyy')").asInt()
+        assertThat(year2).isEqualTo(currentYear)
     }
 }

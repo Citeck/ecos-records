@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.*
 import kotlin.test.assertEquals
 
 class ComputedAttTest {
@@ -230,6 +231,34 @@ class ComputedAttTest {
                 records.getAtt(recordData, "\$comp").asText()
             }
             assertThat(result).isEqualTo("abc-prop-value")
+        }
+    }
+
+    @Test
+    fun testWithPostProc() {
+
+        val computedAttDef1 = RecordComputedAttValue.create()
+            .withType(RecordComputedAttType.TEMPLATE)
+            .withConfig(
+                ObjectData.create("""{ "template": "${"$"}{${"$"}now|fmt('yyyy')}" }""")
+            )
+            .build()
+
+        val computedAttDef2 = RecordComputedAttValue.create()
+            .withType(RecordComputedAttType.TEMPLATE)
+            .withConfig(
+                ObjectData.create("""{ "template": "${"$"}{${"$"}now|fmt('yyyy')!'1234'}" }""")
+            )
+            .build()
+
+        val currentYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.YEAR)
+
+        listOf(computedAttDef1, computedAttDef2).forEach { compAtt ->
+            val records = RecordsServiceFactory().recordsServiceV1
+            val result = RequestContext.doWithAtts(mapOf("comp" to compAtt)) { _ ->
+                records.getAtt(null, "\$comp").asInt()
+            }
+            assertThat(result).isEqualTo(currentYear)
         }
     }
 

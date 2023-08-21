@@ -15,6 +15,7 @@ import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.math.min
 
 class RecordComputedAttsService(services: RecordsServiceFactory) {
 
@@ -43,7 +44,20 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
         if (attribute.contains("{") || attribute.contains('?')) {
             return attribute
         }
-        return attribute + ScalarType.RAW.schema
+        var orElseIdx = attribute.indexOf('!')
+        if (orElseIdx == -1) {
+            orElseIdx = Int.MAX_VALUE
+        }
+        var procDelimIdx = attribute.indexOf('|')
+        if (procDelimIdx == -1) {
+            procDelimIdx = Int.MAX_VALUE
+        }
+        val attEndIdx = min(orElseIdx, procDelimIdx)
+        return if (attEndIdx == Int.MAX_VALUE) {
+            attribute + ScalarType.RAW.schema
+        } else {
+            attribute.substring(0, attEndIdx) + ScalarType.RAW.schema + attribute.substring(attEndIdx)
+        }
     }
 
     fun compute(context: AttValueCtx, att: RecordComputedAttValue, orElse: () -> Any? = { null }): Any? {

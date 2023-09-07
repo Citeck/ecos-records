@@ -149,9 +149,7 @@ open class RecordsServiceFactory {
         }
     }
 
-    val webappProps by lazySingleton {
-        getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps.EMPTY
-    }
+    val webappProps by lazySingleton { evalWebAppProps() }
 
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
 
@@ -393,6 +391,10 @@ open class RecordsServiceFactory {
 
     protected open fun createGlobalAttMixinsProvider(): MutableAttMixinsProvider {
         return AttMixinsProviderImpl()
+    }
+
+    protected open fun evalWebAppProps(): EcosWebAppProps {
+        return getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps.EMPTY
     }
 
     open fun getEcosWebAppApi(): EcosWebAppApi? {

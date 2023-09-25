@@ -79,6 +79,7 @@ class RemoteRecordsResolver(
         ?: error("EcosWebAppApi or EcosWebClientApi is null")
 
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
 
     init {
         sourceIdMeta = services.cacheManager.create(
@@ -253,7 +254,7 @@ class RemoteRecordsResolver(
             ) { mutateResp ->
                 context.getTxnChangedRecords()?.addAll(
                     mutateResp.txnChangedRecords.map {
-                        if (it.appName == currentAppName) {
+                        if (it.appName == currentAppName || it.appName == currentAppRef) {
                             it.withoutAppName()
                         } else {
                             it.withDefaultAppName(appName)

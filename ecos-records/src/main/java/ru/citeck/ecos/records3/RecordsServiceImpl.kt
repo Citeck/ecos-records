@@ -35,6 +35,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
 
     /* QUERY */
 
@@ -176,7 +177,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
             return
         }
-        val normalizedRef = if (recordRef.appName == currentAppName) {
+        val normalizedRef = if (recordRef.appName == currentAppName || recordRef.appName == currentAppRef) {
             recordRef.withoutAppName()
         } else {
             recordRef

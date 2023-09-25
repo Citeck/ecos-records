@@ -35,19 +35,13 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
     private val recordsResolver = services.recordsResolver
     private val txnActionManager = services.txnActionManager
 
-    private val currentAppId: String
+    private val currentAppRef: String
     private val currentAppName: String = services.webappProps.appName
     private val isGateway = services.webappProps.gatewayMode
 
     init {
         val props = services.webappProps
-        var currentAppId = props.appInstanceId.ifBlank {
-            props.appName
-        }
-        if (currentAppId.isBlank()) {
-            currentAppId = "unknown:" + UUID.randomUUID()
-        }
-        this.currentAppId = currentAppId
+        this.currentAppRef = props.appName + ":" + props.appInstanceId
     }
 
     fun queryRecords(body: QueryBody, catchError: Boolean = true): QueryResp {
@@ -233,7 +227,7 @@ class RestHandlerV1(private val services: RecordsServiceFactory) {
                 ctxData.withRequestId(body.requestId)
                 ctxData.withMsgLevel(body.msgLevel)
                 val trace: MutableList<String> = ArrayList(body.getRequestTrace())
-                trace.add(currentAppId)
+                trace.add(currentAppRef)
                 ctxData.withRequestTrace(trace)
                 ctxData.withSourceIdMapping(body.sourceIdMapping)
             },

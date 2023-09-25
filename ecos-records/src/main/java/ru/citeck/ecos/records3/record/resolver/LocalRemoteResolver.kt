@@ -48,8 +48,12 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private val typeService = services.recordTypeService
 
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
     private val defaultAppName = services.properties.defaultApp
+
     private val currentAppSourceIdPrefix = "$currentAppName/"
+    private val currentAppSourceIdInstancePrefix = "$currentAppRef/"
+
     private val isGatewayMode = services.webappProps.gatewayMode
     private val legacyApiMode = services.properties.legacyApiMode
 
@@ -310,7 +314,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             recsToMutate.reverse()
             recsAttsToLoad.reverse()
             val recsAfterMutate = mutateForApp(
-                appToMutate == currentAppName,
+                appToMutate == currentAppName || appToMutate == currentAppRef,
                 recsToMutate.map { it.value },
                 recsAttsToLoad,
                 rawAtts
@@ -338,7 +342,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 recsAttsToLoad.add(attsToLoad.getOrNull(i) ?: emptyMap<String, Any>())
                 // we should not batch local records for correct
                 // working of convertAssocValues function
-                if (appToMutate == currentAppName) {
+                if (appToMutate == currentAppName || appToMutate == currentAppRef) {
                     flushRecords()
                 }
             } else {
@@ -395,10 +399,10 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     }
 
     private fun getLocalSourceId(ref: EntityRef): String {
-        val app = ref.getAppName()
+        val appName = ref.getAppName()
         val srcId = ref.getSourceId()
-        return if (app.isNotBlank() && app != currentAppName) {
-            app + EntityRef.APP_NAME_DELIMITER + srcId
+        return if (appName.isNotBlank() && appName != currentAppName && appName != currentAppRef) {
+            appName + EntityRef.APP_NAME_DELIMITER + srcId
         } else {
             srcId
         }
@@ -410,6 +414,9 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         }
         if (sourceId.startsWith(currentAppSourceIdPrefix)) {
             return sourceId.substring(currentAppSourceIdPrefix.length)
+        }
+        if (sourceId.startsWith(currentAppSourceIdInstancePrefix)) {
+            return sourceId.substring(currentAppSourceIdInstancePrefix.length)
         }
         return sourceId
     }
@@ -637,7 +644,9 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         return if (local.containsDao(getLocalSourceId(sourceId))) {
             false
         } else {
-            sourceId.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix)
+            sourceId.contains("/") &&
+                !sourceId.startsWith(currentAppSourceIdPrefix) &&
+                !sourceId.startsWith(currentAppSourceIdInstancePrefix)
         }
     }
 

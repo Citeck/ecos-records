@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
+import ru.citeck.ecos.records2.utils.ValWithIdx;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
 import ru.citeck.ecos.records3.exception.LanguageNotSupportedException;
@@ -26,10 +27,13 @@ import ru.citeck.ecos.records2.source.dao.*;
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider;
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId;
 import ru.citeck.ecos.records2.utils.RecordsUtils;
+import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver;
+import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
+import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
 import java.util.*;
@@ -58,7 +62,11 @@ public class LocalRecordsResolverV0 {
     private final QueryLangService queryLangService;
     private final RecordsServiceFactory serviceFactory;
     private final String currentApp;
+    private final String currentAppRef;
     private final JobExecutor jobExecutor;
+
+    private final RecordAttsService recordAttsService;
+    private final MixinContextImpl mixinContext = new MixinContextImpl();
 
     private boolean hasDaoWithEmptyId = false;
 
@@ -67,7 +75,11 @@ public class LocalRecordsResolverV0 {
         this.serviceFactory = serviceFactory;
         this.queryLangService = serviceFactory.getQueryLangService();
         this.currentApp = serviceFactory.getWebappProps().getAppName();
+        this.currentAppRef = currentApp + ":" + serviceFactory.getWebappProps().getAppInstanceId();
         this.jobExecutor = serviceFactory.getJobExecutor();
+        this.recordAttsService = serviceFactory.getRecordsAttsService();
+
+        mixinContext.addMixinsProvider(serviceFactory.getGlobalAttMixinsProvider());
 
         daoMapByType = new HashMap<>();
         daoMapByType.put(RecordsMetaDao.class, metaDao);
@@ -88,7 +100,7 @@ public class LocalRecordsResolverV0 {
             String appName = sourceId.substring(0, appDelimIdx);
 
             //if appName is not current app then we in force local mode and sourceId with slash is correct
-            if (appName.equals(currentApp)) {
+            if (appName.equals(currentApp) || appName.equals(currentAppRef)) {
                 sourceId = sourceId.substring(appDelimIdx + 1);
                 query = new RecordsQuery(query);
                 query.setSourceId(sourceId);
@@ -255,7 +267,8 @@ public class LocalRecordsResolverV0 {
         Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
 
         records = records.stream().map(ref -> {
-            if (ref.getAppName().equals(currentApp)) {
+            String appName = ref.getAppName();
+            if (appName.equals(currentApp) || appName.equals(currentAppRef)) {
                 RecordRef newRef = ref.removeAppName();
                 refsMapping.put(newRef, ref);
                 ref = newRef;
@@ -298,15 +311,26 @@ public class LocalRecordsResolverV0 {
 
             if (recordsDao.isPresent()) {
 
+                List<RecordRef> refs = recs.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
                 String recsDaoId = recordsDao.get().getId();
                 meta = doWithCtxSourceIdKey(recsDaoId, () ->
-                    recordsDao.get().getMeta(new ArrayList<>(records), schema, rawAtts)
+                    recordsDao.get().getMeta(refs, schema, rawAtts)
                 );
 
             } else {
 
                 meta = new RecordsResult<>();
-                meta.setRecords(recs.stream().map(r -> new RecordMeta(r.getValue())).collect(Collectors.toList()));
+
+                List<EmptyAttValue> values = recs.stream()
+                    .map(r -> EmptyAttValue.INSTANCE)
+                    .collect(Collectors.toList());
+
+                List<RecordAtts> atts = recordAttsService.getAtts(values, schema, rawAtts, mixinContext);
+                List<RecordAtts> result = new ArrayList<>(atts.size());
+                for (int i = 0; i < atts.size(); i++) {
+                    result.add(new RecordAtts(recs.get(i).getValue(), atts.get(i).getAttributes()));
+                }
+                meta.setRecords(result);
 
                 log.debug("Records source '" + sourceId + "' can't return attributes");
             }
@@ -326,7 +350,8 @@ public class LocalRecordsResolverV0 {
 
         mutation.getRecords().forEach(record -> {
 
-            if (currentApp.equals(record.getId().getAppName())) {
+            String appName = record.getId().getAppName();
+            if (currentApp.equals(appName) || currentAppRef.equals(appName)) {
 
                 RecordRef newId = record.getId().removeAppName();
                 refsMapping.put(newId, record.getId());
@@ -368,8 +393,8 @@ public class LocalRecordsResolverV0 {
             sourceDeletion.setRecords(sourceRecords.stream().map(refWithIdx -> {
 
                 RecordRef ref = refWithIdx.getValue();
-
-                if (ref.getAppName().equals(currentApp)) {
+                String appName = ref.getAppName();
+                if (appName.equals(currentApp) || appName.equals(currentAppRef)) {
                     RecordRef newRef = ref.removeAppName();
                     refsMapping.put(newRef, ref);
                     ref = newRef;

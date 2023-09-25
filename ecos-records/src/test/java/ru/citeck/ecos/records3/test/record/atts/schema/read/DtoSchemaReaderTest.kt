@@ -10,6 +10,23 @@ import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 class DtoSchemaReaderTest {
 
     @Test
+    fun readResultTest() {
+
+        val services = RecordsServiceFactory()
+        val schemaReader = services.dtoSchemaReader
+
+        val schema = schemaReader.read(AttsDto::class.java)
+        val schemaByAlias = schema.associateBy { it.getAliasForValue() }
+
+        assertThat(schemaByAlias["array"].toString()).isEqualTo("array[]?raw")
+        assertThat(schemaByAlias["annotatedArray"].toString()).isEqualTo("array[]?raw")
+        assertThat(schemaByAlias["annotatedArray2"].toString()).isEqualTo("array[]?raw")
+        // TODO: fix it
+        // assertThat(schemaByAlias["annotatedArray3"].toString()).isEqualTo("array[]?id")
+        assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw")
+    }
+
+    @Test
     fun arrayTest() {
 
         val records = RecordsServiceFactory().recordsServiceV1
@@ -25,6 +42,7 @@ class DtoSchemaReaderTest {
         )
 
         val atts = records.getAtts(ref, AttsDto::class.java)
+
         assertThat(atts.array).containsExactlyElementsOf(
             elements.map { DataValue.create(it) }
         )
@@ -43,6 +61,8 @@ class DtoSchemaReaderTest {
         val annotatedArray: List<DataValue>,
         @AttName("array[]")
         val annotatedArray2: List<DataValue>,
+        @AttName("array[]{id}")
+        val annotatedArray3: List<DataValue>,
         @AttName("array")
         val single: DataValue
     )

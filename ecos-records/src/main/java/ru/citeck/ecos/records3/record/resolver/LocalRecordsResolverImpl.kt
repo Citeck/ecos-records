@@ -97,6 +97,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private val queryAutoGroupingEnabled = services.properties.queryAutoGroupingEnabled
     private val currentApp = services.webappProps.appName
+    private val currentAppRef = currentApp + ":" + services.webappProps.appInstanceId
     private val converter: RecsDaoConverter = RecsDaoConverter(currentApp)
 
     private val jobExecutor = services.jobExecutor
@@ -169,7 +170,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         if (appDelimIdx != -1) {
             val appName = sourceId.substring(0, appDelimIdx)
-            if (appName == currentApp) {
+            if (appName == currentApp || appName == currentAppRef) {
                 sourceId = sourceId.substring(appDelimIdx + 1)
                 query = query.copy().withSourceId(sourceId).build()
             }

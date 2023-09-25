@@ -25,7 +25,8 @@ object RecordRefUtils {
         if (recordRef.getAppName().isNotBlank()) {
             targetId = mapping[recordRef.getAppName() + "/" + recordRef.getSourceId()] ?: ""
         }
-        if (targetId.isBlank() && (recordRef.getAppName() == currentAppName || recordRef.getAppName().isEmpty())) {
+        val appName = recordRef.getAppName()
+        if (targetId.isBlank() && (appName == currentAppName || appName.isEmpty())) {
             targetId = mapping[recordRef.getSourceId()] ?: ""
         }
         if (targetId.isBlank()) {

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3.record.atts.proc
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.context.lib.time.TimeZoneContext
 import java.sql.Date
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -36,7 +37,14 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
             formatter.timeZone = args.timeZone ?: if (isFmtContainsTz(args.format)) {
                 TimeZone.getTimeZone(dateTime.zone)
             } else {
-                UTC_TIMEZONE
+                val offsetInMinutes = TimeZoneContext.getUtcOffset().toMinutes()
+                if (offsetInMinutes == 0L) {
+                    UTC_TIMEZONE
+                } else {
+                    val hours = (offsetInMinutes / 60).toString().padStart(2, '0')
+                    val minutes = (offsetInMinutes % 60).toString().padStart(2, '0')
+                    TimeZone.getTimeZone("GMT+$hours:$minutes")
+                }
             }
 
             return formatter.format(Date.from(dateTime.toInstant()))

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.record.atts
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.mixin.MixinContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 interface RecordAttsService {
 
@@ -35,13 +35,13 @@ interface RecordAttsService {
 
     fun getAtts(values: List<*>, attributes: List<SchemaAtt>, rawAtts: Boolean, mixins: MixinContext): List<RecordAtts>
 
-    fun getId(value: Any?, defaultRef: RecordRef): RecordRef
+    fun getId(value: Any?, defaultRef: EntityRef): EntityRef
 
     fun getAtts(
         values: List<*>,
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
         mixins: MixinContext,
-        recordRefs: List<RecordRef>
+        recordRefs: List<EntityRef>
     ): List<RecordAtts>
 }

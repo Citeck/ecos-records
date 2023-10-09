@@ -12,17 +12,25 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.request.error.ErrorUtils
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttsService
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.records3.record.atts.proc.AttProcService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
 import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
+import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.*
+import ru.citeck.ecos.records3.record.atts.value.factory.RecordRefValueFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
@@ -39,9 +47,10 @@ import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
+import kotlin.streams.toList
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
-class AttSchemaResolver(private val services: RecordsServiceFactory) {
+class AttSchemaResolver : ServiceFactoryAware {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -52,15 +61,31 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         private val ID_SCALARS_SCHEMA = ID_SCALARS.map { it.schema }.toSet()
     }
 
-    private val attValuesConverter = services.attValuesConverter
-    private val attProcService = services.attProcService
-    private val attSchemaReader = services.attSchemaReader
-    private val dtoSchemaReader = services.dtoSchemaReader
-    private val computedAttsService = services.recordComputedAttsService
+    private lateinit var services: RecordsServiceFactory
+    private lateinit var attValuesConverter: AttValuesConverter
+    private lateinit var attProcService: AttProcService
+    private lateinit var attSchemaReader: AttSchemaReader
+    private lateinit var attSchemaWriter: AttSchemaWriter
+    private lateinit var dtoSchemaReader: DtoSchemaReader
+    private lateinit var recordsService: RecordsService
+    private lateinit var computedAttsService: RecordComputedAttsService
 
-    private val recordTypeService by lazy { services.recordTypeService }
+    private lateinit var recordTypeService: RecordTypeService
 
-    private val currentAppName = services.getEcosWebAppApi()?.getProperties()?.appName ?: ""
+    private lateinit var currentAppName: String
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.services = serviceFactory
+        this.attValuesConverter = serviceFactory.attValuesConverter
+        this.attProcService = serviceFactory.attProcService
+        this.attSchemaReader = serviceFactory.attSchemaReader
+        this.attSchemaWriter = serviceFactory.attSchemaWriter
+        this.dtoSchemaReader = serviceFactory.dtoSchemaReader
+        this.recordsService = serviceFactory.recordsServiceV1
+        this.computedAttsService = serviceFactory.recordComputedAttsService
+        this.recordTypeService = serviceFactory.recordTypeService
+        this.currentAppName = serviceFactory.getEcosWebAppApi()?.getProperties()?.appName ?: ""
+    }
 
     fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
         val context = AttContext.getCurrent()
@@ -79,22 +104,84 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         return AttSchemaUtils.simplifySchema(schemaAttsToLoad)
     }
 
+    private fun convertToAttValue(value: Any?, initReferencable: Boolean = true): AttValue {
+        val result = if (value is AttValue) {
+            value
+        } else {
+            attValuesConverter.toAttValue(value)
+        } ?: NullAttValue.INSTANCE
+        if (result !is RecordRefValueFactory.RecordRefValue || initReferencable) {
+            // At this moment we will wait until async initialization will be completed
+            // in this method, but in future this waiting may be moved outside for various optimizations
+            result.init()?.get()
+        }
+        return result
+    }
+
+    private fun convertToAttValues(values: List<Any?>): List<AttValue> {
+
+        if (values.isEmpty()) {
+            return emptyList()
+        }
+        if (values.size == 1) {
+            return listOf(convertToAttValue(values[0]))
+        }
+        // Threshold for 5 elements required to avoid creation unnecessary
+        // object instances when all values are not referencable.
+        val isAttsPreloadingRequired = values.size > 5 || values.any {
+            it is EntityRef || it is RecordRefValueFactory.RecordRefValue
+        }
+        if (!isAttsPreloadingRequired) {
+            return values.map { convertToAttValue(it) }
+        }
+        val refs = ArrayList<EntityRef>()
+        val refsIdx = ArrayList<Int>()
+        val attValues = values.mapIndexed { idx, value ->
+            val res = convertToAttValue(value, false)
+            if (res is RecordRefValueFactory.RecordRefValue) {
+                refs.add(res.getRef())
+                refsIdx.add(idx)
+            }
+            res
+        }
+        if (refs.isEmpty()) {
+            return attValues
+        }
+        val attsToLoad = RecordRefValueFactory.getAttsToLoad(
+            AttContext.getCurrentSchemaAtt().inner,
+            attSchemaWriter
+        )
+        if (attsToLoad.isNotEmpty()) {
+            val resolvedAtts = recordsService.getAtts(refs, attsToLoad, true)
+            for (idx in refsIdx) {
+                (attValues[idx] as? RecordRefValueFactory.RecordRefValue)?.init(resolvedAtts[idx].getAtts())
+            }
+        } else {
+            val emptyAtts = ObjectData.create()
+            for (idx in refsIdx) {
+                (attValues[idx] as? RecordRefValueFactory.RecordRefValue)?.init(emptyAtts)
+            }
+        }
+        return attValues
+    }
+
     private fun resolveInAttCtx(args: ResolveArgs): List<Map<String, Any?>> {
 
-        val context = ResolveContext(attValuesConverter, args.mixinCtx, recordTypeService)
+        val context = ResolveContext(args.mixinCtx, recordTypeService)
 
-        val values: List<Any?> = args.values
-        val attValues = ArrayList<ValueContext>()
+        val values: List<AttValue> = convertToAttValues(args.values)
+        val attValuesContext = ArrayList<ValueContext>()
+
         for (i in values.indices) {
             val ref = if (args.valueRefs.isEmpty()) {
-                RecordRef.EMPTY
+                EntityRef.EMPTY
             } else {
                 args.valueRefs[i]
             }
-            attValues.add(
+            attValuesContext.add(
                 context.toRootValueContext(
                     this,
-                    values[i] ?: NullAttValue.INSTANCE,
+                    values[i],
                     ref
                 )
             )
@@ -106,7 +193,7 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         }
 
         val flattenAtts = getFlatAttributes(expandedAtts, false)
-        val result = resolveRoot(attValues, flattenAtts, context)
+        val result = resolveRoot(attValuesContext, flattenAtts, context)
         return resolveResultsWithAliases(result, expandedAtts, args.rawAtts)
     }
 
@@ -377,10 +464,9 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
                         valuesStream = valuesStream.filter { !AttValueUtils.isEmpty(it) }
                     }
                 }
-                val values: List<ValueContext> = valuesStream
-                    .map { v: Any? -> context.toValueContext(this, value, v) }
-                    .collect(Collectors.toList())
-                result[alias] = resolve(values, att.inner, context)
+                val contextValues = convertToAttValues(valuesStream.toList())
+                    .map { context.toValueContext(this, value, it) }
+                result[alias] = resolve(contextValues, att.inner, context)
             } else {
                 if (attValues.isEmpty()) {
                     result[alias] = null
@@ -388,7 +474,8 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
                     if (att.isScalar()) {
                         result[alias] = attValues[0]
                     } else {
-                        val valueContext = context.toValueContext(this, value, attValues[0])
+                        val attValueForCtx = convertToAttValue(attValues[0])
+                        val valueContext = context.toValueContext(this, value, attValueForCtx)
                         result[alias] = resolve(valueContext, att.inner, context)
                     }
                 }
@@ -436,7 +523,7 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         val resolveCtx: ResolveContext?,
         val parent: ValueContext?,
         val value: AttValue,
-        private val valueRef: RecordRef,
+        private val valueRef: EntityRef,
         val ctxSourceId: String,
         val context: RequestContext?,
         val computedAtts: Map<String, RecordComputedAtt>
@@ -448,59 +535,57 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
                 null,
                 null,
                 EmptyAttValue.INSTANCE,
-                RecordRef.EMPTY,
+                EntityRef.EMPTY,
                 "",
                 null, emptyMap()
             )
         }
 
-        private val computedRawRef: RecordRef by lazy {
-            var result = if (RecordRef.isNotEmpty(valueRef)) {
+        private val computedRawRef: EntityRef by lazy {
+            var result = if (EntityRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
                 val id = value.id
-                var computedRef: RecordRef = if (id == null || id is String && StringUtils.isBlank(id)) {
+                var computedRef: EntityRef = if (id == null || id is String && StringUtils.isBlank(id)) {
                     if (resolveCtx != null && ID_SCALARS_SCHEMA.contains(resolveCtx.path)) {
-                        RecordRef.create(ctxSourceId, UUID.randomUUID().toString())
+                        EntityRef.create(ctxSourceId, UUID.randomUUID().toString())
                     } else {
-                        RecordRef.EMPTY
+                        EntityRef.EMPTY
                     }
-                } else if (id is RecordRef) {
-                    id
                 } else if (id is EntityRef) {
-                    RecordRef.valueOf(id)
+                    id
                 } else if (id is DataValue) {
-                    RecordRef.create(ctxSourceId, id.asText())
+                    EntityRef.create(ctxSourceId, id.asText())
                 } else if (id is String) {
                     if (id.contains(RecordRef.SOURCE_DELIMITER)) {
-                        RecordRef.valueOf(id)
+                        EntityRef.valueOf(id)
                     } else {
-                        RecordRef.create(ctxSourceId, id)
+                        EntityRef.create(ctxSourceId, id)
                     }
                 } else {
-                    RecordRef.create(ctxSourceId, id.toString())
+                    EntityRef.create(ctxSourceId, id.toString())
                 }
                 if (ctxSourceId.isNotEmpty() &&
-                    computedRef.appName.isEmpty() &&
-                    computedRef.sourceId.isEmpty() &&
-                    computedRef.id.isNotEmpty()
+                    computedRef.getAppName().isEmpty() &&
+                    computedRef.getSourceId().isEmpty() &&
+                    computedRef.getLocalId().isNotEmpty()
                 ) {
-                    computedRef = RecordRef.create(ctxSourceId, computedRef.id)
+                    computedRef = EntityRef.create(ctxSourceId, computedRef.getLocalId())
                 }
                 computedRef
             }
-            if (RecordRef.isEmpty(result)) {
+            if (EntityRef.isEmpty(result)) {
                 result
             } else {
                 val currentAppName = resolver?.currentAppName ?: ""
-                if (result.appName.isBlank() && currentAppName.isNotBlank()) {
+                if (result.getAppName().isBlank() && currentAppName.isNotBlank()) {
                     result = result.withDefaultAppName(currentAppName)
                 }
                 result
             }
         }
 
-        private val computedRef: RecordRef by lazy {
+        private val computedRef: EntityRef by lazy {
             val currentAppName = resolver?.currentAppName ?: ""
             RecordRefUtils.mapAppIdAndSourceId(
                 computedRawRef,
@@ -513,7 +598,7 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
          * Get value id to identify it when error occurs. Should not be used in business logic.
          */
         private fun getValueIdentifierStrSafe(): String {
-            return if (RecordRef.isNotEmpty(valueRef)) {
+            return if (EntityRef.isNotEmpty(valueRef)) {
                 valueRef
             } else {
                 try {
@@ -696,7 +781,6 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
     }
 
     private class ResolveContext(
-        val converter: AttValuesConverter,
         val mixinCtx: MixinContext,
         val recordTypeService: RecordTypeService
     ) {
@@ -707,20 +791,10 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         var path: String = ""
         var rootValue: ValueContext = ValueContext.EMPTY
 
-        private fun convertToAttValue(value: Any): AttValue? {
-            val result = if (value is AttValue) {
-                value
-            } else {
-                converter.toAttValue(value)
+        fun toRootValueContext(resolver: AttSchemaResolver, attValue: AttValue, valueRef: EntityRef): ValueContext {
+            if (attValue is NullAttValue) {
+                return ValueContext.EMPTY
             }
-            // At this moment we will wait until async initialization will be completed
-            // in this method, but in future this waiting may be moved outside for various optimizations
-            result?.init()?.get()
-            return result
-        }
-
-        fun toRootValueContext(resolver: AttSchemaResolver, value: Any, valueRef: RecordRef): ValueContext {
-            val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
                 resolver,
                 this,
@@ -734,11 +808,10 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
             )
         }
 
-        fun toValueContext(resolver: AttSchemaResolver, parent: ValueContext?, value: Any?): ValueContext {
-            if (value == null) {
+        fun toValueContext(resolver: AttSchemaResolver, parent: ValueContext?, attValue: AttValue): ValueContext {
+            if (attValue is NullAttValue) {
                 return ValueContext.EMPTY
             }
-            val attValue = convertToAttValue(value) ?: return ValueContext.EMPTY
             return ValueContext(
                 resolver,
                 this,
@@ -798,10 +871,10 @@ class AttSchemaResolver(private val services: RecordsServiceFactory) {
         }
 
         override fun getRef(): RecordRef {
-            return valueCtx.getRef()
+            return RecordRef.valueOf(valueCtx.getRef())
         }
 
-        override fun getRawRef(): RecordRef {
+        override fun getRawRef(): EntityRef {
             return valueCtx.getRawRef()
         }
 

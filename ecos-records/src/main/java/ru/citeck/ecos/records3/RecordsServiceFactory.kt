@@ -344,7 +344,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createAttSchemaResolver(): AttSchemaResolver {
-        return AttSchemaResolver(this)
+        return AttSchemaResolver()
     }
 
     protected open fun getAttProcessors(): List<AttProcessor> {

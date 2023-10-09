@@ -10,6 +10,7 @@ import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
 import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.function.Consumer
 import kotlin.collections.Collection
@@ -65,7 +66,7 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         return getAtts(listOf(value), attributes)[0]
     }
 
-    override fun getId(value: Any?, defaultRef: RecordRef): RecordRef {
+    override fun getId(value: Any?, defaultRef: EntityRef): EntityRef {
 
         value ?: return defaultRef
 
@@ -78,8 +79,8 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
                     return defaultRef
                 }
                 return ref.withDefault(
-                    appName = defaultRef.appName,
-                    sourceId = defaultRef.sourceId
+                    appName = defaultRef.getAppName(),
+                    sourceId = defaultRef.getSourceId()
                 )
             }
             else -> {
@@ -151,7 +152,7 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
         mixins: MixinContext,
-        recordRefs: List<RecordRef>
+        recordRefs: List<EntityRef>
     ): List<RecordAtts> {
 
         if (values.isEmpty()) {
@@ -162,7 +163,7 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         val valueRefsProvided = recordRefs.size == values.size
         rootAtts = ArrayList(rootAtts)
 
-        if (!valueRefsProvided) {
+        if (!valueRefsProvided || recordRefs.any { it.isEmpty() }) {
             rootAtts.add(REF_ATT)
         }
 
@@ -184,7 +185,7 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
             }
         } else {
             for (elem in data) {
-                recordAtts.add(toRecAtts(elem, RecordRef.EMPTY))
+                recordAtts.add(toRecAtts(elem, EntityRef.EMPTY))
             }
         }
         return recordAtts
@@ -199,20 +200,20 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         return getAtts(values, schemaReader.read(attributes), rawAtts, mixins)
     }
 
-    private fun toRecAtts(data: Map<String, Any?>, id: RecordRef): RecordAtts {
+    private fun toRecAtts(data: Map<String, Any?>, id: EntityRef): RecordAtts {
 
         var resData = data
-        var resId: RecordRef = id
+        var resId: EntityRef = id
 
-        if (resId === RecordRef.EMPTY) {
+        if (resId.isEmpty()) {
             val alias = resData[REF_ATT_ALIAS]
             resId = if (alias == null) {
-                RecordRef.EMPTY
+                EntityRef.EMPTY
             } else {
-                RecordRef.valueOf(alias.toString())
+                EntityRef.valueOf(alias.toString())
             }
-            if (StringUtils.isBlank(resId.id)) {
-                resId = RecordRef.create(resId.appName, resId.sourceId, UUID.randomUUID().toString())
+            if (StringUtils.isBlank(resId.getLocalId())) {
+                resId = EntityRef.create(resId.getAppName(), resId.getSourceId(), UUID.randomUUID().toString())
             }
             resData = LinkedHashMap(resData)
             resData.remove(REF_ATT_ALIAS)

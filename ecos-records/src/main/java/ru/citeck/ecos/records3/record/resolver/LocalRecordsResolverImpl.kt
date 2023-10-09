@@ -27,6 +27,7 @@ import ru.citeck.ecos.records2.source.dao.local.job.Job
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider
 import ru.citeck.ecos.records2.source.info.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
+import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.exception.LanguageNotSupportedException
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -59,6 +60,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.math.max
 
 open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory) :
@@ -309,7 +311,45 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 AttSchemaResolver.CTX_SOURCE_ID_KEY,
                 query.sourceId
             ) {
-                getValueAttsWithContextImpl(queryRes.getRecords(), attributes, rawAtts, context, objMixins)
+                val currentAppRecIdsBySrcId = mutableMapOf<String, MutableList<ValWithIdx<String>>>()
+                val records = ArrayList(queryRes.getRecords())
+                for ((idx, record) in records.withIndex()) {
+                    if (record is EntityRef) {
+                        val appName = record.getAppName()
+                        if (appName.isBlank() || appName == currentApp) {
+                            val srcId = record.getSourceId().ifBlank { dao.second.getId() }
+                            currentAppRecIdsBySrcId.computeIfAbsent(srcId) { ArrayList() }.add(
+                                ValWithIdx(record.getLocalId(), idx)
+                            )
+                        }
+                    }
+                }
+                var recordRefs: Array<EntityRef>? = null
+                if (currentAppRecIdsBySrcId.isNotEmpty()) {
+                    recordRefs = Array(records.size) { EntityRef.EMPTY }
+                    for ((srcId, recordIds) in currentAppRecIdsBySrcId) {
+                        for (record in recordIds) {
+                            recordRefs[record.idx] = EntityRef.create(currentApp, srcId, record.value)
+                        }
+                        val attsDao = attsDao[srcId] ?: continue
+                        val localRecordIds = recordIds.map { it.value }
+                        val atts = attsDao.second.getRecordsAtts(localRecordIds) ?: continue
+                        if (atts.isEmpty()) {
+                            continue
+                        }
+                        if (atts.size != recordIds.size) {
+                            error(
+                                "The getRecordAtts function should always return " +
+                                    "the same count and order of records as provided in the parameters." +
+                                    "Records DAO - '$srcId'. Records: $localRecordIds"
+                            )
+                        }
+                        for ((idx, recordIdValue) in recordIds.withIndex()) {
+                            records[recordIdValue.idx] = atts[idx] ?: EmptyAttValue.INSTANCE
+                        }
+                    }
+                }
+                getValueAttsWithContextImpl(records, attributes, rawAtts, context, objMixins, recordRefs?.toList())
             }
             recordsResult.setRecords(recAtts)
             recordsResult.setTotalCount(queryRes.getTotalCount())
@@ -467,7 +507,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         attributes: List<SchemaAtt>,
         rawAtts: Boolean,
         context: RequestContext,
-        mixins: MixinContext
+        mixins: MixinContext,
+        recordRefs: List<EntityRef>? = null
     ): List<RecordAtts> {
 
         val objAttsStartMs = System.currentTimeMillis()
@@ -475,7 +516,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             values,
             attributes,
             rawAtts,
-            mixins
+            mixins,
+            recordRefs ?: emptyList()
         )
         if (context.isMsgEnabled(MsgLevel.DEBUG)) {
             context.addMsg(

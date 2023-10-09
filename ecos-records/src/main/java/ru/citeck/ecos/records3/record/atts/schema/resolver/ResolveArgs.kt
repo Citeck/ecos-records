@@ -1,14 +1,14 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 data class ResolveArgs(
     val values: List<Any?>,
     val sourceId: String,
-    val valueRefs: List<RecordRef>,
+    val valueRefs: List<EntityRef>,
     val attributes: List<SchemaAtt>,
     val mixinCtx: MixinContext,
     val rawAtts: Boolean
@@ -43,7 +43,7 @@ data class ResolveArgs(
 
         var values: List<Any?> = emptyList()
         var sourceId: String = ""
-        var valueRefs: List<RecordRef> = emptyList()
+        var valueRefs: List<EntityRef> = emptyList()
         var attributes: List<SchemaAtt> = emptyList()
         var mixinCtx: MixinContext = EmptyMixinContext
         var rawAtts = false
@@ -67,7 +67,7 @@ data class ResolveArgs(
             return this
         }
 
-        fun withValueRefs(valueRefs: List<RecordRef>): Builder {
+        fun withValueRefs(valueRefs: List<EntityRef>): Builder {
             this.valueRefs = valueRefs
             return this
         }

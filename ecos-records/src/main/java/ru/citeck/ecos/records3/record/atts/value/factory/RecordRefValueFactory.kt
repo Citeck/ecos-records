@@ -7,11 +7,13 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
 import kotlin.collections.LinkedHashMap
 
@@ -29,6 +31,26 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
             *SCALARS_WITHOUT_LOADING.map { it.schema }.toTypedArray(),
             *SCALARS_WITHOUT_LOADING.map { it.mirrorAtt }.toTypedArray()
         )
+
+        @JvmStatic
+        fun getAttsToLoad(innerSchema: List<SchemaAtt>, schemaWriter: AttSchemaWriter): Map<String, String> {
+
+            val attsMap: MutableMap<String, String> = LinkedHashMap()
+            val sb = StringBuilder()
+
+            for (inner in innerSchema) {
+
+                val innerName: String = inner.name
+
+                if (!innerName.startsWith('$') && !ATTS_WITHOUT_LOADING.contains(innerName)) {
+                    schemaWriter.write(inner, sb, false)
+                    attsMap[innerName] = sb.toString()
+                    sb.setLength(0)
+                }
+            }
+
+            return attsMap
+        }
     }
 
     private lateinit var recordsService: RecordsService
@@ -49,25 +71,14 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
 
         private lateinit var innerAtts: InnerAttValue
 
+        fun init(loadedAtts: ObjectData) {
+            innerAtts = InnerAttValue(loadedAtts.getData().asJson())
+        }
+
         override fun init(): Promise<Unit>? {
-
-            val innerSchema = AttContext.getCurrentSchemaAtt().inner
-
-            val attsMap: MutableMap<String, String> = LinkedHashMap()
-            val sb = StringBuilder()
-
-            for (inner in innerSchema) {
-
-                val innerName: String = inner.name
-
-                if (!innerName.startsWith('$') && !ATTS_WITHOUT_LOADING.contains(innerName)) {
-                    schemaWriter.write(inner, sb, false)
-                    attsMap[innerName] = sb.toString()
-                    sb.setLength(0)
-                }
-            }
-            val atts = if (attsMap.isNotEmpty()) {
-                loadRawAtts(attsMap).getAtts()
+            val attsToLoad = getAttsToLoad(AttContext.getCurrentSchemaAtt().inner, schemaWriter)
+            val atts = if (attsToLoad.isNotEmpty()) {
+                loadRawAtts(attsToLoad).getAtts()
             } else {
                 ObjectData.create()
             }
@@ -132,6 +143,10 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
 
         override fun asRaw(): Any {
             return ref.toString()
+        }
+
+        fun getRef(): EntityRef {
+            return ref
         }
     }
 }

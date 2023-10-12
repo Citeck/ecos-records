@@ -41,6 +41,6 @@ class ExtStorageRecordsDaoTest {
 
         val queryResult = records.query(queryRes)
         assertThat(queryResult.getRecords()).hasSize(1)
-        assertThat(queryResult.getRecords()[0].toString()).isEqualTo("test@abc")
+        assertThat(queryResult.getRecords()[0].toString()).isEqualTo("test@def")
     }
 }

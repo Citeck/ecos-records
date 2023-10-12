@@ -243,7 +243,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRecordsAttsService(): RecordAttsService {
-        return RecordAttsServiceImpl(this)
+        return RecordAttsServiceImpl()
     }
 
     protected open fun createPredicateService(): PredicateService {

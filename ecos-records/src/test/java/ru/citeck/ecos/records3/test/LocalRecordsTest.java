@@ -98,7 +98,7 @@ class LocalRecordsTest {
         @Override
         public List<Meta> getRecordsAtts(@NotNull List<String> records) {
             return records.stream()
-                .map(r -> new Meta(r, r))
+                .map(r -> new Meta(ID + '@' + r, r))
                 .collect(Collectors.toList());
         }
 

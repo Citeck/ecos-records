@@ -5,6 +5,10 @@ import kotlin.jvm.Throws
 
 interface RecordAttsDao : RecordsDao {
 
+    /**
+     * It is adapter to RecordsAttsDao for single record
+     * @see RecordsAttsDao
+     */
     @Throws(Exception::class)
     fun getRecordAtts(recordId: String): Any?
 }

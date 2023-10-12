@@ -673,9 +673,59 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     EmptyMixinContext
                 }
                 val refs: List<RecordRef> = recs.map { RecordRef.create(sourceId, it) }
-                return recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
+
+                val attsResult = context.doWithVarNotNull(AttSchemaResolver.CTX_SOURCE_ID_KEY, sourceId) {
+                    recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
+                }
+                return sortGetAttsResultIfNeeded(sourceId, attsResult, recs)
             }
         }
+    }
+
+    private fun sortGetAttsResultIfNeeded(
+        sourceId: String,
+        attributes: List<RecordAtts>,
+        recordIds: List<String>
+    ): List<RecordAtts> {
+        if (attributes.size <= 1 || attributes.size != recordIds.size) {
+            return attributes
+        }
+        var isSortingRequired = false
+        for (idx in recordIds.indices) {
+            val valueRef = attributes[idx].getId()
+            val valueAppName = valueRef.appName
+            if (valueAppName.isNotBlank() && valueAppName != currentApp) {
+                break
+            }
+            val valueSourceId = valueRef.sourceId
+            if (valueSourceId.isNotBlank() && valueSourceId != sourceId) {
+                break
+            }
+            val valueLocalId = valueRef.getLocalId()
+            if (valueLocalId != recordIds[idx]) {
+                // we found that id from atts doesn't match id from request
+                // let's check that out atts id exists in request ids list
+                // if it doesn't exist then sorting can't be performed
+                for (innerIdx in (idx + 1) until recordIds.size) {
+                    if (valueLocalId == recordIds[innerIdx]) {
+                        isSortingRequired = true
+                        break
+                    }
+                }
+                break
+            }
+        }
+        if (!isSortingRequired) {
+            return attributes
+        }
+        val idxById = recordIds.mapIndexed { idx, id -> id to idx }.toMap()
+        val valuesToSort = ArrayList<Pair<Int, RecordAtts>>(recordIds.size)
+        for (atts in attributes) {
+            val idx = idxById[atts.getId().getLocalId()] ?: return attributes
+            valuesToSort.add(idx to atts)
+        }
+        valuesToSort.sortBy { it.first }
+        return valuesToSort.map { it.second }
     }
 
     override fun mutateRecord(

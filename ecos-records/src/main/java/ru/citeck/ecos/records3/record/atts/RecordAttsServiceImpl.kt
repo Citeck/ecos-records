@@ -1,13 +1,15 @@
 package ru.citeck.ecos.records3.record.atts
 
-import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
+import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
+import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
+import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -18,22 +20,21 @@ import kotlin.collections.LinkedHashMap
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.emptyList
-import kotlin.collections.indices
 import kotlin.collections.listOf
 
-class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : RecordAttsService {
+class RecordAttsServiceImpl : RecordAttsService, ServiceFactoryAware {
 
-    companion object {
-        private const val REF_ATT_ALIAS: String = "___ref___"
-        private val REF_ATT = SchemaAtt.create()
-            .withAlias(REF_ATT_ALIAS)
-            .withName("?id")
-            .build()
+    private lateinit var schemaReader: AttSchemaReader
+    private lateinit var dtoSchemaReader: DtoSchemaReader
+    private lateinit var schemaResolver: AttSchemaResolver
+    private lateinit var services: RecordsServiceFactory
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.schemaReader = serviceFactory.attSchemaReader
+        this.dtoSchemaReader = serviceFactory.dtoSchemaReader
+        this.schemaResolver = serviceFactory.attSchemaResolver
+        this.services = serviceFactory
     }
-
-    private val schemaReader = services.attSchemaReader
-    private val dtoSchemaReader = services.dtoSchemaReader
-    private val schemaResolver = services.attSchemaResolver
 
     override fun <T> doWithSchema(attributes: Map<String, *>, rawAtts: Boolean, action: (List<SchemaAtt>) -> T): T {
         return doWithSchema(schemaReader.read(attributes), rawAtts, action)
@@ -68,31 +69,21 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
 
     override fun getId(value: Any?, defaultRef: EntityRef): EntityRef {
 
-        value ?: return defaultRef
+        val id: EntityRef = getAtts(
+            listOf(value ?: NullAttValue.INSTANCE),
+            emptyList(),
+            true,
+            EmptyMixinContext,
+            listOf(defaultRef)
+        )[0].getId()
 
-        return when (value) {
-            is RecordRef -> value
-            is RecordAtts -> value.getId()
-            is String -> {
-                val ref = RecordRef.valueOf(value)
-                if (ref.isEmpty()) {
-                    return defaultRef
-                }
-                return ref.withDefault(
-                    appName = defaultRef.getAppName(),
-                    sourceId = defaultRef.getSourceId()
-                )
-            }
-            else -> {
-                val atts = getAtts(listOf(value), listOf(REF_ATT), false, EmptyMixinContext, emptyList())
-                val strId = atts[0].getStringOrNull(REF_ATT_ALIAS) ?: return defaultRef
-                val result = RecordRef.valueOf(strId)
-                if (RecordRef.isEmpty(result)) {
-                    defaultRef
-                } else {
-                    result
-                }
-            }
+        return if (id.isEmpty()) {
+            defaultRef
+        } else {
+            id.withDefault(
+                appName = defaultRef.getAppName(),
+                sourceId = defaultRef.getSourceId()
+            )
         }
     }
 
@@ -160,35 +151,18 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         }
 
         var rootAtts: List<SchemaAtt> = attributes
-        val valueRefsProvided = recordRefs.size == values.size
         rootAtts = ArrayList(rootAtts)
 
-        if (!valueRefsProvided || recordRefs.any { it.isEmpty() }) {
-            rootAtts.add(REF_ATT)
-        }
-
-        val data: List<Map<String, Any?>> = schemaResolver.resolve(
+        return schemaResolver.resolve(
             ResolveArgs
                 .create()
                 .withValues(values)
                 .withAttributes(rootAtts)
                 .withRawAtts(rawAtts)
                 .withMixinContext(mixins)
-                .withValueRefs(recordRefs)
+                .withDefaultValueRefs(recordRefs)
                 .build()
         )
-
-        val recordAtts = ArrayList<RecordAtts>()
-        if (valueRefsProvided) {
-            for (i in data.indices) {
-                recordAtts.add(toRecAtts(data[i], recordRefs[i]))
-            }
-        } else {
-            for (elem in data) {
-                recordAtts.add(toRecAtts(elem, EntityRef.EMPTY))
-            }
-        }
-        return recordAtts
     }
 
     override fun getAtts(
@@ -198,27 +172,6 @@ class RecordAttsServiceImpl(private val services: RecordsServiceFactory) : Recor
         mixins: MixinContext
     ): List<RecordAtts> {
         return getAtts(values, schemaReader.read(attributes), rawAtts, mixins)
-    }
-
-    private fun toRecAtts(data: Map<String, Any?>, id: EntityRef): RecordAtts {
-
-        var resData = data
-        var resId: EntityRef = id
-
-        if (resId.isEmpty()) {
-            val alias = resData[REF_ATT_ALIAS]
-            resId = if (alias == null) {
-                EntityRef.EMPTY
-            } else {
-                EntityRef.valueOf(alias.toString())
-            }
-            if (StringUtils.isBlank(resId.getLocalId())) {
-                resId = EntityRef.create(resId.getAppName(), resId.getSourceId(), UUID.randomUUID().toString())
-            }
-            resData = LinkedHashMap(resData)
-            resData.remove(REF_ATT_ALIAS)
-        }
-        return RecordAtts(resId, ObjectData.create(resData))
     }
 
     private fun <T> getFirst(elements: List<T>, atts: Any?, srcValues: List<Any?>): T {

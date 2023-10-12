@@ -13,8 +13,35 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import java.util.*
 
 class RecordAttsDaoTest {
+
+    @Test
+    fun unorderedAttsTest() {
+
+        data class Record(
+            val id: String,
+            val value: String
+        )
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(object : RecordsAttsDao {
+            override fun getId(): String {
+                return "test"
+            }
+            override fun getRecordsAtts(recordIds: List<String>): List<*> {
+                return recordIds.shuffled(Random(12346789L)).map { Record(it, "$it-value") }
+            }
+        })
+
+        val recordIds = (0 until 10).map { "test@record-$it" }
+
+        val getAttsRes = records.getAtts(recordIds, listOf("value"))
+        val result = getAttsRes.map { it["value"].asText() }
+
+        assertThat(result).containsExactlyElementsOf(recordIds.map { "${it.substringAfter('@')}-value" })
+    }
 
     @Test
     fun test() {

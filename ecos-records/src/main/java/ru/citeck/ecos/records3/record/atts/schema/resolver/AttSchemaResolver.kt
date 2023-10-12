@@ -20,6 +20,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttsService
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.proc.AttProcService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
@@ -87,7 +88,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         this.currentAppName = serviceFactory.getEcosWebAppApi()?.getProperties()?.appName ?: ""
     }
 
-    fun resolve(args: ResolveArgs): List<Map<String, Any?>> {
+    fun resolve(args: ResolveArgs): List<RecordAtts> {
         val context = AttContext.getCurrent()
         return if (context == null) {
             AttContext.doWithCtx(services) { resolveInAttCtx(args) }
@@ -165,7 +166,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         return attValues
     }
 
-    private fun resolveInAttCtx(args: ResolveArgs): List<Map<String, Any?>> {
+    private fun resolveInAttCtx(args: ResolveArgs): List<RecordAtts> {
 
         val context = ResolveContext(args.mixinCtx, recordTypeService)
 
@@ -173,18 +174,12 @@ class AttSchemaResolver : ServiceFactoryAware {
         val attValuesContext = ArrayList<ValueContext>()
 
         for (i in values.indices) {
-            val ref = if (args.valueRefs.isEmpty()) {
+            val defaultRef = if (args.defaultValueRefs.isEmpty()) {
                 EntityRef.EMPTY
             } else {
-                args.valueRefs[i]
+                args.defaultValueRefs[i]
             }
-            attValuesContext.add(
-                context.toRootValueContext(
-                    this,
-                    values[i],
-                    ref
-                )
-            )
+            attValuesContext.add(context.toRootValueContext(this, values[i], defaultRef))
         }
 
         var expandedAtts = args.attributes
@@ -194,7 +189,11 @@ class AttSchemaResolver : ServiceFactoryAware {
 
         val flattenAtts = getFlatAttributes(expandedAtts, false)
         val result = resolveRoot(attValuesContext, flattenAtts, context)
-        return resolveResultsWithAliases(result, expandedAtts, args.rawAtts)
+        val resultAttsMap = resolveResultsWithAliases(result, expandedAtts, args.rawAtts)
+
+        return attValuesContext.mapIndexed { idx, value ->
+            RecordAtts(value.getRef(), ObjectData.create(resultAttsMap[idx]))
+        }
     }
 
     private fun expandAttsWithProcAtts(atts: List<SchemaAtt>): List<SchemaAtt> {
@@ -523,10 +522,11 @@ class AttSchemaResolver : ServiceFactoryAware {
         val resolveCtx: ResolveContext?,
         val parent: ValueContext?,
         val value: AttValue,
-        private val valueRef: EntityRef,
+        private val defaultValueRef: EntityRef,
         val ctxSourceId: String,
         val context: RequestContext?,
-        val computedAtts: Map<String, RecordComputedAtt>
+        val computedAtts: Map<String, RecordComputedAtt>,
+        val isRootValue: Boolean
     ) {
 
         companion object {
@@ -537,17 +537,23 @@ class AttSchemaResolver : ServiceFactoryAware {
                 EmptyAttValue.INSTANCE,
                 EntityRef.EMPTY,
                 "",
-                null, emptyMap()
+                null,
+                emptyMap(),
+                isRootValue = false
             )
         }
 
         private val computedRawRef: EntityRef by lazy {
-            var result = if (EntityRef.isNotEmpty(valueRef)) {
-                valueRef
-            } else {
+            var result = run {
                 val id = value.id
-                var computedRef: EntityRef = if (id == null || id is String && StringUtils.isBlank(id)) {
-                    if (resolveCtx != null && ID_SCALARS_SCHEMA.contains(resolveCtx.path)) {
+                var computedRef: EntityRef = if (
+                    id == null ||
+                    id is String && StringUtils.isBlank(id) ||
+                    id is EntityRef && id.isEmpty()
+                ) {
+                    if (defaultValueRef.isNotEmpty()) {
+                        defaultValueRef
+                    } else if (isRootValue) {
                         EntityRef.create(ctxSourceId, UUID.randomUUID().toString())
                     } else {
                         EntityRef.EMPTY
@@ -557,7 +563,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                 } else if (id is DataValue) {
                     EntityRef.create(ctxSourceId, id.asText())
                 } else if (id is String) {
-                    if (id.contains(RecordRef.SOURCE_DELIMITER)) {
+                    if (id.contains(EntityRef.SOURCE_ID_DELIMITER)) {
                         EntityRef.valueOf(id)
                     } else {
                         EntityRef.create(ctxSourceId, id)
@@ -598,8 +604,8 @@ class AttSchemaResolver : ServiceFactoryAware {
          * Get value id to identify it when error occurs. Should not be used in business logic.
          */
         private fun getValueIdentifierStrSafe(): String {
-            return if (EntityRef.isNotEmpty(valueRef)) {
-                valueRef
+            return if (EntityRef.isNotEmpty(defaultValueRef)) {
+                defaultValueRef
             } else {
                 try {
                     value.id
@@ -791,7 +797,11 @@ class AttSchemaResolver : ServiceFactoryAware {
         var path: String = ""
         var rootValue: ValueContext = ValueContext.EMPTY
 
-        fun toRootValueContext(resolver: AttSchemaResolver, attValue: AttValue, valueRef: EntityRef): ValueContext {
+        fun toRootValueContext(
+            resolver: AttSchemaResolver,
+            attValue: AttValue,
+            defaultValueRef: EntityRef
+        ): ValueContext {
             if (attValue is NullAttValue) {
                 return ValueContext.EMPTY
             }
@@ -800,11 +810,12 @@ class AttSchemaResolver : ServiceFactoryAware {
                 this,
                 null,
                 attValue,
-                valueRef,
+                defaultValueRef,
                 reqContext.getVar(CTX_SOURCE_ID_KEY)
                     ?: "",
                 reqContext,
-                getComputedAtts(null, attValue)
+                getComputedAtts(null, attValue),
+                isRootValue = true
             )
         }
 
@@ -817,11 +828,12 @@ class AttSchemaResolver : ServiceFactoryAware {
                 this,
                 parent,
                 attValue,
-                RecordRef.EMPTY,
+                EntityRef.EMPTY,
                 reqContext.getVar(CTX_SOURCE_ID_KEY)
                     ?: "",
                 reqContext,
-                getComputedAtts(parent, attValue)
+                getComputedAtts(parent, attValue),
+                isRootValue = false
             )
         }
 
@@ -838,7 +850,7 @@ class AttSchemaResolver : ServiceFactoryAware {
             }
             try {
                 val typeRef = RecTypeUtils.anyTypeToRef(value?.type)
-                if (RecordRef.isNotEmpty(typeRef)) {
+                if (EntityRef.isNotEmpty(typeRef)) {
                     for (att in recordTypeService.getRecordType(typeRef).getComputedAtts()) {
                         if (AttUtils.isValidComputedAtt(att.id, false)) {
                             val scalar = ScalarType.getBySchemaOrMirrorAtt(att.id)

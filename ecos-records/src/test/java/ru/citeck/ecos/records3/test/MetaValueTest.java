@@ -102,7 +102,6 @@ public class MetaValueTest extends AbstractRecordsDao
         static int INT_VALUE = (int) DOUBLE_VALUE;
         static Boolean BOOL_VALUE = true;
         static JsonNode JSON_VALUE = JsonNodeFactory.instance.objectNode().with("Test").put("prop", "value");
-        static String ID_VALUE = "SOME_ID";
         static Date DATE_VALUE = new Date();
 
         private Consumer<String> schemaConsumer;
@@ -119,11 +118,6 @@ public class MetaValueTest extends AbstractRecordsDao
         @Override
         public String getDisplayName() {
             return DISP_VALUE;
-        }
-
-        @Override
-        public String getId() {
-            return ID_VALUE;
         }
 
         @Override

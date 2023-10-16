@@ -17,7 +17,7 @@ import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.LinkedHashMap
 
 /**
  * Records DAO with simple in-memory storage system based on Map<String, ObjectData>
@@ -36,7 +36,7 @@ open class InMemDataRecordsDao(
         private val DISPLAY_NAME_ATTS = listOf("_disp", "name")
     }
 
-    private val records = ConcurrentHashMap<String, ObjectData>()
+    private val records = Collections.synchronizedMap(LinkedHashMap<String, ObjectData>())
 
     override fun getId() = id
 
@@ -96,7 +96,9 @@ open class InMemDataRecordsDao(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any {
-        val recordsList = records.entries.map { Record(it.key, it.value) }
+        val recordsList = synchronized(records) {
+            records.entries.map { Record(it.key, it.value) }
+        }
         if (recsQuery.language == "") {
             return recordsList
         }
@@ -143,6 +145,9 @@ open class InMemDataRecordsDao(
         }
 
         override fun getAtt(name: String): Any {
+            if (name == "id") {
+                return id
+            }
             return atts[name]
         }
 

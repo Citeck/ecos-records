@@ -11,11 +11,45 @@ import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.time.Instant
 
 class InMemDataRecordsDaoTest {
 
     companion object {
         private const val ID = "test-id"
+    }
+
+    @Test
+    fun testWithPredicates() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val ref0 = records.create("test", mapOf("abc" to "def"))
+        val ref1 = records.create("test", mapOf("abc" to "def"))
+
+        val baseQuery = RecordsQuery.create()
+            .withSourceId("test")
+            .withMaxItems(10)
+            .withQuery(Predicates.alwaysTrue())
+            .build()
+
+        val res0 = records.query(baseQuery).getRecords()
+
+        assertThat(res0).containsExactly(ref0, ref1)
+
+        assertThat(records.getAtt(ref0, "?id").asText()).isEqualTo(ref0.toString())
+        assertThat(records.getAtt(ref0, "id").asText()).isEqualTo(ref0.getLocalId())
+        assertThat(records.getAtt(ref0, "id?str").asText()).isEqualTo(ref0.getLocalId())
+        assertThat(records.getAtt(ref0, "id?raw").asText()).isEqualTo(ref0.getLocalId())
+
+        val res1 = records.query(
+            baseQuery.copy()
+                .withQuery(Predicates.notEq("id", ref0.getLocalId()))
+                .build()
+        ).getRecords()
+
+        assertThat(res1).containsExactly(ref1)
     }
 
     @Test
@@ -106,6 +140,44 @@ class InMemDataRecordsDaoTest {
         val queryRes3 = records.query(RecordsQuery.create { withSourceId(ID) }, listOf("idx"))
         assertThat(queryRes3.getRecords().map { it.getAtt("idx").asInt() })
             .containsExactlyInAnyOrderElementsOf(recordsToCreate.indices)
+    }
+
+    @Test
+    fun simpleSearchTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val refs = (0 until 300).map {
+            val createdDate = Instant.ofEpochMilli(10000L * it)
+            val recordRef = records.create(
+                "test",
+                mapOf(
+                    "_created" to createdDate
+                )
+            )
+            recordRef to createdDate
+        }
+
+        val conditionValue = Instant.ofEpochMilli(10000L * 100)
+
+        val result = records.query(
+            RecordsQuery.create()
+                .withSourceId("test")
+                .withQuery(Predicates.gt("_created", conditionValue))
+                .withSortBy(SortBy("_created", true))
+                .withMaxItems(1000)
+                .build()
+        )
+
+        assertThat(result.getRecords()).hasSize(199)
+        assertThat(result.getRecords()).containsExactlyElementsOf(
+            refs.filter {
+                it.second.isAfter(conditionValue)
+            }.map {
+                it.first
+            }
+        )
     }
 
     @Test

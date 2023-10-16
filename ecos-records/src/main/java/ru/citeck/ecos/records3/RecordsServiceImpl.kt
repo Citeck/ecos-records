@@ -22,7 +22,9 @@ import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 
-class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService(), ServiceFactoryAware {
+open class RecordsServiceImpl(
+    private val services: RecordsServiceFactory
+) : AbstractRecordsService(), ServiceFactoryAware {
 
     companion object {
         val log = KotlinLogging.logger {}

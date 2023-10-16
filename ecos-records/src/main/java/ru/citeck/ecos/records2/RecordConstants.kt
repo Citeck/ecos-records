@@ -9,6 +9,11 @@ object RecordConstants {
     const val ATT_ECOS_TYPE = "_etype"
 
     const val ATT_NOT_EXISTS = "_notExists"
+
+    /**
+     * Same as _localId
+     */
+    const val ATT_ID = "id"
     const val ATT_LOCAL_ID = "_localId"
 
     const val ATT_AS = "_as"

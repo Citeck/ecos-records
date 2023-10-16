@@ -682,6 +682,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                     RecordConstants.ATT_HAS -> AttFuncValue { name -> value.has(name) }
                     RecordConstants.ATT_EDGE -> AttFuncValue { name -> AttEdgeValue(value.getEdge(name)) }
                     RecordConstants.ATT_SELF -> value
+                    RecordConstants.ATT_ID -> value.getAtt(RecordConstants.ATT_ID) ?: getLocalId()
                     else -> {
                         value.getAtt(
                             if (attribute.startsWith("\\_")) {

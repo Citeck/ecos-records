@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +42,8 @@ public class EvaluatorsWithModelTest extends AbstractRecordsDao implements Recor
         RecordEvaluatorService evaluatorsService = factory.getRecordEvaluatorService();
         evaluatorsService.register(new EvalutorWithModel());
 
-        RecordRef userRef = RecordRef.create(ID, "user");
-        RecordRef recordRef = RecordRef.create(ID, "record");
+        EntityRef userRef = EntityRef.create(ID, "user");
+        EntityRef recordRef = EntityRef.create(ID, "record");
 
         Map<String, Object> model = new HashMap<>();
         model.put("user", userRef);

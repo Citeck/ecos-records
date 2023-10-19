@@ -2,10 +2,10 @@ package ru.citeck.ecos.records3.test.op.mutate
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class RawMutateTest {
@@ -52,11 +52,11 @@ class RawMutateTest {
             """.trimIndent()
         )
 
-        val recordRef = RecordRef.valueOf("test@test")
+        val recordRef = EntityRef.valueOf("test@test")
         val resRec = factory.recordsServiceV1.mutate(recordRef, mutAtts)
 
         assertEquals(recordRef, resRec)
-        assertEquals(recordRef.id, mutRecord.id)
+        assertEquals(recordRef.getLocalId(), mutRecord.id)
         assertEquals(mutRes, mutRecord.attributes)
     }
 }

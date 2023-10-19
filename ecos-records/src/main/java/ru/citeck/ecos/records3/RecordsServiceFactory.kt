@@ -285,7 +285,7 @@ open class RecordsServiceFactory {
         attValueFactories.add(instantValueFactory)
         attValueFactories.add(OffsetDateTimeValueFactory())
         attValueFactories.add(JsonNodeValueFactory())
-        attValueFactories.add(RecordRefValueFactory())
+        attValueFactories.add(EntityRefValueFactory())
         attValueFactories.add(EntityWithMetaValueFactory())
         if (isJacksonPresent()) {
             attValueFactories.add(JacksonJsonNodeValueFactory())

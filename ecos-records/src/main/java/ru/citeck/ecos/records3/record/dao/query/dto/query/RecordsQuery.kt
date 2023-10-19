@@ -7,9 +7,9 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.serialization.annotation.IncludeNonDefault
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
@@ -150,7 +150,7 @@ data class RecordsQuery(
             return this
         }
 
-        fun withAfterId(afterId: RecordRef?): Builder {
+        fun withAfterId(afterId: EntityRef?): Builder {
             this.page.withAfterId(afterId)
             return this
         }

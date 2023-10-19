@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.Exception
 
 class QueryErrorTest {
@@ -32,7 +32,7 @@ class QueryErrorTest {
 
         // local
 
-        val ref = RecordRef.valueOf("error-test@error-rec")
+        val ref = EntityRef.valueOf("error-test@error-rec")
 
         val ex = assertThrows<Exception> { records.getAtt(ref, "errorAtt") }
         assertThat(ex.message).isEqualTo("ERROR_ATT")
@@ -47,7 +47,7 @@ class QueryErrorTest {
         val services2 = createRecordsFactoryWithRemote(services)
         val records2 = services2.recordsServiceV1
 
-        val ref2 = RecordRef.valueOf("remote/$ref")
+        val ref2 = EntityRef.valueOf("remote/$ref")
 
         val ex2 = assertThrows<Exception> { records2.getAtt(ref2, "errorAtt") }
         assertThat(ex2.message).isEqualTo("ERROR_ATT")

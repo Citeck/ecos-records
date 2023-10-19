@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ class RecordRefTest {
                 ",123,"})
     void test(String appName, String sourceId, String id) {
 
-        RecordRef recordRef = RecordRef.create(appName, sourceId, id);
+        EntityRef recordRef = EntityRef.create(appName, sourceId, id);
 
         String recordStr = "";
         if (appName != null) {
@@ -36,7 +36,7 @@ class RecordRefTest {
         }
         recordStr += id != null ? id : "";
 
-        RecordRef refFromStr = RecordRef.valueOf(recordStr);
+        EntityRef refFromStr = EntityRef.valueOf(recordStr);
         assertEquals(recordRef, refFromStr);
 
         RecordsObj recordsObj = Json.getMapper().read("{\"record\": \"" + refFromStr + "\"}", RecordsObj.class);
@@ -54,7 +54,7 @@ class RecordRefTest {
 
         assertEquals(recordRef.getAppName(), appName);
         assertEquals(recordRef.getSourceId(), sourceId);
-        assertEquals(recordRef.getId(), id);
+        assertEquals(recordRef.getLocalId(), id);
         if (!appName.isEmpty()) {
             assertEquals(appName + "/" + sourceId + "@" + id, recordRef.toString());
         } else if (!sourceId.isEmpty()) {
@@ -63,49 +63,49 @@ class RecordRefTest {
             assertEquals(id, recordRef.toString());
         }
 
-        assertEquals(recordRef, RecordRef.valueOf(recordRef.toString()));
+        assertEquals(recordRef, EntityRef.valueOf(recordRef.toString()));
 
-        RecordRef otherRef = RecordRef.create(appName + "0", sourceId, id);
+        EntityRef otherRef = EntityRef.create(appName + "0", sourceId, id);
         assertNotEquals(otherRef, recordRef);
 
         String otherRefStr = Json.getMapper().toString(otherRef);
         assertEquals("\"" + otherRef.toString() + "\"", otherRefStr);
 
-        RecordRef remappedOtherRef = Json.getMapper().convert(otherRefStr, RecordRef.class);
+        EntityRef remappedOtherRef = Json.getMapper().convert(otherRefStr, EntityRef.class);
         assertEquals(otherRef, remappedOtherRef);
 
         RecordsList list = Json.getMapper().read("[\"\", \"\"]", RecordsList.class);
         assertEquals(2, list.size());
-        assertSame(list.get(0), RecordRef.EMPTY);
-        assertSame(list.get(1), RecordRef.EMPTY);
+        assertSame(list.get(0), EntityRef.EMPTY);
+        assertSame(list.get(1), EntityRef.EMPTY);
     }
 
     @Test
     void defaultSourceTest() {
 
         String sourceId = "source-id";
-        RecordRef ref0 = RecordRef.valueOf(sourceId + "@@");
-        RecordRef ref1 = RecordRef.valueOf(sourceId + "@@@@@");
+        EntityRef ref0 = EntityRef.valueOf(sourceId + "@@");
+        EntityRef ref1 = EntityRef.valueOf(sourceId + "@@@@@");
 
         assertEquals(ref0, ref1);
         assertEquals(sourceId, ref0.getSourceId());
         assertEquals(sourceId, ref1.getSourceId());
 
-        assertEquals(ref0, RecordRef.create(null, sourceId, "@@@@"));
-        assertEquals(ref0, RecordRef.create(null, sourceId, "@"));
-        assertEquals(ref0, RecordRef.create(null, sourceId, null));
-        assertEquals(RecordRef.valueOf("some-app/" + sourceId + "@"),
-                     RecordRef.create("some-app", sourceId, null));
+        assertEquals(ref0, EntityRef.create(null, sourceId, "@@@@"));
+        assertEquals(ref0, EntityRef.create(null, sourceId, "@"));
+        assertEquals(ref0, EntityRef.create(null, sourceId, null));
+        assertEquals(EntityRef.valueOf("some-app/" + sourceId + "@"),
+                     EntityRef.create("some-app", sourceId, null));
     }
 
-    private static class RecordsList extends ArrayList<RecordRef> {
+    private static class RecordsList extends ArrayList<EntityRef> {
     }
 
     static class RecordsObj {
 
-        List<RecordRef> list;
+        List<EntityRef> list;
 
-        public void setRecord(RecordRef record) {
+        public void setRecord(EntityRef record) {
             if (list == null) {
                 list = new ArrayList<>();
             }

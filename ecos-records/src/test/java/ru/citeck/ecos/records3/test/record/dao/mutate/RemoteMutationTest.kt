@@ -3,12 +3,12 @@ package ru.citeck.ecos.records3.test.record.dao.mutate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.test.testutils.MockApp
 import ru.citeck.ecos.records3.test.testutils.MockAppsFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RemoteMutationTest {
 
@@ -41,16 +41,16 @@ class RemoteMutationTest {
 
         val recAlias1 = "alias-01"
         val recAlias2 = "alias-02"
-        val record0 = RecordAtts(RecordRef.create("app0", "dao-id", "local-id"))
+        val record0 = RecordAtts(EntityRef.create("app0", "dao-id", "local-id"))
         record0.setAtt("test-assoc?assoc", recAlias1)
         record0.setAtt("test-assoc-arr?assoc", listOf(recAlias1))
         record0.setAtt(".att(n:\"legacy-assoc\"){assoc}", listOf(recAlias1, recAlias1))
         record0.setAtt("test-assoc-rec2?assoc", recAlias2)
 
-        val record1 = RecordAtts(RecordRef.create("app1", "dao-id", "local-id"))
+        val record1 = RecordAtts(EntityRef.create("app1", "dao-id", "local-id"))
         record1.setAtt(RecordConstants.ATT_ALIAS, recAlias1)
 
-        val record2 = RecordAtts(RecordRef.create("app1", "dao-id", "local-id-2"))
+        val record2 = RecordAtts(EntityRef.create("app1", "dao-id", "local-id-2"))
         record2.setAtt(RecordConstants.ATT_ALIAS + "?str", recAlias2)
 
         val sourceRecs = listOf(record0, record1, record2).map { it.deepCopy() }
@@ -65,9 +65,9 @@ class RemoteMutationTest {
             assertThat(result[1].toString()).isEqualTo(expectedRec1Id)
 
             assertThat(result).hasSize(3)
-            assertThat(result[0].id).isEqualTo(toMutatedId.invoke("local-id"))
-            assertThat(result[1].id).isEqualTo(toMutatedId.invoke("local-id"))
-            assertThat(result[2].id).isEqualTo(toMutatedId.invoke("local-id-2"))
+            assertThat(result[0].getLocalId()).isEqualTo(toMutatedId.invoke("local-id"))
+            assertThat(result[1].getLocalId()).isEqualTo(toMutatedId.invoke("local-id"))
+            assertThat(result[2].getLocalId()).isEqualTo(toMutatedId.invoke("local-id-2"))
 
             assertThat(mutatedRecords[0]).hasSize(1)
             assertThat(mutatedRecords[0]["local-id"]).isNotNull

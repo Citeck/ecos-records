@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.ScriptUtils
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
 
     companion object {
-        private val arrakisRef = RecordRef.valueOf("dune@$DEFAULT_ARRAKIS_ID")
+        private val arrakisRef = EntityRef.valueOf("dune@$DEFAULT_ARRAKIS_ID")
     }
 
     @Test
@@ -245,7 +245,7 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
         return script.eval()
     }
 
-    private fun RecordRef.getAtt(att: String): DataValue {
+    private fun EntityRef.getAtt(att: String): DataValue {
         return recordsService.getAtt(this, att)
     }
 

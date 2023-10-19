@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.iter
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -78,7 +78,7 @@ class IterableRecords(
         private val pageSort: SortBy
         private var skipCount = 0
         private var lastValue: DataValue = DataValue.NULL
-        private var lastRecordRef = RecordRef.EMPTY
+        private var lastRecordRef = EntityRef.EMPTY
 
         private val basePredicate = baseQuery.getQuery(Predicate::class.java)
 

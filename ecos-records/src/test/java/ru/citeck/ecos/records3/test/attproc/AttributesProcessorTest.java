@@ -6,11 +6,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.util.Date;
@@ -41,7 +41,7 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
     @Test
     void test() {
 
-        RecordRef ref = RecordRef.create(ID, "test");
+        EntityRef ref = EntityRef.create(ID, "test");
 
         DataValue attribute = recordsService.getAtt(ref, "doubleNum|fmt('000000.00')");
         assertEquals("000123.32", attribute.asText());
@@ -74,7 +74,7 @@ class AttributesProcessorTest extends AbstractRecordsDao implements RecordsAttsD
     @Test
     void multiProcTest() {
 
-        RecordRef ref = RecordRef.create(ID, "test");
+        EntityRef ref = EntityRef.create(ID, "test");
 
         DataValue attribute = recordsService.getAtt(ref, "date|fmt('yyyy.MM.DD___HH','','GMT+7:00')|presuf('№ ')");
         assertEquals("№ 2020.01.01___08", attribute.asText());

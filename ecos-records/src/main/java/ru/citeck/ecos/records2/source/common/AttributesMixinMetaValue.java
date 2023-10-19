@@ -9,12 +9,12 @@ import ru.citeck.ecos.commons.utils.func.UncheckedFunction;
 import ru.citeck.ecos.records2.QueryContext;
 import ru.citeck.ecos.records2.RecordConstants;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.*;
 import ru.citeck.ecos.records2.graphql.meta.value.field.EmptyMetaField;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -108,8 +108,8 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
         if (MetaValue.class.equals(resMetaType)) {
             return action.apply(this);
-        } else if (RecordRef.class.equals(resMetaType)) {
-            return action.apply(RecordRef.valueOf(getId()));
+        } else if (EntityRef.class.equals(resMetaType)) {
+            return action.apply(EntityRef.valueOf(getId()));
         }
 
         if (metaToRequest == null || resMetaType == null) {
@@ -146,7 +146,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
     @Override
     public Object getAttribute(String attribute, MetaField field) {
         Object result = getAttributeImpl(attribute, field, () -> super.getAttribute(attribute, field));
-        if (result instanceof RecordRef) {
+        if (result instanceof EntityRef) {
             return result;
         }
         List<MetaValue> metaValues = metaValuesConverter.getAsMetaValues(result, context, field, false);

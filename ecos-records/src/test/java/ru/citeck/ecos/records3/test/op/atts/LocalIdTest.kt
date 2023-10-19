@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class LocalIdTest {
@@ -13,7 +13,7 @@ class LocalIdTest {
         val services = RecordsServiceFactory()
         val records = services.recordsServiceV1
 
-        val dto = TestDto1(RecordRef.create("aa", "bb", "cc"), "123")
+        val dto = TestDto1(EntityRef.create("aa", "bb", "cc"), "123")
         val localId = records.getAtt(dto, "_localId").asText()
 
         assertEquals("cc", localId)
@@ -28,6 +28,6 @@ class LocalIdTest {
         assertEquals("dd", localId3)
     }
 
-    data class TestDto1(val id: RecordRef, val field: String)
+    data class TestDto1(val id: EntityRef, val field: String)
     data class TestDto2(val id: String, val field: String)
 }

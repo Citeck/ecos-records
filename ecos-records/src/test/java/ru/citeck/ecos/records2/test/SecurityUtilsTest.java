@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records2.test;
 
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.error.RecordsError;
@@ -10,6 +9,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.utils.SecurityUtils;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +33,7 @@ public class SecurityUtilsTest implements RecordsQueryDao {
         query.setQuery("Test");
         query.setSourceId("Unknown");
 
-        RecordsResult<RecordRef> result = service.queryRecords(query);
+        RecordsResult<EntityRef> result = service.queryRecords(query);
         result = SecurityUtils.encodeResult(result);
 
         for (RecordsError error : result.getErrors()) {
@@ -62,7 +62,7 @@ public class SecurityUtilsTest implements RecordsQueryDao {
     }
 
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryRecords(RecordsQuery query) {
         throw new RuntimeException("Exception while query");
     }
 

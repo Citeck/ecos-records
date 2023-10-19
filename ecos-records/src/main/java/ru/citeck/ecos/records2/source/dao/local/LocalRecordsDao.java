@@ -29,6 +29,7 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,9 +91,9 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
             MutableRecordsLocalDao mutableDao = (MutableRecordsLocalDao) this;
 
-            List<RecordRef> recordRefs = mutation.getRecords()
+            List<EntityRef> recordRefs = mutation.getRecords()
                     .stream()
-                    .map(meta -> addSourceId ? RecordRef.valueOf(meta.getId().getId()) : meta.getId())
+                    .map(meta -> addSourceId ? EntityRef.valueOf(meta.getId().getLocalId()) : meta.getId())
                     .collect(Collectors.toList());
 
             List<?> values = mutableDao.getValuesToMutate(recordRefs);
@@ -112,7 +113,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             if (addSourceId) {
                 result.setRecords(result.getRecords()
                         .stream()
-                        .map(meta -> new RecordMeta(meta, r -> RecordRef.valueOf(getId() + "@" + r)))
+                        .map(meta -> new RecordMeta(meta, r -> EntityRef.valueOf(getId() + "@" + r)))
                         .collect(Collectors.toList()));
             }
 
@@ -125,15 +126,15 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsQueryResult<RecordRef> queryRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryRecords(@NotNull RecordsQuery query) {
 
         if (this instanceof LocalRecordsQueryDao) {
 
             LocalRecordsQueryDao recordsQueryLocalDao = (LocalRecordsQueryDao) this;
 
-            RecordsQueryResult<RecordRef> localRecords = recordsQueryLocalDao.queryLocalRecords(query);
+            RecordsQueryResult<EntityRef> localRecords = recordsQueryLocalDao.queryLocalRecords(query);
             if (addSourceId) {
-                return new RecordsQueryResult<>(localRecords, r -> RecordRef.valueOf(getId() + "@" + r));
+                return new RecordsQueryResult<>(localRecords, r -> EntityRef.valueOf(getId() + "@" + r));
             }
             return localRecords;
 
@@ -156,7 +157,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
         RecordsQueryResult<RecordAtts> queryResult = new RecordsQueryResult<>();
 
-        List<RecordRef> recordRefs = new ArrayList<>();
+        List<EntityRef> recordRefs = new ArrayList<>();
         List<Object> rawMetaValues = new ArrayList<>();
 
         if (this instanceof LocalRecordsQueryWithMetaDao) {
@@ -170,8 +171,8 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
             queryResult.setTotalCount(values.getTotalCount());
 
             for (Object record : values.getRecords()) {
-                if (record instanceof RecordRef) {
-                    recordRefs.add((RecordRef) record);
+                if (record instanceof EntityRef) {
+                    recordRefs.add((EntityRef) record);
                 } else {
                     rawMetaValues.add(record);
                 }
@@ -180,7 +181,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
         } else if (this instanceof RecordsQueryDao) {
 
             RecordsQueryDao recordsQueryDao = (RecordsQueryDao) this;
-            RecordsQueryResult<RecordRef> records = recordsQueryDao.queryRecords(query);
+            RecordsQueryResult<EntityRef> records = recordsQueryDao.queryRecords(query);
             queryResult.merge(records);
             queryResult.setHasMore(records.getHasMore());
             queryResult.setTotalCount(records.getTotalCount());
@@ -217,7 +218,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
     }
 
     @NotNull
-    public RecordsResult<RecordAtts> getMeta(@NotNull List<RecordRef> records,
+    public RecordsResult<RecordAtts> getMeta(@NotNull List<EntityRef> records,
                                              @NotNull List<SchemaAtt> metaSchema,
                                              boolean rawAtts) {
 
@@ -227,7 +228,7 @@ public abstract class LocalRecordsDao extends AbstractRecordsDao implements Serv
 
             LocalRecordsMetaDao metaLocalDao = (LocalRecordsMetaDao) this;
 
-            List<RecordRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
+            List<EntityRef> localRecords = addSourceId ? RecordsUtils.toLocalRecords(records) : records;
             List<?> metaValues = metaLocalDao.getLocalRecordsMeta(localRecords, AttMetaField.INSTANCE);
 
             result = getMetaImpl(metaValues, metaSchema, rawAtts);

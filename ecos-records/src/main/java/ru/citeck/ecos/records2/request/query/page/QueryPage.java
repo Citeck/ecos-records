@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.request.query.page;
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 public abstract class QueryPage {
 
@@ -38,7 +38,7 @@ public abstract class QueryPage {
 
         if (pageData.has(AFTER_ID_FIELD) && skipCount == null) {
             JsonNode afterIdNode = pageData.path(AFTER_ID_FIELD);
-            return new AfterPage(RecordRef.valueOf(afterIdNode.textValue()), maxItems);
+            return new AfterPage(EntityRef.valueOf(afterIdNode.textValue()), maxItems);
         } else {
             return new SkipPage(skipCount, maxItems);
         }

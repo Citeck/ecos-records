@@ -6,12 +6,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +27,7 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     private RecordsService recordsService;
 
-    private final Map<RecordRef, Object> metaValues = new HashMap<>();
+    private final Map<EntityRef, Object> metaValues = new HashMap<>();
 
     @NotNull
     @Override
@@ -41,39 +41,39 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
 
-        RecordRef refTest = RecordRef.create(ID, "test");
-        metaValues.put(RecordRef.valueOf("test"), new Value(refTest));
-        metaValues.put(RecordRef.valueOf("ValueByRef"), new ValueByRef());
+        EntityRef refTest = EntityRef.create(ID, "test");
+        metaValues.put(EntityRef.valueOf("test"), new Value(refTest));
+        metaValues.put(EntityRef.valueOf("ValueByRef"), new ValueByRef());
     }
 
     @Test
     void test() {
-        DataValue attribute = recordsService.getAtt(RecordRef.create(ID, "test"), "id");
+        DataValue attribute = recordsService.getAtt(EntityRef.create(ID, "test"), "id");
         assertEquals("test-id", attribute.asText());
     }
 
     @Test
     void refFieldTest() {
 
-        RecordRef testRef = RecordRef.create(ID, "test");
+        EntityRef testRef = EntityRef.create(ID, "test");
 
         DataValue attribute = recordsService.getAtt(testRef, "otherRef?id");
-        assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
+        assertEquals(EntityRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
         MetaClass meta = recordsService.getAtts(testRef, MetaClass.class);
-        assertEquals(RecordRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
+        assertEquals(EntityRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
     }
 
     @NotNull
     @Override
     public List<?> getRecordsAtts(@NotNull List<String> records) {
         return records.stream().map(rec ->
-            metaValues.get(RecordRef.create("", rec))).collect(Collectors.toList());
+            metaValues.get(EntityRef.create("", rec))).collect(Collectors.toList());
     }
 
     @Data
     public static class MetaClass {
-        private RecordRef otherRef;
+        private EntityRef otherRef;
     }
 
     public static class ValueByRef implements AttValue {
@@ -86,22 +86,22 @@ class IdAttTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     public static class Value implements AttValue {
 
-        private RecordRef ref;
+        private EntityRef ref;
 
-        Value(RecordRef ref) {
+        Value(EntityRef ref) {
             this.ref = ref;
         }
 
         @Override
         public String getId() {
-            return ref.getId();
+            return ref.getLocalId();
         }
 
         @Override
         public Object getAtt(@NotNull String name) throws Exception {
             switch (name) {
                 case "id": return "test-id";
-                case "otherRef": return RecordRef.create(ID, ValueByRef.class.getSimpleName());
+                case "otherRef": return EntityRef.create(ID, ValueByRef.class.getSimpleName());
             }
             return null;
         }

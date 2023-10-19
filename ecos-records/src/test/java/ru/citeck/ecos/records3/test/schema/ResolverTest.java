@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
@@ -18,6 +17,7 @@ import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -182,8 +182,8 @@ public class ResolverTest {
         private int number = 11;
 
         @AttName("?id")
-        public RecordRef getRef() {
-            return RecordRef.create("aa", "bb");
+        public EntityRef getRef() {
+            return EntityRef.create("aa", "bb");
         }
 
         @Override

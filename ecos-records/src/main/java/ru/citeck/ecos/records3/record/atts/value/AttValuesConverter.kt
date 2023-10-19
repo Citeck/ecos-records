@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.atts.value
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -44,16 +43,6 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
             return null
         }
         var valueToConvert = value
-        if (valueToConvert is EntityRef && value !is RecordRef) {
-            if (valueToConvert.isEmpty()) {
-                return null
-            }
-            valueToConvert = RecordRef.create(
-                valueToConvert.getAppName(),
-                valueToConvert.getSourceId(),
-                valueToConvert.getLocalId()
-            )
-        }
 
         if (valueToConvert is AttValue) {
             return valueToConvert
@@ -67,8 +56,13 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         if (valueToConvert is MimeType) {
             valueToConvert = valueToConvert.toString()
         }
+        val valueClazz = if (valueToConvert is EntityRef) {
+            EntityRef::class.java
+        } else {
+            valueToConvert.javaClass
+        }
 
-        val factory: AttValueFactory<Any> = valueFactories[valueToConvert.javaClass]
+        val factory: AttValueFactory<Any> = valueFactories[valueClazz]
             ?: (valueFactories[Any::class.java] ?: error("Factory can't be resolved for value: $valueToConvert"))
 
         return factory.getValue(valueToConvert)

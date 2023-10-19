@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.util.*;
@@ -25,8 +25,8 @@ public class OrElseAttTest {
 
     private RecordsService recordsService;
 
-    private final RecordRef TEST_REF = RecordRef.create("test", "test");
-    private final RecordRef PROXY_REF = RecordRef.create("proxy", "test");
+    private final EntityRef TEST_REF = EntityRef.create("test", "test");
+    private final EntityRef PROXY_REF = EntityRef.create("proxy", "test");
 
     @BeforeAll
     void init() {
@@ -122,8 +122,8 @@ public class OrElseAttTest {
             .withQuery(Predicates.alwaysTrue())
             .build();
 
-        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(TEST_REF.sourceId), att));
-        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(PROXY_REF.sourceId), att));
+        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(TEST_REF.getSourceId()), att));
+        assertEquals(DataValue.create(expected), recordsService.queryOne(query.withSourceId(PROXY_REF.getSourceId()), att));
     }
 
     @Data

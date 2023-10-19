@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.text.SimpleDateFormat
@@ -19,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty as JackJsonProperty
 @Slf4j
 open class RecordAtts() : HasSensitiveData<RecordAtts> {
 
-    private var id = RecordRef.EMPTY
+    private var id = EntityRef.EMPTY
     private var attributes = ObjectData.create()
 
     constructor(other: RecordAtts?) : this() {
@@ -27,27 +26,18 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
         setAtts(other?.getAtts())
     }
 
-    constructor(other: RecordAtts?, id: RecordRef?) : this() {
+    constructor(other: RecordAtts?, id: EntityRef?) : this() {
         setId(id)
         setAtts(other?.getAtts())
     }
 
-    constructor(other: RecordAtts?, idMapper: Function<RecordRef, RecordRef>) : this() {
-        setId(idMapper.apply(other?.id ?: RecordRef.EMPTY))
+    constructor(other: RecordAtts?, idMapper: Function<EntityRef, EntityRef>) : this() {
+        setId(idMapper.apply(other?.id ?: EntityRef.EMPTY))
         setAtts(other?.getAtts())
     }
 
     constructor(id: String?) : this() {
         setId(id)
-    }
-
-    constructor(id: RecordRef?) : this() {
-        setId(id)
-    }
-
-    constructor(id: RecordRef?, attributes: ObjectData?) : this() {
-        setId(id)
-        setAtts(attributes)
     }
 
     constructor(id: EntityRef?) : this() {
@@ -59,11 +49,11 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
         setAtts(attributes)
     }
 
-    fun getId(): RecordRef {
+    fun getId(): EntityRef {
         return id
     }
 
-    open fun withId(recordRef: RecordRef?): RecordAtts {
+    open fun withId(recordRef: EntityRef?): RecordAtts {
         return if (id == recordRef) {
             this
         } else {
@@ -85,7 +75,7 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
     }
 
     fun withoutAppName(): RecordAtts {
-        val id = this.id.removeAppName()
+        val id = this.id.withoutAppName()
         if (id == this.id) {
             return this
         }
@@ -95,15 +85,11 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
     @JsonProperty
     @JackJsonProperty
     fun setId(id: String?) {
-        this.id = RecordRef.valueOf(id)
+        this.id = EntityRef.valueOf(id)
     }
 
     fun setId(id: EntityRef?) {
-        this.id = RecordRef.valueOf(id)
-    }
-
-    fun setId(id: RecordRef?) {
-        this.id = RecordRef.valueOf(id)
+        this.id = EntityRef.valueOf(id)
     }
 
     fun forEach(consumer: (String, DataValue) -> Unit) {

@@ -6,11 +6,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
 class NullValueTest {
@@ -20,7 +20,7 @@ class NullValueTest {
         val services = RecordsServiceFactory()
         services.recordsService.register(object : LocalRecordsDao(), LocalRecordsMetaDao<TestDto> {
             override fun getLocalRecordsMeta(
-                records: MutableList<RecordRef>,
+                records: MutableList<EntityRef>,
                 metaField: MetaField
             ): List<TestDto> {
                 return records.map { TestDto() }
@@ -37,7 +37,7 @@ class NullValueTest {
             "dataValue" to "dataValue?str",
             "rawNull" to "rawNull?str"
         )
-        val attsRes = records.getAtts(RecordRef.valueOf("test@abc"), attsToLoad)
+        val attsRes = records.getAtts(EntityRef.valueOf("test@abc"), attsToLoad)
         assertThat(attsRes.getAtts().size()).isEqualTo(attsToLoad.size)
         attsToLoad.forEach { (k, _) ->
             assertTrue(attsRes.getAtts().has(k))

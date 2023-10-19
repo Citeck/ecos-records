@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.bean
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
@@ -11,6 +10,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class BeanValueFactoryTest2 {
@@ -22,15 +22,15 @@ class BeanValueFactoryTest2 {
 
         services.recordsServiceV1.register(object : RecordsQueryDao, RecordAttsDao {
             override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
-                return RecsQueryRes.of(TestClass(RecordRef.valueOf("test@test")))
+                return RecsQueryRes.of(TestClass(EntityRef.valueOf("test@test")))
             }
             override fun getRecordAtts(recordId: String): Any? {
-                return TestClass(RecordRef.valueOf("test@test"))
+                return TestClass(EntityRef.valueOf("test@test"))
             }
             override fun getId() = "test"
         })
 
-        assertEquals("test@test", services.recordsServiceV1.getAtt(RecordRef.valueOf("test@test"), "?id").asText())
+        assertEquals("test@test", services.recordsServiceV1.getAtt(EntityRef.valueOf("test@test"), "?id").asText())
         val queryRecord = services.recordsServiceV1.query(
             RecordsQuery.create {
                 sourceId = "test"
@@ -188,10 +188,10 @@ class BeanValueFactoryTest2 {
         }
     }
 
-    class TestClass(val id: RecordRef) {
+    class TestClass(val id: EntityRef) {
 
         fun getAtt(): String {
-            return id.id
+            return id.getLocalId()
         }
     }
 

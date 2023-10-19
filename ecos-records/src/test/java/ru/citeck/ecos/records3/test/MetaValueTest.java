@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -69,7 +69,7 @@ public class MetaValueTest extends AbstractRecordsDao
         attributes.put("asStr", ".as(n:\"str\"){str}");
         attributes.put("date", ".att(n:\"date\"){str}");
 
-        List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
+        List<EntityRef> records = Collections.singletonList(EntityRef.create(SOURCE_ID, "test"));
         List<RecordAtts> result = recordsService.getAtts(records, attributes);
 
         RecordAtts meta = result.get(0);

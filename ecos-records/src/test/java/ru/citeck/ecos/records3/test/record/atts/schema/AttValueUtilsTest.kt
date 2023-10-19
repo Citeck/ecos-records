@@ -7,8 +7,8 @@ import ecos.com.fasterxml.jackson210.databind.node.TextNode
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttValueUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class AttValueUtilsTest {
 
@@ -22,7 +22,7 @@ class AttValueUtilsTest {
             MissingNode.getInstance(),
             com.fasterxml.jackson.databind.node.NullNode.instance,
             com.fasterxml.jackson.databind.node.MissingNode.getInstance(),
-            RecordRef.EMPTY
+            EntityRef.EMPTY
         )
 
         nullValues.forEach {

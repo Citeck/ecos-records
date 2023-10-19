@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
     @Test
     void test() {
 
-        RecordRef ref = RecordRef.create(ID, "test");
+        EntityRef ref = EntityRef.create(ID, "test");
         DataValue attribute;
 
         //
@@ -104,7 +104,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
             atts.put("innerField1Disp", "inner.field1?disp");
             atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
             atts.put("innerHasFalse", ".att(n:\"inner2\"){has(n:\"has_false\")}");
-            attributes = recordsService.getAtts(RecordRef.create(ID, "inner"), atts);
+            attributes = recordsService.getAtts(EntityRef.create(ID, "inner"), atts);
         }
 
         @Override

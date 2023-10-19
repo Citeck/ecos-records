@@ -3,9 +3,9 @@ package ru.citeck.ecos.records3.test.record.atts.proc
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class ComplexProcArgTest {
 
@@ -14,16 +14,16 @@ class ComplexProcArgTest {
 
         val records = RecordsServiceFactory().recordsServiceV1
 
-        var res: DataValue = records.getAtt(RecordRef.create("meta", ""), "unknown.unknown[]![]")
+        var res: DataValue = records.getAtt(EntityRef.create("meta", ""), "unknown.unknown[]![]")
         assertThat(res).isEqualTo(DataValue.createArr())
 
-        res = records.getAtt(RecordRef.create("meta", ""), "unknown.unknown{a:b}!{}")
+        res = records.getAtt(EntityRef.create("meta", ""), "unknown.unknown{a:b}!{}")
         assertThat(res).isEqualTo(DataValue.createObj())
 
-        res = records.getAtt(RecordRef.create("meta", ""), "unknown.unknown[]![]|join('==')")
+        res = records.getAtt(EntityRef.create("meta", ""), "unknown.unknown[]![]|join('==')")
         assertThat(res).isEqualTo(DataValue.createStr(""))
 
-        res = records.getAtt(RecordRef.create("meta", ""), "unknown.unknown[]![\"aa\",\"bb\"]|join('==')")
+        res = records.getAtt(EntityRef.create("meta", ""), "unknown.unknown[]![\"aa\",\"bb\"]|join('==')")
         assertThat(res).isEqualTo(DataValue.createStr("aa==bb"))
     }
 

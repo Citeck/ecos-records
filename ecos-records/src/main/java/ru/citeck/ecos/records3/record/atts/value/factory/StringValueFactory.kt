@@ -2,8 +2,8 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.NumberFormatException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -16,7 +16,7 @@ class StringValueFactory : AttValueFactory<String> {
     private val converters = ConcurrentHashMap<String, (String) -> Any?>()
 
     init {
-        converters["ref"] = { RecordRef.valueOf(it) }
+        converters["ref"] = { EntityRef.valueOf(it) }
         converters["mltext"] = { MLText(it) }
     }
 

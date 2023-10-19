@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records3.record.dao.impl.proxy
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -24,6 +23,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -80,7 +80,7 @@ open class RecordsDaoProxy(
 
         return postProcAtts.map { proxyAtts ->
             val innerAttValue = InnerAttValue(proxyAtts.atts.getAtts().getData().asJson())
-            val ref = RecordRef.create(idField, proxyAtts.atts.getId().id)
+            val ref = EntityRef.create(idField, proxyAtts.atts.getId().getLocalId())
             ProxyRecVal(ref, innerAttValue, proxyAtts.additionalAtts)
         }
     }
@@ -98,7 +98,7 @@ open class RecordsDaoProxy(
             }
             result.setRecords(
                 result.getRecords().map {
-                    RecordRef.create(idField, it.id)
+                    EntityRef.create(idField, it.getLocalId())
                 }
             )
             result
@@ -147,10 +147,10 @@ open class RecordsDaoProxy(
         if (processedRefs.size != resultRefs.size) {
             error("RecordRefs size was changed by processor: ${mutProc?.javaClass}")
         }
-        return processedRefs.map { it.id }
+        return processedRefs.map { it.getLocalId() }
     }
 
-    open fun mutateWithoutProcessing(records: List<LocalRecordAtts>): List<RecordRef> {
+    open fun mutateWithoutProcessing(records: List<LocalRecordAtts>): List<EntityRef> {
         return doWithSourceIdMapping {
             recordsService.mutate(
                 records.map {
@@ -160,12 +160,12 @@ open class RecordsDaoProxy(
         }
     }
 
-    protected open fun toTargetRefs(recordIds: List<String>): List<RecordRef> {
+    protected open fun toTargetRefs(recordIds: List<String>): List<EntityRef> {
         return recordIds.map { toTargetRef(it) }
     }
 
-    protected open fun toTargetRef(recordId: String): RecordRef {
-        return RecordRef.valueOf("$targetIdField@$recordId")
+    protected open fun toTargetRef(recordId: String): EntityRef {
+        return EntityRef.valueOf("$targetIdField@$recordId")
     }
 
     protected open fun getContextAtts(procContext: ProxyProcContext): Map<String, String> {
@@ -221,7 +221,7 @@ open class RecordsDaoProxy(
     }
 
     private class ProxyRecVal(
-        private val id: RecordRef,
+        private val id: EntityRef,
         base: AttValue,
         val postProcAtts: Map<String, Any?>
     ) : AttValueDelegate(base), AttValueProxy {

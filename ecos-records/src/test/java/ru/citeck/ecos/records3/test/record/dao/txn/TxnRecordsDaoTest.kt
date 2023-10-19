@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -21,6 +20,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
@@ -108,7 +108,7 @@ class TxnRecordsDaoTest {
             }
         }
 
-        val ref = RecordRef.valueOf("${TxnDao.ID}@rec-0")
+        val ref = EntityRef.valueOf("${TxnDao.ID}@rec-0")
         RequestContext.doWithTxn(readOnly = false) {
             assertThat(records.getAtt(ref, "key").asText()).isEqualTo("value-0")
             records.delete(ref)
@@ -127,7 +127,7 @@ class TxnRecordsDaoTest {
         }
 
         RequestContext.doWithTxn(readOnly = false) {
-            records.delete(listOf("rec-1", "rec-2", "rec-3").map { RecordRef.create(TxnDao.ID, it) })
+            records.delete(listOf("rec-1", "rec-2", "rec-3").map { EntityRef.create(TxnDao.ID, it) })
         }
 
         RequestContext.doWithTxn(readOnly = true) {
@@ -203,7 +203,7 @@ class TxnRecordsDaoTest {
 
     private fun testImpl(records: RecordsService, sourceId: String) {
 
-        val testRef = RecordRef.valueOf("$sourceId@test-rec")
+        val testRef = EntityRef.valueOf("$sourceId@test-rec")
         val attName = "attName"
 
         var attValue = records.getAtt(testRef, attName)

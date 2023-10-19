@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -19,6 +18,7 @@ import ru.citeck.ecos.records2.source.common.AttributesMixin;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -82,7 +82,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         assertTrue(meta.get(strAtt).isNull());
         assertTrue(meta.get(intAtt).isNull());
 
-        meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
+        meta = recordsService.getAttributes(EntityRef.create(ID, REC_ID), mixinAtts);
 
         assertTrue(meta.get(strAtt).isNull());
         assertTrue(meta.get(intAtt).isNull());
@@ -99,13 +99,13 @@ public class AttributesMixinTest extends LocalRecordsDao
         addAttributesMixin(new MixinWithRecRef());
         checkValidComputedAttributes();
 
-        DataValue attValue = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
+        DataValue attValue = recordsService.getAttribute(EntityRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
         assertEquals(DataValue.create(REC_META_VALUE_ID), attValue);
 
-        DataValue edgeTitle = recordsService.getAttribute(RecordRef.create(ID, REC_META_VALUE_ID), "#" + recordRefAttName + "?title");
+        DataValue edgeTitle = recordsService.getAttribute(EntityRef.create(ID, REC_META_VALUE_ID), "#" + recordRefAttName + "?title");
         assertEquals(DataValue.create(recordRefAttTitle), edgeTitle);
 
-        MetaWithEdgeForExistingAtt edgeExMeta = recordsService.getMeta(RecordRef.create(ID, REC_META_VALUE_ID), MetaWithEdgeForExistingAtt.class);
+        MetaWithEdgeForExistingAtt edgeExMeta = recordsService.getMeta(EntityRef.create(ID, REC_META_VALUE_ID), MetaWithEdgeForExistingAtt.class);
         assertEquals(intField0Title, edgeExMeta.fieldTitle);
         assertEquals(intField0Value, edgeExMeta.fieldValue);
     }
@@ -129,7 +129,7 @@ public class AttributesMixinTest extends LocalRecordsDao
             assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
             assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
 
-            meta = recordsService.getAttributes(RecordRef.create(ID, REC_ID), mixinAtts);
+            meta = recordsService.getAttributes(EntityRef.create(ID, REC_ID), mixinAtts);
 
             assertEquals(DataValue.create(strFieldValueWithPrefix), meta.get(strAtt));
             assertEquals(DataValue.create((double) intFieldsSum), meta.get(intAtt));
@@ -142,11 +142,11 @@ public class AttributesMixinTest extends LocalRecordsDao
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<EntityRef> records, MetaField metaField) {
         return records.stream().map(r -> {
-            if (REC_ID.equals(r.getId())) {
+            if (REC_ID.equals(r.getLocalId())) {
                 return new Record();
-            } else if (REC_META_VALUE_ID.equals(r.getId())) {
+            } else if (REC_META_VALUE_ID.equals(r.getLocalId())) {
                 return new MetaValueRecord(REC_META_VALUE_ID);
             } else {
                 return new EmptyRecord();
@@ -236,7 +236,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
     }
 
-    public static class MixinWithRecRef implements AttributesMixin<Object, RecordRef> {
+    public static class MixinWithRecRef implements AttributesMixin<Object, EntityRef> {
 
         @Override
         public List<String> getAttributesList() {
@@ -244,7 +244,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAttribute(String attribute, RecordRef id, MetaField field) {
+        public Object getAttribute(String attribute, EntityRef id, MetaField field) {
             if (attribute.equals(recordRefAttName)) {
                 return id.toString();
             }
@@ -252,7 +252,7 @@ public class AttributesMixinTest extends LocalRecordsDao
         }
 
         @Override
-        public MetaEdge getEdge(String attribute, RecordRef meta, Supplier<MetaEdge> base, MetaField field) {
+        public MetaEdge getEdge(String attribute, EntityRef meta, Supplier<MetaEdge> base, MetaField field) {
             if (attribute.equals(recordRefAttName)) {
                 return new MetaEdge() {
                     @Override

@@ -1,17 +1,8 @@
 package ru.citeck.ecos.records3.utils
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object RecordRefUtils {
-
-    fun mapAppIdAndSourceId(
-        recordRef: RecordRef,
-        currentAppName: String,
-        mapping: Map<String, String>?
-    ): RecordRef {
-        return RecordRef.valueOf(mapAppIdAndSourceId(recordRef as EntityRef, currentAppName, mapping))
-    }
 
     fun mapAppIdAndSourceId(
         recordRef: EntityRef,

@@ -4,13 +4,13 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,7 +39,7 @@ class InnerSourceTest extends LocalRecordsDao implements LocalRecordsQueryDao {
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryLocalRecords(@NotNull RecordsQuery query) {
         assertEquals(INNER_ID, query.getSourceId());
         return new RecordsQueryResult<>();
     }

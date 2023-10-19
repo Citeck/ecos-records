@@ -9,11 +9,11 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.request.query.QueryConsistency;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.SortBy;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -34,7 +34,7 @@ public class JacksonTest {
         query.setSourceId("sourceId");
         query.setLanguage("language");
         query.setGroupBy(Arrays.asList("one", "two"));
-        query.setAfterId(RecordRef.valueOf("aaa/bbb@123"));
+        query.setAfterId(EntityRef.valueOf("aaa/bbb@123"));
         query.setSkipCount(55);
         query.setQuery(new SomeQuery());
         query.setConsistency(QueryConsistency.TRANSACTIONAL);

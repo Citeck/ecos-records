@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -24,7 +23,7 @@ abstract class AbstractRecordsService : RecordsService {
 
     /* QUERY */
 
-    override fun queryOne(query: RecordsQuery): RecordRef? {
+    override fun queryOne(query: RecordsQuery): EntityRef? {
         return query(query).getRecords().firstOrNull()
     }
 
@@ -88,27 +87,27 @@ abstract class AbstractRecordsService : RecordsService {
 
     /* MUTATE */
 
-    override fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef {
+    override fun mutateAtt(record: Any, attribute: String, value: Any?): EntityRef {
         return mutate(record, Collections.singletonMap(attribute, value))
     }
 
-    override fun mutate(record: Any, attributes: Map<String, *>): RecordRef {
+    override fun mutate(record: Any, attributes: Map<String, *>): EntityRef {
         return mutate(record, ObjectData.create(attributes))
     }
 
-    override fun mutate(record: Any, attributes: Any): RecordRef {
+    override fun mutate(record: Any, attributes: Any): EntityRef {
         return mutate(record, ObjectData.create(attributes))
     }
 
-    override fun mutate(record: Any, attributes: ObjectData): RecordRef {
+    override fun mutate(record: Any, attributes: ObjectData): EntityRef {
         return mutateAndGetAtts(record, attributes, EMPTY_ATTS_MAP).getId()
     }
 
-    override fun mutate(record: RecordAtts): RecordRef {
+    override fun mutate(record: RecordAtts): EntityRef {
         return mutateAndGetAtts(record, EMPTY_ATTS_MAP).getId()
     }
 
-    override fun mutate(records: List<RecordAtts>): List<RecordRef> {
+    override fun mutate(records: List<RecordAtts>): List<EntityRef> {
         return mutateAndGetAtts(records, EMPTY_ATTS_LIST_OF_MAP, false).map { it.getId() }
     }
 
@@ -143,9 +142,9 @@ abstract class AbstractRecordsService : RecordsService {
 
     override fun mutateAndGetAtts(record: Any, attributes: Any, attsToLoad: Map<String, *>): RecordAtts {
         val ref = when (record) {
-            is String -> RecordRef.valueOf(record)
-            is RecordRef -> record
-            is EntityRef -> RecordRef.valueOf(record)
+            is String -> EntityRef.valueOf(record)
+            is EntityRef -> record
+            is EntityRef -> EntityRef.valueOf(record)
             else -> error("Mutation of custom objects is not supported yet")
         }
         return mutateAndGetAtts(RecordAtts(ref, ObjectData.create(attributes)), attsToLoad)
@@ -154,11 +153,7 @@ abstract class AbstractRecordsService : RecordsService {
     /* DELETE */
 
     override fun delete(record: String): DelStatus {
-        return delete(RecordRef.valueOf(record))
-    }
-
-    override fun delete(record: RecordRef): DelStatus {
-        return delete(record as EntityRef)
+        return delete(EntityRef.valueOf(record))
     }
 
     override fun delete(record: EntityRef): DelStatus {

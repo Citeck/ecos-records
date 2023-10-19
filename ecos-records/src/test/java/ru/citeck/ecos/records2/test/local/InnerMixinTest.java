@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.common.AttributesMixin;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,9 +26,9 @@ public class InnerMixinTest extends LocalRecordsDao
                             implements LocalRecordsMetaDao<Object> {
 
     private static final String ID = "mixinSourceId";
-    private static final RecordRef DTO_REC_REF = RecordRef.create(ID, "test");
-    private static final RecordRef TEST_TYPE0 = RecordRef.create("TYPE", "TEST0");
-    private static final RecordRef TEST_TYPE1 = RecordRef.create("TYPE", "TEST1");
+    private static final EntityRef DTO_REC_REF = EntityRef.create(ID, "test");
+    private static final EntityRef TEST_TYPE0 = EntityRef.create("TYPE", "TEST0");
+    private static final EntityRef TEST_TYPE1 = EntityRef.create("TYPE", "TEST1");
 
     private RecordsService recordsService;
 
@@ -75,9 +75,9 @@ public class InnerMixinTest extends LocalRecordsDao
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<EntityRef> records, MetaField metaField) {
         return records.stream().map(ref -> {
-            if (ref.getId().equals(DTO_REC_REF.getId())) {
+            if (ref.getLocalId().equals(DTO_REC_REF.getLocalId())) {
                 return new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE1)));
             }
             return EmptyValue.INSTANCE;
@@ -87,22 +87,22 @@ public class InnerMixinTest extends LocalRecordsDao
     @Data
     private static class RecRefData {
 
-        private RecordRef type;
+        private EntityRef type;
         private RecRefData inner;
         private String computedAtt0 = "computedValue0";
         private String computedAtt1 = "computedValue1";
 
-        public RecRefData(RecordRef type) {
+        public RecRefData(EntityRef type) {
             this.type = type;
         }
 
-        public RecRefData(RecordRef type, RecRefData inner) {
+        public RecRefData(EntityRef type, RecRefData inner) {
             this.inner = inner;
             this.type = type;
         }
 
         @MetaAtt(".type")
-        public RecordRef getType() {
+        public EntityRef getType() {
             return type;
         }
     }

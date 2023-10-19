@@ -2,7 +2,6 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator;
 import ru.citeck.ecos.records2.predicate.comparator.ValueComparator;
@@ -20,9 +19,9 @@ import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
-import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,7 +83,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
 
         Predicate predicate = query.getQuery(Predicate.class);
 
-        RecsQueryRes<RecordRef> result = new RecsQueryRes<>();
+        RecsQueryRes<EntityRef> result = new RecsQueryRes<>();
 
         List<Map.Entry<String, T>> recordsList = new ArrayList<>(records.entrySet());
         if (!query.getSortBy().isEmpty()) {
@@ -134,7 +133,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
 
         RecordElements elements = new RecordElements(recordsServiceV0, new ArrayList<>(recordsList
             .stream()
-            .map(r -> RecordRef.create(getId(), r.getKey()))
+            .map(r -> EntityRef.create(getId(), r.getKey()))
             .collect(Collectors.toList())
         ));
         int maxItems = query.getPage().getMaxItems();

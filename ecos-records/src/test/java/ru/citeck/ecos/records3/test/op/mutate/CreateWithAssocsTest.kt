@@ -6,7 +6,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
@@ -47,11 +46,11 @@ class CreateWithAssocsTest {
 
         val rec1Alias = "source-id@-alias-1"
 
-        val rec0 = RecordAtts(RecordRef.create("source-id", ""))
+        val rec0 = RecordAtts(EntityRef.create("source-id", ""))
         rec0.setAtt("assocArr$assocScalar", listOf(rec1Alias))
         rec0.setAtt("assocStr$assocScalar", rec1Alias)
 
-        val rec1 = RecordAtts(RecordRef.create("source-id", ""))
+        val rec1 = RecordAtts(EntityRef.create("source-id", ""))
         rec1.setAtt("_alias", "source-id@-alias-1")
 
         val records = RecordsServiceFactory().recordsServiceV1
@@ -80,11 +79,11 @@ class CreateWithAssocsTest {
         val alias = "test-alias-1"
         val fieldWithAssoc = "assocField"
 
-        val rec0 = RecordAtts(RecordRef.create(targetAppName, testSourceId, ""))
+        val rec0 = RecordAtts(EntityRef.create(targetAppName, testSourceId, ""))
         rec0.setAtt(fieldWithAssoc, listOf(alias))
 
         // rec with default app
-        val rec1 = RecordAtts(RecordRef.create(testSourceId, ""))
+        val rec1 = RecordAtts(EntityRef.create(testSourceId, ""))
         rec1.setAtt(RecordConstants.ATT_ALIAS, alias)
 
         val result = gateway.factory.recordsServiceV1.mutate(listOf(rec0, rec1))
@@ -92,7 +91,7 @@ class CreateWithAssocsTest {
         assertThat(result.size).isEqualTo(2)
         val assocFieldValue = gateway.factory
             .recordsServiceV1.getAtt(result[0], "$fieldWithAssoc?id")
-            .getAs(RecordRef::class.java)
+            .getAs(EntityRef::class.java)
 
         assertThat(assocFieldValue).isEqualTo(result[1])
     }

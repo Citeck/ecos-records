@@ -6,10 +6,10 @@ import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.page.AfterPage;
 import ru.citeck.ecos.records2.request.query.page.QueryPage;
 import ru.citeck.ecos.records2.request.query.page.SkipPage;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,11 +103,11 @@ public class RecordsQuery {
 
     @JsonIgnore
     @com.fasterxml.jackson.annotation.JsonIgnore
-    public RecordRef getAfterId() {
+    public EntityRef getAfterId() {
         return getAfterPage().getAfterId();
     }
 
-    public void setAfterId(RecordRef afterId) {
+    public void setAfterId(EntityRef afterId) {
         setPage(getAfterPage().withAfterId(afterId));
     }
 

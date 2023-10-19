@@ -6,8 +6,8 @@ import ecos.com.fasterxml.jackson210.annotation.JsonSetter;
 import ecos.com.fasterxml.jackson210.databind.JsonNode;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 
@@ -19,7 +19,7 @@ public class QueryBody {
     public static final String SINGLE_ATT_KEY = "a";
 
     @Nullable
-    private List<RecordRef> records;
+    private List<EntityRef> records;
     @Nullable
     private RecordsQuery query;
 
@@ -57,15 +57,15 @@ public class QueryBody {
     }
 
     @Nullable
-    public List<RecordRef> getRecords() {
+    public List<EntityRef> getRecords() {
         return records;
     }
 
-    public void setRecords(@Nullable List<RecordRef> records) {
+    public void setRecords(@Nullable List<EntityRef> records) {
         this.records = records;
     }
 
-    public void setRecord(RecordRef record) {
+    public void setRecord(EntityRef record) {
         if (records == null) {
             records = new ArrayList<>();
         }

@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
@@ -95,7 +94,7 @@ class RecordAttsDaoTest {
         // atts with legacy dao
 
         services.recordsService.register(object : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
-            override fun getLocalRecordsMeta(records: MutableList<RecordRef>, metaField: MetaField): List<Any> {
+            override fun getLocalRecordsMeta(records: MutableList<EntityRef>, metaField: MetaField): List<Any> {
                 return records.map { ObjectData.create("""{"test":"value"}""") }
             }
             override fun getId() = "legacy-dao"
@@ -107,11 +106,11 @@ class RecordAttsDaoTest {
     private fun attsTest(sourceId: String, records: RecordsService) {
 
         if (!sourceId.contains('/')) {
-            val res = records.getAtt(RecordRef.valueOf("test-app/$sourceId@localId"), "test").asText()
+            val res = records.getAtt(EntityRef.valueOf("test-app/$sourceId@localId"), "test").asText()
             assertThat(res).isEqualTo("value")
         }
 
-        val res = records.getAtt(RecordRef.valueOf("$sourceId@localId2"), "test").asText()
+        val res = records.getAtt(EntityRef.valueOf("$sourceId@localId2"), "test").asText()
         assertThat(res).isEqualTo("value")
     }
 

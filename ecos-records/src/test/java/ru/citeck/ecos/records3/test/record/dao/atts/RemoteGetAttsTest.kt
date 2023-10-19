@@ -2,10 +2,10 @@ package ru.citeck.ecos.records3.test.record.dao.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.test.testutils.MockApp
 import ru.citeck.ecos.records3.test.testutils.MockAppsFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RemoteGetAttsTest {
 
@@ -27,9 +27,9 @@ class RemoteGetAttsTest {
 
         val assertAtt = { withApp: Boolean, app: MockApp, expected: String ->
             val ref = if (withApp) {
-                RecordRef.create("app-0", "test", "rec0")
+                EntityRef.create("app-0", "test", "rec0")
             } else {
-                RecordRef.create("test", "rec0")
+                EntityRef.create("test", "rec0")
             }
             val value = app.factory.recordsServiceV1.getAtt(ref, "field").asText()
             assertThat(value).isEqualTo(expected)

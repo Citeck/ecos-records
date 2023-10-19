@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor;
 import ru.citeck.ecos.records2.utils.ValWithIdx;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -35,6 +34,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.mixin.MixinContextImpl;
 import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -169,7 +169,7 @@ public class LocalRecordsResolverV0 {
 
         if (records == null) {
 
-            RecordsQueryResult<RecordRef> recordRefs;
+            RecordsQueryResult<EntityRef> recordRefs;
             try {
                 recordRefs = queryRecordsWithoutMeta(query);
 
@@ -236,7 +236,7 @@ public class LocalRecordsResolverV0 {
         return records;
     }
 
-    private RecordsQueryResult<RecordRef> queryRecordsWithoutMeta(RecordsQuery query) {
+    private RecordsQueryResult<EntityRef> queryRecordsWithoutMeta(RecordsQuery query) {
 
         DaoWithConvQuery<RecordsQueryDao> daoWithQuery = getDaoWithQuery(query, RecordsQueryDao.class);
 
@@ -245,7 +245,7 @@ public class LocalRecordsResolverV0 {
         }
 
         long recordsQueryStart = System.currentTimeMillis();
-        RecordsQueryResult<RecordRef> recordRefs = daoWithQuery.dao.queryRecords(daoWithQuery.query);
+        RecordsQueryResult<EntityRef> recordRefs = daoWithQuery.dao.queryRecords(daoWithQuery.query);
         long recordsTime = System.currentTimeMillis() - recordsQueryStart;
 
         if (log.isDebugEnabled()) {
@@ -256,7 +256,7 @@ public class LocalRecordsResolverV0 {
     }
 
     @NotNull
-    public RecordsResult<RecordAtts> getMeta(@NotNull Collection<RecordRef> records,
+    public RecordsResult<RecordAtts> getMeta(@NotNull Collection<EntityRef> records,
                                              List<SchemaAtt> schema,
                                              boolean rawAtts) {
 
@@ -264,12 +264,12 @@ public class LocalRecordsResolverV0 {
             log.trace("getMeta start.\nRecords: " + records + " schema: " + schema);
         }
 
-        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+        Map<EntityRef, EntityRef> refsMapping = new HashMap<>();
 
         records = records.stream().map(ref -> {
             String appName = ref.getAppName();
             if (appName.equals(currentApp) || appName.equals(currentAppRef)) {
-                RecordRef newRef = ref.removeAppName();
+                EntityRef newRef = ref.withoutAppName();
                 refsMapping.put(newRef, ref);
                 ref = newRef;
             }
@@ -285,7 +285,7 @@ public class LocalRecordsResolverV0 {
         results.setRecords(results.getRecords()
             .stream()
             .map(meta -> {
-                RecordRef ref = meta.getId();
+                EntityRef ref = meta.getId();
                 return meta.withId(refsMapping.getOrDefault(ref, ref));
             })
             .collect(Collectors.toList())
@@ -294,7 +294,7 @@ public class LocalRecordsResolverV0 {
         return results;
     }
 
-    private RecordsResult<RecordAtts> getMetaImpl(Collection<RecordRef> records,
+    private RecordsResult<RecordAtts> getMetaImpl(Collection<EntityRef> records,
                                                   List<SchemaAtt> schema,
                                                   boolean rawAtts) {
 
@@ -311,7 +311,7 @@ public class LocalRecordsResolverV0 {
 
             if (recordsDao.isPresent()) {
 
-                List<RecordRef> refs = recs.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
+                List<EntityRef> refs = recs.stream().map(ValWithIdx::getValue).collect(Collectors.toList());
                 String recsDaoId = recordsDao.get().getId();
                 meta = doWithCtxSourceIdKey(recsDaoId, () ->
                     recordsDao.get().getMeta(refs, schema, rawAtts)
@@ -346,14 +346,14 @@ public class LocalRecordsResolverV0 {
 
         RecordsMutResult result = new RecordsMutResult();
 
-        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+        Map<EntityRef, EntityRef> refsMapping = new HashMap<>();
 
         mutation.getRecords().forEach(record -> {
 
             String appName = record.getId().getAppName();
             if (currentApp.equals(appName) || currentAppRef.equals(appName)) {
 
-                RecordRef newId = record.getId().removeAppName();
+                EntityRef newId = record.getId().withoutAppName();
                 refsMapping.put(newId, record.getId());
                 record = new RecordMeta(record, newId);
             }
@@ -369,7 +369,7 @@ public class LocalRecordsResolverV0 {
             result.setRecords(result.getRecords()
                 .stream()
                 .map(meta -> {
-                    RecordRef ref = meta.getId();
+                    EntityRef ref = meta.getId();
                     return meta.withId(refsMapping.getOrDefault(ref, ref));
                 })
                 .collect(Collectors.toList())
@@ -383,7 +383,7 @@ public class LocalRecordsResolverV0 {
 
         RecordsDelResult result = new RecordsDelResult();
 
-        Map<RecordRef, RecordRef> refsMapping = new HashMap<>();
+        Map<EntityRef, EntityRef> refsMapping = new HashMap<>();
 
         RecordsUtils.groupRefBySource(deletion.getRecords()).forEach((sourceId, sourceRecords) -> {
 
@@ -392,10 +392,10 @@ public class LocalRecordsResolverV0 {
             RecordsDeletion sourceDeletion = new RecordsDeletion();
             sourceDeletion.setRecords(sourceRecords.stream().map(refWithIdx -> {
 
-                RecordRef ref = refWithIdx.getValue();
+                EntityRef ref = refWithIdx.getValue();
                 String appName = ref.getAppName();
                 if (appName.equals(currentApp) || appName.equals(currentAppRef)) {
-                    RecordRef newRef = ref.removeAppName();
+                    EntityRef newRef = ref.withoutAppName();
                     refsMapping.put(newRef, ref);
                     ref = newRef;
                 }
@@ -409,7 +409,7 @@ public class LocalRecordsResolverV0 {
             result.setRecords(result.getRecords()
                 .stream()
                 .map(meta -> {
-                    RecordRef ref = meta.getId();
+                    EntityRef ref = meta.getId();
                     return meta.withId(refsMapping.getOrDefault(ref, ref));
                 })
                 .collect(Collectors.toList())
@@ -422,7 +422,7 @@ public class LocalRecordsResolverV0 {
     private <T extends RecordsQueryBaseDao> DaoWithConvQuery<T> getDaoWithQuery(RecordsQuery query, Class<T> daoType) {
 
         String sourceId = query.getSourceId();
-        int sourceDelimIdx = sourceId.indexOf(RecordRef.SOURCE_DELIMITER);
+        int sourceDelimIdx = sourceId.indexOf(EntityRef.SOURCE_ID_DELIMITER);
         String innerSourceId = "";
         if (sourceDelimIdx > 0) {
             innerSourceId = sourceId.substring(sourceDelimIdx + 1);

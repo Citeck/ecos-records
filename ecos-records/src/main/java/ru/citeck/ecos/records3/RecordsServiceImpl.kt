@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -41,7 +40,7 @@ open class RecordsServiceImpl(
 
     /* QUERY */
 
-    override fun query(query: RecordsQuery): RecsQueryRes<RecordRef> {
+    override fun query(query: RecordsQuery): RecsQueryRes<EntityRef> {
         return handleRecordsQuery {
             val metaResult = recordsResolver.query(query, emptyMap<String, Any>(), true)
             metaResult.withRecords { it.getId() }
@@ -86,12 +85,12 @@ open class RecordsServiceImpl(
         }
     }
 
-    private fun tryToGetRecordRef(record: Any?): RecordRef {
-        record ?: return RecordRef.EMPTY
-        if (record is RecordRef) {
+    private fun tryToGetRecordRef(record: Any?): EntityRef {
+        record ?: return EntityRef.EMPTY
+        if (record is EntityRef) {
             return record
         }
-        return RecordRef.EMPTY
+        return EntityRef.EMPTY
     }
 
     override fun <T : Any> getAtts(records: Collection<*>, attributes: Class<T>): List<T> {
@@ -109,9 +108,9 @@ open class RecordsServiceImpl(
 
     /* MUTATE */
 
-    override fun create(sourceIdOrType: String, attributes: Any): RecordRef {
+    override fun create(sourceIdOrType: String, attributes: Any): EntityRef {
         val sourceId = getSourceIdFromTypeOrSourceId(sourceIdOrType)
-        return mutate(RecordRef.valueOf(sourceId + RecordRef.SOURCE_DELIMITER), attributes)
+        return mutate(EntityRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER), attributes)
     }
 
     private fun getSourceIdFromTypeOrSourceId(sourceIdOrType: String): String {
@@ -157,10 +156,10 @@ open class RecordsServiceImpl(
     }
 
     private inline fun <T> addTxnChangedRecords(
-        txnChangedRecords: MutableSet<RecordRef>?,
+        txnChangedRecords: MutableSet<EntityRef>?,
         sourceIdMapping: Map<String, String>,
         records: List<T>,
-        crossinline getRef: (T) -> RecordRef
+        crossinline getRef: (T) -> EntityRef
     ) {
         if (isGatewayMode || txnChangedRecords == null) {
             return
@@ -171,15 +170,18 @@ open class RecordsServiceImpl(
     }
 
     private fun addTxnChangedRecord(
-        txnChangedRecords: MutableSet<RecordRef>?,
+        txnChangedRecords: MutableSet<EntityRef>?,
         sourceIdMapping: Map<String, String>,
-        recordRef: RecordRef?
+        recordRef: EntityRef?
     ) {
 
-        if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
+        if (isGatewayMode || txnChangedRecords == null || recordRef == null || EntityRef.isEmpty(recordRef)) {
             return
         }
-        val normalizedRef = if (recordRef.appName == currentAppName || recordRef.appName == currentAppRef) {
+        val normalizedRef = if (
+            recordRef.getAppName() == currentAppName ||
+            recordRef.getAppName() == currentAppRef
+        ) {
             recordRef.withoutAppName()
         } else {
             recordRef
@@ -209,7 +211,7 @@ open class RecordsServiceImpl(
         val txnChangedRecords = context.getTxnChangedRecords()
         val sourceIdMapping = context.ctxData.sourceIdMapping
 
-        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { RecordRef.valueOf(it) }
+        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { EntityRef.valueOf(it) }
 
         return status
     }

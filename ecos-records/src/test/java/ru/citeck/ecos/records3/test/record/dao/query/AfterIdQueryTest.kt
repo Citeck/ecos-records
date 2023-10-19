@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class AfterIdQueryTest {
 
@@ -50,7 +50,7 @@ class AfterIdQueryTest {
             }.isEqualTo(expectedAfterId.toString())
         }
 
-        val checkAfterIdMode = { sourceId: String, afterId: RecordRef? ->
+        val checkAfterIdMode = { sourceId: String, afterId: EntityRef? ->
             checkQuery(
                 RecordsQuery.create {
                     withSourceId(sourceId)
@@ -65,9 +65,9 @@ class AfterIdQueryTest {
         }
 
         listOf("test-v1", "test-v0").forEach { sourceId ->
-            checkAfterIdMode(sourceId, RecordRef.EMPTY)
-            checkAfterIdMode(sourceId, RecordRef.valueOf("abc@def"))
-            checkAfterIdMode(sourceId, RecordRef.valueOf("app/abc@def"))
+            checkAfterIdMode(sourceId, EntityRef.EMPTY)
+            checkAfterIdMode(sourceId, EntityRef.valueOf("abc@def"))
+            checkAfterIdMode(sourceId, EntityRef.valueOf("app/abc@def"))
         }
 
         val testJsonQuery = { json: String, expectedAfterId: Boolean ->
@@ -207,7 +207,7 @@ class AfterIdQueryTest {
         assertThat(json.get("skipCount").asInt()).isEqualTo(10)
 
         val page2 = QueryPage.create()
-            .withAfterId(RecordRef.EMPTY)
+            .withAfterId(EntityRef.EMPTY)
             .build()
         val json2 = Json.mapper.convert(page2, ObjectData::class.java)!!
 
@@ -217,7 +217,7 @@ class AfterIdQueryTest {
         assertThat(json2.get("maxItems").asInt()).isEqualTo(-1)
         assertThat(json2.get("skipCount").asInt()).isEqualTo(0)
 
-        val ref = RecordRef.create("emodel", "type", "abc")
+        val ref = EntityRef.create("emodel", "type", "abc")
         val page3 = QueryPage.create()
             .withAfterId(ref)
             .build()

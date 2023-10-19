@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.atts.value
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 interface AttValueCtx {
@@ -13,7 +12,7 @@ interface AttValueCtx {
      */
     fun getValue(): Any
 
-    fun getRef(): RecordRef
+    fun getRef(): EntityRef
 
     fun getRawRef(): EntityRef
 

@@ -5,7 +5,6 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ScriptUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -28,8 +27,8 @@ class RecordsScriptService(services: RecordsServiceFactory) {
             return record
         }
         val recordRef = when (record) {
-            is RecordRef -> record
-            is String -> RecordRef.valueOf(record)
+            is EntityRef -> record
+            is String -> EntityRef.valueOf(record)
             else -> error("Incorrect record: $record")
         }
         return AttValueScriptCtxImpl(Record(recordRef), recordsService, implCreator)
@@ -85,13 +84,13 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         return ScriptUtils.convertToScript(flatResult) ?: error("Conversion error. Result: $flatResult")
     }
 
-    private inner class Record(val recordRef: RecordRef) : AttValueCtx {
+    private inner class Record(val recordRef: EntityRef) : AttValueCtx {
 
         override fun getValue(): Any {
             return recordRef
         }
 
-        override fun getRef(): RecordRef {
+        override fun getRef(): EntityRef {
             return recordRef
         }
 
@@ -100,7 +99,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         }
 
         override fun getLocalId(): String {
-            return recordRef.id
+            return recordRef.getLocalId()
         }
 
         override fun getAtt(attribute: String): DataValue {

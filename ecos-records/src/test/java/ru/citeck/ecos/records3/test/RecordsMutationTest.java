@@ -7,12 +7,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 
@@ -23,14 +23,14 @@ public class RecordsMutationTest extends AbstractRecordsDao
     implements RecordMutateDtoDao<RecordsMutationTest.TestDto> {
 
     private static final String SOURCE_ID = "test-source-id";
-    private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
+    private static final EntityRef TEST_REF = EntityRef.create(SOURCE_ID, "TEST_REC_ID");
 
     private static final String ALIAS_VALUE = "ALIAS";
 
     private RecordsService recordsService;
 
-    private Map<RecordRef, TestDto> valuesToMutate;
-    private Map<RecordRef, TestDto> newValues;
+    private Map<EntityRef, TestDto> valuesToMutate;
+    private Map<EntityRef, TestDto> newValues;
 
     @NotNull
     @Override
@@ -106,7 +106,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
 
         assertEquals(0, newValues.size());
 
-        RecordRef newRef = RecordRef.create(SOURCE_ID, "newRef");
+        EntityRef newRef = EntityRef.create(SOURCE_ID, "newRef");
         meta = new RecordAtts(newRef);
         meta.setAtt("field", "test");
         meta.setAtt("field0", "test0");
@@ -126,11 +126,11 @@ public class RecordsMutationTest extends AbstractRecordsDao
 
         newValues.clear();
 
-        RecordRef withInnerRef = RecordRef.create(SOURCE_ID, "newRefWithInner");
+        EntityRef withInnerRef = EntityRef.create(SOURCE_ID, "newRefWithInner");
         RecordAtts newWithInner = new RecordAtts(withInnerRef);
         newWithInner.setAtt("field", "value123");
 
-        RecordRef innerRef = RecordRef.create(SOURCE_ID, "newInner");
+        EntityRef innerRef = EntityRef.create(SOURCE_ID, "newInner");
 
         RecordAtts newInner = new RecordAtts(innerRef);
         newInner.setAtt(RecordConstants.ATT_ALIAS, ALIAS_VALUE);
@@ -144,7 +144,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
 
         assertEquals(2, newValues.size());
 
-        RecordRef newWithInnerRef = RecordRef.valueOf(withInnerRef + "-new");
+        EntityRef newWithInnerRef = EntityRef.valueOf(withInnerRef + "-new");
         TestDto withInnerDto = newValues.get(newWithInnerRef);
         String newInnerRef = innerRef + "-new";
         assertEquals(newInnerRef, withInnerDto.getAssoc0());
@@ -156,9 +156,9 @@ public class RecordsMutationTest extends AbstractRecordsDao
 
     @Override
     public TestDto getRecToMutate(@NotNull String recordId) {
-        RecordRef ref = RecordRef.create(getId(), recordId);
+        EntityRef ref = EntityRef.create(getId(), recordId);
         TestDto testDto = valuesToMutate.get(ref);
-        return testDto == null ? new TestDto(RecordRef.valueOf(ref + "-new")) : new TestDto(testDto);
+        return testDto == null ? new TestDto(EntityRef.valueOf(ref + "-new")) : new TestDto(testDto);
     }
 
     @Override
@@ -169,12 +169,12 @@ public class RecordsMutationTest extends AbstractRecordsDao
         } else {
             newValues.put(record.getRef(), record);
         }
-        return record.getRef().getId();
+        return record.getRef().getLocalId();
     }
 
     public static class TestDto {
 
-        RecordRef ref;
+        EntityRef ref;
 
         String field;
         String field0;
@@ -185,7 +185,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
         String assoc1;
         List<String> assocArr;
 
-        TestDto(RecordRef ref) {
+        TestDto(EntityRef ref) {
             this.ref = ref;
         }
 
@@ -209,7 +209,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
             this.bool = bool;
         }
 
-        public RecordRef getRef() {
+        public EntityRef getRef() {
             return ref;
         }
 

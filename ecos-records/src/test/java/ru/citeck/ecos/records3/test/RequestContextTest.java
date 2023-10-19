@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +46,9 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
         assertNull(RequestContext.getCurrent());
 
         recordsService.getAtts(Arrays.asList(
-            RecordRef.create(SOURCE_ID, "1"),
-            RecordRef.create(SOURCE_ID, "2"),
-            RecordRef.create(SOURCE_ID, "3")
+            EntityRef.create(SOURCE_ID, "1"),
+            EntityRef.create(SOURCE_ID, "2"),
+            EntityRef.create(SOURCE_ID, "3")
         ), TestMeta.class);
 
         assertNull(RequestContext.getCurrent());
@@ -90,10 +90,10 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
 
     public class Record implements AttValue {
 
-        private RecordRef id;
+        private EntityRef id;
 
         Record(String id) {
-            this.id = RecordRef.valueOf(id);
+            this.id = EntityRef.valueOf(id);
             RequestContext.getCurrentNotNull().getList("testList").add(this);
         }
 

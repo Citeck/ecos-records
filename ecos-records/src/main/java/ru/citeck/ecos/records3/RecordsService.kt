@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
@@ -58,7 +57,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
  * @see RecordsDeleteDao
  *
  * @see AttValue
- * @see RecordRef
+ * @see EntityRef
  * @see RecordAtts
  *
  * @author Pavel Simonov
@@ -72,7 +71,7 @@ interface RecordsService {
      *
      * @see RecordsService.query
      */
-    fun queryOne(query: RecordsQuery): RecordRef?
+    fun queryOne(query: RecordsQuery): EntityRef?
 
     /**
      * Query single record.
@@ -104,7 +103,7 @@ interface RecordsService {
      *
      * @return list of records, page info and debug info if query.isDebug() returns true
      */
-    fun query(query: RecordsQuery): RecsQueryRes<RecordRef>
+    fun query(query: RecordsQuery): RecsQueryRes<EntityRef>
 
     /**
      * Query records with data. Specified class will be used to determine
@@ -235,39 +234,39 @@ interface RecordsService {
     /* MUTATE */
 
     /**
-     * Same as mutate but for '{{sourceId}}@' record (RecordRef without local ID)
+     * Same as mutate but for '{{sourceId}}@' record (EntityRef without local ID)
      */
-    fun create(sourceIdOrType: String, attributes: Any): RecordRef
+    fun create(sourceIdOrType: String, attributes: Any): EntityRef
 
     /**
      * Create or change record.
      */
-    fun mutate(record: RecordAtts): RecordRef
+    fun mutate(record: RecordAtts): EntityRef
 
     /**
      * Create or change records.
      */
-    fun mutate(records: List<RecordAtts>): List<RecordRef>
+    fun mutate(records: List<RecordAtts>): List<EntityRef>
 
     /**
      * Create or change record.
      */
-    fun mutate(record: Any, attributes: ObjectData): RecordRef
+    fun mutate(record: Any, attributes: ObjectData): EntityRef
 
     /**
      * Create or change record.
      */
-    fun mutate(record: Any, attributes: Any): RecordRef
+    fun mutate(record: Any, attributes: Any): EntityRef
 
     /**
      * Create or change records.
      */
-    fun mutate(record: Any, attributes: Map<String, *>): RecordRef
+    fun mutate(record: Any, attributes: Map<String, *>): EntityRef
 
     /**
      * Create or change record with single attribute
      */
-    fun mutateAtt(record: Any, attribute: String, value: Any?): RecordRef
+    fun mutateAtt(record: Any, attribute: String, value: Any?): EntityRef
 
     /**
      * Create or change record and load attributes from result.
@@ -323,8 +322,6 @@ interface RecordsService {
     fun delete(records: List<EntityRef>): List<DelStatus>
 
     fun delete(record: String): DelStatus
-
-    fun delete(record: RecordRef): DelStatus
 
     fun delete(record: EntityRef): DelStatus
 

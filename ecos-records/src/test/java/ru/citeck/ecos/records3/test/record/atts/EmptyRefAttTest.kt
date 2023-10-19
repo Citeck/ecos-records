@@ -2,11 +2,11 @@ package ru.citeck.ecos.records3.test.record.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class EmptyRefAttTest {
 
@@ -31,7 +31,7 @@ class EmptyRefAttTest {
                 .build()
         )
 
-        val ref = RecordRef.create("test", "rec0")
+        val ref = EntityRef.create("test", "rec0")
 
         val compareStrAtt = { att: String, expected: String ->
             assertThat(records.getAtt(ref, att).asText()).describedAs(att).isEqualTo(expected)
@@ -45,10 +45,10 @@ class EmptyRefAttTest {
     }
 
     class RecordValue(
-        val emptyRef: RecordRef = RecordRef.EMPTY,
+        val emptyRef: EntityRef = EntityRef.EMPTY,
         val emptyStr: String = "",
-        val refWithoutApp: RecordRef = RecordRef.create("source-id", "local-id"),
-        val refWithOtherApp: RecordRef = RecordRef.create("otherApp", "source-id", "local-id"),
-        val refWithApp: RecordRef = RecordRef.create(APP_NAME, "source-id", "local-id"),
+        val refWithoutApp: EntityRef = EntityRef.create("source-id", "local-id"),
+        val refWithOtherApp: EntityRef = EntityRef.create("otherApp", "source-id", "local-id"),
+        val refWithApp: EntityRef = EntityRef.create(APP_NAME, "source-id", "local-id"),
     )
 }

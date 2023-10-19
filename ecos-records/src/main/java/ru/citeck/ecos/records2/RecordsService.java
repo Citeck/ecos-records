@@ -12,6 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records2.source.dao.RecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collection;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Optional;
 /**
  * Service to work with some abstract "records" from any source.
  * It may be database records, generated data and so on.
- * Each record can be identified by its RecordRef. <br><br>
+ * Each record can be identified by its EntityRef. <br><br>
  *
  * <p>There are three main purposes: <br>
  * 1) Query records by some language, query and other parameters; <br>
@@ -37,7 +38,7 @@ import java.util.Optional;
  * It means that {"a":{"b":{"c":"value"}}} will be replaced with {"a": "value"}
  *
  * @see MetaValue
- * @see RecordRef
+ * @see EntityRef
  * @see RecordMeta
  *
  * @deprecated use RecordsService from records3 package
@@ -55,7 +56,7 @@ public interface RecordsService {
      * @see RecordsService#queryRecords(RecordsQuery)
      */
     @NotNull
-    Optional<RecordRef> queryRecord(RecordsQuery query);
+    Optional<EntityRef> queryRecord(RecordsQuery query);
 
     /**
      * Query single record.
@@ -89,7 +90,7 @@ public interface RecordsService {
      * @return list of records, page info and debug info if query.isDebug() returns true
      */
     @NotNull
-    RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query);
+    RecordsQueryResult<EntityRef> queryRecords(RecordsQuery query);
 
     /**
      * Query records with data. Specified class will be used to determine
@@ -135,7 +136,7 @@ public interface RecordsService {
      * @return flat record attribute value
      */
     @NotNull
-    DataValue getAtt(RecordRef record, String attribute);
+    DataValue getAtt(EntityRef record, String attribute);
 
     /**
      * Get a single record attribute.
@@ -143,7 +144,7 @@ public interface RecordsService {
      * @return flat record attribute value
      */
     @NotNull
-    DataValue getAttribute(RecordRef record, String attribute);
+    DataValue getAttribute(EntityRef record, String attribute);
 
     /**
      * Get record attributes.
@@ -153,7 +154,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordMeta getAttributes(RecordRef record, Collection<String> attributes);
+    RecordMeta getAttributes(EntityRef record, Collection<String> attributes);
 
     /**
      * Get record attributes.
@@ -164,7 +165,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordMeta getAttributes(RecordRef record, Map<String, String> attributes);
+    RecordMeta getAttributes(EntityRef record, Map<String, String> attributes);
 
     /**
      * Get records attributes.
@@ -174,7 +175,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Collection<String> attributes);
+    RecordsResult<RecordMeta> getAttributes(Collection<EntityRef> records, Collection<String> attributes);
 
     /**
      * Get records attributes.
@@ -185,7 +186,7 @@ public interface RecordsService {
      * @return flat records metadata (all objects in attributes with a single key will be simplified)
      */
     @NotNull
-    RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records, Map<String, String> attributes);
+    RecordsResult<RecordMeta> getAttributes(Collection<EntityRef> records, Map<String, String> attributes);
 
     /**
      * Get raw (not flat) record meta attributes.
@@ -194,7 +195,7 @@ public interface RecordsService {
      *                   and value is an attribute which value we want to request.
      */
     @NotNull
-    RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes);
+    RecordMeta getRawAttributes(EntityRef record, Map<String, String> attributes);
 
     /**
      * Get raw (not flat) records meta attributes.
@@ -203,7 +204,7 @@ public interface RecordsService {
      *                   and value is an attribute which value we want to request.
      */
     @NotNull
-    RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes);
+    RecordsResult<RecordMeta> getRawAttributes(Collection<EntityRef> records, Map<String, String> attributes);
 
     /* META */
 
@@ -219,7 +220,7 @@ public interface RecordsService {
      * @see MetaAtt
      */
     @NotNull
-    <T> T getMeta(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass);
+    <T> T getMeta(@NotNull EntityRef recordRef, @NotNull Class<T> metaClass);
 
     /**
      * Get records metadata. Specified class will be used to determine
@@ -233,7 +234,7 @@ public interface RecordsService {
      * @see MetaAtt
      */
     @NotNull
-    <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass);
+    <T> RecordsResult<T> getMeta(@NotNull Collection<EntityRef> records, @NotNull Class<T> metaClass);
 
     /* MODIFICATION */
 

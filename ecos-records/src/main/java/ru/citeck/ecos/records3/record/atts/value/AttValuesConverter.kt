@@ -63,6 +63,9 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         }
         if (valueToConvert is AttValueCtx) {
             valueToConvert = valueToConvert.getValue()
+            if (valueToConvert is AttValue) {
+                return valueToConvert
+            }
         }
         if (valueToConvert is MimeType) {
             valueToConvert = valueToConvert.toString()

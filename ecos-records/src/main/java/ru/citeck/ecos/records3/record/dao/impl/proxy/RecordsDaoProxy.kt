@@ -24,6 +24,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -53,7 +54,7 @@ open class RecordsDaoProxy(
     private val clientMetaProc = processor as? HasClientMeta
     private lateinit var recordsResolver: LocalRemoteResolver
 
-    protected val sourceIdMapping = mapOf(targetIdField to idField)
+    protected var sourceIdMapping: Map<String, String> = emptyMap()
 
     override fun getRecordsAtts(recordIds: List<String>): List<*>? {
 
@@ -202,6 +203,19 @@ open class RecordsDaoProxy(
         }
         recordsResolver = serviceFactory.recordsResolver
         processorField?.init(this)
+
+        val currentAppName = serviceFactory.webappProps.appName
+        fun addDefaultAppName(srcId: String): String {
+            if (currentAppName.isBlank()) {
+                return srcId
+            }
+            val appNameDelimIdx = srcId.indexOf(EntityRef.APP_NAME_DELIMITER)
+            if (appNameDelimIdx != -1) {
+                return srcId
+            }
+            return currentAppName + EntityRef.APP_NAME_DELIMITER + srcId
+        }
+        sourceIdMapping = mapOf(addDefaultAppName(targetIdField) to addDefaultAppName(idField))
     }
 
     override fun getClientMeta(): ClientMeta? {

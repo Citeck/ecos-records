@@ -211,7 +211,6 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
         val recordsAttValuesFromCache = recs.map { HashMap<String, DataValue>() }
 
-
         // cache won't be used if one of requested records doesn't have
         // cached value for attribute. So if we call
         // getAtts(rec0, atts)

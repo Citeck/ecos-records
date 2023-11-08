@@ -193,7 +193,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             }
         }
         val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
-        val cachedAttsWithAliases: MutableMap<String, String> = HashMap(
+        val possibleCachedAttsWithAliases: MutableMap<String, String> = HashMap(
             attsMap.getAttributes().entries.mapNotNull {
                 val value = it.value
                 if (value !is String) {
@@ -204,18 +204,39 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             }.toMap()
         )
 
-        if (cachedAttsWithAliases.isEmpty()) {
+        if (possibleCachedAttsWithAliases.isEmpty()) {
             return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
         }
 
-        val cacheByRecord = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
-        val cachedAttValues = recs.map { HashMap<String, DataValue>() }
+        val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
+        val recordsAttValuesFromCache = recs.map { HashMap<String, DataValue>() }
+
+
+        // cache won't be used if one of requested records doesn't have
+        // cached value for attribute. So if we call
+        // getAtts(rec0, atts)
+        // getAtts(rec0, atts)
+        // getAtts(rec0, atts)
+        // then cache will work, but if we call
+        // getAtts(listOf(rec0, rec1), atts)
+        // then attributes for rec0 will be loaded again and next calls
+        // getAtts(listOf(rec0, rec1), atts)
+        // getAtts(listOf(rec0), atts)
+        // getAtts(listOf(rec1), atts)
+        // will return values from cache.
+        // This limitation can be overcome when we
+        // implement the ability to specify different attributes
+        // for different records in one query.
+
+        // one set for all records to exclude unnecessary instantiations
+        // this set used in array as empty set for each record
         val notCachedAtts = hashSetOf<String>()
 
-        for ((idx, cache) in cacheByRecord.withIndex()) {
-            val cachedRecordAttValues = cachedAttValues[idx]
+        // clan possible cached attributes when attribute is not cached for any record
+        for ((idx, cache) in cacheForRecords.withIndex()) {
+            val recordAttValuesFromCache = recordsAttValuesFromCache[idx]
             notCachedAtts.clear()
-            cachedAttsWithAliases.forEach { (alias, attribute) ->
+            possibleCachedAttsWithAliases.forEach { (alias, attribute) ->
                 // context attributes should not be cached
                 val valueFromCache = if (!attribute.startsWith("$")) {
                     cache[attribute]
@@ -225,32 +246,33 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 if (valueFromCache == null) {
                     notCachedAtts.add(alias)
                 } else {
-                    cachedRecordAttValues[alias] = valueFromCache
+                    recordAttValuesFromCache[alias] = valueFromCache
                 }
             }
-            notCachedAtts.forEach { cachedAttsWithAliases.remove(it) }
-            if (cachedAttsWithAliases.isNotEmpty()) {
+            notCachedAtts.forEach { possibleCachedAttsWithAliases.remove(it) }
+            if (possibleCachedAttsWithAliases.isEmpty()) {
+                // We don't have cached attributes. Next iterations are not required
                 break
             }
         }
 
-        val attsToLoad = if (cachedAttsWithAliases.isEmpty()) {
+        val attsToLoad = if (possibleCachedAttsWithAliases.isEmpty()) {
             attsMap.getAttributes()
         } else {
-            attsMap.getAttributes().filter { cachedAttsWithAliases[it.key] == null }.toMap()
+            attsMap.getAttributes().filter { possibleCachedAttsWithAliases[it.key] == null }.toMap()
         }
 
         val loadedAtts = loadAttsForRefs(context, sourceId, recs, AttsMap(attsToLoad), rawAtts)
         loadedAtts.forEachIndexed { idx, recordAttsWithIdx ->
 
             val recAtts = recordAttsWithIdx.value
-            val recCache = cacheByRecord[idx]
+            val recCache = cacheForRecords[idx]
 
             recAtts.getAtts().forEach { key, value ->
                 recCache[key] = value
             }
 
-            val cachedRecordAttValues = cachedAttValues[idx]
+            val cachedRecordAttValues = recordsAttValuesFromCache[idx]
             cachedRecordAttValues.forEach { (alias, value) ->
                 recAtts.setAtt(alias, value)
             }

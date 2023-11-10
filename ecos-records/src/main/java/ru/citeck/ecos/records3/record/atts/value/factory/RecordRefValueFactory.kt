@@ -23,6 +23,7 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
         private val SCALARS_WITHOUT_LOADING = listOf(
             ScalarType.ID,
             ScalarType.LOCAL_ID,
+            ScalarType.APP_NAME,
             ScalarType.ASSOC,
             ScalarType.STR,
             ScalarType.RAW
@@ -131,6 +132,7 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
                     ScalarType.STR,
                     ScalarType.RAW -> id
                     ScalarType.LOCAL_ID -> id.id
+                    ScalarType.APP_NAME -> id.appName
                     else -> null
                 }
             }

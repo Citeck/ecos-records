@@ -15,6 +15,7 @@ object RecordConstants {
      */
     const val ATT_ID = "id"
     const val ATT_LOCAL_ID = "_localId"
+    const val ATT_APP_NAME = "_appName"
 
     const val ATT_AS = "_as"
     const val ATT_HAS = "_has"

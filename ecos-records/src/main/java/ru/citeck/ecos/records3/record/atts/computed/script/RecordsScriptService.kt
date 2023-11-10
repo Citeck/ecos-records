@@ -5,11 +5,13 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ScriptUtils
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 class RecordsScriptService(services: RecordsServiceFactory) {
 
@@ -87,12 +89,26 @@ class RecordsScriptService(services: RecordsServiceFactory) {
 
     private inner class Record(val recordRef: RecordRef) : AttValueCtx {
 
+        private val typeRefValue by lazy {
+            recordsService.getAtt(recordRef, RecordConstants.ATT_TYPE + "?id")
+                .asText()
+                .toEntityRef()
+        }
+
         override fun getValue(): Any {
             return recordRef
         }
 
         override fun getRef(): RecordRef {
             return recordRef
+        }
+
+        override fun getTypeRef(): EntityRef {
+            return typeRefValue
+        }
+
+        override fun getTypeId(): String {
+            return typeRefValue.getLocalId()
         }
 
         override fun getRawRef(): EntityRef {

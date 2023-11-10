@@ -28,6 +28,7 @@ class ComputedAssocTest {
         }
         val typeInfo = object : RecordTypeInfo {
             override fun getSourceId() = ""
+            override fun getParentId(): String = ""
             override fun getComputedAtts(): List<RecordComputedAtt> {
                 return listOf(
                     RecordComputedAtt.create {

@@ -28,6 +28,12 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
     ASSOC("assoc", false),
 
     /**
+     * AppName from ID value.
+     * ID: appName/localSourceId@localId <- appName - value before /.
+     */
+    APP_NAME("appName", false),
+
+    /**
      * Local ID value.
      * ID: appName/localSourceId@localId <- localId - value after @.
      */
@@ -70,6 +76,7 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
         const val STR_SCHEMA = "?str"
         const val DISP_SCHEMA = "?disp"
         const val NUM_SCHEMA = "?num"
+        const val APP_NAME_SCHEMA = "?appName"
         const val LOCAL_ID_SCHEMA = "?localId"
         const val BOOL_SCHEMA = "?bool"
         const val JSON_SCHEMA = "?json"
@@ -88,6 +95,7 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
                 NUM.schema -> NUM
                 ASSOC.schema -> ASSOC
                 LOCAL_ID.schema -> LOCAL_ID
+                APP_NAME.schema -> APP_NAME
                 BOOL.schema -> BOOL
                 JSON.schema -> JSON
                 RAW.schema -> RAW
@@ -108,6 +116,7 @@ enum class ScalarType(schema: String, val overridable: Boolean = true) {
                 NUM.mirrorAtt -> NUM
                 ASSOC.mirrorAtt -> ASSOC
                 LOCAL_ID.mirrorAtt -> LOCAL_ID
+                APP_NAME.mirrorAtt -> APP_NAME
                 BOOL.mirrorAtt -> BOOL
                 JSON.mirrorAtt -> JSON
                 RAW.mirrorAtt -> RAW

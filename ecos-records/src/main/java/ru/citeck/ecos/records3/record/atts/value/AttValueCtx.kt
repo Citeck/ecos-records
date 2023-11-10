@@ -19,6 +19,10 @@ interface AttValueCtx {
 
     fun getLocalId(): String
 
+    fun getTypeRef(): EntityRef
+
+    fun getTypeId(): String
+
     fun getAtt(attribute: String): DataValue
 
     fun getAtts(attributes: Map<String, *>): ObjectData

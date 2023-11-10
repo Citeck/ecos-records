@@ -41,6 +41,8 @@ import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValu
 import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
+import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinService
+import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinServiceImpl
 import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProviderImpl
 import ru.citeck.ecos.records3.record.mixin.provider.MutableAttMixinsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -100,6 +102,8 @@ open class RecordsServiceFactory {
     val jobExecutor: JobExecutor by lazySingleton { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazySingleton { createTxnActionManager() }
     val globalAttMixinsProvider: MutableAttMixinsProvider by lazySingleton { createGlobalAttMixinsProvider() }
+    val extAttMixinService: ExtAttMixinService by lazySingleton { createExternalAttMixinService() }
+
     val exceptionMessageExtractors: Map<Class<out Throwable>, ExceptionMessageExtractor<Throwable>> by lazySingleton {
         val extractors = ArrayList(createExceptionMessageExtractors())
         extractors.sortBy { it.getOrder() }
@@ -391,6 +395,10 @@ open class RecordsServiceFactory {
 
     protected open fun createGlobalAttMixinsProvider(): MutableAttMixinsProvider {
         return AttMixinsProviderImpl()
+    }
+
+    protected open fun createExternalAttMixinService(): ExtAttMixinService {
+        return ExtAttMixinServiceImpl()
     }
 
     protected open fun evalWebAppProps(): EcosWebAppProps {

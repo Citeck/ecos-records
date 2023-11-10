@@ -6,10 +6,13 @@ interface RecordTypeInfo {
 
     companion object {
         val EMPTY = object : RecordTypeInfo {
+            override fun getParentId(): String = ""
             override fun getSourceId(): String = ""
             override fun getComputedAtts(): List<RecordComputedAtt> = emptyList()
         }
     }
+
+    fun getParentId(): String
 
     fun getSourceId(): String
 

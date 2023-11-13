@@ -6,7 +6,6 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ScriptUtils
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery

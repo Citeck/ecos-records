@@ -324,7 +324,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         val attsToLoadByName = attsToLoad.associateBy { it.name }
         val extAttMixinContexts = HashMap<String, ExtMixinCtxData?>()
         for (attValueCtx in values) {
-            if (attValueCtx.value is RecordRefValueFactory.RecordRefValue) {
+            if (attValueCtx.value is EntityRefValueFactory.EntityRefValue) {
                 // mixin attributes for references will be evaluated in external request
                 continue
             }

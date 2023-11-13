@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
@@ -23,6 +22,7 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyRecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class RecordsDaoProxyAttsTest {
@@ -44,7 +44,7 @@ class RecordsDaoProxyAttsTest {
         records.register(targetRecordsDao)
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
 
-        val targetRef = RecordRef.create(TARGET_ID, "att-value-rec")
+        val targetRef = EntityRef.create(TARGET_ID, "att-value-rec")
         val proxyRef = targetRef.withSourceId(PROXY_ID)
 
         val att = "_edge._status.title.en"
@@ -83,7 +83,7 @@ class RecordsDaoProxyAttsTest {
         records.register(targetRecordsDao)
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
 
-        val txtId = records.getAtt(RecordRef.create(PROXY_ID, "test"), "?id").asText()
+        val txtId = records.getAtt(EntityRef.create(PROXY_ID, "test"), "?id").asText()
         assertEquals("$PROXY_ID@test", txtId)
 
         // ================== test query result id ==================
@@ -95,16 +95,16 @@ class RecordsDaoProxyAttsTest {
             .build()
 
         val queryResWithoutAtts = records.query(query)
-        assertThat(queryResWithoutAtts.getRecords().map { it.id }).containsAll(targetRecordsDao.records.keys)
+        assertThat(queryResWithoutAtts.getRecords().map { it.getLocalId() }).containsAll(targetRecordsDao.records.keys)
 
         val queryResWithAtts = records.query(query, listOf("strField"))
-        assertThat(queryResWithAtts.getRecords().map { it.getId().id }).containsAll(targetRecordsDao.records.keys)
+        assertThat(queryResWithAtts.getRecords().map { it.getId().getLocalId() }).containsAll(targetRecordsDao.records.keys)
 
         // ==========================================================
 
         // test atts with getAtts
         val getAttsById: (sourceId: String, atts: List<String>) -> List<ObjectData> = { sourceId, atts ->
-            listOf(records.getAtts(RecordRef.create(sourceId, "test"), atts).getAtts())
+            listOf(records.getAtts(EntityRef.create(sourceId, "test"), atts).getAtts())
         }
         checkFull(getAttsById)
 
@@ -134,11 +134,11 @@ class RecordsDaoProxyAttsTest {
         )
         records.register(proxyWithProc)
 
-        val procAttValue = records.getAtt(RecordRef.create(PROXY_ID, "test"), "proc-att").asText()
+        val procAttValue = records.getAtt(EntityRef.create(PROXY_ID, "test"), "proc-att").asText()
         assertEquals("proc-value", procAttValue)
 
         val procAttValueWithTarget = records.getAtts(
-            RecordRef.create(PROXY_ID, "test"),
+            EntityRef.create(PROXY_ID, "test"),
             listOf("proc-att", "strField")
         )
         assertEquals("proc-value", procAttValueWithTarget.getAtt("proc-att").asText())
@@ -191,8 +191,8 @@ class RecordsDaoProxyAttsTest {
 
         val idAttFromProxy = getAtts(PROXY_ID, listOf("?id"))
         for (atts in idAttFromProxy) {
-            val ref = RecordRef.valueOf(atts.get("?id").asText())
-            assertThat(ref.sourceId).isEqualTo(PROXY_ID)
+            val ref = EntityRef.valueOf(atts.get("?id").asText())
+            assertThat(ref.getSourceId()).isEqualTo(PROXY_ID)
         }
     }
 
@@ -245,7 +245,7 @@ class RecordsDaoProxyAttsTest {
     class ValueDto {
 
         val strField = "str-value"
-        val linkedRef = RecordRef.valueOf("$TARGET_ID@linked")
+        val linkedRef = EntityRef.valueOf("$TARGET_ID@linked")
         val linkedDto = LinkedDto()
 
         fun getEcosType(): String {
@@ -280,7 +280,7 @@ class RecordsDaoProxyAttsTest {
     class LinkedDto {
 
         val linkedValue = "linked-str-value"
-        val ref = RecordRef.valueOf("$TARGET_ID@linked")
+        val ref = EntityRef.valueOf("$TARGET_ID@linked")
 
         fun getDisplayName(): String {
             return "DisplayName"

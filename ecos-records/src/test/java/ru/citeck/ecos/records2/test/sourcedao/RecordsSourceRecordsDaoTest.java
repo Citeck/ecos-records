@@ -4,7 +4,6 @@ import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,10 +49,10 @@ public class RecordsSourceRecordsDaoTest extends LocalRecordsDao implements Loca
 
     @Test
     public void test() {
-        SourceLangMetaInfo meta = recordsService.getMeta(RecordRef.create("source", "test"), SourceLangMetaInfo.class);
+        SourceLangMetaInfo meta = recordsService.getMeta(EntityRef.create("source", "test"), SourceLangMetaInfo.class);
         assertEquals(SUPPORTED_LANGUAGES, meta.getSupportedLanguages());
 
-        SourceFlagsMetaInfo meta2 = recordsService.getMeta(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
+        SourceFlagsMetaInfo meta2 = recordsService.getMeta(EntityRef.create("source", "meta"), SourceFlagsMetaInfo.class);
         assertEquals("meta", meta2.id);
         assertTrue(meta2.attsSupported);
         assertFalse(meta2.mutationSupported);

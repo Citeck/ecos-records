@@ -3,9 +3,9 @@ package ru.citeck.ecos.records3.record.atts.computed.script
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.ScriptUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class AttValueScriptCtxImpl(
     val impl: AttValueCtx,
@@ -19,7 +19,7 @@ class AttValueScriptCtxImpl(
         return getRef().toString()
     }
 
-    override fun getRef(): RecordRef {
+    override fun getRef(): EntityRef {
         return impl.getRef()
     }
 

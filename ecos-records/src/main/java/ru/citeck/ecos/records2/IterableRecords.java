@@ -2,13 +2,14 @@ package ru.citeck.ecos.records2;
 
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-public class IterableRecords implements Iterable<RecordRef> {
+public class IterableRecords implements Iterable<EntityRef> {
 
     private static final int SEARCH_MAX_ITEMS = 100;
 
@@ -26,7 +27,7 @@ public class IterableRecords implements Iterable<RecordRef> {
     }
 
     @Override
-    public Iterator<RecordRef> iterator() {
+    public Iterator<EntityRef> iterator() {
         return new RecordsIterator();
     }
 
@@ -49,11 +50,11 @@ public class IterableRecords implements Iterable<RecordRef> {
         return recordsQuery.hashCode();
     }
 
-    private class RecordsIterator implements Iterator<RecordRef> {
+    private class RecordsIterator implements Iterator<EntityRef> {
 
         private int currentIdx = 0;
-        private List<RecordRef> records;
-        private RecordRef lastId = recordsQuery.getAfterId();
+        private List<EntityRef> records;
+        private EntityRef lastId = recordsQuery.getAfterId();
         private boolean stopped = false;
 
         private int processedCount = 0;
@@ -69,7 +70,7 @@ public class IterableRecords implements Iterable<RecordRef> {
             records = recordsService.queryRecords(query).getRecords();
 
             if (records.size() > 0) {
-                RecordRef newLastId = records.get(records.size() - 1);
+                EntityRef newLastId = records.get(records.size() - 1);
                 if (!Objects.equals(newLastId, lastId)) {
                     lastId = newLastId;
                 } else {
@@ -91,7 +92,7 @@ public class IterableRecords implements Iterable<RecordRef> {
         }
 
         @Override
-        public RecordRef next() {
+        public EntityRef next() {
             int maxItems = recordsQuery.getMaxItems();
             if (stopped || maxItems > 0 && processedCount >= maxItems) {
                 throw new NoSuchElementException();

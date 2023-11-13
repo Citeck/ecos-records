@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordMeta
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -136,7 +135,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
             context.putVar(CTX_VAR_QUERY_RAW_PREDICATE, query.query)
 
-            var queryRes = recordsTemplateService.resolve(query.query, RecordRef.create("meta", ""))
+            var queryRes = recordsTemplateService.resolve(query.query, EntityRef.create("meta", ""))
             if (queryRes.isNull()) {
                 queryRes = query.query
             }
@@ -509,7 +508,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 null
             } else {
                 val atts: ObjectData = v.asObjectData()
-                val ref: RecordRef = RecordRef.valueOf(atts.get(distinctValueIdAlias).asText())
+                val ref: EntityRef = EntityRef.valueOf(atts[distinctValueIdAlias].asText())
                 atts.remove(distinctValueAlias)
                 atts.remove(distinctValueIdAlias)
                 RecordAtts(ref, atts)
@@ -604,7 +603,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 "Results count doesn't match with " +
                     "requested. atts: " + atts + " values: " + values
             }
-            values.map { RecordAtts(RecordRef.EMPTY) }
+            values.map { RecordAtts(EntityRef.EMPTY) }
         }
     }
 
@@ -671,7 +670,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         }
         val context: RequestContext = RequestContext.getCurrentNotNull()
         if (attributes.isEmpty()) {
-            return recordIds.map { id: String -> RecordAtts(RecordRef.create(sourceId, id)) }
+            return recordIds.map { id: String -> RecordAtts(EntityRef.create(sourceId, id)) }
         }
         return getAttsFromSource(sourceId, recordIds, attributes, rawAtts, context)
     }
@@ -690,7 +689,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             return getAttsFromRecordsDao(sourceId, recordsDao, recs, attributes, rawAtts, context)
         } else {
 
-            val sourceIdRefs: List<RecordRef?> = recs.map { RecordRef.create(sourceId, it) }
+            val sourceIdRefs: List<EntityRef?> = recs.map { EntityRef.create(sourceId, it) }
 
             var attsList: List<RecordAtts>? = null
 
@@ -749,14 +748,14 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     "Actual length: " + finalRecAtts.size + " " +
                     "Refs: " + recs + " Atts: " + finalRecAtts
             }
-            return recs.map { RecordAtts(RecordRef.create(sourceId, it)) }
+            return recs.map { RecordAtts(EntityRef.create(sourceId, it)) }
         } else {
             val mixins = if (recordsDao.first is AttMixinsHolder) {
                 (recordsDao.first as AttMixinsHolder).getMixinContext()
             } else {
                 EmptyMixinContext
             }
-            val refs: List<RecordRef> = recs.map { RecordRef.create(sourceId, it) }
+            val refs: List<EntityRef> = recs.map { EntityRef.create(sourceId, it) }
 
             val attsResult = context.doWithVarNotNull(AttSchemaResolver.CTX_SOURCE_ID_KEY, sourceId) {
                 recordsAttsService.getAtts(recAtts, attributes, rawAtts, mixins, refs)
@@ -776,11 +775,11 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         var isSortingRequired = false
         for (idx in recordIds.indices) {
             val valueRef = attributes[idx].getId()
-            val valueAppName = valueRef.appName
+            val valueAppName = valueRef.getAppName()
             if (valueAppName.isNotBlank() && valueAppName != currentApp) {
                 break
             }
-            val valueSourceId = valueRef.sourceId
+            val valueSourceId = valueRef.getSourceId()
             if (valueSourceId.isNotBlank() && valueSourceId != sourceId) {
                 break
             }
@@ -874,27 +873,27 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
         if (dao == null) {
 
-            val ref = RecordRef.create(sourceId, record.id)
+            val ref = EntityRef.create(sourceId, record.id)
             val mutation = RecordsMutation()
             mutation.records = listOf(RecordMeta(ref, record.attributes))
             val mutateRes: RecordsMutResult = localRecordsResolverV0.mutate(mutation)
 
             return if (mutateRes.records == null || mutateRes.records.isEmpty()) {
-                RecordAtts(RecordRef.create(sourceId, record.id))
+                RecordAtts(EntityRef.create(sourceId, record.id))
             } else {
                 mutateRes.records.first()
             }
         } else {
 
             var mutAnyRes = dao.second.mutateForAnyRes(record)
-                ?: return RecordAtts(RecordRef.create(sourceId, record.id))
+                ?: return RecordAtts(EntityRef.create(sourceId, record.id))
 
             if (mutAnyRes is String && mutAnyRes.isNotEmpty()) {
-                mutAnyRes = RecordRef.valueOf(mutAnyRes).withDefaultSourceId(sourceId)
+                mutAnyRes = EntityRef.valueOf(mutAnyRes).withDefaultSourceId(sourceId)
             }
 
             var mutRes = if (attsToLoad.isEmpty()) {
-                val defaultRef = RecordRef.create(sourceId, record.id)
+                val defaultRef = EntityRef.create(sourceId, record.id)
                 RecordAtts(recordsAttsService.getId(mutAnyRes, defaultRef))
             } else {
 
@@ -903,8 +902,8 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 }
             }
             val ref = mutRes.getId()
-            if (StringUtils.isBlank(ref.sourceId)) {
-                mutRes = RecordAtts(mutRes, RecordRef.create(sourceId, ref.id))
+            if (StringUtils.isBlank(ref.getSourceId())) {
+                mutRes = RecordAtts(mutRes, EntityRef.create(sourceId, ref.getLocalId()))
             }
             return mutRes
         }
@@ -928,9 +927,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         return if (dao == null) {
             val deletion = RecordsDeletion()
             val refsToDelete = if (sourceId.contains("/")) {
-                recordIds.map { RecordRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER + it) }
+                recordIds.map { EntityRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER + it) }
             } else {
-                recordIds.map { RecordRef.create(sourceId, it) }
+                recordIds.map { EntityRef.create(sourceId, it) }
             }
             deletion.records = refsToDelete
             localRecordsResolverV0.delete(deletion)

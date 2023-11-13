@@ -12,7 +12,6 @@ import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.request.error.ErrorUtils
@@ -32,7 +31,7 @@ import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.*
-import ru.citeck.ecos.records3.record.atts.value.factory.RecordRefValueFactory
+import ru.citeck.ecos.records3.record.atts.value.factory.EntityRefValueFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.AttEdgeValue
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
@@ -130,7 +129,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         } else {
             attValuesConverter.toAttValue(value)
         } ?: NullAttValue.INSTANCE
-        if (result !is RecordRefValueFactory.RecordRefValue || initReferencable) {
+        if (result !is EntityRefValueFactory.EntityRefValue || initReferencable) {
             // At this moment we will wait until async initialization will be completed
             // in this method, but in future this waiting may be moved outside for various optimizations
             result.init()?.get()
@@ -149,7 +148,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         // Threshold for 5 elements required to avoid creation unnecessary
         // object instances when all values are not referencable.
         val isAttsPreloadingRequired = values.size > 5 || values.any {
-            it is EntityRef || it is RecordRefValueFactory.RecordRefValue
+            it is EntityRef || it is EntityRefValueFactory.EntityRefValue
         }
         if (!isAttsPreloadingRequired) {
             return values.map { convertToAttValue(it) }
@@ -158,7 +157,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         val refsIdx = ArrayList<Int>()
         val attValues = values.mapIndexed { idx, value ->
             val res = convertToAttValue(value, false)
-            if (res is RecordRefValueFactory.RecordRefValue) {
+            if (res is EntityRefValueFactory.EntityRefValue) {
                 refs.add(res.getRef())
                 refsIdx.add(idx)
             }
@@ -167,19 +166,19 @@ class AttSchemaResolver : ServiceFactoryAware {
         if (refs.isEmpty()) {
             return attValues
         }
-        val attsToLoad = RecordRefValueFactory.getAttsToLoad(
+        val attsToLoad = EntityRefValueFactory.getAttsToLoad(
             AttContext.getCurrentSchemaAtt().inner,
             attSchemaWriter
         )
         if (attsToLoad.isNotEmpty()) {
             val resolvedAtts = recordsService.getAtts(refs, attsToLoad, true)
             for (idx in refsIdx) {
-                (attValues[idx] as? RecordRefValueFactory.RecordRefValue)?.init(resolvedAtts[idx].getAtts())
+                (attValues[idx] as? EntityRefValueFactory.EntityRefValue)?.init(resolvedAtts[idx].getAtts())
             }
         } else {
             val emptyAtts = ObjectData.create()
             for (idx in refsIdx) {
-                (attValues[idx] as? RecordRefValueFactory.RecordRefValue)?.init(emptyAtts)
+                (attValues[idx] as? EntityRefValueFactory.EntityRefValue)?.init(emptyAtts)
             }
         }
         return attValues
@@ -1058,8 +1057,8 @@ class AttSchemaResolver : ServiceFactoryAware {
             return valueCtx.value
         }
 
-        override fun getRef(): RecordRef {
-            return RecordRef.valueOf(valueCtx.getRef())
+        override fun getRef(): EntityRef {
+            return EntityRef.valueOf(valueCtx.getRef())
         }
 
         override fun getRawRef(): EntityRef {

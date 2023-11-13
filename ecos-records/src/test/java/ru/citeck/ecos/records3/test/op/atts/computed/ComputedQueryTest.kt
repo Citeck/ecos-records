@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.op.atts.computed
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
@@ -18,7 +17,7 @@ import kotlin.test.assertEquals
 class ComputedQueryTest {
 
     companion object {
-        val type0 = RecordRef.valueOf("type0")
+        val type0 = EntityRef.valueOf("type0")
     }
 
     @Test
@@ -127,7 +126,7 @@ class ComputedQueryTest {
         })
 
         val type0Record = RecordValue("type0Record", type0, "first", "second")
-        val type0Ref = RecordRef.create("test", type0Record.id)
+        val type0Ref = EntityRef.create("test", type0Record.id)
 
         services.recordsServiceV1.register(
             RecordsDaoBuilder.create("test")
@@ -163,13 +162,13 @@ class ComputedQueryTest {
 
     data class RecordValue(
         val id: String,
-        private val type: RecordRef,
+        private val type: EntityRef,
         val attAttributeValue: String,
         val attForScript: String
     ) {
 
         @AttName("_type")
-        fun getType(): RecordRef {
+        fun getType(): EntityRef {
             return type
         }
     }

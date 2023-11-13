@@ -1,7 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -17,7 +16,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
 import kotlin.collections.LinkedHashMap
 
-class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
+class EntityRefValueFactory : AttValueFactory<EntityRef>, ServiceFactoryAware {
 
     companion object {
         private val SCALARS_WITHOUT_LOADING = listOf(
@@ -57,18 +56,18 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
     private lateinit var recordsService: RecordsService
     private lateinit var schemaWriter: AttSchemaWriter
 
-    override fun getValue(value: RecordRef): AttValue {
-        return RecordRefValue(value)
+    override fun getValue(value: EntityRef): AttValue {
+        return EntityRefValue(value)
     }
 
-    override fun getValueTypes() = listOf(RecordRef::class.java)
+    override fun getValueTypes() = listOf(EntityRef::class.java)
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         this.recordsService = serviceFactory.recordsServiceV1
         this.schemaWriter = serviceFactory.attSchemaWriter
     }
 
-    inner class RecordRefValue(private val ref: RecordRef) : AttValue, AttValueProxy {
+    inner class EntityRefValue(private val ref: EntityRef) : AttValue, AttValueProxy {
 
         private lateinit var innerAtts: InnerAttValue
 
@@ -91,7 +90,7 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
             return recordsService.getAtts(setOf(ref), attsMap, true)[0]
         }
 
-        override fun getId(): RecordRef {
+        override fun getId(): EntityRef {
             return ref
         }
 
@@ -131,15 +130,15 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
                     ScalarType.ASSOC,
                     ScalarType.STR,
                     ScalarType.RAW -> id
-                    ScalarType.LOCAL_ID -> id.id
-                    ScalarType.APP_NAME -> id.appName
+                    ScalarType.LOCAL_ID -> id.getLocalId()
+                    ScalarType.APP_NAME -> id.getAppName()
                     else -> null
                 }
             }
             return innerAtts.getAtt(name)
         }
 
-        override fun getType(): RecordRef {
+        override fun getType(): EntityRef {
             return innerAtts.type
         }
 

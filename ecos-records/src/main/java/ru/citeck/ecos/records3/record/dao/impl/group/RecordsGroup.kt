@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.record.dao.impl.group
 
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.common.group.DistinctValue
@@ -11,6 +10,7 @@ import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 class RecordsGroup(
@@ -86,22 +86,22 @@ class RecordsGroup(
         return attributes[name]
     }
 
-    override fun getType(): RecordRef {
+    override fun getType(): EntityRef {
 
         val type = attributes[RecordConstants.ATT_TYPE]
-            ?: return RecordRef.EMPTY
+            ?: return EntityRef.EMPTY
 
         var typeRefStr = type.id
-        if (typeRefStr is RecordRef) {
+        if (typeRefStr is EntityRef) {
             return typeRefStr
         }
         if (typeRefStr is String) {
             if (!typeRefStr.startsWith("emodel/type@")) {
                 typeRefStr = "emodel/type@$typeRefStr"
             }
-            return RecordRef.valueOf(typeRefStr)
+            return EntityRef.valueOf(typeRefStr)
         }
-        return RecordRef.EMPTY
+        return EntityRef.EMPTY
     }
 
     private class ValueWrapper internal constructor(private val value: DistinctValue) : AttValue {

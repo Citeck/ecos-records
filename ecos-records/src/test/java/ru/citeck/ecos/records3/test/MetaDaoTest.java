@@ -5,13 +5,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaAttributesSupplier;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -56,7 +56,7 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
     @Test
     void test() {
 
-        RecordRef ref = RecordRef.valueOf("meta@");
+        EntityRef ref = EntityRef.valueOf("meta@");
 
         DataValue value = recordsService.getAtt(ref, "rec.123@VALUE.field");
         assertEquals("VALUE", value.asText());
@@ -73,21 +73,21 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
 
     @Override
     public List<AttValue> getRecordsAtts(List<String> records) {
-        return records.stream().map(RecordRef::valueOf).map(Value::new).collect(Collectors.toList());
+        return records.stream().map(EntityRef::valueOf).map(Value::new).collect(Collectors.toList());
     }
 
     public static class Value implements AttValue {
 
-        private final RecordRef ref;
+        private final EntityRef ref;
 
-        Value(RecordRef ref) {
+        Value(EntityRef ref) {
             this.ref = ref;
         }
 
         @Override
         public Object getAtt(@NotNull String name) {
             if (name.equals("field")) {
-                return ref.getId();
+                return ref.getLocalId();
             } else if (name.equals("enum")) {
                 return TestEnum.FIRST;
             } else if (name.equals("bytes")) {

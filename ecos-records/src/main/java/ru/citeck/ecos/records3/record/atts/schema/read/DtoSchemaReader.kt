@@ -13,7 +13,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -58,6 +57,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     private val attSchemaReader = factory.attSchemaReader
     private val attProcReader = factory.attProcReader
 
+    private val REF_SCALAR_FIELD = ScalarField(EntityRef::class.java, ScalarType.ID)
+
     init {
         listOf(
             ScalarField(ByteArray::class.java, ScalarType.BIN),
@@ -85,7 +86,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(ArrayNode::class.java, ScalarType.JSON),
             ScalarField(ObjectData::class.java, ScalarType.JSON),
             ScalarField(DataValue::class.java, ScalarType.RAW),
-            ScalarField(RecordRef::class.java, ScalarType.ID),
             ScalarField(EntityRef::class.java, ScalarType.ID),
             ScalarField(MimeType::class.java, ScalarType.STR),
             ScalarField(Map::class.java, ScalarType.JSON),
@@ -182,7 +182,11 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
-            val scalarField = scalars[propType]
+            val scalarField = if (EntityRef::class.java.isAssignableFrom(propType)) {
+                REF_SCALAR_FIELD
+            } else {
+                scalars[propType]
+            }
 
             getAttributeSchema(
                 attsClass,

@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.test.script
 
 import org.junit.jupiter.api.BeforeEach
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 abstract class AbstractRecordsScriptTest {
 
@@ -13,7 +13,7 @@ abstract class AbstractRecordsScriptTest {
     lateinit var recordsServiceFactory: RecordsServiceFactory
     lateinit var rScript: RecordsScriptService
 
-    lateinit var duneSpice: RecordRef
+    lateinit var duneSpice: EntityRef
 
     companion object {
         const val DEFAULT_ARRAKIS_ID = "arrakis"
@@ -41,7 +41,7 @@ abstract class AbstractRecordsScriptTest {
         createSpice(40.0)
     }
 
-    private fun createSpice(intensity: Double): RecordRef {
+    private fun createSpice(intensity: Double): EntityRef {
         return recordsService.create(
             "dune",
             mapOf(

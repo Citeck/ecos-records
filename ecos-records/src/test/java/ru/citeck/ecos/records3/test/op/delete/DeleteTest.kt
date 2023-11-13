@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.op.delete
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordMeta
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -43,11 +43,11 @@ class DeleteTest {
         })
 
         val recsToDelete = arrayListOf("one", "two", "three")
-        services.recordsServiceV1.delete(recsToDelete.map { RecordRef.create("test0", it) })
+        services.recordsServiceV1.delete(recsToDelete.map { EntityRef.create("test0", it) })
         assertEquals(recsToDelete, test0Deleted)
         assertTrue(test1Deleted.isEmpty())
 
-        services.recordsServiceV1.delete(recsToDelete.map { RecordRef.create("test1", it) })
+        services.recordsServiceV1.delete(recsToDelete.map { EntityRef.create("test1", it) })
         assertEquals(recsToDelete, test1Deleted)
 
         val test2Deleted = ArrayList<String>()
@@ -61,7 +61,7 @@ class DeleteTest {
             }
 
             override fun delete(deletion: RecordsDeletion): RecordsDelResult {
-                test2Deleted.addAll(deletion.records.map { it.id })
+                test2Deleted.addAll(deletion.records.map { it.getLocalId() })
                 val res = RecordsDelResult()
                 res.records = deletion.records.map { RecordMeta(it) }
                 return res
@@ -70,7 +70,7 @@ class DeleteTest {
             override fun getId() = "test2"
         })
 
-        services.recordsServiceV1.delete(recsToDelete.map { RecordRef.create("test2", it) })
+        services.recordsServiceV1.delete(recsToDelete.map { EntityRef.create("test2", it) })
         assertEquals(recsToDelete, test2Deleted)
     }
 }

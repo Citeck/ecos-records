@@ -2,19 +2,16 @@ package ru.citeck.ecos.records2.source.common.group;
 
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.graphql.meta.value.InnerMetaValue;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.predicate.model.ComposedPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -101,7 +98,7 @@ public class RecordsGroup implements MetaValue {
                 .withMaxItems(1)
                 .withSkipCount(0)
                 .build();
-            RecsQueryRes<RecordRef> records = recordsService.query(countQuery);
+            RecsQueryRes<EntityRef> records = recordsService.query(countQuery);
 
             return records.getTotalCount();
         }

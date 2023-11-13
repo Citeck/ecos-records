@@ -3,7 +3,7 @@ package ru.citeck.ecos.records3.record.dao.query.dto.query
 import ecos.com.fasterxml.jackson210.annotation.JsonInclude
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import mu.KotlinLogging
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 data class QueryPage(
     val maxItems: Int,
     val skipCount: Int,
-    val afterId: RecordRef?
+    val afterId: EntityRef?
 ) {
 
     companion object {
@@ -46,7 +46,7 @@ data class QueryPage(
 
         var maxItems: Int = -1
         var skipCount: Int = 0
-        var afterId: RecordRef? = null
+        var afterId: EntityRef? = null
 
         constructor(base: QueryPage) : this() {
             maxItems = base.maxItems
@@ -64,7 +64,7 @@ data class QueryPage(
             return this
         }
 
-        fun withAfterId(afterId: RecordRef?): Builder {
+        fun withAfterId(afterId: EntityRef?): Builder {
             this.afterId = afterId
             return this
         }

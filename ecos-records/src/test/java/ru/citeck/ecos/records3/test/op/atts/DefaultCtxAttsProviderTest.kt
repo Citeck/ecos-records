@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class DefaultCtxAttsProviderTest {
@@ -29,10 +29,10 @@ class DefaultCtxAttsProviderTest {
             override fun getId(): String = "test"
         })
 
-        val testStr = records.getAtt(RecordRef.valueOf("test@test"), "\$test-str").asText()
+        val testStr = records.getAtt(EntityRef.valueOf("test@test"), "\$test-str").asText()
         assertEquals("value", testStr)
 
-        val testNum = records.getAtt(RecordRef.valueOf("test@test"), "\$test-num?num").asDouble()
+        val testNum = records.getAtt(EntityRef.valueOf("test@test"), "\$test-num?num").asDouble()
         assertEquals(123.0, testNum)
     }
 }

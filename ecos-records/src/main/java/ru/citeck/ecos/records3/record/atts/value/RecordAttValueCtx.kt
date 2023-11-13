@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.record.atts.value
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -13,11 +12,11 @@ class RecordAttValueCtx(
     val service: RecordsService
 ) : AttValueCtx {
 
-    private val recordRef: RecordRef by lazy {
+    private val recordRef: EntityRef by lazy {
         if (record is EntityRef) {
-            RecordRef.valueOf(record)
+            EntityRef.valueOf(record)
         } else {
-            RecordRef.valueOf(service.getAtt(record, ScalarType.ID.schema).asText())
+            EntityRef.valueOf(service.getAtt(record, ScalarType.ID.schema).asText())
         }
     }
 
@@ -37,7 +36,7 @@ class RecordAttValueCtx(
         return record
     }
 
-    override fun getRef(): RecordRef {
+    override fun getRef(): EntityRef {
         return recordRef
     }
 
@@ -46,7 +45,7 @@ class RecordAttValueCtx(
     }
 
     override fun getLocalId(): String {
-        return recordRef.id
+        return recordRef.getLocalId()
     }
 
     override fun getAtt(attribute: String): DataValue {

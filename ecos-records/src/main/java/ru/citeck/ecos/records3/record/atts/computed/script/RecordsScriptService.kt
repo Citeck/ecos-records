@@ -30,8 +30,8 @@ class RecordsScriptService(services: RecordsServiceFactory) {
             return record
         }
         val recordRef = when (record) {
-            is RecordRef -> record
-            is String -> RecordRef.valueOf(record)
+            is EntityRef -> record
+            is String -> EntityRef.valueOf(record)
             else -> error("Incorrect record: $record")
         }
         return AttValueScriptCtxImpl(Record(recordRef), recordsService, implCreator)
@@ -87,7 +87,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         return ScriptUtils.convertToScript(flatResult) ?: error("Conversion error. Result: $flatResult")
     }
 
-    private inner class Record(val recordRef: RecordRef) : AttValueCtx {
+    private inner class Record(val recordRef: EntityRef) : AttValueCtx {
 
         private val typeRefValue by lazy {
             recordsService.getAtt(recordRef, RecordConstants.ATT_TYPE + "?id")
@@ -99,7 +99,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
             return recordRef
         }
 
-        override fun getRef(): RecordRef {
+        override fun getRef(): EntityRef {
             return recordRef
         }
 
@@ -116,7 +116,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         }
 
         override fun getLocalId(): String {
-            return recordRef.id
+            return recordRef.getLocalId()
         }
 
         override fun getAtt(attribute: String): DataValue {

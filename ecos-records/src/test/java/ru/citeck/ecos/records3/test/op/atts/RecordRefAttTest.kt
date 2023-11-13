@@ -2,20 +2,20 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class RecordRefAttTest {
 
     companion object {
-        val testRecordRef = RecordRef.create("test-app", "sourceId", "test")
-        val testRecordRef2 = RecordRef.create("test-app", "", "test")
+        val testRecordRef = EntityRef.create("test-app", "sourceId", "test")
+        val testRecordRef2 = EntityRef.create("test-app", "", "test")
     }
 
     @Test
@@ -27,7 +27,7 @@ class RecordRefAttTest {
             override fun getRecordAtts(record: String): Any? {
                 return ObjectData.create()
             }
-            override fun getId() = testRecordRef.sourceId
+            override fun getId() = testRecordRef.getSourceId()
         })
 
         assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?id").asText())
@@ -60,10 +60,10 @@ class RecordRefAttTest {
     }
 
     class RefFieldDto(
-        var ref: RecordRef = testRecordRef
+        var ref: EntityRef = testRecordRef
     )
 
     class RefFieldDto2(
-        var ref: RecordRef = testRecordRef2
+        var ref: EntityRef = testRecordRef2
     )
 }

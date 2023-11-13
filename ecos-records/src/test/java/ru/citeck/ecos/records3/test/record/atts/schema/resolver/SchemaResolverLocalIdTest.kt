@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.record.atts.schema.resolver
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -11,6 +10,7 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class SchemaResolverLocalIdTest {
@@ -31,7 +31,7 @@ class SchemaResolverLocalIdTest {
         records.register(recordsDao)
 
         recordsDao.records.forEach {
-            val localId = records.getAtt(RecordRef.create("test", it.key), "?localId").asText()
+            val localId = records.getAtt(EntityRef.create("test", it.key), "?localId").asText()
             assertEquals(it.key, localId)
         }
 
@@ -53,7 +53,7 @@ class SchemaResolverLocalIdTest {
             } else {
                 (keyRec.value as MetaValue).id
             }
-            assertThat(localId).isEqualTo(RecordRef.valueOf(idFromValue).id)
+            assertThat(localId).isEqualTo(EntityRef.valueOf(idFromValue).getLocalId())
         }
     }
 

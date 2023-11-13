@@ -5,7 +5,6 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,8 +38,8 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
         RecordEvaluatorService evaluatorsService = factory.getRecordEvaluatorService();
         evaluatorsService.register(new EvalutorWithModel());
 
-        RecordRef userRef = RecordRef.create(ID, "user");
-        RecordRef recordRef = RecordRef.create(ID, "record");
+        EntityRef userRef = EntityRef.create(ID, "user");
+        EntityRef recordRef = EntityRef.create(ID, "record");
 
         Map<String, Object> model = new HashMap<>();
         model.put("user", userRef);
@@ -62,9 +62,9 @@ public class EvaluatorsWithModelTest extends LocalRecordsDao implements LocalRec
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<EntityRef> records, MetaField metaField) {
         return records.stream().map(r -> {
-            switch (r.getId()) {
+            switch (r.getLocalId()) {
                 case "user": return new UserValue();
                 case "record": return new OtherValue();
             }

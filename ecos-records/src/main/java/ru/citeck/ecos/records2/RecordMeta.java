@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -24,11 +25,11 @@ public class RecordMeta extends RecordAtts {
         super(other);
     }
 
-    public RecordMeta(RecordMeta other, RecordRef id) {
+    public RecordMeta(RecordMeta other, EntityRef id) {
         super(other, id);
     }
 
-    public RecordMeta(RecordMeta other, Function<RecordRef, RecordRef> idMapper) {
+    public RecordMeta(RecordMeta other, Function<EntityRef, EntityRef> idMapper) {
         super(other, idMapper);
     }
 
@@ -36,11 +37,11 @@ public class RecordMeta extends RecordAtts {
         super(id);
     }
 
-    public RecordMeta(RecordRef id) {
+    public RecordMeta(EntityRef id) {
         super(id);
     }
 
-    public RecordMeta(RecordRef id, ObjectData attributes) {
+    public RecordMeta(EntityRef id, ObjectData attributes) {
         super(id, attributes);
     }
 
@@ -49,7 +50,7 @@ public class RecordMeta extends RecordAtts {
     }
 
     @NotNull
-    public RecordMeta withId(@NotNull RecordRef recordRef) {
+    public RecordMeta withId(@NotNull EntityRef recordRef) {
         if (getId().equals(recordRef)) {
             return this;
         }
@@ -58,8 +59,8 @@ public class RecordMeta extends RecordAtts {
 
     @NotNull
     public RecordMeta withDefaultAppName(@NotNull String appName) {
-        RecordRef currId = getId();
-        RecordRef newId = currId.withDefaultAppName(appName);
+        EntityRef currId = getId();
+        EntityRef newId = currId.withDefaultAppName(appName);
         return newId == currId ? this : new RecordMeta(this, newId);
     }
 

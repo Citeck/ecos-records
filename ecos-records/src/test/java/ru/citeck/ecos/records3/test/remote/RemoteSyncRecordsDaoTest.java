@@ -10,10 +10,8 @@ import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.commons.promise.Promises;
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock;
 import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
@@ -29,6 +27,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.RemoteSyncRecordsDao;
 import ru.citeck.ecos.webapp.api.EcosWebAppApi;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -83,12 +82,12 @@ public class RemoteSyncRecordsDaoTest {
             .withLanguage(PredicateService.LANGUAGE_PREDICATE)
             .build();
 
-        RecsQueryRes<RecordRef> result = recordsService.query(query);
+        RecsQueryRes<EntityRef> result = recordsService.query(query);
         assertEquals(TOTAL_RECS, result.getTotalCount());
 
         assertEquals(new HashSet<>(recordsWithMetaSource.values), new HashSet<>(remoteSyncRecordsDao.getRecords().values()));
 
-        ValueDto dto = recordsService.getAtts(RecordRef.create("remote", "remote-source", "id-100"), ValueDto.class);
+        ValueDto dto = recordsService.getAtts(EntityRef.create("remote", "remote-source", "id-100"), ValueDto.class);
         ValueDto origDto = recordsWithMetaSource.values.stream().filter(v -> v.getId().equals("id-100")).findFirst().orElse(null);
 
         assertEquals(origDto, dto);
@@ -99,7 +98,7 @@ public class RemoteSyncRecordsDaoTest {
             .withSourceId(REMOTE_SOURCE_ID)
             .withQuery(predicate)
             .build();
-        RecsQueryRes<RecordRef> recs = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
+        RecsQueryRes<EntityRef> recs = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
             try {
                 return recordsService.query(query1);
             } finally {
@@ -107,7 +106,7 @@ public class RemoteSyncRecordsDaoTest {
             }
         });
         assertEquals(1, recs.getRecords().size());
-        assertEquals(RecordRef.valueOf(REMOTE_SOURCE_ID + "@id-100"), recs.getRecords().get(0));
+        assertEquals(EntityRef.valueOf(REMOTE_SOURCE_ID + "@id-100"), recs.getRecords().get(0));
 
         RecsQueryRes<ValueDto> resultWithMeta = RequestContext.doWithCtx(recordsServiceFactory, ctx -> {
             try {

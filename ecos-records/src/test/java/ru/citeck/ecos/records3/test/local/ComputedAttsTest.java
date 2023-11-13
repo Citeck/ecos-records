@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.*;
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt;
@@ -20,6 +19,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,12 +122,12 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
         computedAttributesType0.add(intCcmputedAtt);
 
-        RecordAtts recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
+        RecordAtts recMeta0 = recordsService.getAtts(EntityRef.create(getId(), "type0"), mixinAtts);
 
         assertTrue(recMeta0.get(strAtt).isNull());
         assertEquals(30, recMeta0.get(intAtt).asInt());
 
-        RecordAtts recMeta1 = recordsService.getAtts(RecordRef.create(getId(), "type1"), mixinAtts);
+        RecordAtts recMeta1 = recordsService.getAtts(EntityRef.create(getId(), "type1"), mixinAtts);
 
         assertTrue(recMeta1.get(strAtt).isNull());
         assertTrue(recMeta1.get(intAtt).isNull());
@@ -150,18 +150,18 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
         computedAttributesType1.add(strPrefixAtt);
 
-        recMeta1 = recordsService.getAtts(RecordRef.create(getId(), "type1"), mixinAtts);
+        recMeta1 = recordsService.getAtts(EntityRef.create(getId(), "type1"), mixinAtts);
         assertEquals(expectedStrPrefixResult, recMeta1.get(strAtt, ""));
         assertTrue(recMeta1.get(intAtt).isNull());
 
-        recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
+        recMeta0 = recordsService.getAtts(EntityRef.create(getId(), "type0"), mixinAtts);
 
         assertTrue(recMeta0.get(strAtt).isNull());
         assertEquals(30, recMeta0.get(intAtt).asInt());
 
         computedAttributesType0.add(strPrefixAtt);
 
-        recMeta0 = recordsService.getAtts(RecordRef.create(getId(), "type0"), mixinAtts);
+        recMeta0 = recordsService.getAtts(EntityRef.create(getId(), "type0"), mixinAtts);
 
         assertEquals(expectedStrPrefixResult, recMeta0.get(strAtt, ""));
         assertEquals(30, recMeta0.get(intAtt).asInt());
@@ -176,7 +176,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
 
         computedAttributesType0.add(innerComputedAtt);
 
-        DataValue res = recordsService.getAtt(RecordRef.create(getId(), "type0"), innerFieldName);
+        DataValue res = recordsService.getAtt(EntityRef.create(getId(), "type0"), innerFieldName);
         assertEquals("some-inner-value", res.asText());*/
     }
 
@@ -219,8 +219,8 @@ public class ComputedAttsTest extends AbstractRecordsDao
         }
 
         @Override
-        public RecordRef getType() {
-            return RecordRef.create("emodel", "type", id);
+        public EntityRef getType() {
+            return EntityRef.create("emodel", "type", id);
         }
     }
 

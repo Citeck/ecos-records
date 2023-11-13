@@ -13,7 +13,7 @@ data class LocalRecordAtts(
     val attributes: ObjectData = ObjectData.create()
 ) : HasSensitiveData<LocalRecordAtts> {
 
-    constructor(atts: RecordAtts) : this(atts.getId().id, atts.getAtts().deepCopy())
+    constructor(atts: RecordAtts) : this(atts.getId().getLocalId(), atts.getAtts().deepCopy())
 
     fun withId(id: String): LocalRecordAtts {
         return if (this.id == id) {

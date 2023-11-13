@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.utils.StringUtils;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
 
@@ -43,8 +43,8 @@ public interface MetaValue {
 
     default String getLocalId() {
         String id = getId();
-        if (StringUtils.isNotBlank(id) && id.contains(RecordRef.SOURCE_DELIMITER)) {
-            return RecordRef.valueOf(id).getId();
+        if (StringUtils.isNotBlank(id) && id.contains(EntityRef.SOURCE_ID_DELIMITER)) {
+            return EntityRef.valueOf(id).getLocalId();
         }
         return id;
     }
@@ -93,7 +93,7 @@ public interface MetaValue {
         return null;
     }
 
-    default RecordRef getRecordType() {
-        return RecordRef.EMPTY;
+    default EntityRef getRecordType() {
+        return EntityRef.EMPTY;
     }
 }

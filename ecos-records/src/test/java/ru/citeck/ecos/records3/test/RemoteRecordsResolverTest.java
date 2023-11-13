@@ -25,6 +25,7 @@ import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody;
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp;
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody;
 import ru.citeck.ecos.webapp.api.EcosWebAppApi;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -60,8 +61,8 @@ class RemoteRecordsResolverTest {
 
     private RecordsService recordsService;
 
-    private final List<RecordRef> refs = new ArrayList<>();
-    private final Map<RecordRef, RecordMeta> metaByRef = new HashMap<>();
+    private final List<EntityRef> refs = new ArrayList<>();
+    private final Map<EntityRef, RecordMeta> metaByRef = new HashMap<>();
 
     private final List<String> urls = new ArrayList<>();
 
@@ -80,7 +81,7 @@ class RemoteRecordsResolverTest {
         refs.add(RecordRef.valueOf("alf/src3@loc6"));
 
         refs.forEach(r -> {
-            RecordRef localRef = r.removeAppName();
+            EntityRef localRef = r.withoutAppName();
             metaByRef.put(localRef, new RecordMeta(localRef));
         });
     }
@@ -99,8 +100,8 @@ class RemoteRecordsResolverTest {
                     urls.remove(urls.size() - 1);
                     return null;
                 }
-                for (RecordRef ref : body.getRecords()) {
-                    assertTrue(refs.stream().map(RecordRef::removeAppName).anyMatch(ref::equals));
+                for (EntityRef ref : body.getRecords()) {
+                    assertTrue(refs.stream().map(EntityRef::withoutAppName).anyMatch(ref::equals));
                 }
 
                 RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
@@ -149,9 +150,9 @@ class RemoteRecordsResolverTest {
         ru.citeck.ecos.records2.request.query.RecordsQuery query = new RecordsQuery();
         query.setSourceId(appId + "/localSource");
 
-        RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
+        RecordsQueryResult<EntityRef> result = recordsService.queryRecords(query);
         assertEquals(refs.stream()
-                .map(r -> RecordRef.valueOf(appId + "/" + r.removeAppName()))
+                .map(r -> EntityRef.valueOf(appId + "/" + r.withoutAppName()))
                 .collect(Collectors.toList()),
             result.getRecords());
 
@@ -160,7 +161,7 @@ class RemoteRecordsResolverTest {
 
         urls.clear();
 
-        List<RecordRef> qrefs = new ArrayList<>(refs);
+        List<EntityRef> qrefs = new ArrayList<>(refs);
         RecordsResult<RecordMeta> metaResult = recordsService.getAttributes(qrefs, Collections.singleton(TEST_ATT));
 
         assertEquals(4, urls.size());
@@ -179,7 +180,7 @@ class RemoteRecordsResolverTest {
         checkRecordsMeta(refs, delResult.getRecords(), false);
     }
 
-    private void checkRecordsMeta(List<RecordRef> expected, List<RecordMeta> records, boolean addDefaultAppName) {
+    private void checkRecordsMeta(List<EntityRef> expected, List<RecordMeta> records, boolean addDefaultAppName) {
         assertEquals(expected.size(), records.size());
         assertEquals(expected.stream().map(r -> {
                 if (r.getAppName().isEmpty() && addDefaultAppName) {

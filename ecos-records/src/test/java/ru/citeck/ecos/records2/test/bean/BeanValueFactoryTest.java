@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,14 +38,14 @@ public class BeanValueFactoryTest extends LocalRecordsDao
     @Test
     void test() {
 
-        RecordRef ref0 = RecordRef.create(ID, "0");
+        EntityRef ref0 = EntityRef.create(ID, "0");
 
         ValueDto0 dto0 = new ValueDto0();
 
         assertEquals(DataValue.createStr(dto0.getDisplayName()), recordsService.getAtt(ref0, ".disp"));
         assertEquals(DataValue.createStr(dto0.getStrValue()), recordsService.getAtt(ref0, ".str"));
 
-        RecordRef ref1 = RecordRef.create(ID, "1");
+        EntityRef ref1 = EntityRef.create(ID, "1");
 
         ValueDto1 dto1 = new ValueDto1();
 
@@ -53,12 +53,12 @@ public class BeanValueFactoryTest extends LocalRecordsDao
     }
 
     @Override
-    public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(List<EntityRef> records, MetaField metaField) {
         return records.stream()
             .map(r -> {
-                if (r.getId().equals("0")) {
+                if (r.getLocalId().equals("0")) {
                     return new ValueDto0();
-                } else if (r.getId().equals("1")) {
+                } else if (r.getLocalId().equals("1")) {
                     return new ValueDto1();
                 }
                 throw new IllegalStateException("Unknown ref: " + r);

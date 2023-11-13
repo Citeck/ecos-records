@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordMeta
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
@@ -19,6 +18,7 @@ import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordMutateDaoTest {
 
@@ -35,7 +35,7 @@ class RecordMutateDaoTest {
         records.register(InMemDataRecordsDao("test"))
 
         val res = records.create("test", mapOf("id" to "123"))
-        assertThat(res).isEqualTo(RecordRef.create("test", "test", "123"))
+        assertThat(res).isEqualTo(EntityRef.create("test", "test", "123"))
     }
 
     @Test
@@ -55,7 +55,7 @@ class RecordMutateDaoTest {
             override fun mutate(record: LocalRecordAtts): String {
                 mutatedList.add(
                     RecordAtts(
-                        RecordRef.create("test-app", getId(), record.id),
+                        EntityRef.create("test-app", getId(), record.id),
                         record.attributes
                     )
                 )
@@ -72,7 +72,7 @@ class RecordMutateDaoTest {
             override fun mutate(record: LocalRecordAtts): String {
                 mutatedList.add(
                     RecordAtts(
-                        RecordRef.create("remote", getId().substringAfterLast('/'), record.id),
+                        EntityRef.create("remote", getId().substringAfterLast('/'), record.id),
                         record.attributes
                     )
                 )
@@ -93,7 +93,7 @@ class RecordMutateDaoTest {
                 mutation.records.forEach {
                     mutatedList.add(
                         RecordAtts(
-                            RecordRef.create("test-app", id, it.getId().id),
+                            EntityRef.create("test-app", id, it.getId().getLocalId()),
                             it.getAttributes()
                         )
                     )
@@ -103,7 +103,7 @@ class RecordMutateDaoTest {
                 return result
             }
 
-            override fun getValuesToMutate(records: MutableList<RecordRef>): MutableList<Any> {
+            override fun getValuesToMutate(records: MutableList<EntityRef>): MutableList<Any> {
                 error("Not implemented")
             }
 
@@ -132,14 +132,14 @@ class RecordMutateDaoTest {
         )
 
         if (!sourceId.contains('/')) {
-            val firstRecordAtts = RecordAtts(RecordRef.valueOf("test-app/$sourceId@localId"), attsToMutate)
+            val firstRecordAtts = RecordAtts(EntityRef.valueOf("test-app/$sourceId@localId"), attsToMutate)
             records.mutate(firstRecordAtts)
             assertThat(mutatedList).containsExactly(firstRecordAtts)
         }
 
         mutatedList.clear()
 
-        val secondRecordAtts = RecordAtts(RecordRef.valueOf("$sourceId@localId2"), attsToMutate)
+        val secondRecordAtts = RecordAtts(EntityRef.valueOf("$sourceId@localId2"), attsToMutate)
 
         records.mutate(secondRecordAtts)
         val expectedRec = if (!sourceId.contains("/")) {

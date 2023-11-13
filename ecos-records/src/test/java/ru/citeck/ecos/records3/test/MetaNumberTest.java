@@ -6,12 +6,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,10 +40,10 @@ public class MetaNumberTest extends AbstractRecordsDao
 
     @Test
     public void test() {
-        DataValue value = recordsService.getAtt(RecordRef.create("test", ""), "double1_000_000_000");
+        DataValue value = recordsService.getAtt(EntityRef.create("test", ""), "double1_000_000_000");
         String strValue = value.asText();
         assertEquals("1000000000", strValue);
-        value = recordsService.getAtt(RecordRef.create("test", ""), "double2_000_000_000\\.0123458");
+        value = recordsService.getAtt(EntityRef.create("test", ""), "double2_000_000_000\\.0123458");
         strValue = value.asText();
         assertEquals("2000000000.0123458", strValue);
     }
@@ -56,10 +56,10 @@ public class MetaNumberTest extends AbstractRecordsDao
 
     static class TestValue implements AttValue {
 
-        private final RecordRef ref;
+        private final EntityRef ref;
 
         public TestValue(String ref) {
-            this.ref = RecordRef.create("test", ref);
+            this.ref = EntityRef.create("test", ref);
         }
 
         @Override

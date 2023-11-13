@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2.source.common;
 
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +15,17 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
     private RecordsQueryDao targetDao;
 
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryRecords(RecordsQuery query) {
 
         RecordsQuery localQuery = new RecordsQuery(query);
         int maxItems = localQuery.getMaxItems();
         localQuery.setMaxItems((int) (1.5f * maxItems));
 
-        RecordsQueryResult<RecordRef> records = targetDao.queryRecords(localQuery);
-        Function<List<RecordRef>, List<RecordRef>> filter = getFilter(query);
+        RecordsQueryResult<EntityRef> records = targetDao.queryRecords(localQuery);
+        Function<List<EntityRef>, List<EntityRef>> filter = getFilter(query);
 
-        List<RecordRef> filtered = filter.apply(records.getRecords());
-        List<RecordRef> resultRecords = new ArrayList<>();
+        List<EntityRef> filtered = filter.apply(records.getRecords());
+        List<EntityRef> resultRecords = new ArrayList<>();
 
         int itemsCount = Math.min(filtered.size(), maxItems);
         for (int i = 0; i < itemsCount; i++) {
@@ -39,7 +39,7 @@ public abstract class FilteredRecordsDao extends AbstractRecordsDao implements R
         return records;
     }
 
-    protected abstract Function<List<RecordRef>, List<RecordRef>> getFilter(RecordsQuery query);
+    protected abstract Function<List<EntityRef>, List<EntityRef>> getFilter(RecordsQuery query);
 
     public void setTargetDao(RecordsQueryDao targetDao) {
         this.targetDao = targetDao;

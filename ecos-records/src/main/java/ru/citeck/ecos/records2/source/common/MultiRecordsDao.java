@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records2.source.common;
 
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.source.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.Map;
@@ -22,15 +22,15 @@ public class MultiRecordsDao extends AbstractRecordsDao
     private Map<String, RecordsQueryDao> daoBySource = new ConcurrentHashMap<>();
 
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryRecords(RecordsQuery query) {
 
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
+        RecordsQueryResult<EntityRef> result = new RecordsQueryResult<>();
 
         RecordsQuery localQuery = new RecordsQuery(query);
 
         int sourceIdx = 0;
-        RecordRef afterId = localQuery.getAfterId();
-        if (afterId != RecordRef.EMPTY) {
+        EntityRef afterId = localQuery.getAfterId();
+        if (afterId != EntityRef.EMPTY) {
             String source = afterId.getSourceId();
             while (sourceIdx < recordsDao.size() && !recordsDao.get(sourceIdx).getId().equals(source)) {
                 sourceIdx++;
@@ -41,7 +41,7 @@ public class MultiRecordsDao extends AbstractRecordsDao
 
             localQuery.setMaxItems(query.getMaxItems() - result.getRecords().size());
             RecordsQueryDao recordsDao = this.recordsDao.get(sourceIdx);
-            RecordsQueryResult<RecordRef> daoRecords = recordsDao.queryRecords(localQuery);
+            RecordsQueryResult<EntityRef> daoRecords = recordsDao.queryRecords(localQuery);
 
             result.merge(daoRecords);
 

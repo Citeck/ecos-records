@@ -6,7 +6,9 @@ import ru.citeck.ecos.webapp.api.entity.EntityRefFactory
 
 class RecordEntityRefFactory : EntityRefFactory {
 
+    // this code required to use RecordRef as EntityRef in runtime for backward compatibility
     override fun getEntityRef(appName: String, sourceId: String, localId: String): EntityRef {
+        @Suppress("DEPRECATION")
         return RecordRef.create(appName, sourceId, localId)
     }
 

@@ -3,18 +3,18 @@ package ru.citeck.ecos.records3.test.record.atts.value.factory
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
-class RecordRefValueFactoryTest {
+class EntityRefValueFactoryTest {
 
     @Test
     fun test() {
 
-        val test1Ref = RecordRef.valueOf("test@test1")
+        val test1Ref = EntityRef.valueOf("test@test1")
         val testRecord1 = TestRecord1(test1Ref)
 
         val services = RecordsServiceFactory()
@@ -25,7 +25,7 @@ class RecordRefValueFactoryTest {
                 .addRecord("test1", testRecord1)
                 .build()
         )
-        val testRef = RecordRef.valueOf("test@test")
+        val testRef = EntityRef.valueOf("test@test")
 
         assertEquals(testRecord1.type.toString(), records.getAtt(testRef, "ref._type?id").asText())
         assertEquals(testRecord1.displayName.toString(), records.getAtt(testRef, "ref?disp").asText())
@@ -57,10 +57,10 @@ class RecordRefValueFactoryTest {
     }
 
     class TestRecord0(
-        val ref: RecordRef
+        val ref: EntityRef
     )
 
-    class TestRecord1(val ref: RecordRef) : AttValue {
+    class TestRecord1(val ref: EntityRef) : AttValue {
 
         override fun getId(): Any? {
             return "abc"
@@ -82,8 +82,8 @@ class RecordRefValueFactoryTest {
             return ObjectData.create("{\"aa\":\"bb\"}")
         }
 
-        override fun getType(): RecordRef {
-            return RecordRef.valueOf("abc@def")
+        override fun getType(): EntityRef {
+            return EntityRef.valueOf("abc@def")
         }
 
         override fun getAtt(name: String): Any? {

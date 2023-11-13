@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt;
@@ -19,6 +18,7 @@ import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,9 +32,9 @@ public class InnerMixinTest extends AbstractRecordsDao
                             implements RecordsAttsDao {
 
     private static final String ID = "mixinSourceId";
-    private static final RecordRef DTO_REC_REF = RecordRef.create(ID, "test");
-    private static final RecordRef TEST_TYPE0 = RecordRef.create("TYPE", "TEST0");
-    private static final RecordRef TEST_TYPE1 = RecordRef.create("TYPE", "TEST1");
+    private static final EntityRef DTO_REC_REF = EntityRef.create(ID, "test");
+    private static final EntityRef TEST_TYPE0 = EntityRef.create("TYPE", "TEST0");
+    private static final EntityRef TEST_TYPE1 = EntityRef.create("TYPE", "TEST1");
 
     private RecordsService recordsService;
 
@@ -117,7 +117,7 @@ public class InnerMixinTest extends AbstractRecordsDao
     @Override
     public List<?> getRecordsAtts(List<String> records) {
         return records.stream().map(ref -> {
-            if (ref.equals(DTO_REC_REF.getId())) {
+            if (ref.equals(DTO_REC_REF.getLocalId())) {
                 return new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE0, new RecRefData(TEST_TYPE1)));
             }
             return EmptyAttValue.INSTANCE;
@@ -127,22 +127,22 @@ public class InnerMixinTest extends AbstractRecordsDao
     @Data
     private static class RecRefData {
 
-        private RecordRef type;
+        private EntityRef type;
         private RecRefData inner;
         private String computedAtt0 = "computedValue0";
         private String computedAtt1 = "computedValue1";
 
-        public RecRefData(RecordRef type) {
+        public RecRefData(EntityRef type) {
             this.type = type;
         }
 
-        public RecRefData(RecordRef type, RecRefData inner) {
+        public RecRefData(EntityRef type, RecRefData inner) {
             this.inner = inner;
             this.type = type;
         }
 
         @AttName(".type")
-        public RecordRef getType() {
+        public EntityRef getType() {
             return type;
         }
     }

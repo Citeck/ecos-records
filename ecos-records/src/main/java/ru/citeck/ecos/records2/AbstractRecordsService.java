@@ -8,6 +8,7 @@ import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public abstract class AbstractRecordsService implements RecordsService {
     /* QUERY */
 
     @Override
-    public Optional<RecordRef> queryRecord(RecordsQuery query) {
+    public Optional<EntityRef> queryRecord(RecordsQuery query) {
         return queryRecords(query).getRecords().stream().findFirst();
     }
 
@@ -51,24 +52,24 @@ public abstract class AbstractRecordsService implements RecordsService {
     /* ATTRIBUTES */
 
     @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+    public RecordsResult<RecordMeta> getAttributes(Collection<EntityRef> records,
                                                    Collection<String> attributes) {
 
         return getAttributes(records, toAttributesMap(attributes));
     }
 
     @Override
-    public RecordMeta getAttributes(RecordRef record, Collection<String> attributes) {
+    public RecordMeta getAttributes(EntityRef record, Collection<String> attributes) {
         return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
     }
 
     @Override
-    public RecordMeta getAttributes(RecordRef record, Map<String, String> attributes) {
+    public RecordMeta getAttributes(EntityRef record, Map<String, String> attributes) {
         return extractOne(getAttributes(Collections.singletonList(record), attributes), record);
     }
 
     @Override
-    public RecordMeta getRawAttributes(RecordRef record, Map<String, String> attributes) {
+    public RecordMeta getRawAttributes(EntityRef record, Map<String, String> attributes) {
         return extractOne(getRawAttributes(Collections.singletonList(record), attributes), record);
     }
 
@@ -91,7 +92,7 @@ public abstract class AbstractRecordsService implements RecordsService {
 
     /* UTILS */
 
-    private RecordMeta extractOne(RecordsResult<RecordMeta> values, RecordRef record) {
+    private RecordMeta extractOne(RecordsResult<RecordMeta> values, EntityRef record) {
 
         if (values.getRecords().isEmpty()) {
             return new RecordMeta(record);

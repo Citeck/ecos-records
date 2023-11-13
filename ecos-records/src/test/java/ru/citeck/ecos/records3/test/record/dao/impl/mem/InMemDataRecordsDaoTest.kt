@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.dao.impl.mem
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -86,7 +85,7 @@ class InMemDataRecordsDaoTest {
         records.register(InMemDataRecordsDao(ID))
 
         val rec0 = records.mutate(
-            RecordRef.create(ID, ""),
+            EntityRef.create(ID, ""),
             ObjectData.create(
                 """
             {
@@ -97,7 +96,7 @@ class InMemDataRecordsDaoTest {
             )
         )
 
-        assertThat(rec0.id).isNotBlank
+        assertThat(rec0.getLocalId()).isNotBlank
         assertThat(records.getAtt(rec0, "field0").asText()).isEqualTo("value0")
         assertThat(records.getAtt(rec0, "field1").asText()).isEqualTo("value1")
 
@@ -113,7 +112,7 @@ class InMemDataRecordsDaoTest {
         val recordsToCreate = Array(10) { idx ->
             val data = ObjectData.create()
                 .set("idx", idx)
-            RecordAtts(RecordRef.create(ID, ""), data)
+            RecordAtts(EntityRef.create(ID, ""), data)
         }.toList()
 
         val recs = records.mutate(recordsToCreate)
@@ -201,7 +200,7 @@ class InMemDataRecordsDaoTest {
             withSourceId("test")
         }
         fun queryImpl(query: RecordsQuery): List<Int> {
-            return records.query(query).getRecords().map { it.id.toInt() }
+            return records.query(query).getRecords().map { it.getLocalId().toInt() }
         }
 
         val queryRes0 = queryImpl(query.copy { withQuery(Predicates.eq("num", 5)) })

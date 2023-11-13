@@ -8,8 +8,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordConstants;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.model.*;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;

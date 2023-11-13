@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.record.atts.value.factory
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -11,6 +10,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.concurrent.atomic.AtomicInteger
 
 class RecordRefCacheTest {
@@ -122,11 +122,11 @@ class RecordRefCacheTest {
         records.register(object : RecordsQueryDao, RecordAttsDao {
             override fun getId() = "test"
             override fun getRecordAtts(recordId: String): Any {
-                return RecordRef.create("refs", recordId)
+                return EntityRef.create("refs", recordId)
             }
             override fun queryRecords(recsQuery: RecordsQuery): Any {
                 return listOf("ref0", "ref1", "ref2").map {
-                    mapOf("ref" to RecordRef.create("refs", it))
+                    mapOf("ref" to EntityRef.create("refs", it))
                 }
             }
         })
@@ -201,11 +201,11 @@ class RecordRefCacheTest {
         records.register(object : RecordsQueryDao, RecordAttsDao {
             override fun getId() = "test"
             override fun getRecordAtts(recordId: String): Any {
-                return RecordRef.create("refs", recordId)
+                return EntityRef.create("refs", recordId)
             }
             override fun queryRecords(recsQuery: RecordsQuery): Any {
                 return listOf("ref0", "ref1", "ref2").map {
-                    mapOf("ref" to RecordRef.create("refs", it))
+                    mapOf("ref" to EntityRef.create("refs", it))
                 }
             }
         })
@@ -234,7 +234,7 @@ class RecordRefCacheTest {
         override fun getAtt(name: String): Any {
             attCounters.computeIfAbsent(name) { AtomicInteger() }.incrementAndGet()
             if (name.startsWith("ref")) {
-                return RecordRef.create("refs", name)
+                return EntityRef.create("refs", name)
             }
             if (name.startsWith("str")) {
                 return name

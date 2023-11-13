@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
@@ -42,12 +42,12 @@ class TxnActionsTest {
         val actionData = TxnActionData("abc")
 
         val mutate = { source: RecordsServiceFactory, target: RecordsServiceFactory, nonErrorRecords: Int, error: Boolean ->
-            val records = mutableListOf<RecordRef>()
+            val records = mutableListOf<EntityRef>()
             repeat(nonErrorRecords) {
-                records.add(RecordRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "123"))
+                records.add(EntityRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "123"))
             }
             if (error) {
-                records.add(RecordRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "error"))
+                records.add(EntityRef.create(target.webappProps.appName, MUT_DAO_SOURCE_ID, "error"))
             }
             source.recordsServiceV1.mutate(records.map { RecordAtts(it, ObjectData.create(actionData)) })
         }
@@ -87,7 +87,7 @@ class TxnActionsTest {
         services0.recordsServiceV1.register(testRecordsDao)
 
         // simple test to verify that remote records is accessible
-        val ref0 = RecordRef.create("app0", "test", "rec0")
+        val ref0 = EntityRef.create("app0", "test", "rec0")
         val testAtt = services1.recordsServiceV1.getAtt(ref0, "key")
         assertThat(testAtt.asText()).isEqualTo("value")
 
@@ -95,8 +95,8 @@ class TxnActionsTest {
 
         // mutate without transaction. Action should be executed immediately
 
-        val ref1App0 = RecordRef.create("app0", MUT_DAO_SOURCE_ID, "rec1")
-        val ref2App0 = RecordRef.create("app0", MUT_DAO_SOURCE_ID, "rec2")
+        val ref1App0 = EntityRef.create("app0", MUT_DAO_SOURCE_ID, "rec1")
+        val ref2App0 = EntityRef.create("app0", MUT_DAO_SOURCE_ID, "rec2")
         services1.recordsServiceV1.mutate(ref1App0, ObjectData.create(actionData))
 
         assertThat(actions0).hasSize(1)

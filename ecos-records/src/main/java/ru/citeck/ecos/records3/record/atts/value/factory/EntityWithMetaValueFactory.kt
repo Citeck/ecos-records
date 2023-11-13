@@ -3,10 +3,10 @@ package ru.citeck.ecos.records3.record.atts.value.factory
 import ru.citeck.ecos.commons.data.entity.EntityMeta
 import ru.citeck.ecos.commons.data.entity.EntityWithMeta
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
 import ru.citeck.ecos.records3.record.atts.value.impl.AttValueDelegate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class EntityWithMetaValueFactory : AttValueFactory<EntityWithMeta<*>> {
 
@@ -32,9 +32,9 @@ class EntityWithMetaValueFactory : AttValueFactory<EntityWithMeta<*>> {
         override fun getAtt(name: String): Any? {
             return when (name) {
                 RecordConstants.ATT_MODIFIED -> meta.modified
-                RecordConstants.ATT_MODIFIER -> RecordRef.create("emodel", "person", meta.modifier)
+                RecordConstants.ATT_MODIFIER -> EntityRef.create("emodel", "person", meta.modifier)
                 RecordConstants.ATT_CREATED -> meta.created
-                RecordConstants.ATT_CREATOR -> RecordRef.create("emodel", "person", meta.creator)
+                RecordConstants.ATT_CREATOR -> EntityRef.create("emodel", "person", meta.creator)
                 else -> super.getAtt(name)
             }
         }

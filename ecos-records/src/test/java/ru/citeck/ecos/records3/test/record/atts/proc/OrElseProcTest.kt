@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class OrElseProcTest {
 
@@ -59,7 +59,7 @@ class OrElseProcTest {
                 .build()
         )
 
-        val ref = RecordRef.create("test", "test")
+        val ref = EntityRef.create("test", "test")
 
         val res: DataValue = records.getAtt(ref, "attributes[]{value:id,label:name}")
         assertThat(res).isEqualTo(

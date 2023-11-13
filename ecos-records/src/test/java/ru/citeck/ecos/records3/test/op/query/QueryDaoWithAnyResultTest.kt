@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.test.op.query
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
 class QueryDaoWithAnyResultTest {
@@ -33,9 +33,9 @@ class QueryDaoWithAnyResultTest {
                 .build()
         )
         assertEquals(3, listRes.getRecords().size)
-        assertEquals(RecordRef.valueOf("test@one"), listRes.getRecords()[0])
-        assertEquals(RecordRef.valueOf("test@two"), listRes.getRecords()[1])
-        assertEquals(RecordRef.valueOf("test@three"), listRes.getRecords()[2])
+        assertEquals(EntityRef.valueOf("test@one"), listRes.getRecords()[0])
+        assertEquals(EntityRef.valueOf("test@two"), listRes.getRecords()[1])
+        assertEquals(EntityRef.valueOf("test@three"), listRes.getRecords()[2])
         assertEquals(3, listRes.getTotalCount())
 
         val setRes = records.query(
@@ -45,9 +45,9 @@ class QueryDaoWithAnyResultTest {
                 .build()
         )
         assertEquals(3, setRes.getRecords().size)
-        assertEquals(RecordRef.valueOf("test@four"), setRes.getRecords()[0])
-        assertEquals(RecordRef.valueOf("test@five"), setRes.getRecords()[1])
-        assertEquals(RecordRef.valueOf("test@six"), setRes.getRecords()[2])
+        assertEquals(EntityRef.valueOf("test@four"), setRes.getRecords()[0])
+        assertEquals(EntityRef.valueOf("test@five"), setRes.getRecords()[1])
+        assertEquals(EntityRef.valueOf("test@six"), setRes.getRecords()[2])
         assertEquals(3, setRes.getTotalCount())
 
         val mapRes = records.query(

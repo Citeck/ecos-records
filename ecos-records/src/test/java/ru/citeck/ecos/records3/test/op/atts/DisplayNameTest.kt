@@ -3,11 +3,11 @@ package ru.citeck.ecos.records3.test.op.atts
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -79,6 +79,6 @@ class DisplayNameTest {
     )
 
     class DtoWithLinkToDtoMLDispClass(
-        val link: RecordRef = RecordRef.valueOf("test@test")
+        val link: EntityRef = EntityRef.valueOf("test@test")
     )
 }

@@ -6,13 +6,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records2.meta.RecordsTemplateService;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.Locale;
@@ -51,7 +51,7 @@ public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAt
             .withValue(new Locale("ru"), "Договор №100 для Поставщик №1")
             .withValue(new Locale("en"), "Contract №100 for Поставщик №1");
 
-        MLText resolved = recordsTemplateService.resolve(text, RecordRef.create(ID, "rec"));
+        MLText resolved = recordsTemplateService.resolve(text, EntityRef.create(ID, "rec"));
         assertEquals(expected, resolved);
     }
 

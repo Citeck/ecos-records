@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -13,6 +12,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.test.testutils.MockAppsFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 class ContextAttsTest {
@@ -86,7 +86,7 @@ class ContextAttsTest {
             }
         }
 
-        listOf(RecordRef.EMPTY, NullAttValue.INSTANCE, null).forEach { record ->
+        listOf(EntityRef.EMPTY, NullAttValue.INSTANCE, null).forEach { record ->
             try {
                 testWithCtxValue.invoke(record, false)
                 testWithCtxValue.invoke(record, true)
@@ -110,8 +110,8 @@ class ContextAttsTest {
         val localApp = mockAppsFactory.createApp(LOCAL_APP_NAME)
         val remoteApp = mockAppsFactory.createApp(REMOTE_APP_NAME)
 
-        val localRecord = RecordRef.create(LOCAL_APP_NAME, MetaRecordsDao.ID, "")
-        val remoteRecord = RecordRef.create(REMOTE_APP_NAME, MetaRecordsDao.ID, "")
+        val localRecord = EntityRef.create(LOCAL_APP_NAME, MetaRecordsDao.ID, "")
+        val remoteRecord = EntityRef.create(REMOTE_APP_NAME, MetaRecordsDao.ID, "")
 
         val ctxAttValue = "ctx-att-value"
         RequestContext.doWithAtts(mapOf("ctxAtt" to ctxAttValue)) { _ ->
@@ -174,7 +174,7 @@ class ContextAttsTest {
             }
         })
 
-        val recordRefsToGetAtts = Array(recsCount) { RecordRef.create("test", it.toString()) }.toList()
+        val recordRefsToGetAtts = Array(recsCount) { EntityRef.create("test", it.toString()) }.toList()
 
         val atts2 = records.getAtts(recordRefsToGetAtts, listOf("field"))
 

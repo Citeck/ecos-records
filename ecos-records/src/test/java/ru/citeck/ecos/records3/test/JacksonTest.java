@@ -1,7 +1,12 @@
 package ru.citeck.ecos.records3.test;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -9,11 +14,11 @@ import lombok.Data;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.Consistency;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -34,7 +39,7 @@ public class JacksonTest {
             .withSourceId("sourceId")
             .withLanguage("language")
             .withGroupBy(Arrays.asList("one", "two"))
-            .withAfterId(RecordRef.valueOf("aaa/bbb@123"))
+            .withAfterId(EntityRef.valueOf("aaa/bbb@123"))
             .withSkipCount(55)
             .withQuery(new SomeQuery())
             .withConsistency(Consistency.TRANSACTIONAL)
@@ -44,6 +49,9 @@ public class JacksonTest {
             ).build();
 
         ObjectMapper mapper = new ObjectMapper();
+        SimpleModule testModule = new SimpleModule("test");
+        testModule.addDeserializer(EntityRef.class, new EntityRefDeserializer());
+        mapper.registerModule(testModule);
 
         String mJsonString = mapper.writeValueAsString(query);
         String eJsonString = Json.getMapper().toString(query);
@@ -125,5 +133,20 @@ public class JacksonTest {
     public static class WithJsonField {
 
         private JsonNode field;
+    }
+
+    class EntityRefDeserializer extends StdDeserializer<EntityRef> {
+
+        public EntityRefDeserializer() {
+            super(EntityRef.class);
+        }
+        @Override
+        public EntityRef deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            if (JsonToken.VALUE_STRING.equals(p.getCurrentToken())) {
+                return EntityRef.valueOf(p.getText());
+            } else {
+                throw new RuntimeException("Error");
+            }
+        }
     }
 }

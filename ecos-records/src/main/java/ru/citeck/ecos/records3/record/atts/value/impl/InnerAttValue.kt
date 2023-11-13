@@ -5,11 +5,11 @@ import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
 import ecos.com.fasterxml.jackson210.databind.node.TextNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.HasListView
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValueProxy {
@@ -116,7 +116,7 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValu
         return getScalar(value, ScalarType.BIN.schema) { it }
     }
 
-    override fun getType(): RecordRef {
+    override fun getType(): EntityRef {
         val type = if (value.has("_type")) {
             value.path("_type")
         } else {
@@ -124,8 +124,8 @@ class InnerAttValue(value: Any?) : AttValue, HasListView<InnerAttValue>, AttValu
         }
         val res = type.path(ScalarType.ID.schema)
         if (res.isNull || res.isMissingNode) {
-            return RecordRef.EMPTY
+            return EntityRef.EMPTY
         }
-        return RecordRef.valueOf(res.asText())
+        return EntityRef.valueOf(res.asText())
     }
 }

@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -12,6 +11,7 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.MutateProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordsDaoProxyMutateTest {
 
@@ -41,7 +41,7 @@ class RecordsDaoProxyMutateTest {
         })
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID))
 
-        val proxyRef = RecordRef.create(PROXY_ID, "test")
+        val proxyRef = EntityRef.create(PROXY_ID, "test")
         val mutRes = records.mutate(
             proxyRef,
             mapOf(
@@ -75,16 +75,16 @@ class RecordsDaoProxyMutateTest {
                         }
                     }
                     override fun mutatePostProcess(
-                        records: List<RecordRef>,
+                        records: List<EntityRef>,
                         context: ProxyProcContext
-                    ): List<RecordRef> {
+                    ): List<EntityRef> {
                         return records
                     }
                 }
             )
         )
 
-        val proxyRef2 = RecordRef.create(PROXY_ID, "test2")
+        val proxyRef2 = EntityRef.create(PROXY_ID, "test2")
         val mutRes2 = records.mutate(
             proxyRef2,
             mapOf(
@@ -104,6 +104,6 @@ class RecordsDaoProxyMutateTest {
 
         records.delete(proxyRef)
         assertThat(recordsMap).hasSize(1)
-        assertThat(recordsMap.keys.first()).isEqualTo(proxyRef2.id)
+        assertThat(recordsMap.keys.first()).isEqualTo(proxyRef2.getLocalId())
     }
 }

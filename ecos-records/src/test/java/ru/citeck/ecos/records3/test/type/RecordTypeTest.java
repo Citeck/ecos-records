@@ -6,13 +6,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,8 +42,8 @@ public class RecordTypeTest extends AbstractRecordsDao implements RecordsAttsDao
     @Test
     void test() {
 
-        RecordRef recRef = RecordRef.create(ID, TestRecord.class.getName());
-        RecordRef typeRef = RecordRef.create(ID, TypeInfo.class.getName());
+        EntityRef recRef = EntityRef.create(ID, TestRecord.class.getName());
+        EntityRef typeRef = EntityRef.create(ID, TypeInfo.class.getName());
 
         assertEquals(DataValue.createStr(typeRef.toString()), recordsService.getAtt(recRef, "_type?id"));
         assertEquals(DataValue.createStr(typeRef.toString()), recordsService.getAtt(recRef, ".type{id}"));
@@ -65,7 +65,7 @@ public class RecordTypeTest extends AbstractRecordsDao implements RecordsAttsDao
     @Data
     public static class TestRecord {
         @AttName(".type")
-        private RecordRef typeRef = RecordRef.create(ID, TypeInfo.class.getName());
+        private EntityRef typeRef = EntityRef.create(ID, TypeInfo.class.getName());
     }
 
     @Data

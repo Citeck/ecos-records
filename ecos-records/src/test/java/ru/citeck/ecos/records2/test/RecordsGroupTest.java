@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.RecordsServiceImpl;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -19,6 +18,7 @@ import ru.citeck.ecos.records2.request.query.lang.DistinctQuery;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.io.IOException;
 import java.util.*;
@@ -83,10 +83,10 @@ class RecordsGroupTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryLocalRecords(@NotNull RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryLocalRecords(@NotNull RecordsQuery query) {
 
-        RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
-        result.setRecords(Collections.singletonList(RecordRef.valueOf("One")));
+        RecordsQueryResult<EntityRef> result = new RecordsQueryResult<>();
+        result.setRecords(Collections.singletonList(EntityRef.valueOf("One")));
         result.setHasMore(false);
 
         return result;

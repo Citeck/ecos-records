@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -12,6 +11,7 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.MutateProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordsDaoProxyProcTest {
 
@@ -21,8 +21,8 @@ class RecordsDaoProxyProcTest {
         val proxySourceId = "proxy"
         val targetSourceId = "target"
 
-        val mainRecRef = RecordRef.create(targetSourceId, "main")
-        val childRecRef = RecordRef.create(targetSourceId, "child")
+        val mainRecRef = EntityRef.create(targetSourceId, "main")
+        val childRecRef = EntityRef.create(targetSourceId, "child")
         val proxyMainRecRef = mainRecRef.withSourceId(proxySourceId)
         val proxyChildRecRef = childRecRef.withSourceId(proxySourceId)
 
@@ -57,7 +57,7 @@ class RecordsDaoProxyProcTest {
                     }
                     return atts
                 }
-                override fun mutatePostProcess(records: List<RecordRef>, context: ProxyProcContext): List<RecordRef> {
+                override fun mutatePostProcess(records: List<EntityRef>, context: ProxyProcContext): List<EntityRef> {
                     return records
                 }
             }
@@ -65,7 +65,7 @@ class RecordsDaoProxyProcTest {
         records.register(proxyDao)
 
         val mainRecordAtts = RecordAtts(
-            RecordRef.create(proxySourceId, ""),
+            EntityRef.create(proxySourceId, ""),
             ObjectData.create(
                 """
             {
@@ -78,7 +78,7 @@ class RecordsDaoProxyProcTest {
         )
 
         val childRecordAtts = RecordAtts(
-            RecordRef.create(proxySourceId, ""),
+            EntityRef.create(proxySourceId, ""),
             ObjectData.create(
                 """
             {

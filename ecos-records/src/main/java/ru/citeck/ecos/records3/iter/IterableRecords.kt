@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.iter
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -13,6 +14,8 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -24,6 +27,16 @@ class IterableRecords(
 
     companion object {
         private const val SORT_BY_ATT_ALIAS = "__sort_by_att__"
+
+        const val STATE_BASE_CURRENT_IDX = "currentIdx"
+        const val STATE_BASE_RECORDS = "records"
+        const val STATE_BASE_PROCESSED_COUNT = "processedCount"
+        const val STATE_BASE_TOTAL_COUNT = "totalCount"
+
+        const val STATE_IT_BY_ATT_SKIP_COUNT = "skipCount"
+        const val STATE_IT_BY_ATT_LAST_VALUE = "lastValue"
+
+        const val STATE_BASE_LAST_ID = "lastId"
 
         private val log = KotlinLogging.logger {}
     }
@@ -43,7 +56,8 @@ class IterableRecords(
 
     override fun iterator(): RecordsIterator<RecordAtts> {
         return when (config.pageStrategy) {
-            PageStrategy.CREATED -> SortByRecordsIterator(RecordConstants.ATT_CREATED)
+            PageStrategy.CREATED -> ItByAttRecordsIterator(RecordConstants.ATT_CREATED)
+            PageStrategy.MODIFIED -> ItByAttRecordsIterator(RecordConstants.ATT_MODIFIED)
             PageStrategy.AFTER_ID -> AfterIdRecordsIterator()
         }
     }
@@ -73,12 +87,11 @@ class IterableRecords(
         }
     }
 
-    private inner class SortByRecordsIterator(attribute: String) : AbstractIterator() {
+    private inner class ItByAttRecordsIterator(attribute: String) : AbstractIterator() {
 
         private val pageSort: SortBy
         private var skipCount = 0
         private var lastValue: DataValue = DataValue.NULL
-        private var lastRecordRef = RecordRef.EMPTY
 
         private val basePredicate = baseQuery.getQuery(Predicate::class.java)
 
@@ -99,6 +112,18 @@ class IterableRecords(
             val attsToLoad = HashMap(config.attsToLoad)
             attsToLoad[SORT_BY_ATT_ALIAS] = pageSort.attribute + ScalarType.STR.schema
             this.attsToLoad = attsToLoad
+        }
+
+        override fun getState(full: Boolean): ObjectData {
+            return super.getState(full)
+                .set(STATE_IT_BY_ATT_LAST_VALUE, lastValue)
+                .set(STATE_IT_BY_ATT_SKIP_COUNT, skipCount)
+        }
+
+        override fun setState(state: ObjectData) {
+            super.setState(state)
+            skipCount = state.get(STATE_IT_BY_ATT_SKIP_COUNT, 0)
+            lastValue = state[STATE_IT_BY_ATT_LAST_VALUE]
         }
 
         override fun takeNextRecords(): Page {
@@ -124,9 +149,9 @@ class IterableRecords(
             val records = page.records
 
             if (records.isNotEmpty()) {
-                if (records.any { it.getId() == lastRecordRef }) {
+                if (records.any { it.getId() == lastId }) {
                     log.error {
-                        "records query returned the same record: '$lastRecordRef'. " +
+                        "records query returned the same record: '$lastId'. " +
                             "lastValue: $lastValue " +
                             "query: $query " +
                             "attsToLoad: $attsToLoad " +
@@ -160,14 +185,17 @@ class IterableRecords(
                     }
                 }
                 this.lastValue = lastValue
-                lastRecordRef = lastRecord.getId()
 
                 if (lastValue.isNull() || lastValue.isTextual() && lastValue.asText().isEmpty()) {
                     log.warn {
                         "Last value of attribute '${pageSort.attribute}' is null or empty. " +
-                            "Record: $lastRecordRef. Iteration will be stopped. Query: $query"
+                            "Record: ${lastRecord.getId()}. Iteration will be stopped. Query: $query"
                     }
                     return Page(emptyList(), 0)
+                } else {
+                    page.records.forEach {
+                        it.getAtts().remove(SORT_BY_ATT_ALIAS)
+                    }
                 }
             }
             return page
@@ -176,12 +204,10 @@ class IterableRecords(
 
     private inner class AfterIdRecordsIterator : AbstractIterator() {
 
-        private var lastId = baseQuery.page.afterId
-
         override fun takeNextRecords(): Page {
 
             val query = baseQuery.copy()
-                .withAfterId(lastId)
+                .withAfterId(RecordRef.valueOf(lastId))
                 .withMaxItems(config.pageSize)
                 .build()
 
@@ -191,9 +217,7 @@ class IterableRecords(
             if (records.isNotEmpty()) {
                 val lastRecord = records.last()
                 val newLastId = lastRecord.getId()
-                if (newLastId != lastId) {
-                    lastId = newLastId
-                } else {
+                if (newLastId == lastId) {
                     return Page(emptyList(), 0)
                 }
             }
@@ -208,6 +232,31 @@ class IterableRecords(
         private var processedCount = 0L
         private var totalCount = -1L
 
+        protected var lastId: EntityRef = EntityRef.EMPTY
+
+        override fun getState(full: Boolean): ObjectData {
+
+            val state = ObjectData.create()
+                .set(STATE_BASE_PROCESSED_COUNT, processedCount)
+                .set(STATE_BASE_TOTAL_COUNT, totalCount)
+                .set(STATE_BASE_LAST_ID, lastId)
+
+            if (full) {
+                state[STATE_BASE_RECORDS] = records
+                state[STATE_BASE_CURRENT_IDX] = currentIdx
+            }
+
+            return state
+        }
+
+        override fun setState(state: ObjectData) {
+            currentIdx = state.get(STATE_BASE_CURRENT_IDX, 0)
+            records = state[STATE_BASE_RECORDS].toList(RecordAtts::class.java)
+            processedCount = state.get(STATE_BASE_PROCESSED_COUNT, 0L)
+            totalCount = state.get(STATE_BASE_TOTAL_COUNT, -1L)
+            lastId = state[STATE_BASE_LAST_ID].asText().toEntityRef()
+        }
+
         protected abstract fun takeNextRecords(): Page
 
         override fun hasNext(): Boolean {
@@ -215,13 +264,16 @@ class IterableRecords(
             if (maxItems in 1..processedCount) {
                 return false
             }
-            if (records.isEmpty() || currentIdx >= records.size && currentIdx > 0) {
+            if (records.isEmpty() || currentIdx >= records.size) {
                 val nextPage = takeNextRecords()
                 records = nextPage.records
                 if (totalCount == -1L) {
                     totalCount = nextPage.totalCount
                 }
                 currentIdx = 0
+                if (records.isNotEmpty()) {
+                    lastId = records.last().getId()
+                }
             }
             return currentIdx < records.size
         }

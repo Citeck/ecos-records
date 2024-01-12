@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>3.61.2</revision>
+        <revision>3.61.3</revision>
 
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
 

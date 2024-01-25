@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.predicate.comparator
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator
@@ -35,6 +36,16 @@ class PredicateComparatorTest {
         testWithValueConv("time:toString-toMillis", { it.toString() }, { it.toEpochMilli() })
         testWithValueConv("time:toMillis-toMillis", { it.toEpochMilli() }, { it.toEpochMilli() })
         testWithValueConv("time:toMillis-toString", { it.toEpochMilli() }, { it.toString() })
+
+        val dateWithNano = DataValue.createStr("2022-01-02T11:22:33.123456Z")
+        val dateWithMillis = DataValue.createStr("2022-01-02T11:22:33.123Z")
+
+        assertThat(comparator.isGreaterThan(dateWithNano, dateWithMillis, false)).isTrue
+        assertThat(comparator.isGreaterThan(dateWithNano, dateWithMillis, true)).isTrue
+        assertThat(comparator.isLessThan(dateWithNano, dateWithMillis, true)).isFalse
+        assertThat(comparator.isLessThan(dateWithMillis, dateWithNano, true)).isTrue
+        assertThat(comparator.isLessThan(dateWithMillis, dateWithNano, false)).isTrue
+        assertThat(comparator.isEquals(dateWithMillis, dateWithNano)).isFalse
     }
 
     @Test

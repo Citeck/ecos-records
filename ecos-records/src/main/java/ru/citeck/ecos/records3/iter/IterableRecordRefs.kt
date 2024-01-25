@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records3.iter
 
+import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -37,6 +39,8 @@ class IterableRecordRefs(
 
     private class Iter(val impl: RecordsIterator<RecordAtts>) : RecordsIterator<EntityRef> {
 
+        override fun getState(full: Boolean): ObjectData = impl.getState(full)
+        override fun setState(state: ObjectData) = impl.setState(state)
         override fun hasNext() = impl.hasNext()
         override fun next() = impl.next().getId()
         override fun getProcessedCount() = impl.getProcessedCount()

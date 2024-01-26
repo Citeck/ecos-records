@@ -21,6 +21,7 @@ import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
+import kotlin.system.measureTimeMillis
 
 open class RecordsServiceImpl(
     private val services: RecordsServiceFactory
@@ -137,23 +138,32 @@ open class RecordsServiceImpl(
         rawAtts: Boolean
     ): List<RecordAtts> {
 
-        return RequestContext.doWithCtx(services) {
-            if (records.isEmpty()) {
-                emptyList()
-            } else {
-                val context = RequestContext.getCurrentNotNull()
-                if (context.ctxData.readOnly) {
-                    error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+        val mutateResult: List<RecordAtts>
+        val time = measureTimeMillis {
+            mutateResult = RequestContext.doWithCtx(services) {
+                if (records.isEmpty()) {
+                    emptyList()
+                } else {
+                    val context = RequestContext.getCurrentNotNull()
+                    if (context.ctxData.readOnly) {
+                        error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+                    }
+                    val txnChangedRecords = context.getTxnChangedRecords()
+                    val sourceIdMapping = context.ctxData.sourceIdMapping
+                    val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
+
+                    addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
+
+                    result.map { it.withDefaultAppName(currentAppName) }
                 }
-                val txnChangedRecords = context.getTxnChangedRecords()
-                val sourceIdMapping = context.ctxData.sourceIdMapping
-                val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
-
-                addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
-
-                result.map { it.withDefaultAppName(currentAppName) }
             }
         }
+
+        log.trace {
+            "Mutate records: $records in $time ms"
+        }
+
+        return mutateResult
     }
 
     private inline fun <T> addTxnChangedRecords(

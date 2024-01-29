@@ -160,7 +160,7 @@ open class RecordsServiceImpl(
         }
 
         log.trace {
-            "Mutate records: $records in $time ms"
+            "Mutate records: ${records.map { it.withoutSensitiveData() }} in $time ms"
         }
 
         return mutateResult

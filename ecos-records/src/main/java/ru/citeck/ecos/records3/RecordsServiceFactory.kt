@@ -139,10 +139,7 @@ open class RecordsServiceFactory {
         if (auditInterceptor.isValid()) {
             resolver.addInterceptor(auditInterceptor)
         }
-        val observableInterceptor = ObservableRecordsInterceptor(this)
-        if (observableInterceptor.isValid()) {
-            resolver.addInterceptor(observableInterceptor)
-        }
+        resolver.addInterceptor(ObservableRecordsInterceptor(this))
         resolver
     }
 

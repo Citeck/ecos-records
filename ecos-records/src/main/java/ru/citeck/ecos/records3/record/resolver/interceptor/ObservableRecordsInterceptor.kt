@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.resolver.interceptor
 
-import io.micrometer.observation.Observation
-import ru.citeck.ecos.micrometer.observeKt
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -21,11 +21,8 @@ open class ObservableRecordsInterceptor(services: RecordsServiceFactory) : Local
         private const val RECORD_IDS = "recordIds"
     }
 
-    private val registry = services.micrometerContext.getObservationRegistry()
-
-    open fun isValid(): Boolean {
-        return !registry.isNoop
-    }
+    private val context = services.micrometerContext
+    private val attSchemaWriter = services.attSchemaWriter
 
     override fun queryRecords(
         queryArg: RecordsQuery,
@@ -34,10 +31,10 @@ open class ObservableRecordsInterceptor(services: RecordsServiceFactory) : Local
         chain: QueryRecordsInterceptorsChain
     ): RecsQueryRes<RecordAtts> {
 
-        return Observation.createNotStarted("ecos.records.query", registry)
+        return context.createObservation("ecos.records.query")
             .lowCardinalityKeyValue(SOURCE_ID, queryArg.sourceId)
-            .highCardinalityKeyValue(ATTS_TO_LOAD, formatAttributes(attributes))
-            .observeKt { chain.invoke(queryArg, attributes, rawAtts) }
+            .highCardinalityKeyValue(ATTS_TO_LOAD) { formatAttsToLoad(attributes) }
+            .observe { chain.invoke(queryArg, attributes, rawAtts) }
     }
 
     override fun getRecordsAtts(
@@ -48,22 +45,26 @@ open class ObservableRecordsInterceptor(services: RecordsServiceFactory) : Local
         chain: GetRecordsAttsInterceptorsChain
     ): List<RecordAtts> {
 
-        return Observation.createNotStarted("ecos.records.get-atts", registry)
-            .lowCardinalityKeyValue(SOURCE_ID, sourceId)
-            .highCardinalityKeyValue(RECORD_IDS, recordIds.joinToString(","))
-            .highCardinalityKeyValue(ATTS_TO_LOAD, formatAttributes(attributes))
-            .observeKt { chain.invoke(sourceId, recordIds, attributes, rawAtts) }
+        return context.createObservation("ecos.records.get-atts")
+            .lowCardinalityKeyValue(SOURCE_ID) { sourceId }
+            .highCardinalityKeyValues {
+                listOf(
+                    RECORD_IDS to recordIds.joinToString(","),
+                    ATTS_TO_LOAD to formatAttsToLoad(attributes)
+                )
+            }
+            .observe { chain.invoke(sourceId, recordIds, attributes, rawAtts) }
     }
 
-    private fun formatAttributes(attributes: List<SchemaAtt>): String {
-        val atts = StringBuilder()
+    private fun formatAttsToLoad(attributes: List<SchemaAtt>): String {
+        if (attributes.isEmpty()) {
+            return "[]"
+        }
+        val resArr = DataValue.createArr()
         attributes.forEach {
-            atts.append(it.name).append(",")
+            resArr.add(DataValue.createStr(attSchemaWriter.write(it)))
         }
-        if (atts.isNotEmpty()) {
-            atts.setLength(atts.length - 1)
-        }
-        return atts.toString()
+        return resArr.toString()
     }
 
     override fun getValuesAtts(
@@ -83,21 +84,27 @@ open class ObservableRecordsInterceptor(services: RecordsServiceFactory) : Local
         chain: MutateRecordInterceptorsChain
     ): RecordAtts {
 
-        val atts = StringBuilder()
-        val attsIt = record.getAtts().fieldNames()
-        while (attsIt.hasNext()) {
-            atts.append(attsIt.next()).append(",")
-        }
-        if (atts.isNotEmpty()) {
-            atts.setLength(atts.length - 1)
-        }
-
-        return Observation.createNotStarted("ecos.records.mutate", registry)
+        return context.createObservation("ecos.records.mutate")
             .lowCardinalityKeyValue(SOURCE_ID, sourceId)
-            .highCardinalityKeyValue(RECORD_ID, record.id)
-            .highCardinalityKeyValue(RECORD_ATTS, atts.toString())
-            .highCardinalityKeyValue(ATTS_TO_LOAD, formatAttributes(attsToLoad))
-            .observeKt { chain.invoke(sourceId, record, attsToLoad, rawAtts) }
+            .highCardinalityKeyValues {
+                listOf(
+                    RECORD_ID to record.id,
+                    RECORD_ATTS to formatMutatedRecordAtts(record.getAtts()),
+                    ATTS_TO_LOAD to formatAttsToLoad(attsToLoad)
+                )
+            }.observe { chain.invoke(sourceId, record, attsToLoad, rawAtts) }
+    }
+
+    private fun formatMutatedRecordAtts(atts: ObjectData): String {
+        val attsStr = StringBuilder()
+        val attsIt = atts.fieldNames()
+        while (attsIt.hasNext()) {
+            attsStr.append(attsIt.next()).append(",")
+        }
+        if (attsStr.isNotEmpty()) {
+            attsStr.setLength(attsStr.length - 1)
+        }
+        return attsStr.toString()
     }
 
     override fun deleteRecords(
@@ -106,9 +113,9 @@ open class ObservableRecordsInterceptor(services: RecordsServiceFactory) : Local
         chain: DeleteRecordsInterceptorsChain
     ): List<DelStatus> {
 
-        return Observation.createNotStarted("ecos.records.delete", registry)
+        return context.createObservation("ecos.records.delete")
             .lowCardinalityKeyValue(SOURCE_ID, sourceId)
-            .highCardinalityKeyValue(RECORD_IDS, recordIds.joinToString(","))
-            .observeKt { chain.invoke(sourceId, recordIds) }
+            .highCardinalityKeyValue(RECORD_IDS) { recordIds.joinToString(",") }
+            .observe { chain.invoke(sourceId, recordIds) }
     }
 }

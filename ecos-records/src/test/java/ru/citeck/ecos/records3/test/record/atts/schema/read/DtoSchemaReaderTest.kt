@@ -3,9 +3,11 @@ package ru.citeck.ecos.records3.test.record.atts.schema.read
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class DtoSchemaReaderTest {
 
@@ -24,6 +26,10 @@ class DtoSchemaReaderTest {
         // TODO: fix it
         // assertThat(schemaByAlias["annotatedArray3"].toString()).isEqualTo("array[]?id")
         assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw")
+
+        val schema2 = schemaReader.read(RefsDto::class.java).associateBy { it.getAliasForValue() }
+        assertThat(schema2["legacyRecordRef"].toString()).isEqualTo("legacyRecordRef?id")
+        assertThat(schema2["entityRef"].toString()).isEqualTo("entityRef?id")
     }
 
     @Test
@@ -65,5 +71,10 @@ class DtoSchemaReaderTest {
         val annotatedArray3: List<DataValue>,
         @AttName("array")
         val single: DataValue
+    )
+
+    class RefsDto(
+        val legacyRecordRef: RecordRef,
+        val entityRef: EntityRef
     )
 }

@@ -34,7 +34,6 @@ import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.primaryConstructor
 
@@ -182,11 +181,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
-            val scalarField = if (EntityRef::class.java.isAssignableFrom(propType)) {
-                REF_SCALAR_FIELD
-            } else {
-                scalars[propType]
-            }
 
             getAttributeSchema(
                 attsClass,
@@ -194,7 +188,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 writeMethod,
                 descriptor.name,
                 isMultiple,
-                scalarField,
+                getScalarField(propType),
                 propType,
                 visited
             )?.let { attributes.add(it) }
@@ -233,26 +227,34 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 argType = arg.type.arguments[0].type?.classifier as? KClass<*>
                     ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
             }
-
             val javaClass = argType.java
-            var scalar = scalars[javaClass]
-            if (scalar == null && argType.isSubclassOf(Map::class)) {
-                scalar = scalars[Map::class.java]
-            }
-
             getAttributeSchema(
                 attsClass,
                 arg,
                 null,
                 paramName,
                 multiple,
-                scalar,
+                getScalarField(javaClass),
                 javaClass,
                 visited
             )?.let { atts.add(it) }
         }
 
         return atts
+    }
+
+    private fun getScalarField(clazz: Class<*>): ScalarField<Any>? {
+        val res = if (EntityRef::class.java.isAssignableFrom(clazz)) {
+            REF_SCALAR_FIELD
+        } else {
+            var scalar = scalars[clazz]
+            if (scalar == null && Map::class.java.isAssignableFrom(clazz)) {
+                scalar = scalars[Map::class.java]
+            }
+            scalar
+        }
+        @Suppress("UNCHECKED_CAST")
+        return res as ScalarField<Any>?
     }
 
     private fun getAttributeSchema(

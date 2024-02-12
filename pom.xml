@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>3.67.1</revision>
+        <revision>3.69.0</revision>
 
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
 
@@ -35,6 +35,7 @@
         <kotlin.version>1.7.10</kotlin.version>
         <kotlin.logging.version>1.12.5</kotlin.logging.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <ecos.micrometer.version>1.1.0</ecos.micrometer.version>
 
     </properties>
 
@@ -150,6 +151,13 @@
             <artifactId>ecos-test-commons</artifactId>
             <version>${ecos.test-commons.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.micrometer</groupId>
+            <artifactId>ecos-micrometer</artifactId>
+            <version>${ecos.micrometer.version}</version>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.commons.utils.ReflectUtils
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
@@ -51,6 +52,7 @@ import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
 import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.*
 import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
+import ru.citeck.ecos.records3.record.resolver.interceptor.ObservableRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -137,6 +139,7 @@ open class RecordsServiceFactory {
         if (auditInterceptor.isValid()) {
             resolver.addInterceptor(auditInterceptor)
         }
+        resolver.addInterceptor(ObservableRecordsInterceptor(this))
         resolver
     }
 
@@ -162,6 +165,8 @@ open class RecordsServiceFactory {
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
     private var recordTypeComponent: RecordTypeComponent? = null
+
+    val micrometerContext: EcosMicrometerContext by lazy { createMicrometerContext() }
 
     init {
         RequestContext.setLastCreatedServices(this)
@@ -214,6 +219,10 @@ open class RecordsServiceFactory {
             RecordsApiRecordsDao(),
             ru.citeck.ecos.records2.source.common.group.RecordsGroupDao()
         )
+    }
+
+    protected open fun createMicrometerContext(): EcosMicrometerContext {
+        return EcosMicrometerContext.NOOP
     }
 
     protected open fun createRecordsResolver(): LocalRemoteResolver {

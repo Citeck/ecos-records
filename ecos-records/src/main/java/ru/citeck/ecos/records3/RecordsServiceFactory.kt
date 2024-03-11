@@ -52,7 +52,7 @@ import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
 import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.*
 import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
-import ru.citeck.ecos.records3.record.resolver.interceptor.ObservableRecordsInterceptor
+import ru.citeck.ecos.records3.record.resolver.interceptor.obs.ObservableRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService

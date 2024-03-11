@@ -111,7 +111,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                     recordObjs.add(ValWithIdx(virtualRec, idx))
                 } else {
                     if (EntityRef.isNotEmpty(rec) || local.hasDaoWithEmptyId()) {
-                        if (virtualRecords.contains(rec)) {
+                        if (virtualRecords.containsKey(rec)) {
                             recordObjs.add(ValWithIdx(rec, idx))
                         } else {
                             recordRefs.add(ValWithIdx(rec, idx))
@@ -742,7 +742,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     }
 
     fun containsVirtualRecord(ref: EntityRef): Boolean {
-        return virtualRecords.contains(ref.withDefaultAppName(currentAppName))
+        return virtualRecords.containsKey(ref.withDefaultAppName(currentAppName))
     }
 
     fun registerVirtualRecord(ref: EntityRef, value: Any) {

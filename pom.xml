@@ -35,7 +35,7 @@
         <kotlin.version>1.7.10</kotlin.version>
         <kotlin.logging.version>1.12.5</kotlin.logging.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <ecos.micrometer.version>1.2.0</ecos.micrometer.version>
+        <ecos.micrometer.version>1.2.1</ecos.micrometer.version>
 
     </properties>
 

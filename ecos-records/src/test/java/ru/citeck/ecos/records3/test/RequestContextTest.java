@@ -11,12 +11,13 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.request.RequestCtxData;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -38,6 +39,29 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsServiceV1();
         recordsService.register(this);
+    }
+
+    @Test
+    void srcIdMappingTest() {
+
+        Map<String, String> sourceIdMapping0 = Collections.singletonMap("first", "second");
+        Map<String, String> sourceIdMapping1 = Collections.singletonMap("third", "fourth");
+
+        RequestContext.doWithCtxJ((b0) -> b0.withSourceIdMapping(sourceIdMapping0), (c0) -> {
+            assertThat(c0.ctxData.getSourceIdMapping()).isEqualTo(sourceIdMapping0);
+            RequestContext.doWithCtxJ((b1) -> b1.withSourceIdMapping(sourceIdMapping1), (c1) -> {
+                Map<String, String> fullMapping = new HashMap<>(sourceIdMapping0);
+                fullMapping.putAll(sourceIdMapping1);
+                assertThat(c1.ctxData.getSourceIdMapping()).isEqualTo(fullMapping);
+                return null;
+            });
+            assertThat(c0.ctxData.getSourceIdMapping()).isEqualTo(sourceIdMapping0);
+            RequestContext.doWithCtxJ(RequestCtxData.Builder::withoutSourceIdMapping, (c1) -> {
+                assertThat(c1.ctxData.getSourceIdMapping()).isEmpty();
+                return null;
+            });
+            return null;
+        });
     }
 
     @Test

@@ -628,7 +628,7 @@ class AttSchemaResolver : ServiceFactoryAware {
     private inline fun <T> withoutSourceIdMapping(context: ResolveContext, crossinline action: () -> T): T {
         val sourceIdMapping = context.reqContext.ctxData.sourceIdMapping
         return if (sourceIdMapping.isNotEmpty()) {
-            RequestContext.doWithCtx({ it.withSourceIdMapping(emptyMap()) }) {
+            RequestContext.doWithCtx({ it.withoutSourceIdMapping() }) {
                 action.invoke()
             }
         } else {

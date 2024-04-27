@@ -12,7 +12,7 @@ import java.util.*
 /**
  * Unique identifier of a record.
  */
-@SuppressWarnings
+@Suppress("DEPRECATION")
 @Deprecated(
     "Use EntityRef instead",
     ReplaceWith("EntityRef", "ru.citeck.ecos.webapp.api.entity.EntityRef")

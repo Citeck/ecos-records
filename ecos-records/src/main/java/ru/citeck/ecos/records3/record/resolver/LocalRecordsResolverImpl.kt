@@ -141,30 +141,32 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             }
 
             val predicate = Json.mapper.convert(queryRes, Predicate::class.java)
-            queryRes = DataValue.create(
-                PredicateUtils.mapValuePredicates(predicate) { pred ->
+            val mappedPredicate = PredicateUtils.mapValuePredicates(
+                predicate, { pred ->
 
-                    val type = pred.getType()
-                    if (pred.getValue().isArray() &&
-                        (
-                            type == ValuePredicate.Type.EQ ||
-                                type == ValuePredicate.Type.CONTAINS ||
-                                type == ValuePredicate.Type.LIKE
-                            )
-                    ) {
+                val type = pred.getType()
+                if (pred.getValue().isArray() &&
+                    (
+                        type == ValuePredicate.Type.EQ ||
+                            type == ValuePredicate.Type.CONTAINS ||
+                            type == ValuePredicate.Type.LIKE
+                        )
+                ) {
 
-                        val orPredicates = mutableListOf<Predicate>()
-                        pred.getValue().forEach { elem ->
-                            orPredicates.add(ValuePredicate(pred.getAttribute(), pred.getType(), elem))
-                        }
-
-                        OrPredicate.of(orPredicates)
-                    } else {
-                        pred
+                    val orPredicates = mutableListOf<Predicate>()
+                    pred.getValue().forEach { elem ->
+                        orPredicates.add(ValuePredicate(pred.getAttribute(), pred.getType(), elem))
                     }
+
+                    OrPredicate.of(orPredicates)
+                } else {
+                    pred
                 }
+            }, onlyAnd = false, optimize = true, filterEmptyComposite = false
             )
-            query = query.copy().withQuery(queryRes).build()
+            if (mappedPredicate != null) {
+                query = query.copy().withQuery(DataValue.createAsIs(mappedPredicate)).build()
+            }
         }
 
         var sourceId = query.sourceId

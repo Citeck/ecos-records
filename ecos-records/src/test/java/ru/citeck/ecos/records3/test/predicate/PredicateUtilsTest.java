@@ -2,7 +2,11 @@ package ru.citeck.ecos.records3.test.predicate;
 
 import lombok.Data;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
+import ru.citeck.ecos.records2.predicate.model.AndPredicate;
+import ru.citeck.ecos.records2.predicate.model.OrPredicate;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 
@@ -14,6 +18,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class PredicateUtilsTest {
+
+    static List<Predicate> getCompositePredicates() {
+        return Arrays.asList(
+            new AndPredicate(),
+            new OrPredicate()
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("getCompositePredicates")
+    void testWithEmptyCompositePredicate(Predicate predicate) {
+
+        Predicate result = PredicateUtils.mapAttributePredicates(predicate, it -> it, false, true, false);
+        if (predicate instanceof AndPredicate) {
+            assertThat(result).isEqualTo(Predicates.alwaysTrue());
+        } else {
+            assertThat(result).isEqualTo(Predicates.alwaysFalse());
+        }
+    }
 
     @Test
     void test() {

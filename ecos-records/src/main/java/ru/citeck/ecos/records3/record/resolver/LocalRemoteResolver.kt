@@ -261,8 +261,12 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             val recAtts = recordAttsWithIdx.value
             val recCache = cacheForRecords[idx]
 
-            recAtts.getAtts().forEach { key, value ->
-                recCache[key] = value
+            val attsByAlias = attsMap.getAttributes()
+            recAtts.getAtts().forEach { alias, value ->
+                val loadedAtt = attsByAlias[alias]
+                if (loadedAtt is String && loadedAtt.isNotBlank()) {
+                    recCache[loadedAtt] = value
+                }
             }
 
             val cachedRecordAttValues = recordsAttValuesFromCache[idx]

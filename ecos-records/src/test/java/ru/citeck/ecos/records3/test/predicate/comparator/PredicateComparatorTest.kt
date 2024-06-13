@@ -89,4 +89,25 @@ class PredicateComparatorTest {
         assertTrue(comparator.isContains(obj, DataValue.create("Name")))
         assertTrue(comparator.isEquals(obj, DataValue.create("Ru name")))
     }
+
+    @Test
+    fun arraysTest() {
+
+        val comparator = DefaultValueComparator()
+        val arr = DataValue.createArr().add("a").add("b").add("c").add(1)
+
+        assertThat(comparator.isContains(arr, DataValue.createStr("a"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createStr("b"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createStr("e"))).isFalse
+        assertThat(comparator.isContains(arr, DataValue.create(1))).isTrue
+
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("a"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("a").add("b"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("a").add("b").add("c"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("a").add("b").add("c").add("d"))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("d"))).isFalse
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("d").add("e"))).isFalse
+        assertThat(comparator.isContains(arr, DataValue.createArr().add("a").add("b").add("c").add(1))).isTrue
+        assertThat(comparator.isContains(arr, DataValue.createArr().add(1))).isTrue
+    }
 }

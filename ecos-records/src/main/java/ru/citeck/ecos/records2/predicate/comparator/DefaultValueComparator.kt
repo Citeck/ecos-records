@@ -50,7 +50,15 @@ object DefaultValueComparator : ValueComparator {
             return false
         }
         if (value.isArray()) {
-            return value.any { isEquals(it, subValue) }
+            return if (subValue.isArray()) {
+                value.any { v ->
+                    subValue.any { sv ->
+                        isEquals(v, sv)
+                    }
+                }
+            } else {
+                value.any { isEquals(it, subValue) }
+            }
         }
         if (value.isObject() && subValue.isTextual()) {
             val subValStr = subValue.asText().lowercase()

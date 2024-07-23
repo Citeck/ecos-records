@@ -108,7 +108,7 @@ public class AttributesMixinMetaValue extends MetaValueDelegate {
 
         if (MetaValue.class.equals(resMetaType)) {
             return action.apply(this);
-        } else if (EntityRef.class.equals(resMetaType)) {
+        } else if (EntityRef.class.isAssignableFrom(resMetaType)) {
             return action.apply(EntityRef.valueOf(getId()));
         }
 

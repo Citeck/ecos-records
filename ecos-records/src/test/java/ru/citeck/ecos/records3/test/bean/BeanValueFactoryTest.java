@@ -35,7 +35,7 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 
@@ -46,14 +46,14 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
 
         ValueDto0 dto0 = new ValueDto0();
 
-        assertEquals(DataValue.createStr(dto0.getDisplayName()), recordsService.getAtt(ref0, ".disp"));
-        assertEquals(DataValue.createStr(dto0.getStrValue()), recordsService.getAtt(ref0, ".str"));
+        assertEquals(DataValue.createStr(dto0.getDisplayName()), recordsService.getAtt(ref0, "?disp"));
+        assertEquals(DataValue.createStr(dto0.getStrValue()), recordsService.getAtt(ref0, "?str"));
 
         EntityRef ref1 = EntityRef.create(ID, "1");
 
         ValueDto1 dto1 = new ValueDto1();
 
-        assertEquals(DataValue.createStr(dto1.toString()), recordsService.getAtt(ref1, ".str"));
+        assertEquals(DataValue.createStr(dto1.toString()), recordsService.getAtt(ref1, "?str"));
     }
 
     @Nullable
@@ -72,9 +72,9 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
 
     @Data
     public static class ValueDto0 {
-        @AttName(".disp")
+        @AttName("?disp")
         private String displayName = "dispName";
-        @AttName(".str")
+        @AttName("?str")
         private String strValue = "strValue";
     }
 

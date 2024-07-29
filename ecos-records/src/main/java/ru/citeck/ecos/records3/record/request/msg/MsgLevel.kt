@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.request.msg
 
-import ecos.com.fasterxml.jackson210.annotation.JsonEnumDefaultValue
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 
 enum class MsgLevel {
 

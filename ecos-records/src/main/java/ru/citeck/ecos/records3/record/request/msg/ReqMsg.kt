@@ -1,12 +1,10 @@
 package ru.citeck.ecos.records3.record.request.msg
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.data.DataValue
 import java.time.Instant
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = ReqMsg.Builder::class)
-@JackJsonDeserialize(builder = ReqMsg.Builder::class)
 data class ReqMsg(
     val level: MsgLevel,
     val time: Instant,

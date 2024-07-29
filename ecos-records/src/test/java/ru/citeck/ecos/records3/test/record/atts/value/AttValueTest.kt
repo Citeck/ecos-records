@@ -25,7 +25,7 @@ class AttValueTest {
             """.trimIndent()
         )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val num = records.getAtt(record, "field0.field1.num?num").asDouble()
         assertThat(num).isEqualTo(123.0)
@@ -62,7 +62,7 @@ class AttValueTest {
             """.trimIndent()
         )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val attValue = RecordAttValueCtx(record, records)
 
         assertThat(attValue.getAtt("key").asText()).isEqualTo("value")

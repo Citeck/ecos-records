@@ -14,7 +14,7 @@ class RecordRefAttValueTest {
 
         val refValueDto = RefValueDto("str-value")
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("ref-value", refValueDto)

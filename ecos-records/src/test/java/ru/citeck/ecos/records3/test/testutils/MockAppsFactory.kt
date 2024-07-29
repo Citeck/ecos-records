@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.testutils
 
+import com.fasterxml.jackson.databind.node.ObjectNode
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.records3.RecordsProperties
@@ -7,10 +8,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.mixin.external.remote.CalculateExtAttsWebExecutor
 import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.records3.rest.v1.delete.DeleteBody
-import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
-import ru.citeck.ecos.records3.rest.v1.query.QueryBody
-import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
@@ -72,17 +69,14 @@ class MockAppsFactory {
         val mockApp = apps[targetApp] ?: error("Application doesn't found: $targetApp")
 
         val response = if (path.contains(RemoteRecordsResolver.QUERY_PATH)) {
-            val query = mapper.convert(reqObjData, QueryBody::class.java) ?: error("Incorrect QueryBody. Url: $path")
-            mockApp.factory.restHandlerAdapter.queryRecords(query)
+            val query = mapper.convert(reqObjData, ObjectNode::class.java) ?: error("Incorrect QueryBody. Url: $path")
+            mockApp.factory.restHandlerAdapter.queryRecords(query, 2)
         } else if (path.contains(RemoteRecordsResolver.MUTATE_PATH)) {
-            val query = mapper.convert(reqObjData, MutateBody::class.java) ?: error("Incorrect MutateBody. Url: $path")
-            mockApp.factory.restHandlerAdapter.mutateRecords(query)
+            val query = mapper.convert(reqObjData, ObjectNode::class.java) ?: error("Incorrect MutateBody. Url: $path")
+            mockApp.factory.restHandlerAdapter.mutateRecords(query, 1)
         } else if (path.contains(RemoteRecordsResolver.DELETE_PATH)) {
-            val query = mapper.convert(reqObjData, DeleteBody::class.java) ?: error("Incorrect DeleteBody. Url: $path")
-            mockApp.factory.restHandlerAdapter.deleteRecords(query)
-        } else if (path.contains(RemoteRecordsResolver.TXN_PATH)) {
-            val query = mapper.convert(reqObjData, TxnBody::class.java) ?: error("Incorrect TxnBody. Url: $path")
-            mockApp.factory.restHandlerAdapter.deleteRecords(query)
+            val query = mapper.convert(reqObjData, ObjectNode::class.java) ?: error("Incorrect DeleteBody. Url: $path")
+            mockApp.factory.restHandlerAdapter.deleteRecords(query, 1)
         } else if (path.contains(CalculateExtAttsWebExecutor.PATH)) {
 
             val req = mapper.convert(

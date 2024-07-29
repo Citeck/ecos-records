@@ -1,26 +1,21 @@
 package ru.citeck.ecos.records2.test;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MetaNumberTest extends LocalRecordsDao
-                            implements LocalRecordsMetaDao<Object> {
+public class MetaNumberTest implements RecordAttsDao {
 
     RecordsService recordsService;
 
@@ -29,27 +24,32 @@ public class MetaNumberTest extends LocalRecordsDao
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
 
-        setId("test");
         recordsService.register(this);
     }
 
     @Test
     public void test() {
-        DataValue value = recordsService.getAttribute(EntityRef.create("test", ""), "double1_000_000_000");
+        DataValue value = recordsService.getAtt(EntityRef.create("test", ""), "double1_000_000_000");
         String strValue = value.asText();
         assertEquals("1000000000", strValue);
-        value = recordsService.getAttribute(EntityRef.create("test", ""), "double2_000_000_000\\.0123458");
+        value = recordsService.getAtt(EntityRef.create("test", ""), "double2_000_000_000\\.0123458");
         strValue = value.asText();
         assertEquals("2000000000.0123458", strValue);
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
-        return records.stream().map(TestValue::new).collect(Collectors.toList());
+    public Object getRecordAtts(@NotNull String recordId) throws Exception {
+        return new TestValue(EntityRef.create(getId(), recordId));
     }
 
-    class TestValue implements MetaValue {
+    @NotNull
+    @Override
+    public String getId() {
+        return "test";
+    }
+
+    class TestValue implements AttValue {
 
         private EntityRef ref;
 
@@ -62,13 +62,14 @@ public class MetaNumberTest extends LocalRecordsDao
             return ref.toString();
         }
 
+        @Nullable
         @Override
-        public Double getDouble() {
+        public Double asDouble() throws Exception {
             return 1_000_000_000.0;
         }
 
         @Override
-        public Object getAttribute(@NotNull String name, @NotNull MetaField field) throws Exception {
+        public Object getAtt(@NotNull String name) throws Exception {
             switch (name) {
                 case "double1_000_000_000":
                     return 1_000_000_000d;

@@ -18,7 +18,7 @@ class EntityRefValueFactoryTest {
         val testRecord1 = TestRecord1(test1Ref)
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("test", TestRecord0(test1Ref))

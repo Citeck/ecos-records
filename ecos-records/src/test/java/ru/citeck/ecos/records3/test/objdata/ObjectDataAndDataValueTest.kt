@@ -23,13 +23,13 @@ class ObjectDataAndDataValueTest : AbstractRecordsDao(), RecordsAttsDao {
     }
 
     override fun getId(): String {
-        return ""
+        return "test"
     }
 
     @BeforeAll
     fun init() {
         val factory = RecordsServiceFactory()
-        recordsService = factory.recordsServiceV1
+        recordsService = factory.recordsService
         recordsService.register(this)
     }
 
@@ -46,31 +46,32 @@ class ObjectDataAndDataValueTest : AbstractRecordsDao(), RecordsAttsDao {
     @Test
     fun test() {
 
-        var value = recordsService.getAtt(EntityRef.valueOf("test"), "data?json")
+        val ref = EntityRef.valueOf("test@test")
+        var value = recordsService.getAtt(ref, "data?json")
         assertEquals("b", value.get("a").asText())
 
-        var value2 = recordsService.getAtt(EntityRef.valueOf("test"), "data.a?str")
+        var value2 = recordsService.getAtt(ref, "data.a?str")
         assertEquals("b", value2.asText())
 
-        value = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue?json")
+        value = recordsService.getAtt(ref, "dataValue?json")
         assertEquals("b", value.get("a").asText())
 
-        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue.a?str")
+        value2 = recordsService.getAtt(ref, "dataValue.a?str")
         assertEquals("b", value2.asText())
 
-        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "data.unknown?str")
+        value2 = recordsService.getAtt(ref, "data.unknown?str")
         assertEquals(DataValue.NULL, value2)
 
-        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue.unknown?str")
+        value2 = recordsService.getAtt(ref, "dataValue.unknown?str")
         assertEquals(DataValue.NULL, value2)
 
-        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "unknown?str")
+        value2 = recordsService.getAtt(ref, "unknown?str")
         assertEquals(DataValue.NULL, value2)
     }
 
     @Test
     fun dtoTest() {
-        val dtoValue = recordsService.getAtts(EntityRef.valueOf("test"), TestDataMeta::class.java)
+        val dtoValue = recordsService.getAtts(EntityRef.valueOf("test@test"), TestDataMeta::class.java)
         val expected = TestDataMeta(TestData("test"))
         assertEquals(expected, dtoValue)
     }

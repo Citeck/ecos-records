@@ -23,8 +23,8 @@ class RemoteMutationTest {
         val app0 = appsFactory.createApp("app0")
         val app1 = appsFactory.createApp("app1")
 
-        val app0Records = app0.factory.recordsServiceV1
-        val app1Records = app1.factory.recordsServiceV1
+        val app0Records = app0.factory.recordsService
+        val app1Records = app1.factory.recordsService
 
         val mutatedRecords = Array(2) { mutableMapOf<String, LocalRecordAtts>() }
         val toMutatedId = { id: String -> "$id-mutated" }
@@ -58,7 +58,7 @@ class RemoteMutationTest {
         val mutateWithApp = { app: MockApp ->
             mutatedRecords.forEach { it.clear() }
 
-            val records = app.factory.recordsServiceV1
+            val records = app.factory.recordsService
             val result = records.mutate(listOf(record0, record1, record2))
             val expectedRec1Id = toMutatedId.invoke("app1/dao-id@local-id")
             val expectedRec2Id = toMutatedId.invoke("app1/dao-id@local-id-2")

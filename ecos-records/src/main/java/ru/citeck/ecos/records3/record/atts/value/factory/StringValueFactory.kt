@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef

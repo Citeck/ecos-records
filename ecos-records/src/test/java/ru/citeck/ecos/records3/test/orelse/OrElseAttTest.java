@@ -32,7 +32,7 @@ public class OrElseAttTest {
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
 
         recordsService.register(RecordsDaoBuilder.create("test")
             .addRecord("test", new RecordData())

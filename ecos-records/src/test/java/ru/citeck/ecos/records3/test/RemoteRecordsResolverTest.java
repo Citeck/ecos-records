@@ -1,19 +1,17 @@
 package ru.citeck.ecos.records3.test;
 
+import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.records3.RecordsService;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock;
-import ru.citeck.ecos.records2.*;
-import ru.citeck.ecos.records2.request.delete.RecordsDelResult;
-import ru.citeck.ecos.records2.request.delete.RecordsDeletion;
-import ru.citeck.ecos.records2.request.mutation.RecordsMutResult;
-import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
 import ru.citeck.ecos.records3.RecordsProperties;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -62,7 +60,7 @@ class RemoteRecordsResolverTest {
     private RecordsService recordsService;
 
     private final List<EntityRef> refs = new ArrayList<>();
-    private final Map<EntityRef, RecordMeta> metaByRef = new HashMap<>();
+    private final Map<EntityRef, RecordAtts> metaByRef = new HashMap<>();
 
     private final List<String> urls = new ArrayList<>();
 
@@ -73,16 +71,16 @@ class RemoteRecordsResolverTest {
 
         recordsService = factory.getRecordsService();
 
-        refs.add(RecordRef.valueOf("src1@loc1"));
-        refs.add(RecordRef.valueOf("src1@loc2"));
-        refs.add(RecordRef.valueOf("uiserv/src2@loc3"));
-        refs.add(RecordRef.valueOf("uiserv/src2@loc4"));
-        refs.add(RecordRef.valueOf("alf/src2@loc5"));
-        refs.add(RecordRef.valueOf("alf/src3@loc6"));
+        refs.add(EntityRef.valueOf("src1@loc1"));
+        refs.add(EntityRef.valueOf("src1@loc2"));
+        refs.add(EntityRef.valueOf("uiserv/src2@loc3"));
+        refs.add(EntityRef.valueOf("uiserv/src2@loc4"));
+        refs.add(EntityRef.valueOf("alf/src2@loc5"));
+        refs.add(EntityRef.valueOf("alf/src3@loc6"));
 
         refs.forEach(r -> {
             EntityRef localRef = r.withoutAppName();
-            metaByRef.put(localRef, new RecordMeta(localRef));
+            metaByRef.put(localRef, new RecordAtts(localRef));
         });
     }
 
@@ -104,14 +102,14 @@ class RemoteRecordsResolverTest {
                     assertTrue(refs.stream().map(EntityRef::withoutAppName).anyMatch(ref::equals));
                 }
 
-                RecordsQueryResult<RecordMeta> result = new RecordsQueryResult<>();
+                RecsQueryRes<RecordAtts> result = new RecsQueryRes<>();
                 result.setRecords(body.getRecords().stream().map(metaByRef::get).collect(Collectors.toList()));
                 return result;
 
             } else if (body.getQuery() != null) {
 
                 assertFalse(body.getQuery().getSourceId().contains("/"));
-                RecordsResult<RecordMeta> result = new RecordsResult<>();
+                RecordsResult<RecordAtts> result = new RecordsResult<>();
                 result.setRecords(new ArrayList<>(metaByRef.values()));
                 return result;
 
@@ -147,10 +145,9 @@ class RemoteRecordsResolverTest {
 
         String appId = "some-app";
 
-        ru.citeck.ecos.records2.request.query.RecordsQuery query = new RecordsQuery();
-        query.setSourceId(appId + "/localSource");
+        RecordsQuery query = RecordsQuery.create().withSourceId(appId + "/localSource").build();
 
-        RecordsQueryResult<EntityRef> result = recordsService.queryRecords(query);
+        RecsQueryRes<EntityRef> result = recordsService.query(query);
         assertEquals(refs.stream()
                 .map(r -> EntityRef.valueOf(appId + "/" + r.withoutAppName()))
                 .collect(Collectors.toList()),
@@ -162,25 +159,23 @@ class RemoteRecordsResolverTest {
         urls.clear();
 
         List<EntityRef> qrefs = new ArrayList<>(refs);
-        RecordsResult<RecordMeta> metaResult = recordsService.getAttributes(qrefs, Collections.singleton(TEST_ATT));
+        List<RecordAtts> metaResult = recordsService.getAtts(qrefs, Collections.singleton(TEST_ATT));
 
         assertEquals(4, urls.size());
-        checkRecordsMeta(refs, metaResult.getRecords(), false);
+        checkRecordsMeta(refs, metaResult, false);
 
-        RecordsMutation mutation = new RecordsMutation();
-        mutation.setRecords(refs.stream().map(RecordMeta::new).collect(Collectors.toList()));
+        List<RecordAtts> recsToMutate = refs.stream().map(RecordAtts::new).collect(Collectors.toList());
 
-        RecordsMutResult mutResult = recordsService.mutate(mutation);
-        checkRecordsMeta(refs, mutResult.getRecords(), true);
+        List<RecordAtts> mutResult = recordsService.mutate(recsToMutate)
+            .stream()
+            .map(RecordAtts::new)
+            .collect(Collectors.toList());
+        checkRecordsMeta(refs, mutResult, true);
 
-        RecordsDeletion deletion = new RecordsDeletion();
-        deletion.setRecords(refs);
-
-        RecordsDelResult delResult = recordsService.delete(deletion);
-        checkRecordsMeta(refs, delResult.getRecords(), false);
+        recordsService.delete(refs);
     }
 
-    private void checkRecordsMeta(List<EntityRef> expected, List<RecordMeta> records, boolean addDefaultAppName) {
+    private void checkRecordsMeta(List<EntityRef> expected, List<RecordAtts> records, boolean addDefaultAppName) {
         assertEquals(expected.size(), records.size());
         assertEquals(expected.stream().map(r -> {
                 if (r.getAppName().isEmpty() && addDefaultAppName) {
@@ -188,6 +183,6 @@ class RemoteRecordsResolverTest {
                 }
                 return r;
             }).collect(Collectors.toList()),
-            records.stream().map(RecordMeta::getId).collect(Collectors.toList()));
+            records.stream().map(RecordAtts::getId).collect(Collectors.toList()));
     }
 }

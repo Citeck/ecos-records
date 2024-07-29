@@ -19,7 +19,7 @@ class ExtAttMixinTest {
     @Test
     fun test() {
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("rec-0", Record(0))
@@ -123,7 +123,7 @@ class ExtAttMixinTest {
             )
         )
 
-        val app0Records = app0.factory.recordsServiceV1
+        val app0Records = app0.factory.recordsService
         app0Records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("rec-0", Record(0))

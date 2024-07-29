@@ -91,10 +91,10 @@ public class JacksonTest {
         mNode.put("test2", TextNode.valueOf("12312"));
         mNode.put("test3", BooleanNode.TRUE);
 
-        ecos.com.fasterxml.jackson210.databind.node.ObjectNode eNode = ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory.instance.objectNode();
-        eNode.put("test", ecos.com.fasterxml.jackson210.databind.node.IntNode.valueOf(232));
-        eNode.put("test2", ecos.com.fasterxml.jackson210.databind.node.TextNode.valueOf("12312"));
-        eNode.put("test3", ecos.com.fasterxml.jackson210.databind.node.BooleanNode.TRUE);
+        com.fasterxml.jackson.databind.node.ObjectNode eNode = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+        eNode.put("test", com.fasterxml.jackson.databind.node.IntNode.valueOf(232));
+        eNode.put("test2", com.fasterxml.jackson.databind.node.TextNode.valueOf("12312"));
+        eNode.put("test3", com.fasterxml.jackson.databind.node.BooleanNode.TRUE);
 
         TestDto controlTestDto = new TestDto();
         controlTestDto.setTest(232);

@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.value.impl
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
-import ecos.com.fasterxml.jackson210.databind.node.TextNode
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.TextNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType

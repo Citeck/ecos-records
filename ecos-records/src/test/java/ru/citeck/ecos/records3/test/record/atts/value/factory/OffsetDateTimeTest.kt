@@ -21,7 +21,7 @@ class OffsetDateTimeTest {
     )
     fun test(valueStr: String) {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val expectedDateTime = OffsetDateTime.parse(valueStr)
         val value = Value(expectedDateTime)
 

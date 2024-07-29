@@ -39,6 +39,6 @@ class RecordsTemplateService : ServiceFactoryAware {
     }
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
-        this.recordsService = serviceFactory.recordsServiceV1
+        this.recordsService = serviceFactory.recordsService
     }
 }

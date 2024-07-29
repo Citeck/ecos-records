@@ -1,19 +1,18 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
-import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
-import mu.KotlinLogging
-import org.apache.commons.beanutils.PropertyUtils
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import io.github.oshai.kotlinlogging.KotlinLogging
+import ru.citeck.beans.BeanUtils
+import ru.citeck.beans.desc.PropertyDesc
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
@@ -23,7 +22,6 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttWithProc
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.mime.MimeType
-import java.beans.PropertyDescriptor
 import java.lang.reflect.*
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -94,17 +92,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 scalars[field.fieldType] = field
             }
         )
-        if (LibsUtils.isJacksonPresent()) {
-            listOf(
-                ScalarField(com.fasterxml.jackson.databind.JsonNode::class.java, ScalarType.RAW),
-                ScalarField(com.fasterxml.jackson.databind.node.ObjectNode::class.java, ScalarType.JSON),
-                ScalarField(com.fasterxml.jackson.databind.node.ArrayNode::class.java, ScalarType.JSON)
-            ).forEach(
-                Consumer { field ->
-                    scalars[field.fieldType] = field
-                }
-            )
-        }
     }
 
     fun read(attsClass: Class<*>): List<SchemaAtt> {
@@ -162,14 +149,14 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             return readFromConstructor(attsClass, visited)
         }
 
-        val descriptors: Array<PropertyDescriptor> = PropertyUtils.getPropertyDescriptors(attsClass)
+        val properties: List<PropertyDesc> = BeanUtils.getProperties(attsClass)
         val attributes: MutableList<SchemaAtt> = ArrayList()
 
-        for (descriptor in descriptors) {
+        for (property in properties) {
 
-            val writeMethod = descriptor.writeMethod ?: continue
+            val writeMethod = property.getWriteMethod() ?: continue
 
-            var propType: Class<*> = descriptor.propertyType
+            var propType: Class<*> = property.getPropClass()
             var isMultiple = false
             if (List::class.java.isAssignableFrom(propType) || Set::class.java.isAssignableFrom(propType)) {
                 val parameterType: ParameterizedType = writeMethod.genericParameterTypes[0] as ParameterizedType
@@ -186,7 +173,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 attsClass,
                 null,
                 writeMethod,
-                descriptor.name,
+                property.getName(),
                 isMultiple,
                 getScalarField(propType),
                 propType,
@@ -289,11 +276,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         val attName: AttName? = getAnnotation(argument, writeMethod, scope, fieldName, AttName::class.java)
         if (attName != null) {
             attNameValue = attName.value
-        } else {
-            val metaAtt: MetaAtt? = getAnnotation(argument, writeMethod, scope, fieldName, MetaAtt::class.java)
-            if (metaAtt != null) {
-                attNameValue = metaAtt.value
-            }
         }
         val att: SchemaAtt.Builder
         val processors: List<AttProcDef>

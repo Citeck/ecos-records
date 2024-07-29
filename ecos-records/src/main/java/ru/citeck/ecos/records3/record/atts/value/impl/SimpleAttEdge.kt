@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.record.atts.value.impl
 
-import mu.KotlinLogging
-import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.func.UncheckedSupplier
 
 open class SimpleAttEdge : AttEdge {
 

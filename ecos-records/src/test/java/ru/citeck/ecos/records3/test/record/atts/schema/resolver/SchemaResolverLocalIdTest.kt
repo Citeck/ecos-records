@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.record.atts.schema.resolver
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
@@ -19,7 +18,7 @@ class SchemaResolverLocalIdTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val recordsDao = RecordsDaoBuilder.create("test")
             .addRecord("empty-source-id", TestClassWithEmptySourceId())
@@ -51,31 +50,31 @@ class SchemaResolverLocalIdTest {
             val idFromValue = if (keyRec.value is AttValue) {
                 (keyRec.value as AttValue).id as String
             } else {
-                (keyRec.value as MetaValue).id
+                (keyRec.value as AttValue).id
             }
             assertThat(localId).isEqualTo(EntityRef.valueOf(idFromValue).getLocalId())
         }
     }
 
     class TestClassWithEmptySourceId : AttValue {
-        override fun getId(): Any? {
+        override fun getId(): Any {
             return "appName/@empty-source-id"
         }
     }
 
     class TestClassWithSourceId : AttValue {
-        override fun getId(): Any? {
+        override fun getId(): Any {
             return "appName/sourceId@with-source-id"
         }
     }
 
-    class TestClassWithEmptySourceIdMetaValue : MetaValue {
+    class TestClassWithEmptySourceIdMetaValue : AttValue {
         override fun getId(): String {
             return "appName/@empty-source-id-meta"
         }
     }
 
-    class TestClassWithSourceIdMetaValue : MetaValue {
+    class TestClassWithSourceIdMetaValue : AttValue {
         override fun getId(): String {
             return "appName/sourceId@with-source-id-meta"
         }

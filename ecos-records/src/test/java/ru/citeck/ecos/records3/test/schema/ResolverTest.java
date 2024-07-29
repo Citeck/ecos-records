@@ -48,7 +48,7 @@ public class ResolverTest {
 
         testAtt(dto, "inner[]?json", "[ {\"key\":\"value\"} ]");
 
-        testAtt(dto, ".disp", dto.toString());
+        testAtt(dto, "?disp", dto.toString());
         testAtt(dto, "?disp", dto.toString());
     }
 

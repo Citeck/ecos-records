@@ -123,7 +123,11 @@ object DefaultValueComparator : ValueComparator {
         if (value0.isNull() && value1.isNull()) {
             return inclusive
         }
-        val compareType = if (isGreater) { CompareType.GREATER } else { CompareType.LESS }
+        val compareType = if (isGreater) {
+            CompareType.GREATER
+        } else {
+            CompareType.LESS
+        }
         var result = compareDateTime(value0, value1, compareType, inclusive)
         if (result == CompareResult.UNKNOWN) {
             result = compareDouble(value0, value1, isGreater, inclusive)
@@ -262,10 +266,14 @@ object DefaultValueComparator : ValueComparator {
     }
 
     private enum class CompareResult {
-        TRUE, FALSE, UNKNOWN
+        TRUE,
+        FALSE,
+        UNKNOWN
     }
 
     private enum class CompareType {
-        EQUALS, GREATER, LESS
+        EQUALS,
+        GREATER,
+        LESS
     }
 }

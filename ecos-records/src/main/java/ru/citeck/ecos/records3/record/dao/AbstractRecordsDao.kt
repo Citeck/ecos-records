@@ -33,7 +33,7 @@ abstract class AbstractRecordsDao @JvmOverloads constructor(
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
         this.serviceFactory = serviceFactory
-        recordsService = serviceFactory.recordsServiceV1
+        recordsService = serviceFactory.recordsService
         predicateService = serviceFactory.predicateService
         if (addGlobalMixins) {
             mixinContext.addMixinsProvider(serviceFactory.globalAttMixinsProvider)

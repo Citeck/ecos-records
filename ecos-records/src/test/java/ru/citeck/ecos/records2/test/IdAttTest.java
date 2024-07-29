@@ -2,51 +2,47 @@ package ru.citeck.ecos.records2.test;
 
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
+import ru.citeck.ecos.webapp.api.promise.Promise;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+class IdAttTest implements RecordAttsDao {
 
     private static final String ID = "test";
 
     private RecordsService recordsService;
 
-    private final Map<EntityRef, Object> metaValues = new HashMap<>();
+    private final Map<String, Object> metaValues = new HashMap<>();
 
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
-        setId(ID);
         recordsService.register(this);
 
         EntityRef refTest = EntityRef.create(ID, "test");
-        metaValues.put(EntityRef.valueOf("test"), new Value(refTest));
-        metaValues.put(EntityRef.valueOf("ValueByRef"), new ValueByRef());
+        metaValues.put("test", new Value(refTest));
+        metaValues.put("ValueByRef", new ValueByRef());
     }
 
     @Test
     void test() {
-        DataValue attribute = recordsService.getAttribute(EntityRef.create(ID, "test"), "id");
+        DataValue attribute = recordsService.getAtt(EntityRef.create(ID, "test"), "id");
         assertEquals("test-id", attribute.asText());
     }
 
@@ -55,23 +51,27 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
 
         EntityRef testRef = EntityRef.create(ID, "test");
 
-        DataValue attribute = recordsService.getAttribute(testRef, "otherRef?id");
+        DataValue attribute = recordsService.getAtt(testRef, "otherRef?id");
         assertEquals(EntityRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
-        attribute = recordsService.getAttribute(testRef, "otherRef?str");
+        attribute = recordsService.getAtt(testRef, "otherRef?str");
         assertEquals(EntityRef.create(ID, ValueByRef.class.getSimpleName()).toString(), attribute.asText());
 
-        MetaClass meta = recordsService.getMeta(testRef, MetaClass.class);
+        MetaClass meta = recordsService.getAtts(testRef, MetaClass.class);
         assertEquals(EntityRef.create(ID, ValueByRef.class.getSimpleName()), meta.getOtherRef());
         assertTrue(meta.initialized);
     }
 
+    @Nullable
+    @Override
+    public Object getRecordAtts(@NotNull String recordId) throws Exception {
+        return metaValues.get(recordId);
+    }
+
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
-        return records.stream()
-            .map(metaValues::get)
-            .collect(Collectors.toList());
+    public String getId() {
+        return ID;
     }
 
     @Data
@@ -80,15 +80,15 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
         private Boolean initialized;
     }
 
-    public static class ValueByRef implements MetaValue {
+    public static class ValueByRef implements AttValue {
 
         @Override
-        public String getString() {
+        public String asText() {
             return getClass().getName();
         }
     }
 
-    public static class Value implements MetaValue {
+    public static class Value implements AttValue {
 
         private EntityRef ref;
 
@@ -98,9 +98,12 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
             this.ref = ref;
         }
 
+
+        @Nullable
         @Override
-        public <T extends QueryContext> void init(@NotNull T context, @NotNull MetaField field) {
+        public Promise<?> init() throws Exception {
             initialized = true;
+            return null;
         }
 
         @Override
@@ -109,7 +112,7 @@ class IdAttTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) throws Exception {
+        public Object getAtt(String name) throws Exception {
             switch (name) {
                 case "id": return "test-id";
                 case "otherRef": return EntityRef.create(ID, ValueByRef.class.getSimpleName());

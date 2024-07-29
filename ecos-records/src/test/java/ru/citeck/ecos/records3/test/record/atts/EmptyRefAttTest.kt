@@ -22,7 +22,7 @@ class EmptyRefAttTest {
                 return EcosWebAppApiMock(APP_NAME)
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val value = RecordValue()
         records.register(

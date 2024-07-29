@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.test.querylang;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.json.Json;

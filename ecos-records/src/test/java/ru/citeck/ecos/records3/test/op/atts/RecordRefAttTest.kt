@@ -23,17 +23,17 @@ class RecordRefAttTest {
 
         val services = RecordsServiceFactory()
 
-        services.recordsServiceV1.register(object : RecordAttsDao {
+        services.recordsService.register(object : RecordAttsDao {
             override fun getRecordAtts(record: String): Any? {
                 return ObjectData.create()
             }
             override fun getId() = testRecordRef.getSourceId()
         })
 
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?id").asText())
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref{.id}").asText())
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref?assoc").asText())
-        assertEquals(testRecordRef.toString(), services.recordsServiceV1.getAtt(RefFieldDto(), "ref{.assoc}").asText())
+        assertEquals(testRecordRef.toString(), services.recordsService.getAtt(RefFieldDto(), "ref?id").asText())
+        assertEquals(testRecordRef.toString(), services.recordsService.getAtt(RefFieldDto(), "ref{.id}").asText())
+        assertEquals(testRecordRef.toString(), services.recordsService.getAtt(RefFieldDto(), "ref?assoc").asText())
+        assertEquals(testRecordRef.toString(), services.recordsService.getAtt(RefFieldDto(), "ref{.assoc}").asText())
     }
 
     @Test
@@ -41,13 +41,13 @@ class RecordRefAttTest {
 
         val services = RecordsServiceFactory()
 
-        services.recordsServiceV1.register(
+        services.recordsService.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("record", RefFieldDto2())
                 .build()
         )
 
-        val recordRef = services.recordsServiceV1.queryOne(
+        val recordRef = services.recordsService.queryOne(
             RecordsQuery.create {
                 withSourceId("test")
                 withQuery(VoidPredicate.INSTANCE)

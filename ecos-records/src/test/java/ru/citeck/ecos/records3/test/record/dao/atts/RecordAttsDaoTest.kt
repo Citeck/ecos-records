@@ -4,9 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -28,7 +25,7 @@ class RecordAttsDaoTest {
             val value: String
         )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(object : RecordsAttsDao, RecordsQueryDao {
             override fun getId(): String {
                 return "test"
@@ -67,7 +64,7 @@ class RecordAttsDaoTest {
                 return EcosWebAppApiMock("test-app")
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         // simple atts
 
@@ -93,9 +90,10 @@ class RecordAttsDaoTest {
 
         // atts with legacy dao
 
-        services.recordsService.register(object : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
-            override fun getLocalRecordsMeta(records: MutableList<EntityRef>, metaField: MetaField): List<Any> {
-                return records.map { ObjectData.create("""{"test":"value"}""") }
+        services.recordsService.register(object : RecordAttsDao {
+
+            override fun getRecordAtts(recordId: String): Any {
+                return ObjectData.create("""{"test":"value"}""")
             }
             override fun getId() = "legacy-dao"
         })
@@ -126,7 +124,7 @@ class RecordAttsDaoTest {
                 return recordId
             }
         }
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(recordAttsDao)
         assertThat(records.getAtt("test@null", "_notExists?bool").asBoolean()).isTrue
         assertThat(records.getAtt("test@other", "_notExists?bool").asBoolean()).isFalse

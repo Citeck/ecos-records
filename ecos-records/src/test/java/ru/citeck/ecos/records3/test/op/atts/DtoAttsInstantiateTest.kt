@@ -13,12 +13,12 @@ class DtoAttsInstantiateTest {
         val services = RecordsServiceFactory()
 
         val data = AttsClass("123", "456", 456)
-        val dataRes = services.recordsServiceV1.getAtts(data, AttsClass::class.java)
+        val dataRes = services.recordsService.getAtts(data, AttsClass::class.java)
 
         assertEquals(data, dataRes)
 
         val dataMut = AttsMutClass("123", "456", 456)
-        val dataMutRes = services.recordsServiceV1.getAtts(dataMut, AttsMutClass::class.java)
+        val dataMutRes = services.recordsService.getAtts(dataMut, AttsMutClass::class.java)
 
         assertEquals(dataMut, dataMutRes)
     }

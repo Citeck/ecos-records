@@ -1,15 +1,12 @@
 package ru.citeck.ecos.records3.record.atts.schema
 
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.exception.AttSchemaException
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriterV2
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = SchemaAtt.Builder::class)
-@JackJsonDeserialize(builder = SchemaAtt.Builder::class)
 data class SchemaAtt(
     val alias: String,
     val name: String,
@@ -132,7 +129,6 @@ data class SchemaAtt(
         }
 
         @JsonSetter
-        @JackJsonSetter
         fun withInner(inner: List<SchemaAtt>): Builder {
             this.inner = inner
             return this

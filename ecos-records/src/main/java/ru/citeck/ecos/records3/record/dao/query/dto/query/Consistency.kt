@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.query
 
-import ecos.com.fasterxml.jackson210.annotation.JsonEnumDefaultValue
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 
 enum class Consistency {
     EVENTUAL,

@@ -25,7 +25,7 @@ class DisplayNameTest {
     fun test() {
 
         val factory = RecordsServiceFactory()
-        val records = factory.recordsServiceV1
+        val records = factory.recordsService
 
         assertEquals(RU_DISP, records.getAtt(AttValueStrRuDispClass(), "?disp").asText())
         assertEquals(EN_DISP, records.getAtt(AttValueMlDispClass(), "?disp").asText())

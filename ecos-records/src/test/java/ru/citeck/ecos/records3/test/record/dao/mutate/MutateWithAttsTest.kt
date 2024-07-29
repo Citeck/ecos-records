@@ -13,7 +13,7 @@ class MutateWithAttsTest {
 
     private fun baseTest(services: RecordsServiceFactory, targetSrcId: String) {
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val result = records.mutateAndGetAtts(
             "$targetSrcId@",
@@ -68,7 +68,7 @@ class MutateWithAttsTest {
 
     private fun multipleDaoMutateTest(services: RecordsServiceFactory, targetSourcesId: List<String>) {
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         var recIdx = 0
         val recsToMutate = targetSourcesId.flatMap { sourceId ->
@@ -114,7 +114,7 @@ class MutateWithAttsTest {
     fun localTest() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         records.register(InMemDataRecordsDao("test"))
 
@@ -134,13 +134,13 @@ class MutateWithAttsTest {
         val app0 = appsFactory.createApp("app-0")
         val app1 = appsFactory.createApp("app-1")
 
-        app1.factory.recordsServiceV1.register(InMemDataRecordsDao("test-0"))
+        app1.factory.recordsService.register(InMemDataRecordsDao("test-0"))
 
         baseTest(app0.factory, "app-1/test-0")
 
-        app1.factory.recordsServiceV1.register(InMemDataRecordsDao("test-1"))
-        app1.factory.recordsServiceV1.register(InMemDataRecordsDao("test-2"))
-        app1.factory.recordsServiceV1.register(InMemDataRecordsDao("test-3"))
+        app1.factory.recordsService.register(InMemDataRecordsDao("test-1"))
+        app1.factory.recordsService.register(InMemDataRecordsDao("test-2"))
+        app1.factory.recordsService.register(InMemDataRecordsDao("test-3"))
 
         multipleDaoMutateTest(app0.factory, listOf("app-1/test-1", "app-1/test-2", "app-1/test-3"))
         multipleDaoMutateTest(app1.factory, listOf("app-1/test-1", "app-1/test-2", "app-1/test-3"))

@@ -16,7 +16,7 @@ class RawMutateTest {
         val factory = RecordsServiceFactory()
         var mutRecord = LocalRecordAtts()
 
-        factory.recordsServiceV1.register(object : RecordMutateDao {
+        factory.recordsService.register(object : RecordMutateDao {
             override fun mutate(record: LocalRecordAtts): String {
                 mutRecord = record
                 return record.id
@@ -53,7 +53,7 @@ class RawMutateTest {
         )
 
         val recordRef = EntityRef.valueOf("test@test")
-        val resRec = factory.recordsServiceV1.mutate(recordRef, mutAtts)
+        val resRec = factory.recordsService.mutate(recordRef, mutAtts)
 
         assertEquals(recordRef, resRec)
         assertEquals(recordRef.getLocalId(), mutRecord.id)

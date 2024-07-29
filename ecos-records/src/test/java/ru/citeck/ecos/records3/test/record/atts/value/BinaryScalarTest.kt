@@ -11,7 +11,7 @@ class BinaryScalarTest {
     fun test() {
         val services = RecordsServiceFactory()
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         val dtoSchemaReader = services.dtoSchemaReader
         val schemaWriter = services.attSchemaWriter
 

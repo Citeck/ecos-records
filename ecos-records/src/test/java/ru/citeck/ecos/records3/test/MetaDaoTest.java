@@ -49,7 +49,7 @@ class MetaDaoTest extends AbstractRecordsDao implements RecordsAttsDao {
                 return metaAtts.get(attribute);
             }
         });
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 

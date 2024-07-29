@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.dto
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnore
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import lombok.extern.slf4j.Slf4j
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
@@ -12,8 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Function
-import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty as JackJsonProperty
 
 @Slf4j
 open class RecordAtts() : HasSensitiveData<RecordAtts> {
@@ -83,7 +81,6 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
     }
 
     @JsonProperty
-    @JackJsonProperty
     fun setId(id: String?) {
         this.id = EntityRef.valueOf(id)
     }
@@ -105,7 +102,6 @@ open class RecordAtts() : HasSensitiveData<RecordAtts> {
     }
 
     @JsonIgnore
-    @JackJsonIgnore
     fun getAtts(): ObjectData {
         return attributes
     }

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.source.dao.local.job
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import lombok.Data
-import mu.KotlinLogging
 import ru.citeck.ecos.commons.task.schedule.Schedules
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -120,7 +120,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
             try {
                 it.second?.get(Duration.ofSeconds(20))
             } catch (e: Exception) {
-                log.warn("Exception while job cancelling. SourceId: " + it.first.sourceId, e)
+                log.warn(e) { "Exception while job cancelling. SourceId: " + it.first.sourceId }
             }
         }
     }
@@ -146,7 +146,7 @@ class JobExecutor(private val serviceFactory: RecordsServiceFactory) {
                 }
             }
         } catch (e: Exception) {
-            log.error("Job execution error", e)
+            log.error(e) { "${"Job execution error"}" }
         } finally {
             job.running = false
         }

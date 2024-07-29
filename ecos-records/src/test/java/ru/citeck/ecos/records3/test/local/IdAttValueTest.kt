@@ -17,7 +17,7 @@ class IdAttValueTest {
                 return EcosWebAppApiMock("app0")
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         records.register(
             RecordsDaoBuilder.create("test")

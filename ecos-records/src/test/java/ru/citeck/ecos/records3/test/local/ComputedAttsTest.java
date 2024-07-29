@@ -81,7 +81,7 @@ public class ComputedAttsTest extends AbstractRecordsDao
                 }
             }
         });
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 

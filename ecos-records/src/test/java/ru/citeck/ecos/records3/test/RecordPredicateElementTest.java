@@ -4,14 +4,15 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement;
+import ru.citeck.ecos.records2.predicate.element.raw.RawElement;
+import ru.citeck.ecos.records2.predicate.element.raw.RawElements;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.RecordElement;
-import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
@@ -36,7 +37,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
     @NotNull
     @Override
     public String getId() {
-        return "";
+        return "test";
     }
 
     @BeforeAll
@@ -46,7 +47,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
 
         predicates = factory.getPredicateService();
 
-        factory.getRecordsServiceV1().register(this);
+        factory.getRecordsService().register(this);
     }
 
     @Test
@@ -59,7 +60,7 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             put("b", "bb");
         }});
 
-        Element element = new RecordElement(recordsService, EntityRef.create("", ""));
+        Element element = new RawElement<>(recordsService, EntityRef.create("test", ""));
 
         Predicate pred = Predicates.eq("a", "aa");
         assertTrue(predicates.isMatch(element, pred));
@@ -115,14 +116,14 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             put("c", "cc");
         }});
 
-        RecordElements elements = new RecordElements(recordsService, Arrays.asList(
-            EntityRef.valueOf("0"),
-            EntityRef.valueOf("1"),
-            EntityRef.valueOf("2"),
-            EntityRef.valueOf("3"),
-            EntityRef.valueOf("4"),
-            EntityRef.valueOf("5"),
-            EntityRef.valueOf("6")
+        RawElements<EntityRef> elements = new RawElements<>(recordsService, Arrays.asList(
+            EntityRef.valueOf("test@0"),
+            EntityRef.valueOf("test@1"),
+            EntityRef.valueOf("test@2"),
+            EntityRef.valueOf("test@3"),
+            EntityRef.valueOf("test@4"),
+            EntityRef.valueOf("test@5"),
+            EntityRef.valueOf("test@6")
         ));
 
         Predicate pred = Predicates.and(
@@ -130,22 +131,22 @@ public class RecordPredicateElementTest extends AbstractRecordsDao implements Re
             Predicates.eq("b", "bb")
         );
 
-        List<RecordElement> filtered = predicateService.filter(elements, pred);
+        List<RecordAttsElement<EntityRef>> filtered = predicateService.filter(elements, pred);
         assertEquals(3, filtered.size());
-        assertEquals(EntityRef.valueOf("1"), filtered.get(0).getRecordRef());
-        assertEquals(EntityRef.valueOf("5"), filtered.get(1).getRecordRef());
-        assertEquals(EntityRef.valueOf("6"), filtered.get(2).getRecordRef());
+        assertEquals(EntityRef.valueOf("test@1"), filtered.get(0).getObj());
+        assertEquals(EntityRef.valueOf("test@5"), filtered.get(1).getObj());
+        assertEquals(EntityRef.valueOf("test@6"), filtered.get(2).getObj());
 
         filtered = predicateService.filter(elements, pred, 2);
         assertEquals(2, filtered.size());
-        assertEquals(EntityRef.valueOf("1"), filtered.get(0).getRecordRef());
-        assertEquals(EntityRef.valueOf("5"), filtered.get(1).getRecordRef());
+        assertEquals(EntityRef.valueOf("test@1"), filtered.get(0).getObj());
+        assertEquals(EntityRef.valueOf("test@5"), filtered.get(1).getObj());
 
         pred = Predicates.eq("c", "cc");
         filtered = predicateService.filter(elements, pred);
         assertEquals(2, filtered.size());
-        assertEquals(EntityRef.valueOf("4"), filtered.get(0).getRecordRef());
-        assertEquals(EntityRef.valueOf("6"), filtered.get(1).getRecordRef());
+        assertEquals(EntityRef.valueOf("test@4"), filtered.get(0).getObj());
+        assertEquals(EntityRef.valueOf("test@6"), filtered.get(1).getObj());
     }
 
     @NotNull

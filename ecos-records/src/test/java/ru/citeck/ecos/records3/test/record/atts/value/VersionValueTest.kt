@@ -10,7 +10,7 @@ class VersionValueTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val version = Version.valueOf("1.0.0")
 
         val strValue = records.getAtt(version, "?str").asText()

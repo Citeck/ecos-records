@@ -6,10 +6,10 @@ public class DistinctValue {
 
     private String id;
 
-    @AttName(".str")
+    @AttName("?str")
     private String value;
 
-    @AttName(".disp")
+    @AttName("?disp")
     private String displayName;
 
     public String getId() {

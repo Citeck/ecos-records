@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test;
 
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class MapJsonRecordsTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 

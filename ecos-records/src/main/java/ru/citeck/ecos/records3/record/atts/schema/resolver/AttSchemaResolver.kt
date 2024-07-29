@@ -1,19 +1,16 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
-import ecos.com.fasterxml.jackson210.databind.node.NullNode
-import mu.KotlinLogging
+import com.fasterxml.jackson.databind.node.NullNode
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.exception.JsonMapperException
-import ru.citeck.ecos.commons.promise.Promises
-import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.ServiceFactoryAware
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -47,6 +44,7 @@ import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.promise.Promises
 import java.time.Duration
 import java.util.*
 import java.util.stream.Collectors
@@ -54,8 +52,6 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
-import kotlin.streams.toList
-import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
 class AttSchemaResolver : ServiceFactoryAware {
 
@@ -93,7 +89,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         this.attSchemaReader = serviceFactory.attSchemaReader
         this.attSchemaWriter = serviceFactory.attSchemaWriter
         this.dtoSchemaReader = serviceFactory.dtoSchemaReader
-        this.recordsService = serviceFactory.recordsServiceV1
+        this.recordsService = serviceFactory.recordsService
         this.computedAttsService = serviceFactory.recordComputedAttsService
         this.recordTypeService = serviceFactory.recordTypeService
         this.extAttMixinService = serviceFactory.extAttMixinService
@@ -813,7 +809,6 @@ class AttSchemaResolver : ServiceFactoryAware {
                     when (res) {
                         is String -> res
                         is AttValue -> res.asText()
-                        is MetaValue -> res.string
                         else -> res.toString()
                     }
                 } else {
@@ -866,7 +861,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                 ScalarType.DISP -> {
                     val disp = value.displayName
 
-                    if (disp == null || LibsUtils.isJacksonPresent() && disp is JackNullNode) {
+                    if (disp == null) {
                         null
                     } else if (disp is DataValue) {
                         when {

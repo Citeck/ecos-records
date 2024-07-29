@@ -22,7 +22,7 @@ open class AttSchemaWriterV2 : AttSchemaWriter {
             out.append(':')
             writeAndEscape(attribute.name, out, ",.")
         } else {
-            writeAndEscape(attribute.name, out, if (firstInBraces) { ":,." } else { ",." })
+            writeAndEscape(attribute.name, out, if (firstInBraces) ":,." else ",.")
         }
         if (attribute.multiple) {
             out.append("[]")

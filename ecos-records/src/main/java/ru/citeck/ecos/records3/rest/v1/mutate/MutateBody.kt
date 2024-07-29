@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.rest.v1.mutate
 
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
+import com.fasterxml.jackson.annotation.JsonSetter
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.rest.v1.RequestBody
 import ru.citeck.ecos.records3.rest.v1.RestUtils
@@ -40,7 +40,6 @@ class MutateBody : RequestBody, HasSensitiveData<MutateBody> {
     }
 
     @JsonSetter
-    @com.fasterxml.jackson.annotation.JsonSetter
     fun setAttributes(attributes: Any?) {
         this.attributes = RestUtils.prepareReqAttsAsListOfMap(attributes)
     }

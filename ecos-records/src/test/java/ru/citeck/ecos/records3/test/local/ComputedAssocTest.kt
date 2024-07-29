@@ -70,7 +70,7 @@ class ComputedAssocTest {
             }
         })
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         records.register(InMemDataRecordsDao("test"))
         records.create(

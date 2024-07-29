@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.test.record.atts.schema
 
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory
-import ecos.com.fasterxml.jackson210.databind.node.MissingNode
-import ecos.com.fasterxml.jackson210.databind.node.NullNode
-import ecos.com.fasterxml.jackson210.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.MissingNode
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue

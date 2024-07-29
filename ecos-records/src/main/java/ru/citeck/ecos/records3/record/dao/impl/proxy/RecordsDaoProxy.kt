@@ -20,9 +20,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.RecsGroupQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.record.dao.txn.TxnRecordsDao
 import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -37,7 +35,6 @@ open class RecordsDaoProxy(
     RecordsMutateDao,
     RecordsDeleteDao,
     HasClientMeta,
-    TxnRecordsDao,
     RecsGroupQueryDao {
 
     // fields in constructor cause exception
@@ -51,7 +48,6 @@ open class RecordsDaoProxy(
     private val mutProc = processor as? MutateProxyProcessor
     private val delProc = processor as? DeleteProxyProcessor
     private val clientMetaProc = processor as? HasClientMeta
-    private lateinit var recordsResolver: LocalRemoteResolver
 
     protected var sourceIdMapping: Map<String, String> = emptyMap()
 
@@ -200,7 +196,6 @@ open class RecordsDaoProxy(
         if (processorField is ServiceFactoryAware) {
             processorField.setRecordsServiceFactory(serviceFactory)
         }
-        recordsResolver = serviceFactory.recordsResolver
         processorField?.init(this)
 
         val currentAppName = serviceFactory.webappProps.appName
@@ -219,18 +214,6 @@ open class RecordsDaoProxy(
 
     override fun getClientMeta(): ClientMeta? {
         return clientMetaProc?.getClientMeta()
-    }
-
-    override fun commit(txnId: UUID, recordIds: List<String>) {
-        recordsResolver.commit(recordIds.map { toTargetRef(it) })
-    }
-
-    override fun rollback(txnId: UUID, recordIds: List<String>) {
-        recordsResolver.rollback(recordIds.map { toTargetRef(it) })
-    }
-
-    override fun isTransactional(): Boolean {
-        return recordsResolver.isSourceTransactional(targetIdField)
     }
 
     private class ProxyRecVal(

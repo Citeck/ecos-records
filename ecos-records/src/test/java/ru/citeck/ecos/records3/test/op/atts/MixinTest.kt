@@ -31,7 +31,7 @@ class MixinTest {
             override fun getId() = "test"
         }
 
-        factory.recordsServiceV1.register(recordsDao)
+        factory.recordsService.register(recordsDao)
 
         val field0Title = "field0_Title"
         val displayName = "Display Name"
@@ -61,28 +61,28 @@ class MixinTest {
 
         val ref = EntityRef.valueOf("test@local")
 
-        val providedAtt = factory.recordsServiceV1.getAtt(ref, "providedAtt").asText()
+        val providedAtt = factory.recordsService.getAtt(ref, "providedAtt").asText()
         assertEquals("providedAtt", providedAtt)
 
-        val innerProvidedAtt = factory.recordsServiceV1.getAtt(ref, "inner.providedAtt").asText()
+        val innerProvidedAtt = factory.recordsService.getAtt(ref, "inner.providedAtt").asText()
         assertEquals("", innerProvidedAtt)
 
-        val providedInnerAtt = factory.recordsServiceV1.getAtt(ref, "innerProvided").asText()
+        val providedInnerAtt = factory.recordsService.getAtt(ref, "innerProvided").asText()
         assertEquals("providedAtt", providedInnerAtt)
 
-        val innerProvidedInnerAtt = factory.recordsServiceV1.getAtt(ref, "inner.innerProvided").asText()
+        val innerProvidedInnerAtt = factory.recordsService.getAtt(ref, "inner.innerProvided").asText()
         assertEquals("providedAtt", innerProvidedInnerAtt)
 
-        val field0TitleFromRec = factory.recordsServiceV1.getAtt(ref, "_edge.field0.title").asText()
+        val field0TitleFromRec = factory.recordsService.getAtt(ref, "_edge.field0.title").asText()
         assertEquals(field0Title, field0TitleFromRec)
 
-        val field0TitleFromRec2 = factory.recordsServiceV1.getAtt(ref, ".edge(n:\"field0\"){title}").asText()
+        val field0TitleFromRec2 = factory.recordsService.getAtt(ref, ".edge(n:\"field0\"){title}").asText()
         assertEquals(field0Title, field0TitleFromRec2)
 
-        val dispNameScalar = factory.recordsServiceV1.getAtt(ref, "?disp").asText()
+        val dispNameScalar = factory.recordsService.getAtt(ref, "?disp").asText()
         assertEquals(displayName, dispNameScalar)
 
-        val dispNameAtt = factory.recordsServiceV1.getAtt(ref, "_disp").asText()
+        val dispNameAtt = factory.recordsService.getAtt(ref, "_disp").asText()
         assertEquals(displayName, dispNameAtt)
     }
 

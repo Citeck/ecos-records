@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records2.predicate
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
-import org.apache.commons.beanutils.PropertyUtils
+import com.fasterxml.jackson.databind.node.ObjectNode
+import ru.citeck.beans.BeanUtils
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.TmplUtils.applyAtts
@@ -117,27 +117,27 @@ object PredicateUtils {
     }
 
     @JvmStatic
-    fun <T> convertToDto(predicate: Predicate, type: Class<T>): T {
+    fun <T : Any> convertToDto(predicate: Predicate, type: Class<T>): T {
         return convertToDto(predicate, type, false)
     }
 
     @JvmStatic
-    fun <T> convertToDto(predicate: Predicate, type: Class<T>, onlyAnd: Boolean): T {
+    fun <T : Any> convertToDto(predicate: Predicate, type: Class<T>, onlyAnd: Boolean): T {
         val dto: T = type.newInstance()
         return convertToDto(predicate, dto, onlyAnd)
     }
 
     @JvmStatic
-    fun <T> convertToDto(predicate: Predicate, dto: T): T {
+    fun <T : Any> convertToDto(predicate: Predicate, dto: T): T {
         return convertToDto(predicate, dto, false)
     }
 
     @JvmStatic
-    fun <T> convertToDto(predicate: Predicate, dto: T, onlyAnd: Boolean): T {
+    fun <T : Any> convertToDto(predicate: Predicate, dto: T, onlyAnd: Boolean): T {
         val dtoFields: MutableSet<String> = HashSet()
-        for (descriptor in PropertyUtils.getPropertyDescriptors(dto)) {
-            if (descriptor.propertyType != Predicate::class.java) {
-                dtoFields.add(descriptor.name)
+        for (descriptor in BeanUtils.getProperties(dto::class)) {
+            if (descriptor.getPropClass() != Predicate::class.java) {
+                dtoFields.add(descriptor.getName())
             }
         }
         val dtoData: MutableMap<String, Any> = HashMap()
@@ -159,7 +159,7 @@ object PredicateUtils {
         val dtoDataNode = mapper.toJson(dtoData) as ObjectNode
         mapper.applyData(dto, dtoDataNode)
         try {
-            PropertyUtils.setProperty(dto, "predicate", filtered)
+            BeanUtils.setProperty(dto, "predicate", filtered)
         } catch (e: IllegalAccessException) {
             // do nothing
             return dto
@@ -186,7 +186,9 @@ object PredicateUtils {
                 }
                 pred
             },
-            onlyAnd, optimize, filterEmptyComposite
+            onlyAnd,
+            optimize,
+            filterEmptyComposite
         )
     }
 

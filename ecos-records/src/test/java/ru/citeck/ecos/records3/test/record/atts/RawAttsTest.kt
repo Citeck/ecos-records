@@ -9,7 +9,7 @@ class RawAttsTest {
     @Test
     fun notRawTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val testDto = TestDto(inner = TestDto(inner = TestDto()))
 
         // val res0 = records.getAtt(testDto, "inner.notEmptyStr").asText()

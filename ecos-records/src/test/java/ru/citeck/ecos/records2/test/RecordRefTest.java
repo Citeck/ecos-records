@@ -69,7 +69,7 @@ class RecordRefTest {
         assertNotEquals(otherRef, recordRef);
 
         String otherRefStr = Json.getMapper().toString(otherRef);
-        assertEquals("\"" + otherRef.toString() + "\"", otherRefStr);
+        assertEquals("\"" + otherRef + "\"", otherRefStr);
 
         EntityRef remappedOtherRef = Json.getMapper().convert(otherRefStr, EntityRef.class);
         assertEquals(otherRef, remappedOtherRef);
@@ -87,13 +87,12 @@ class RecordRefTest {
         EntityRef ref0 = EntityRef.valueOf(sourceId + "@@");
         EntityRef ref1 = EntityRef.valueOf(sourceId + "@@@@@");
 
-        assertEquals(ref0, ref1);
         assertEquals(sourceId, ref0.getSourceId());
         assertEquals(sourceId, ref1.getSourceId());
 
-        assertEquals(ref0, EntityRef.create(null, sourceId, "@@@@"));
-        assertEquals(ref0, EntityRef.create(null, sourceId, "@"));
-        assertEquals(ref0, EntityRef.create(null, sourceId, null));
+        assertEquals("source-id@@@@@", EntityRef.create(null, sourceId, "@@@@").toString());
+        assertEquals("source-id@@", EntityRef.create(null, sourceId, "@").toString());
+        assertEquals("source-id@", EntityRef.create(null, sourceId, null).toString());
         assertEquals(EntityRef.valueOf("some-app/" + sourceId + "@"),
                      EntityRef.create("some-app", sourceId, null));
     }

@@ -22,7 +22,7 @@ public class ForceLocalRecordsTest {
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        RecordsService recordsService = factory.getRecordsServiceV1();
+        RecordsService recordsService = factory.getRecordsService();
 
         recordsService.register(new TypesDao());
 

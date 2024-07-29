@@ -20,7 +20,7 @@ class SelfAttTest {
     @Test
     fun getAttsTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
         val testDto = TestDto(
             "value0",
@@ -76,7 +76,7 @@ class SelfAttTest {
             selfDataBase64YamlArr
         )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         for (value in selfDataTypes) {
 

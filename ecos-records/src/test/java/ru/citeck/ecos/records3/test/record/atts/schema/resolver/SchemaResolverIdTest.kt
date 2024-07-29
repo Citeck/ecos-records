@@ -20,7 +20,7 @@ class SchemaResolverIdTest {
                 return EcosWebAppApiMock("test-app")
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val recordsDao = RecordsDaoBuilder.create("test")
             .addRecord("some-id", ObjectData.create())

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.ServiceFactoryAware
@@ -17,7 +17,6 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.type.RecordTypeService
-import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
@@ -147,11 +146,7 @@ open class RecordsServiceImpl(
                     if (context.ctxData.readOnly) {
                         error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
                     }
-                    val txnChangedRecords = context.getTxnChangedRecords()
-                    val sourceIdMapping = context.ctxData.sourceIdMapping
                     val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
-
-                    addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
 
                     result.map { it.withDefaultAppName(currentAppName) }
                 }
@@ -163,46 +158,6 @@ open class RecordsServiceImpl(
         }
 
         return mutateResult
-    }
-
-    private inline fun <T> addTxnChangedRecords(
-        txnChangedRecords: MutableSet<EntityRef>?,
-        sourceIdMapping: Map<String, String>,
-        records: List<T>,
-        crossinline getRef: (T) -> EntityRef
-    ) {
-        if (isGatewayMode || txnChangedRecords == null) {
-            return
-        }
-        records.forEach {
-            addTxnChangedRecord(txnChangedRecords, sourceIdMapping, getRef.invoke(it))
-        }
-    }
-
-    private fun addTxnChangedRecord(
-        txnChangedRecords: MutableSet<EntityRef>?,
-        sourceIdMapping: Map<String, String>,
-        recordRef: EntityRef?
-    ) {
-
-        if (isGatewayMode || txnChangedRecords == null || recordRef == null || EntityRef.isEmpty(recordRef)) {
-            return
-        }
-        val normalizedRef = if (
-            recordRef.getAppName() == currentAppName ||
-            recordRef.getAppName() == currentAppRef
-        ) {
-            recordRef.withoutAppName()
-        } else {
-            recordRef
-        }
-        txnChangedRecords.add(
-            RecordRefUtils.mapAppIdAndSourceId(
-                normalizedRef,
-                currentAppName,
-                sourceIdMapping
-            )
-        )
     }
 
     /* DELETE */
@@ -217,12 +172,6 @@ open class RecordsServiceImpl(
             error("Deletion is not allowed in read-only mode. Records: $records")
         }
         val status = recordsResolver.delete(records)
-
-        val txnChangedRecords = context.getTxnChangedRecords()
-        val sourceIdMapping = context.ctxData.sourceIdMapping
-
-        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { EntityRef.valueOf(it) }
-
         return status
     }
 
@@ -255,7 +204,11 @@ open class RecordsServiceImpl(
     }
 
     override fun register(sourceId: String, recordsSource: RecordsDao) {
-        recordsResolver.register(sourceId, recordsSource)
+        if (sourceId.isEmpty()) {
+            log.error { "RecordsDAO with empty sourceId won't be registered: $recordsSource" }
+        } else {
+            recordsResolver.register(sourceId, recordsSource)
+        }
     }
 
     override fun unregister(sourceId: String) {

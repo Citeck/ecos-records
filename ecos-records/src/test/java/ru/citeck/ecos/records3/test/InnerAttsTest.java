@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
 
-    private static final String ID = "";
+    private static final String ID = "test";
     private RecordsService recordsService;
 
     @NotNull
@@ -36,7 +36,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 
@@ -98,8 +98,8 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
 
             Map<String, String> atts = AttContext.getInnerAttsMap();
             atts.put("display", "inner?disp");
-            atts.put("innerDisp", ".disp");
-            atts.put("innerStr", ".str");
+            atts.put("innerDisp", "?disp");
+            atts.put("innerStr", "?str");
             atts.put("innerField1", "inner.field1");
             atts.put("innerField1Disp", "inner.field1?disp");
             atts.put("innerHasTrue", ".att(n:\"inner2\"){has(n:\"has_true\")}");
@@ -172,7 +172,7 @@ class InnerAttsTest extends AbstractRecordsDao implements RecordsAttsDao {
             this.field1 = field1;
         }
 
-        @AttName(".disp")
+        @AttName("?disp")
         public String getDisplay() {
             return "DISPLAY";
         }

@@ -10,7 +10,7 @@ class YamlProcessorTest {
     fun test() {
 
         val value = DtoValue("abc", 123)
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val yamlText = records.getAtt(value, "?json|yaml()").asText()
         assertThat(yamlText).isEqualTo(

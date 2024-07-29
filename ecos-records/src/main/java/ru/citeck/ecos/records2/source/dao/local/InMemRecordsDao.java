@@ -2,9 +2,10 @@ package ru.citeck.ecos.records2.source.dao.local;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator;
 import ru.citeck.ecos.records2.predicate.comparator.ValueComparator;
+import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement;
+import ru.citeck.ecos.records2.predicate.element.raw.RawElements;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.ServiceFactoryAware;
@@ -14,7 +15,6 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.atts.RecordAttsService;
 import ru.citeck.ecos.records2.predicate.PredicateService;
-import ru.citeck.ecos.records2.predicate.RecordElements;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages;
@@ -47,7 +47,6 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
     protected RecordsService recordsService;
     protected RecordsServiceFactory serviceFactory;
     protected RecordAttsService recordsMetaService;
-    protected ru.citeck.ecos.records2.RecordsService recordsServiceV0;
     protected ValueComparator comparator = DefaultValueComparator.INSTANCE;
 
     @NotNull
@@ -128,10 +127,10 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
                     }
                 }
                 return 0;
-            }).collect(Collectors.toList());
+            }).toList();
         }
 
-        RecordElements elements = new RecordElements(recordsServiceV0, new ArrayList<>(recordsList
+        RawElements<EntityRef> elements = new RawElements<>(recordsService, new ArrayList<>(recordsList
             .stream()
             .map(r -> EntityRef.create(getId(), r.getKey()))
             .collect(Collectors.toList())
@@ -144,7 +143,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
             .stream()
             .skip(query.getPage().getSkipCount())
             .limit(maxItems)
-            .map(RecordElement::getRecordRef)
+            .map(RecordAttsElement::getObj)
             .collect(Collectors.toList())
         );
 
@@ -179,8 +178,7 @@ public class InMemRecordsDao<T> extends AbstractRecordsDao
     public void setRecordsServiceFactory(RecordsServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
         this.predicateService = serviceFactory.getPredicateService();
-        this.recordsService = serviceFactory.getRecordsServiceV1();
+        this.recordsService = serviceFactory.getRecordsService();
         this.recordsMetaService = serviceFactory.getRecordsAttsService();
-        this.recordsServiceV0 = serviceFactory.getRecordsService();
     }
 }

@@ -1,17 +1,12 @@
 package ru.citeck.ecos.records2.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import ru.citeck.ecos.commons.utils.StringUtils;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,29 +15,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class RecordsUtils {
-
-    public static String getMetaValueId(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof MetaValue) {
-            return ((MetaValue) value).getId();
-        }
-        try {
-            Object propValue = PropertyUtils.getProperty(value, "id");
-            return propValue != null ? propValue.toString() : null;
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            log.debug("Error", e);
-        }
-        return null;
-    }
-
-    public static RecordsQueryResult<RecordAtts> attsWithDefaultApp(RecordsQueryResult<RecordAtts> queryResult,
-                                                                    String appName, String sourceId) {
-
-        queryResult.setRecords(attsWithDefaultApp(queryResult.getRecords(), appName, sourceId));
-        return queryResult;
-    }
 
     public static RecsQueryRes<RecordAtts> attsWithDefaultApp(RecsQueryRes<RecordAtts> queryResult, String appName) {
         return attsWithDefaultApp(queryResult, appName, "");
@@ -78,19 +50,6 @@ public class RecordsUtils {
             recordsStream = recordsStream.map(meta -> meta.withDefaultAppName(appName));
         }
         return recordsStream.collect(Collectors.toList());
-    }
-
-    public static RecordsQueryResult<RecordMeta> metaWithDefaultApp(RecordsQueryResult<RecordMeta> queryResult,
-                                                                    String appName) {
-        if (StringUtils.isBlank(appName)) {
-            return queryResult;
-        }
-        queryResult.setRecords(queryResult.getRecords()
-            .stream()
-            .map(meta -> meta.withDefaultAppName(appName))
-            .collect(Collectors.toList())
-        );
-        return queryResult;
     }
 
     public static Map<String, Class<?>> getAttributesClasses(String sourceId,
@@ -145,16 +104,6 @@ public class RecordsUtils {
                       .collect(Collectors.toList());
     }
 
-    @Deprecated
-    public static List<RecordMeta> toScopedRecordsMeta(String sourceId, List<RecordMeta> records) {
-        if (StringUtils.isBlank(sourceId)) {
-            return records;
-        }
-        return records.stream()
-                      .map(n -> new RecordMeta(EntityRef.valueOf(sourceId + "@" + n.getId()), n.getAttributes()))
-                      .collect(Collectors.toList());
-    }
-
     public static List<EntityRef> strToRecords(String sourceId, List<String> records) {
         return records.stream()
                       .map(r -> EntityRef.create(sourceId, r))
@@ -184,11 +133,6 @@ public class RecordsUtils {
         Map<EntityRef, V> result = new HashMap<>();
         data.forEach((id, recMeta) -> result.put(EntityRef.create(sourceId, id), recMeta));
         return result;
-    }
-
-    @Deprecated
-    public static  List<RecordMeta> convertToRefsMeta(String sourceId, List<RecordMeta> data) {
-        return toScopedRecordsMeta(sourceId, data);
     }
 
     public static  List<RecordAtts> convertToRefs(String sourceId, List<RecordAtts> data) {

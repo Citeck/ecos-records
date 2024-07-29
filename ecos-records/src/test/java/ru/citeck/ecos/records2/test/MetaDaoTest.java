@@ -1,16 +1,16 @@
 package ru.citeck.ecos.records2.test;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaAttributesSupplier;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.nio.charset.StandardCharsets;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaValue> {
+class MetaDaoTest implements RecordAttsDao {
 
     private static final String ID = "123";
 
@@ -43,7 +43,6 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaVal
                 return metaAtts.get(attribute);
             }
         });
-        setId(ID);
         recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
@@ -53,25 +52,32 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaVal
 
         EntityRef ref = EntityRef.valueOf("meta@");
 
-        DataValue value = recordsService.getAttribute(ref, "rec.123@VALUE.field");
+        DataValue value = recordsService.getAtt(ref, "rec.123@VALUE.field");
         assertEquals("VALUE", value.asText());
 
-        String attValue = recordsService.getAttribute(ref, "attributes.key?str").asText();
+        String attValue = recordsService.getAtt(ref, "attributes.key?str").asText();
         assertEquals(metaAtts.get("key"), attValue);
 
-        String enumAttValue = recordsService.getAttribute(ref, "rec.123@VALUE.enum").asText();
+        String enumAttValue = recordsService.getAtt(ref, "rec.123@VALUE.enum").asText();
         assertEquals("FIRST", enumAttValue);
 
-        String bytesValue = recordsService.getAttribute(ref, "rec.123@VALUE.bytes").asText();
+        String bytesValue = recordsService.getAtt(ref, "rec.123@VALUE.bytes").asText();
         assertEquals(Base64.getEncoder().encodeToString(BYTES_STR), bytesValue);
     }
 
+    @Nullable
     @Override
-    public List<MetaValue> getLocalRecordsMeta(List<EntityRef> records, MetaField metaField) {
-        return records.stream().map(Value::new).collect(Collectors.toList());
+    public Object getRecordAtts(@NotNull String recordId) throws Exception {
+        return new Value(EntityRef.create(getId(), recordId));
     }
 
-    public static class Value implements MetaValue {
+    @NotNull
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    public static class Value implements AttValue {
 
         private EntityRef ref;
 
@@ -80,7 +86,7 @@ class MetaDaoTest extends LocalRecordsDao implements LocalRecordsMetaDao<MetaVal
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAtt(String name) {
             if (name.equals("field")) {
                 return ref.getLocalId();
             } else if (name.equals("enum")) {

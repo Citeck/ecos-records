@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 @JsonDeserialize(builder = RecordsProperties.Builder::class)
 class RecordsProperties(

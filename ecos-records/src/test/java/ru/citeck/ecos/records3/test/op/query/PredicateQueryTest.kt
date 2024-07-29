@@ -25,7 +25,7 @@ class PredicateQueryTest {
             }
         }
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(dao)
         val query = RecordsQuery.create {
             withSourceId("test")

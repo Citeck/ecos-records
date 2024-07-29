@@ -9,7 +9,7 @@ class NotExistsAttTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         assertThat(records.getAtt("unknown-src@def", "_notExists?bool").asBoolean()).isTrue
     }
 }

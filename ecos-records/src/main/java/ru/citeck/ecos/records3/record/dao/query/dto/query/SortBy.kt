@@ -1,10 +1,8 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.query
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 @JsonDeserialize(builder = SortBy.Builder::class)
-@JackJsonDeserialize(builder = SortBy.Builder::class)
 data class SortBy(
     val attribute: String,
     val ascending: Boolean

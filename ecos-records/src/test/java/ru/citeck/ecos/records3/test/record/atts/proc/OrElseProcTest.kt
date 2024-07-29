@@ -13,7 +13,7 @@ class OrElseProcTest {
 
     @Test
     fun autoOrElseTest() {
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         assertThat(records.getAtt(null, "abc?bool!")).isEqualTo(DataValue.FALSE)
         assertThat(records.getAtt(null, "abc?num!")).isEqualTo(DataValue.create(0.0))
         assertThat(records.getAtt(null, "abc?json!")).isEqualTo(DataValue.createObj())
@@ -38,7 +38,7 @@ class OrElseProcTest {
     @Test
     fun orElseTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord(

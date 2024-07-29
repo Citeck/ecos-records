@@ -15,7 +15,7 @@ class DateInstantFactoryTest {
         val instant = Instant.now()
         val expectedYear = instant.atOffset(ZoneOffset.UTC).year
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val testImpl = { time: Any ->
             val year = records.getAtt(time, "?str|fmt('yyyy')").asInt()

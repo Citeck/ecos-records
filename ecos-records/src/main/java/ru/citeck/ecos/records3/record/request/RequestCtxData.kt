@@ -1,12 +1,10 @@
 package ru.citeck.ecos.records3.record.request
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import java.util.*
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonDeserialize(builder = RequestCtxData.Builder::class)
-@JackJsonDeserialize(builder = RequestCtxData.Builder::class)
 data class RequestCtxData(
     val requestId: String,
     val requestTrace: List<String>,
@@ -15,8 +13,6 @@ data class RequestCtxData(
     val msgLevel: MsgLevel,
     val omitErrors: Boolean,
     val readOnly: Boolean,
-    val txnId: UUID?,
-    val txnOwner: Boolean,
     val sourceIdMapping: Map<String, String>
 ) {
 
@@ -54,8 +50,6 @@ data class RequestCtxData(
         var msgLevel: MsgLevel = MsgLevel.WARN
         var omitErrors: Boolean = false
         var readOnly: Boolean = false
-        var txnId: UUID? = null
-        var txnOwner: Boolean = false
         var sourceIdMapping: Map<String, String> = emptyMap()
 
         constructor(base: RequestCtxData) : this() {
@@ -66,8 +60,6 @@ data class RequestCtxData(
             msgLevel = base.msgLevel
             omitErrors = base.omitErrors
             readOnly = base.readOnly
-            txnId = base.txnId
-            txnOwner = base.txnOwner
             sourceIdMapping = base.sourceIdMapping
         }
 
@@ -106,16 +98,6 @@ data class RequestCtxData(
             return this
         }
 
-        fun withTxnId(txnId: UUID?): Builder {
-            this.txnId = txnId
-            return this
-        }
-
-        fun withTxnOwner(txnOwner: Boolean?): Builder {
-            this.txnOwner = txnOwner ?: false
-            return this
-        }
-
         fun withoutSourceIdMapping(): Builder {
             this.sourceIdMapping = this.sourceIdMapping.keys.associateWith { "" }
             return this
@@ -140,8 +122,6 @@ data class RequestCtxData(
                 msgLevel,
                 omitErrors,
                 readOnly,
-                txnId,
-                txnOwner,
                 sourceIdMapping
             )
         }

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.factory.bean
 
-import org.apache.commons.beanutils.PropertyUtils
+import ru.citeck.beans.BeanUtils
+import ru.citeck.beans.desc.PropertyDesc
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
@@ -9,7 +10,6 @@ import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.factory.AttValueFactory
 import ru.citeck.ecos.records3.record.atts.value.impl.SimpleAttEdge
-import java.beans.PropertyDescriptor
 import java.lang.reflect.ParameterizedType
 
 class BeanValueFactory : AttValueFactory<Any> {
@@ -121,25 +121,26 @@ class BeanValueFactory : AttValueFactory<Any> {
     internal class BeanEdge(name: String, scope: Value) : SimpleAttEdge(name, scope) {
 
         // never executed
-        private val descriptor: PropertyDescriptor? by lazy {
+        private val descriptor: PropertyDesc? by lazy {
             try {
-                PropertyUtils.getPropertyDescriptor(scope.bean, getName())
+                val propName = getName()
+                BeanUtils.getProperties(scope.bean::class).find { it.getName() == propName }
             } catch (e: NoSuchMethodException) {
-                log.debug("Descriptor not found", e)
+                log.debug(e) { "Descriptor not found" }
                 null
             }
         }
 
         override fun isMultiple(): Boolean {
             val desc = descriptor ?: return false
-            return Collection::class.java.isAssignableFrom(desc.propertyType)
+            return Collection::class.java.isAssignableFrom(desc.getPropClass())
         }
 
         override fun getJavaClass(): Class<*>? {
             val descriptor = descriptor ?: return null
-            val type = descriptor.propertyType
-            if (MutableCollection::class.java.isAssignableFrom(type)) {
-                val returnType = descriptor.readMethod.genericReturnType
+            val type = descriptor.getPropClass()
+            if (Collection::class.java.isAssignableFrom(type)) {
+                val returnType = descriptor.getReadMethod()!!.genericReturnType
                 val parameterType = returnType as ParameterizedType
                 return parameterType.actualTypeArguments[0] as? Class<*>
             }

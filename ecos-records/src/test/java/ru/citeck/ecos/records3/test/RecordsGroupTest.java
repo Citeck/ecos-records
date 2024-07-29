@@ -73,7 +73,7 @@ class RecordsGroupTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = (RecordsServiceImpl) factory.getRecordsServiceV1();
+        recordsService = (RecordsServiceImpl) factory.getRecordsService();
         predicateService = factory.getPredicateService();
         queryLangService = factory.getQueryLangService();
 
@@ -297,7 +297,7 @@ class RecordsGroupTest extends AbstractRecordsDao
 
     public static class DistinctValue {
 
-        @AttName(".str")
+        @AttName("?str")
         private String value;
 
         public String getValue() {

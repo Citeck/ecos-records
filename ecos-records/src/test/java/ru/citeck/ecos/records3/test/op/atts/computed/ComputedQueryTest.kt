@@ -128,7 +128,7 @@ class ComputedQueryTest {
         val type0Record = RecordValue("type0Record", type0, "first", "second")
         val type0Ref = EntityRef.create("test", type0Record.id)
 
-        services.recordsServiceV1.register(
+        services.recordsService.register(
             RecordsDaoBuilder.create("test")
                 .addRecord(type0Record.id, type0Record)
                 .build()
@@ -141,22 +141,22 @@ class ComputedQueryTest {
                     "\"att\":\"${type0Record.attForScript}\"" +
                     "}"
             ),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript0?json")
+            services.recordsService.getAtt(type0Ref, "attScript0?json")
         )
 
         assertEquals(
             DataValue.create("[\"${type0Record.attForScript}\"]"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript01[]")
+            services.recordsService.getAtt(type0Ref, "attScript01[]")
         )
 
         assertEquals(
             DataValue.create(type0Record.attAttributeValue),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript1")
+            services.recordsService.getAtt(type0Ref, "attScript1")
         )
 
         assertEquals(
             DataValue.create("{\"attAttributeValue\":\"${type0Record.attAttributeValue}\"}"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript2?json")
+            services.recordsService.getAtt(type0Ref, "attScript2?json")
         )
     }
 

@@ -23,7 +23,7 @@ class DefaultCtxAttsProviderTest {
                 )
             }
         })
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(object : RecordAttsDao {
             override fun getRecordAtts(record: String): Any? = emptyMap<String, Any>()
             override fun getId(): String = "test"

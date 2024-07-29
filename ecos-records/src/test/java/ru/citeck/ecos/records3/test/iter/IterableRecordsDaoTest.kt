@@ -21,7 +21,7 @@ class IterableRecordsDaoTest {
     @ParameterizedTest
     fun test(batchSize: Int) {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val indices = mutableListOf<Int>()
         val daoBuilder = RecordsDaoBuilder.create("test")

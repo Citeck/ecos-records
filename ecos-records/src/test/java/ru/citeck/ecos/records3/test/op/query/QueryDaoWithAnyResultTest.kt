@@ -14,7 +14,7 @@ class QueryDaoWithAnyResultTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(RecordsQueryDaoWithAny())
 
         val nullRes = records.query(

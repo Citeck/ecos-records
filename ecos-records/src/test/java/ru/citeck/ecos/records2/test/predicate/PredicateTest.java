@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.test.predicate;
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;

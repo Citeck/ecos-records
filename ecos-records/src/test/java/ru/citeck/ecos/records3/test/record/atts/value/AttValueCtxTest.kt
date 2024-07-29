@@ -11,7 +11,7 @@ class AttValueCtxTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val attValueCtx = RecordAttValueCtx(CustomAttValue(), records)
 
         assertThat(records.getAtt(attValueCtx, "field").asText()).isEqualTo("value")

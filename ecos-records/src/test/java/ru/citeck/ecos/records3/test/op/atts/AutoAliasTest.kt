@@ -11,7 +11,7 @@ class AutoAliasTest {
     fun test() {
 
         val factory = RecordsServiceFactory()
-        val result = factory.recordsServiceV1.getAtt(
+        val result = factory.recordsService.getAtt(
             DataValue.create("{\"inner\":{\"key\":\"value\",\"key2\":\"value2\"}}"),
             "inner{key?str,aa:key?disp}"
         )

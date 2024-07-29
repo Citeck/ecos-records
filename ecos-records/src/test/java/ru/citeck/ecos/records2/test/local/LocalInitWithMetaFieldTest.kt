@@ -1,16 +1,15 @@
 package ru.citeck.ecos.records2.test.local
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.QueryContext
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.promise.Promise
 import kotlin.test.assertEquals
 
-class LocalInitWithMetaFieldTest : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
+class LocalInitWithMetaFieldTest : RecordAttsDao {
 
     private var innerAttsMapList: MutableList<HashMap<String, String>> = mutableListOf()
     private val factory = RecordsServiceFactory()
@@ -26,7 +25,7 @@ class LocalInitWithMetaFieldTest : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
     fun test() {
 
         factory.recordsService.register(this)
-        factory.recordsService.getAttributes(EntityRef.create("test", "test"), attsToReq)
+        factory.recordsService.getAtts(EntityRef.create("test", "test"), attsToReq)
 
         val expectedAtts = hashMapOf(
             Pair("second", "second"),
@@ -36,18 +35,19 @@ class LocalInitWithMetaFieldTest : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
         assertEquals(mutableListOf(expectedAtts, expectedAtts), innerAttsMapList)
     }
 
-    override fun getLocalRecordsMeta(records: List<EntityRef>, metaField: MetaField): List<Any> {
-        return records.map { Value(it) }
+    override fun getRecordAtts(recordId: String): Any {
+        return Value(EntityRef.create(getId(), recordId))
     }
 
-    inner class Value(val id: EntityRef) : MetaValue {
+    inner class Value(val id: EntityRef) : AttValue {
 
-        override fun <T : QueryContext?> init(context: T, field: MetaField) {
+        override fun init(): Promise<*>? {
             if (id.getLocalId() == "test") {
-                innerAttsMapList.add(HashMap(field.innerAttributesMap))
+                innerAttsMapList.add(HashMap(AttContext.getInnerAttsMap()))
                 factory.recordsService.getAtt(EntityRef.create("test", "test2"), "?id")
-                innerAttsMapList.add(HashMap(field.innerAttributesMap))
+                innerAttsMapList.add(HashMap(AttContext.getInnerAttsMap()))
             }
+            return null
         }
     }
 }

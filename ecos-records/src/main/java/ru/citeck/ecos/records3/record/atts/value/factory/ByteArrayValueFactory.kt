@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode
+import com.fasterxml.jackson.databind.JsonNode
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import java.nio.charset.StandardCharsets

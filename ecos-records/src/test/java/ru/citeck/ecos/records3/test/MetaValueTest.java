@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test;
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class MetaValueTest extends AbstractRecordsDao
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 
@@ -56,9 +56,9 @@ public class MetaValueTest extends AbstractRecordsDao
         String testInnerSchema = "number?num,test?str";
 
         Map<String, String> attributes = new HashMap<>();
-        attributes.put("str", ".str");
-        attributes.put("disp", ".disp");
-        attributes.put("id", ".id");
+        attributes.put("str", "?str");
+        attributes.put("disp", "?disp");
+        attributes.put("id", "?id");
         attributes.put("localId", ".localId");
         attributes.put("has", ".has(n:\"One\")");
         attributes.put("num", ".num");

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.remote;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,10 @@ public class RemoteSyncRecordsDaoTest {
         RecordsServiceFactory remoteFactory = new RecordsServiceFactory();
         EcosWebAppApiMock webAppContext = new EcosWebAppApiMock();
         webAppContext.setWebClientExecuteImpl((targetApp, path, body) ->
-            remoteFactory.getRestHandlerAdapter().queryRecords(body)
+            remoteFactory.getRestHandlerAdapter().queryRecords(
+                Json.getMapper().convertNotNull(body, ObjectNode.class),
+                2
+            )
         );
 
         RecordsServiceFactory localFactory = new RecordsServiceFactory() {
@@ -64,10 +68,10 @@ public class RemoteSyncRecordsDaoTest {
         };
         recordsServiceFactory = localFactory;
 
-        this.recordsService = localFactory.getRecordsServiceV1();
+        this.recordsService = localFactory.getRecordsService();
 
         recordsWithMetaSource = new RecordsWithMetaSource();
-        remoteFactory.getRecordsServiceV1().register(recordsWithMetaSource);
+        remoteFactory.getRecordsService().register(recordsWithMetaSource);
 
         remoteSyncRecordsDao = new RemoteSyncRecordsDao<>(REMOTE_SOURCE_ID, ValueDto.class);
         this.recordsService.register(remoteSyncRecordsDao);

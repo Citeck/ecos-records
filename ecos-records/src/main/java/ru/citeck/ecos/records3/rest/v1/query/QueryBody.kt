@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records3.rest.v1.query
 
-import ecos.com.fasterxml.jackson210.annotation.JsonInclude
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
-import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
-import ecos.com.fasterxml.jackson210.databind.node.TextNode
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -12,10 +12,8 @@ import ru.citeck.ecos.records3.rest.v1.RequestBody
 import ru.citeck.ecos.records3.rest.v1.RestUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
-import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JackJsonInclude(JackJsonInclude.Include.NON_NULL)
 open class QueryBody : RequestBody() {
 
     private var records: MutableList<EntityRef>? = null
@@ -50,7 +48,6 @@ open class QueryBody : RequestBody() {
     }
 
     @JsonSetter
-    @com.fasterxml.jackson.annotation.JsonSetter
     fun setAttributes(attributes: Any?) {
         this.attributes = RestUtils.prepareReqAtts(attributes)
     }

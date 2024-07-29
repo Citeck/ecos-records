@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records2.RecordConstants
@@ -278,7 +278,7 @@ class AttSchemaReader(private val services: RecordsServiceFactory) {
 
         return parserFunc.invoke(
             alias.trim(),
-            if (dotContext) { ".$att" } else { att },
+            if (dotContext) ".$att" else att,
             attWithProc.processors
         )
     }

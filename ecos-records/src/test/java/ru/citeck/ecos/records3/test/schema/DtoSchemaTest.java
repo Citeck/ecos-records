@@ -40,11 +40,11 @@ public class DtoSchemaTest {
         dto.setNumField(123);
         dto.setStrField("strField-123");
 
-        RecordsService recordsService = serviceFactory.getRecordsServiceV1();
+        RecordsService recordsService = serviceFactory.getRecordsService();
 
         assertEquals(dto, recordsService.getAtts(dto, TestDto.class));
-        assertEquals("InnerDisp", serviceFactory.getRecordsServiceV1().getAtt(dto, "inner?disp").asText());
-        assertEquals("TestDtoDisp", serviceFactory.getRecordsServiceV1().getAtt(dto, "?disp").asText());
+        assertEquals("InnerDisp", serviceFactory.getRecordsService().getAtt(dto, "inner?disp").asText());
+        assertEquals("TestDtoDisp", serviceFactory.getRecordsService().getAtt(dto, "?disp").asText());
 
         assertEquals(dto.attWithCustomName, recordsService.getAtts(dto, CustomNameFieldAtt.class).otherField);
 

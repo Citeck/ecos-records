@@ -1,14 +1,12 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.query
 
-import ecos.com.fasterxml.jackson210.annotation.JsonInclude
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import mu.KotlinLogging
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = QueryPage.Builder::class)
-@JackJsonDeserialize(builder = QueryPage.Builder::class)
 data class QueryPage(
     val maxItems: Int,
     val skipCount: Int,
@@ -75,10 +73,10 @@ data class QueryPage(
                 skipCount = 0
             }
             if (skipCount > 0 && afterId != null) {
-                log.warn(
+                log.warn {
                     "Skip count can't be used when afterId is set. " +
                         "skipCount: $skipCount afterId: $afterId. Skip count will be replaced with 0"
-                )
+                }
                 skipCount = 0
             }
             return QueryPage(maxItems, skipCount, afterId)

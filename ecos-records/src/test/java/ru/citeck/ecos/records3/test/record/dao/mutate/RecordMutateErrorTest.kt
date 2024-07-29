@@ -17,7 +17,7 @@ class RecordMutateErrorTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         records.register(object : RecordMutateDao {
 

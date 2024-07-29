@@ -11,9 +11,6 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class SecurityUtilsTest implements RecordsQueryDao, SupportsQueryLanguages {
 
     private static final String ID = "test";
@@ -69,6 +66,7 @@ public class SecurityUtilsTest implements RecordsQueryDao, SupportsQueryLanguage
         return Collections.emptyList();
     }
 
+    @NotNull
     @Override
     public String getId() {
         return ID;

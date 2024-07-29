@@ -1,14 +1,13 @@
 package ru.citeck.ecos.records2.test;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
@@ -17,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsMetaDao<Object> {
+public class QueryExceptionTest implements RecordAttsDao {
 
     private static final String MSG = "SomeMessage";
 
@@ -28,7 +27,6 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
 
-        setId("test");
         recordsService.register(this);
     }
 
@@ -38,7 +36,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
         List<EntityRef> refs = Collections.singletonList(EntityRef.create("test", ""));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            recordsService.getAttributes(refs, Collections.singleton("str"));
+            recordsService.getAtts(refs, Collections.singleton("str"));
         });
 
         Throwable rootCause = exception.getCause();
@@ -49,9 +47,9 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
         assertEquals(MSG, rootCause.getMessage());
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
+    public Object getRecordAtts(@NotNull String recordId) throws Exception {
         try {
             try {
                 throw new IllegalArgumentException(MSG);
@@ -61,5 +59,11 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
         } catch(Exception e1) {
             throw new IllegalStateException("state", e1);
         }
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return "test";
     }
 }

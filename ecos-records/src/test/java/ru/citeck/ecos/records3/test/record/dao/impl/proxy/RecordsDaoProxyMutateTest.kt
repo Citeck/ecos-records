@@ -24,7 +24,7 @@ class RecordsDaoProxyMutateTest {
     fun mutateTest() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val recordsMap = HashMap<String, ObjectData>()
 
@@ -61,7 +61,8 @@ class RecordsDaoProxyMutateTest {
         val procAttValue = "proc-att-value"
         records.register(
             RecordsDaoProxy(
-                PROXY_ID, TARGET_ID,
+                PROXY_ID,
+                TARGET_ID,
                 object : MutateProxyProcessor {
                     override fun mutatePreProcess(
                         atts: List<LocalRecordAtts>,

@@ -1,10 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.value
 
 import ru.citeck.ecos.records2.ServiceFactoryAware
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.AttValueFactory
-import ru.citeck.ecos.records3.record.atts.value.impl.meta.AttMetaValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.mime.MimeType
 
@@ -46,9 +44,6 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
 
         if (valueToConvert is AttValue) {
             return valueToConvert
-        }
-        if (valueToConvert is MetaValue) {
-            return AttMetaValue(valueToConvert)
         }
         if (valueToConvert is AttValueCtx) {
             valueToConvert = valueToConvert.getValue()

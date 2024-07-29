@@ -17,7 +17,7 @@ class CreateWithAssocsTest {
     @Test
     fun mutationTestWithLink() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
 
         val recordsToMutate = listOf(
@@ -53,7 +53,7 @@ class CreateWithAssocsTest {
         val rec1 = RecordAtts(EntityRef.create("source-id", ""))
         rec1.setAtt("_alias", "source-id@-alias-1")
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("source-id"))
 
         val mutRes = records.mutate(listOf(rec0, rec1))
@@ -74,7 +74,7 @@ class CreateWithAssocsTest {
 
         val gateway = appsFactory.createGatewayApp(defaultApp = targetAppName)
         val targetApp = appsFactory.createApp(targetAppName)
-        targetApp.factory.recordsServiceV1.register(InMemDataRecordsDao(testSourceId))
+        targetApp.factory.recordsService.register(InMemDataRecordsDao(testSourceId))
 
         val alias = "test-alias-1"
         val fieldWithAssoc = "assocField"
@@ -86,11 +86,11 @@ class CreateWithAssocsTest {
         val rec1 = RecordAtts(EntityRef.create(testSourceId, ""))
         rec1.setAtt(RecordConstants.ATT_ALIAS, alias)
 
-        val result = gateway.factory.recordsServiceV1.mutate(listOf(rec0, rec1))
+        val result = gateway.factory.recordsService.mutate(listOf(rec0, rec1))
 
         assertThat(result.size).isEqualTo(2)
         val assocFieldValue = gateway.factory
-            .recordsServiceV1.getAtt(result[0], "$fieldWithAssoc?id")
+            .recordsService.getAtt(result[0], "$fieldWithAssoc?id")
             .getAs(EntityRef::class.java)
 
         assertThat(assocFieldValue).isEqualTo(result[1])

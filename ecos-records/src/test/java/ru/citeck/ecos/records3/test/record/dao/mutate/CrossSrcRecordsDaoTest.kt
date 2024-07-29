@@ -12,7 +12,7 @@ class CrossSrcRecordsDaoTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(CrossSrcDao())
 
         val res = records.mutate("test@", emptyMap<String, Any>())

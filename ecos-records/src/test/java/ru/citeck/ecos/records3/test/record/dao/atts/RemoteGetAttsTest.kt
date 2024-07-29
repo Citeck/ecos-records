@@ -19,7 +19,7 @@ class RemoteGetAttsTest {
         val gateway = appsFactory.createGatewayApp(defaultApp = "app-0")
 
         val fieldValue = "field"
-        apps[0].factory.recordsServiceV1.register(
+        apps[0].factory.recordsService.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("rec0", RecordData(fieldValue))
                 .build()
@@ -31,7 +31,7 @@ class RemoteGetAttsTest {
             } else {
                 EntityRef.create("test", "rec0")
             }
-            val value = app.factory.recordsServiceV1.getAtt(ref, "field").asText()
+            val value = app.factory.recordsService.getAtt(ref, "field").asText()
             assertThat(value).isEqualTo(expected)
         }
 

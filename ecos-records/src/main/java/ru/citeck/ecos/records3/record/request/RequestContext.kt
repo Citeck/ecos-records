@@ -1,18 +1,15 @@
 package ru.citeck.ecos.records3.record.request
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.func.UncheckedRunnable
-import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
-import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.func.UncheckedSupplier
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -27,14 +24,7 @@ class RequestContext {
 
     companion object {
 
-        private const val TXN_MUT_RECORDS_KEY = "__txn_mut_records_key__"
-        private const val TXN_OWNED_KEY = "__txn_owned__"
         private const val READ_ONLY_CACHE_KEY = "__read_only_cache__"
-        private const val AFTER_COMMIT_ACTIONS_KEY = "__after_commit_actions__"
-        private const val BEFORE_COMMIT_ACTIONS_KEY = "__before_commit_actions__"
-
-        private const val BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS = 20
-        private const val AFTER_COMMIT_ACTIONS_MAX_ITERATIONS = 10
 
         private val log = KotlinLogging.logger {}
 
@@ -64,15 +54,6 @@ class RequestContext {
         }
 
         @JvmStatic
-        @Deprecated(
-            "Use I8nContext.getLocale() instead",
-            ReplaceWith("I8nContext.getLocale()", "ru.citeck.ecos.context.lib.i18n.I8nContext")
-        )
-        fun getLocale(): Locale {
-            return I18nContext.getLocale()
-        }
-
-        @JvmStatic
         fun <T> doWithAtts(atts: Map<String, Any?>, action: (RequestContext) -> T): T {
             return doWithCtx(null, { it.withCtxAtts(atts) }, action)
         }
@@ -92,17 +73,6 @@ class RequestContext {
         }
 
         @JvmStatic
-        fun <T> doWithTxnJ(readOnly: Boolean, requiresNew: Boolean, action: UncheckedSupplier<T>): T {
-            return doWithTxn(readOnly, requiresNew) { action.get() }
-        }
-
-        @JvmStatic
-        @JvmOverloads
-        fun doWithTxnJ(readOnly: Boolean = false, requiresNew: Boolean = false, action: Runnable) {
-            doWithTxn(readOnly, requiresNew) { action.run() }
-        }
-
-        @JvmStatic
         fun <T> doWithReadOnly(action: () -> T): T {
             return doWithCtx(null, { it.withReadOnly(true) }) { action.invoke() }
         }
@@ -115,47 +85,6 @@ class RequestContext {
         @JvmStatic
         fun doWithReadOnlyJ(action: UncheckedRunnable) {
             return doWithReadOnly { action.invoke() }
-        }
-
-        @JvmStatic
-        fun <T> doWithTxn(readOnly: Boolean = false, requiresNew: Boolean = false, action: () -> T): T {
-            var isTxnOwner = false
-            return doWithCtx(
-                null,
-                {
-                    if (requiresNew || it.txnId == null) {
-                        isTxnOwner = true
-                        it.withTxnId(UUID.randomUUID())
-                        it.withTxnOwner(true)
-                    }
-                    it.withReadOnly(readOnly)
-                }
-            ) {
-                if (isTxnOwner && !readOnly) {
-                    it.putVar(TXN_OWNED_KEY, true)
-                    try {
-                        val res = action.invoke()
-                        it.completeTxn(true)
-                        res
-                    } catch (originalEx: Throwable) {
-                        try {
-                            it.completeTxn(false)
-                        } catch (e: Throwable) {
-                            log.error("Transaction rollback completed with error", e)
-                            originalEx.addSuppressed(e)
-                        }
-                        throw originalEx
-                    } finally {
-                        it.removeVar<Any>(TXN_OWNED_KEY)
-                    }
-                } else {
-                    action.invoke()
-                }
-            }
-        }
-
-        fun doAfterCommit(action: () -> Unit) {
-            getCurrentNotNull().doAfterCommit(action)
         }
 
         @JvmStatic
@@ -276,9 +205,9 @@ class RequestContext {
                 if (isContextOwner) {
                     current.messages.forEach { msg ->
                         when (msg.level) {
-                            MsgLevel.ERROR -> log.error(msg.toString())
-                            MsgLevel.WARN -> log.warn(msg.toString())
-                            MsgLevel.DEBUG -> log.debug(msg.toString())
+                            MsgLevel.ERROR -> log.error { msg.toString() }
+                            MsgLevel.WARN -> log.warn { msg.toString() }
+                            MsgLevel.DEBUG -> log.debug { msg.toString() }
                             else -> {}
                         }
                     }
@@ -296,117 +225,6 @@ class RequestContext {
     private lateinit var serviceFactory: RecordsServiceFactory
 
     private var messages: MutableList<ReqMsg> = ArrayList()
-
-    private fun completeTxn(success: Boolean) {
-        val txnId = ctxData.txnId
-        if (txnId == null || ctxData.readOnly) {
-            return
-        }
-        val mutRecords = getMap<UUID, Set<EntityRef>>(TXN_MUT_RECORDS_KEY)
-        val txnRecords = mutRecords[txnId] ?: emptySet()
-
-        val beforeCommitActions = getList<OrderedAction>(BEFORE_COMMIT_ACTIONS_KEY)
-        val afterCommitActions = getList<OrderedAction>(AFTER_COMMIT_ACTIONS_KEY)
-
-        try {
-            if (success) {
-                invokeActionsList(false, beforeCommitActions, BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS) {
-                    error(
-                        "Before commit actions iterations limit was exceeded: " +
-                            "$BEFORE_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
-                    )
-                }
-            }
-            if (txnRecords.isNotEmpty()) {
-                if (success) {
-                    serviceFactory.recordsResolver.commit(txnRecords.toList())
-                } else {
-                    serviceFactory.recordsResolver.rollback(txnRecords.toList())
-                }
-            }
-            if (success) {
-                AuthContext.runAsSystem {
-                    invokeActionsList(true, afterCommitActions, AFTER_COMMIT_ACTIONS_MAX_ITERATIONS) {
-                        log.warn {
-                            "After commit actions iterations limit was exceeded: " +
-                                "$AFTER_COMMIT_ACTIONS_MAX_ITERATIONS. It may be cyclic dependency."
-                        }
-                    }
-                }
-            }
-            mutRecords.remove(txnId)
-        } finally {
-            beforeCommitActions.clear()
-            afterCommitActions.clear()
-        }
-    }
-
-    private fun invokeActionsList(
-        allowErrors: Boolean,
-        actionsList: MutableList<OrderedAction>,
-        maxIterations: Int,
-        onMaxIterations: () -> Unit
-    ) {
-        if (actionsList.isEmpty()) {
-            return
-        }
-        try {
-            var iterations = maxIterations
-            while (--iterations > 0 && actionsList.isNotEmpty()) {
-                val actionsToExecute = ArrayList(actionsList)
-                actionsList.clear()
-                actionsToExecute.sortBy { it.order }
-
-                for (action in actionsToExecute) {
-                    if (allowErrors) {
-                        try {
-                            action.action.invoke()
-                        } catch (e: Throwable) {
-                            log.error("Error while action execution", e)
-                        }
-                    } else {
-                        action.action.invoke()
-                    }
-                }
-            }
-            if (iterations == 0) {
-                onMaxIterations.invoke()
-            }
-        } finally {
-            actionsList.clear()
-        }
-    }
-
-    fun doAfterCommit(action: () -> Unit) {
-        doAfterCommit(0f, action)
-    }
-
-    fun doAfterCommit(order: Float, action: () -> Unit) {
-        val txnId = ctxData.txnId
-        if (txnId == null) {
-            action.invoke()
-        } else {
-            getList<OrderedAction>(AFTER_COMMIT_ACTIONS_KEY).add(OrderedAction(order, action))
-        }
-    }
-
-    fun doBeforeCommit(action: () -> Unit) {
-        doBeforeCommit(0f, action)
-    }
-
-    fun doBeforeCommit(order: Float, action: () -> Unit) {
-        val txnId = ctxData.txnId
-        if (txnId == null) {
-            action.invoke()
-        } else {
-            getList<OrderedAction>(BEFORE_COMMIT_ACTIONS_KEY).add(OrderedAction(order, action))
-        }
-    }
-
-    fun getTxnChangedRecords(): MutableSet<EntityRef>? {
-        val txnId = ctxData.txnId ?: return null
-        return getMap<UUID, MutableSet<EntityRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
-    }
 
     fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T?): T? {
         val prevValue = getVar<Any>(key)
@@ -426,14 +244,6 @@ class RequestContext {
         } finally {
             putVar(key, prevValue)
         }
-    }
-
-    @Deprecated(
-        "Use I18nContext.getLocale() instead",
-        ReplaceWith("I18nContext.getLocale()", "ru.citeck.ecos.context.lib.i18n.I18nContext")
-    )
-    fun getCtxLocale(): Locale {
-        return I18nContext.getLocale()
     }
 
     fun hasVar(key: String): Boolean {
@@ -594,9 +404,4 @@ class RequestContext {
     fun getErrors(): List<ReqMsg> {
         return messages.filter { MsgLevel.ERROR.isEnabled(it.level) }
     }
-
-    private class OrderedAction(
-        val order: Float,
-        val action: () -> Unit
-    )
 }

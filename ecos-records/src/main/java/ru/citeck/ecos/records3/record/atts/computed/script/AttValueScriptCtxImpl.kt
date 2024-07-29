@@ -1,8 +1,9 @@
 package ru.citeck.ecos.records3.record.atts.computed.script
 
+import org.graalvm.polyglot.HostAccess.Export
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.utils.ScriptUtils
+import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -15,18 +16,22 @@ class AttValueScriptCtxImpl(
 
     private var mutateAtts: ObjectData? = null
 
+    @Export
     override fun getId(): String {
         return getRef().toString()
     }
 
+    @Export
     override fun getRef(): EntityRef {
         return impl.getRef()
     }
 
+    @Export
     override fun getLocalId(): String {
         return impl.getLocalId()
     }
 
+    @Export
     override fun load(attributes: Any?): Any? {
 
         val atts = ComputedScriptUtils.toRecordAttsMap(attributes)
@@ -41,10 +46,12 @@ class AttValueScriptCtxImpl(
         return ScriptUtils.convertToScript(resolvedAtts)
     }
 
+    @Export
     override fun reset() {
         mutateAtts = null
     }
 
+    @Export
     override fun save(): AttValueScriptCtx {
         checkMutationCompatibility()
 
@@ -58,6 +65,7 @@ class AttValueScriptCtxImpl(
         return result
     }
 
+    @Export
     override fun att(attribute: String, value: Any?) {
         checkMutationCompatibility()
 
@@ -75,6 +83,7 @@ class AttValueScriptCtxImpl(
         }
     }
 
+    @Export
     override fun toString(): String {
         return "ScriptRecord(${getRef()})"
     }

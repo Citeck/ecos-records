@@ -15,7 +15,7 @@ class EmptyAssocTest {
 
         val idScalars = listOf("assoc", "id", "localId")
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("test", RecordValue())

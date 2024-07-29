@@ -1,14 +1,14 @@
 package ru.citeck.ecos.records2.predicate.json.std;
 
-import ecos.com.fasterxml.jackson210.core.JsonParser;
-import ecos.com.fasterxml.jackson210.core.JsonToken;
-import ecos.com.fasterxml.jackson210.core.ObjectCodec;
-import ecos.com.fasterxml.jackson210.databind.DeserializationContext;
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.ObjectMapper;
-import ecos.com.fasterxml.jackson210.databind.ObjectReader;
-import ecos.com.fasterxml.jackson210.databind.deser.std.StdDeserializer;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.commons.utils.StringUtils;
@@ -68,8 +68,8 @@ public class PredicateJsonDeserializer extends StdDeserializer<Predicate> {
             throw ctxt.instantiationException(Predicate.class, "Incorrect predicate value: '"
                 + jp.getValueAsString() + "' token: "
                 + jp.getCurrentToken() + " name: "
-                + jp.getCurrentName() + " location: "
-                + jp.getCurrentLocation());
+                + jp.currentName() + " location: "
+                + jp.currentLocation());
         }
 
         String type = predicateNode.path("t").asText();

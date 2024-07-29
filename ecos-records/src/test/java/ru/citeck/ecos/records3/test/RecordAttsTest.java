@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.test;
 
-import ecos.com.fasterxml.jackson210.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;

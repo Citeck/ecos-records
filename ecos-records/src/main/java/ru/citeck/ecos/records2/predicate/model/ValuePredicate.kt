@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonCreator
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
-import ecos.com.fasterxml.jackson210.annotation.JsonValue
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
 import ru.citeck.ecos.commons.data.DataValue
 import java.util.*
 
@@ -10,7 +10,14 @@ class ValuePredicate : AttributePredicate {
 
     enum class Type {
 
-        EQ, GT, GE, LT, LE, LIKE, IN, CONTAINS;
+        EQ,
+        GT,
+        GE,
+        LT,
+        LE,
+        LIKE,
+        IN,
+        CONTAINS;
 
         @JsonValue
         fun asString(): String {

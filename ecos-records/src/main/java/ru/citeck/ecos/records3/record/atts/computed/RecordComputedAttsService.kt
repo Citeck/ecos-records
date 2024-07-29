@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.ScriptUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.commons.utils.TmplUtils
+import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.script.AttValueScriptCtxImpl
 import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
@@ -24,8 +24,13 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
     }
 
     private val recordsScriptService by lazy { RecordsScriptService(services) }
-    private val recordsService by lazy { services.recordsServiceV1 }
+    private val recordsService by lazy { services.recordsService }
     private val authoritiesApi by lazy { services.getEcosWebAppApi()?.getAuthoritiesApi() }
+
+    private val scriptExecutor by lazy {
+        ScriptUtils.getExecutor(ScriptUtils.LANG_JS, "records")
+            .addBinding("Records", recordsScriptService)
+    }
 
     fun compute(value: Any, att: RecordComputedAtt, orElse: () -> Any? = { null }): Any? {
         val valueCtx = if (value is AttValueCtx) {
@@ -69,16 +74,12 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
                 val script = att.config["fn"].asText()
 
                 if (StringUtils.isBlank(script)) {
-                    log.warn("Script is blank. Def: $att")
+                    log.warn { "Script is blank. Def: $att" }
                     return null
                 }
+                val scriptModel = mapOf("value" to AttValueScriptCtxImpl(context))
 
-                val scriptModel = mapOf(
-                    Pair("value", AttValueScriptCtxImpl(context)),
-                    Pair("Records", recordsScriptService)
-                )
-
-                ScriptUtils.eval(script, scriptModel)
+                scriptExecutor.execute(script, scriptModel)
             }
             RecordComputedAttType.ATTRIBUTE -> {
 

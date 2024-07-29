@@ -43,12 +43,6 @@ interface LocalRecordsResolver {
         recordIds: List<String>
     ): List<DelStatus>
 
-    fun isSourceTransactional(sourceId: String): Boolean
-
-    fun commit(sourceId: String, recordIds: List<String>)
-
-    fun rollback(sourceId: String, recordIds: List<String>)
-
     fun register(sourceId: String, recordsDao: RecordsDao)
 
     fun unregister(sourceId: String)

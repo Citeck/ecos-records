@@ -2,12 +2,6 @@ package ru.citeck.ecos.records3.test.record.dao.delete
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordMeta
-import ru.citeck.ecos.records2.request.delete.RecordsDelResult
-import ru.citeck.ecos.records2.request.delete.RecordsDeletion
-import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
-import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDao
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -28,7 +22,7 @@ class RecordDeleteDaoTest {
                 return EcosWebAppApiMock("test-app")
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         records.register(object : RecordDeleteDao {
             override fun getId() = "test-delete"
@@ -40,18 +34,10 @@ class RecordDeleteDaoTest {
 
         deleteTest("test-delete", records)
 
-        services.recordsService.register(object : LocalRecordsDao(), MutableRecordsLocalDao<Any> {
-            override fun delete(deletion: RecordsDeletion): RecordsDelResult {
-                deletion.records.forEach { deletedList.add(it.getLocalId()) }
-                val result = RecordsDelResult()
-                result.records = deletion.records.map { RecordMeta(it) }
-                return result
-            }
-            override fun getValuesToMutate(records: MutableList<EntityRef>): MutableList<Any> {
-                error("Not implemented")
-            }
-            override fun save(values: MutableList<Any>): RecordsMutResult {
-                error("Not implemented")
+        services.recordsService.register(object : RecordDeleteDao {
+            override fun delete(recordId: String): DelStatus {
+                deletedList.add(recordId)
+                return DelStatus.OK
             }
             override fun getId() = "legacy-dao"
         })

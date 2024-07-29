@@ -10,7 +10,7 @@ class DtoAttsTest {
     @Test
     fun testWithSingleAtt() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(
             RecordsDaoBuilder
                 .create("test")

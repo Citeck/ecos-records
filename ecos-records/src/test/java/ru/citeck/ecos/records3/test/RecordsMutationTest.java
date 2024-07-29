@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test;
 
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public class RecordsMutationTest extends AbstractRecordsDao
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
 
         valuesToMutate = Collections.singletonMap(TEST_REF, new TestDto(TEST_REF));

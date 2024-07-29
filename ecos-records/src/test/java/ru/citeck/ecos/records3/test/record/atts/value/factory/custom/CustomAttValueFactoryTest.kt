@@ -10,7 +10,7 @@ class CustomAttValueFactoryTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val customDto = CustomDto(
             DataValue.createObj()
                 .set("field0", "value0")

@@ -19,7 +19,7 @@ class ExtStorageRecordsDaoTest {
             "abcdef" to "hij"
         )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val daoConfig = ExtStorageRecordsDaoConfig.create(ReadOnlyMapExtStorage(map))
             .withEcosType("customType")
             .withSourceId("test")

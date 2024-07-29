@@ -21,7 +21,7 @@ class LocalRecordsInterceptorTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        services.recordsServiceV1.register(
+        services.recordsService.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("test", TestRecord("abc", 123))
                 .addRecord("test2", TestRecord("def", 456))
@@ -83,7 +83,7 @@ class LocalRecordsInterceptorTest {
             }
         })
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val queryResult = records.query(
             RecordsQuery.create {

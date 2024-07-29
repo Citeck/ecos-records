@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
-import ecos.com.fasterxml.jackson210.annotation.JsonEnumDefaultValue
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 
 enum class RecordComputedAttResType {
     REF,

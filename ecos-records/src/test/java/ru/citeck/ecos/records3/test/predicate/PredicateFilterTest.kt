@@ -69,7 +69,11 @@ class PredicateFilterTest {
         val predicateService = RecordsServiceFactory().predicateService
 
         val values = listOf(
-            "AAB", "eeeeeeeeeee", "a", "abc", "defhig"
+            "AAB",
+            "eeeeeeeeeee",
+            "a",
+            "abc",
+            "defhig"
         ).map { StrValue(it) }
 
         val sortRes = predicateService.filterAndSort(

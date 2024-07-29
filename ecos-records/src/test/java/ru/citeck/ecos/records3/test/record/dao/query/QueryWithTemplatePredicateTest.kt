@@ -19,7 +19,7 @@ class QueryWithTemplatePredicateTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val queries = mutableListOf<Predicate>()
         records.register(object : RecordsQueryDao {

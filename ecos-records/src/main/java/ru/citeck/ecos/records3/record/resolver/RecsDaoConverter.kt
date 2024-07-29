@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.resolver
 
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
-import mu.KotlinLogging
+import com.fasterxml.jackson.databind.node.ArrayNode
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.ReflectUtils

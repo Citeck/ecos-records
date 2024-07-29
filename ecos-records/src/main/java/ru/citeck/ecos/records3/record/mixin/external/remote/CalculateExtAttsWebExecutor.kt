@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.record.mixin.external.remote
 
-import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.ResolveArgs
 import ru.citeck.ecos.records3.record.mixin.external.ExtAttHandlerContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.promise.Promises
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp

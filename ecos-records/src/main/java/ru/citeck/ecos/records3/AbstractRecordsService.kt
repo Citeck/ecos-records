@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
@@ -144,7 +144,6 @@ abstract class AbstractRecordsService : RecordsService {
         val ref = when (record) {
             is String -> EntityRef.valueOf(record)
             is EntityRef -> record
-            is EntityRef -> EntityRef.valueOf(record)
             else -> error("Mutation of custom objects is not supported yet")
         }
         return mutateAndGetAtts(RecordAtts(ref, ObjectData.create(attributes)), attsToLoad)
@@ -159,7 +158,7 @@ abstract class AbstractRecordsService : RecordsService {
     override fun delete(record: EntityRef): DelStatus {
         val result: List<DelStatus> = delete(listOf(record))
         if (result.size != 1) {
-            log.warn("Unexpected result. Expected 1 record, but found " + result.size)
+            log.warn { "Unexpected result. Expected 1 record, but found " + result.size }
         }
         return result[0]
     }

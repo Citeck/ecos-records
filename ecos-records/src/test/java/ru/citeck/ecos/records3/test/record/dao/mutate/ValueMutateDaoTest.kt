@@ -10,7 +10,7 @@ class ValueMutateDaoTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(TestDao())
 
         val atts = records.mutateAndGetAtts(

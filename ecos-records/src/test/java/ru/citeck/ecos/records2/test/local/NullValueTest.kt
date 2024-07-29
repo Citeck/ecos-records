@@ -1,15 +1,12 @@
 package ru.citeck.ecos.records2.test.local
 
-// import com.fasterxml.jackson.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
@@ -18,19 +15,16 @@ class NullValueTest {
     @Test
     fun test() {
         val services = RecordsServiceFactory()
-        services.recordsService.register(object : LocalRecordsDao(), LocalRecordsMetaDao<TestDto> {
-            override fun getLocalRecordsMeta(
-                records: MutableList<EntityRef>,
-                metaField: MetaField
-            ): List<TestDto> {
-                return records.map { TestDto() }
+        services.recordsService.register(object : RecordAttsDao {
+            override fun getRecordAtts(recordId: String): Any {
+                return TestDto()
             }
             override fun getId(): String {
                 return "test"
             }
         })
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         val attsToLoad = mapOf(
             "jackNull" to "jackNull?str",
             "ecosJackNull" to "ecosJackNull?str",

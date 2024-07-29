@@ -37,7 +37,7 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
     void init() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 
@@ -79,7 +79,7 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
     }
 
     public static class TestMeta {
-        @AttName(".str")
+        @AttName("?str")
         public String value;
 
         public String getValue() {

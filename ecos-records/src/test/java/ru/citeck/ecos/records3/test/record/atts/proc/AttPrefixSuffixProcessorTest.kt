@@ -9,7 +9,7 @@ class AttPrefixSuffixProcessorTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val rec = mapOf(
             "notEmpty" to "value",

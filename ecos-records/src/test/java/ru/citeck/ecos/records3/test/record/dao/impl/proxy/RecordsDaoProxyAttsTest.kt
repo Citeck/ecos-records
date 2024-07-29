@@ -35,7 +35,7 @@ class RecordsDaoProxyAttsTest {
     @Test
     fun edgeAttTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val targetRecordsDao = RecordsDaoBuilder.create(TARGET_ID)
             .addRecord("att-value-rec", AttValueRec())
@@ -60,7 +60,7 @@ class RecordsDaoProxyAttsTest {
     fun attsByIdTest() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val targetRecordsDao = RecordsDaoBuilder.create(TARGET_ID)
             .addRecord("test", ValueDto())
@@ -124,7 +124,8 @@ class RecordsDaoProxyAttsTest {
 
         records.unregister(PROXY_ID)
         val proxyWithProc = RecordsDaoProxy(
-            PROXY_ID, TARGET_ID,
+            PROXY_ID,
+            TARGET_ID,
             object : AttsProxyProcessor {
                 override fun attsPreProcess(schemaAtts: List<SchemaAtt>, context: ProxyProcContext) = schemaAtts
                 override fun attsPostProcess(atts: List<ProxyRecordAtts>, context: ProxyProcContext): List<ProxyRecordAtts> {

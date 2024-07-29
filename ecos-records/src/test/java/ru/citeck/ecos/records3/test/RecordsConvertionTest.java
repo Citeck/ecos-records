@@ -33,7 +33,7 @@ public class RecordsConvertionTest extends AbstractRecordsDao implements Records
     void test() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
 
         factory.getQueryLangService().register(query -> query, SOURCE_LANG, CONVERTED_LANG);
 

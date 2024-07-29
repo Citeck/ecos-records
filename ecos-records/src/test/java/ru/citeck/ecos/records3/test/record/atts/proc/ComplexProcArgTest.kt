@@ -12,7 +12,7 @@ class ComplexProcArgTest {
     @Test
     fun orElseTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         var res: DataValue = records.getAtt(EntityRef.create("meta", ""), "unknown.unknown[]![]")
         assertThat(res).isEqualTo(DataValue.createArr())

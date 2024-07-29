@@ -46,7 +46,7 @@ public class MetaFieldTest extends AbstractRecordsDao
     void beforeAll() {
 
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 

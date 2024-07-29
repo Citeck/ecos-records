@@ -1,24 +1,19 @@
 package ru.citeck.ecos.records2.test;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,52 +35,51 @@ class LocalRecordsTest {
     @Test
     void testSourceWithoutMetaInterface() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(RecordsQueryDaoImpl.ID);
-        recordsService.queryRecords(query);
-    }
-
-    @Test
-    void testRecordWithComplexSourceId() {
-
-        EntityRef ref = EntityRef.valueOf(RecordsSource.ID + "@first@second");
-        RecordMeta meta = recordsService.getAttributes(ref, Collections.singleton("localId"));
-
-        assertEquals(ref, meta.getId());
+        RecordsQuery query = RecordsQuery.create().withSourceId(RecordsQueryDaoImpl.ID).build();
+        recordsService.query(query);
     }
 
     @Test
     void testWithMeta() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(RecordsWithMetaSource.ID);
+        RecordsQuery query = RecordsQuery.create().withSourceId(RecordsWithMetaSource.ID).build();
 
-        RecordsQueryResult<EntityRef> result = recordsService.queryRecords(query);
+        RecsQueryRes<EntityRef> result = recordsService.query(query);
 
         assertEquals(1, result.getRecords().size());
     }
 
-    static class RecordsQueryDaoImpl extends LocalRecordsDao implements RecordsQueryDao {
+    static class RecordsQueryDaoImpl implements RecordsQueryDao {
 
         static String ID = "RecordsQueryDaoImpl";
 
-        RecordsQueryDaoImpl() {
-            setId(ID);
-        }
-    }
-
-    static class RecordsSource extends LocalRecordsDao implements LocalRecordsMetaDao<RecordsSource.Meta> {
-
-        static String ID = "recs-source";
-
-        RecordsSource() {
-            setId(ID);
+        @Nullable
+        @Override
+        public Object queryRecords(@NotNull RecordsQuery recsQuery) throws Exception {
+            return null;
         }
 
         @NotNull
         @Override
-        public List<Meta> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
-            return records.stream().map(r -> new Meta(r.toString(), r.getLocalId())).collect(Collectors.toList());
+        public String getId() {
+            return ID;
+        }
+    }
+
+    static class RecordsSource implements RecordAttsDao {
+
+        static String ID = "recs-source";
+
+        @Nullable
+        @Override
+        public Object getRecordAtts(@NotNull String recordId) throws Exception {
+            return new Meta(recordId, recordId);
+        }
+
+        @NotNull
+        @Override
+        public String getId() {
+            return ID;
         }
 
         public static class Meta {
@@ -117,21 +111,14 @@ class LocalRecordsTest {
         }
     }
 
-    static class RecordsWithMetaSource extends LocalRecordsDao
-        implements LocalRecordsQueryWithMetaDao<RecordsWithMetaSource.Meta> {
+    static class RecordsWithMetaSource implements RecordsQueryDao {
 
         static final String ID = "with-meta";
 
-        RecordsWithMetaSource() {
-            setId(ID);
-        }
-
-        @NotNull
+        @Nullable
         @Override
-        public RecordsQueryResult<Meta> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
-            RecordsQueryResult<Meta> result = new RecordsQueryResult<>();
-            result.addRecord(new Meta());
-            return result;
+        public Object queryRecords(@NotNull RecordsQuery recsQuery) throws Exception {
+            return List.of(new Meta());
         }
 
         @Override

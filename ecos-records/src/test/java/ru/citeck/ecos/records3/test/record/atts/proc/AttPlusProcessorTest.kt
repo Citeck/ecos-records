@@ -16,7 +16,7 @@ class AttPlusProcessorTest {
         val expectedInstantPlus6Hours = instant.plus(Duration.ofHours(6))
         val expectedInstantMinus6Hours = instant.minus(Duration.ofHours(6))
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val instantPlus6Hours = records.getAtt(instant, "_self|plus('PT6H')").getAs(Instant::class.java)!!
         assertThat(instantPlus6Hours).isEqualTo(expectedInstantPlus6Hours)
         val instantMinus6Hours = records.getAtt(instant, "_self|plus('-PT6H')").getAs(Instant::class.java)!!
@@ -43,7 +43,7 @@ class AttPlusProcessorTest {
     @Test
     fun numTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val num10 = 10
 

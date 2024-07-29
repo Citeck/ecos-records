@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.computed.script
 
-import ru.citeck.ecos.commons.utils.ScriptUtils
+import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.records3.utils.AttUtils
 import java.lang.RuntimeException
 

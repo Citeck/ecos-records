@@ -1,14 +1,12 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.data.ObjectData
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 /**
  * This value will be evaluated as computed attribute in AttSchemaResolver
  */
 @JsonDeserialize(builder = RecordComputedAttValue.Builder::class)
-@JackJsonDeserialize(builder = RecordComputedAttValue.Builder::class)
 data class RecordComputedAttValue(
     val type: RecordComputedAttType,
     val config: ObjectData,

@@ -24,7 +24,7 @@ class SourceIdWithAppInstanceIdTest {
                 return EcosWebAppApiMock()
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(TestDao())
 
         val res = records.mutate("test@", mapOf("aa" to "bb"))

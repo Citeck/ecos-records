@@ -1,6 +1,5 @@
 package ru.citeck.ecos.records2.source.info;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 
 @Data
-@SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"})
 public class RecordsSourceInfo {
 
     @NotNull

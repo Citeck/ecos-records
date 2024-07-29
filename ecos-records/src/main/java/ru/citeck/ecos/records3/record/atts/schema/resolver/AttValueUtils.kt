@@ -1,9 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.records3.record.atts.value.HasListView
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.reflect.Array
@@ -52,8 +51,6 @@ object AttValueUtils {
                 listOf(rawValue)
             }
         } else if (rawValue is ArrayNode) {
-            return iterableToListWithoutNullValues(rawValue)
-        } else if (LibsUtils.isJacksonPresent() && rawValue is com.fasterxml.jackson.databind.node.ArrayNode) {
             return iterableToListWithoutNullValues(rawValue)
         } else if (rawValue is Collection<*>) {
             return iterableToListWithoutNullValues(rawValue)
@@ -117,12 +114,6 @@ object AttValueUtils {
             return rawValue.isTextual && rawValue.asText().isEmpty() ||
                 rawValue.isArray && rawValue.size() == 0
         }
-        if (LibsUtils.isJacksonPresent()) {
-            if (rawValue is com.fasterxml.jackson.databind.JsonNode) {
-                return rawValue.isTextual && rawValue.asText().isEmpty() ||
-                    rawValue.isArray && rawValue.size() == 0
-            }
-        }
         if (rawValue is Collection<*>) {
             return rawValue.isEmpty()
         }
@@ -144,11 +135,6 @@ object AttValueUtils {
         }
         if (rawValue is JsonNode) {
             return rawValue.isNull || rawValue.isMissingNode
-        }
-        if (LibsUtils.isJacksonPresent()) {
-            if (rawValue is com.fasterxml.jackson.databind.JsonNode) {
-                return rawValue.isNull || rawValue.isMissingNode
-            }
         }
         return false
     }

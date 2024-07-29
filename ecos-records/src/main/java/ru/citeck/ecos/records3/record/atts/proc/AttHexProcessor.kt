@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.proc
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import java.util.*

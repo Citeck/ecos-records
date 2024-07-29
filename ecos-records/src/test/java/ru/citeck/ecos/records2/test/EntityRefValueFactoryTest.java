@@ -1,36 +1,29 @@
 package ru.citeck.ecos.records2.test;
 
-import ecos.com.fasterxml.jackson210.databind.node.ArrayNode;
-import ecos.com.fasterxml.jackson210.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordsService;
+import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
-import ru.citeck.ecos.records2.request.query.RecordsQuery;
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.records3.record.atts.value.AttValue;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class EntityRefValueFactoryTest extends LocalRecordsDao
-                                implements LocalRecordsMetaDao<MetaValue>,
-        LocalRecordsQueryWithMetaDao<MetaValue> {
+class EntityRefValueFactoryTest implements RecordAttsDao, RecordsQueryDao {
 
     private static final String ID = "sourceId";
 
@@ -38,8 +31,6 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
 
     @BeforeAll
     void init() {
-        setId(ID);
-
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsService = factory.getRecordsService();
         recordsService.register(this);
@@ -48,8 +39,9 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
     @Test
     void test() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("att0", Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VAL0_FIELD + "." + Val.VALUE_FIELD + "?str");
@@ -67,14 +59,14 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
         attsToRequest.put("disp", Val.VAL1_FIELD + "?disp");
         attsToRequest.put("assoc", Val.VAL0_FIELD + "?assoc");
 
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
+        RecsQueryRes<RecordAtts> result = recordsService.query(query, attsToRequest);
 
         assertEquals(1, result.getRecords().size());
-        RecordMeta meta = result.getRecords().get(0);
-        assertEquals(Val.val0.value, meta.get("att0", ""));
-        assertEquals(Val.val2.value, meta.get("att2", ""));
-        assertEquals(Val.val1.getDisplayName(), meta.get("disp", ""));
-        assertEquals(Val.val0.ref.toString(), meta.get("assoc", ""));
+        RecordAtts meta = result.getRecords().getFirst();
+        assertEquals(Val.val0.value, meta.getAtts().get("att0", ""));
+        assertEquals(Val.val2.value, meta.getAtts().get("att2", ""));
+        assertEquals(Val.val1.getDisplayName(), meta.getAtts().get("disp", ""));
+        assertEquals(Val.val0.ref.toString(), meta.getAtts().get("assoc", ""));
 
         assertEquals(DataValue.TRUE, meta.get("has_true"));
         assertEquals(DataValue.FALSE, meta.get("has_false"));
@@ -94,52 +86,55 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
     @Test
     void test3() {
 
-        String id = recordsService.getAttribute(Val.val0.ref, "globalRef?localId").asText();
+        String id = recordsService.getAtt(Val.val0.ref, "globalRef?localId").asText();
         assertEquals(Val.globalRef.getLocalId(), id);
     }
 
     @Test
     void test2() {
 
-        RecordsQuery query = new RecordsQuery();
-        query.setSourceId(ID);
+        RecordsQuery query = RecordsQuery.create()
+            .withSourceId(ID)
+            .build();
 
         Map<String, String> attsToRequest = new HashMap<>();
         attsToRequest.put("null_0", Val.VAL0_FIELD + "." + Val.VAL1_FIELD + ".unknown?str");
 
-        RecordsQueryResult<RecordMeta> result = recordsService.queryRecords(query, attsToRequest);
+        RecsQueryRes<RecordAtts> result = recordsService.query(query, attsToRequest);
 
         assertEquals(1, result.getRecords().size());
-        RecordMeta meta = result.getRecords().get(0);
+        RecordAtts meta = result.getRecords().getFirst();
 
         assertEquals(DataValue.NULL, meta.get("null_0"));
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public RecordsQueryResult<MetaValue> queryLocalRecords(@NotNull RecordsQuery query, @NotNull MetaField field) {
-        RecordsQueryResult<MetaValue> result = new RecordsQueryResult<>();
-        result.addRecord(Val.val0);
-        return result;
+    public Object getRecordAtts(@NotNull String recordId) throws Exception {
+        if (recordId.equals(Val.val0.getId())) {
+            return Val.val0;
+        } else if (recordId.equals(Val.val1.getId())) {
+            return Val.val1;
+        } else if (recordId.equals(Val.val2.getId())) {
+            return Val.val2;
+        } else {
+            throw new IllegalStateException("Unknown ref: " + recordId);
+        }
+    }
+
+    @Nullable
+    @Override
+    public Object queryRecords(@NotNull RecordsQuery recsQuery) throws Exception {
+        return List.of(Val.val0);
     }
 
     @NotNull
     @Override
-    public List<MetaValue> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
-        return records.stream().map(r -> {
-            if (r.equals(EntityRef.valueOf(Val.val0.getId()))) {
-                return Val.val0;
-            } else if (r.equals(EntityRef.valueOf(Val.val1.getId()))) {
-                return Val.val1;
-            } else if (r.equals(EntityRef.valueOf(Val.val2.getId()))) {
-                return Val.val2;
-            } else {
-                throw new IllegalStateException("Unknown ref: " + r);
-            }
-        }).collect(Collectors.toList());
+    public String getId() {
+        return ID;
     }
 
-    public static class Val implements MetaValue {
+    public static class Val implements AttValue {
 
         static final String VALUE_FIELD = "value";
         static final String VAL0_FIELD = "val0";
@@ -171,7 +166,7 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
         }
 
         @Override
-        public String getString() {
+        public String asText() {
             return "STR OF " + ref;
         }
 
@@ -186,12 +181,12 @@ class EntityRefValueFactoryTest extends LocalRecordsDao
         }
 
         @Override
-        public Object getAs(String name) {
+        public Object getAs(@NotNull String name) {
             return this;
         }
 
         @Override
-        public Object getAttribute(String name, MetaField field) {
+        public Object getAtt(String name) {
             switch (name) {
                 case VAL0_FIELD:
                     return val0.ref;

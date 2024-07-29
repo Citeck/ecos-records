@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records2.predicate.json.std;
 
-import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
-import ecos.com.fasterxml.jackson210.core.ObjectCodec;
-import ecos.com.fasterxml.jackson210.databind.JsonNode;
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate;

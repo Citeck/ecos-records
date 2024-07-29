@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.query
 
-import ecos.com.fasterxml.jackson210.annotation.JsonIgnore
-import ecos.com.fasterxml.jackson210.annotation.JsonSetter
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import mu.KotlinLogging
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.serialization.annotation.IncludeNonDefault
@@ -12,13 +12,9 @@ import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
-import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
-import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDeserialize
 
 @IncludeNonDefault
 @JsonDeserialize(builder = RecordsQuery.Builder::class)
-@JackJsonDeserialize(builder = RecordsQuery.Builder::class)
 data class RecordsQuery(
     val sourceId: String,
     val ecosType: String,
@@ -59,7 +55,7 @@ data class RecordsQuery(
     fun <T : Any> getQuery(type: Class<T>): T {
         val result = getQueryOrNull(type)
         if (result == null) {
-            log.warn("Can't convert query to type $type. Query: $query")
+            log.warn { "Can't convert query to type $type. Query: $query" }
             return type.newInstance()
         }
         return result
@@ -71,7 +67,6 @@ data class RecordsQuery(
      * result will be Predicates.alwaysFalse().
      */
     @JsonIgnore
-    @JackJsonIgnore
     fun getPredicate(): Predicate {
         if (language.isNotBlank() && language != PredicateService.LANGUAGE_PREDICATE) {
             return Predicates.alwaysFalse()
@@ -80,7 +75,6 @@ data class RecordsQuery(
     }
 
     @JsonIgnore
-    @JackJsonIgnore
     fun isAfterIdMode(): Boolean {
         return page.afterId != null
     }
@@ -144,7 +138,6 @@ data class RecordsQuery(
         }
 
         @JsonSetter
-        @JackJsonSetter
         fun withSortBy(sortBy: List<SortBy>?): Builder {
             this.sortBy = sortBy?.let { ArrayList(it) } ?: arrayListOf()
             return this

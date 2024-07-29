@@ -22,7 +22,7 @@ class RecordRefCacheTest {
         val record1 = RecordWithCounters(1)
         val record2 = RecordWithCounters(2)
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("rec-0", record0)
@@ -118,7 +118,7 @@ class RecordRefCacheTest {
     @Test
     fun testWithQuery() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(object : RecordsQueryDao, RecordAttsDao {
             override fun getId() = "test"
             override fun getRecordAtts(recordId: String): Any {
@@ -196,7 +196,7 @@ class RecordRefCacheTest {
     @Test
     fun mutTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         records.register(object : RecordsQueryDao, RecordAttsDao {
             override fun getId() = "test"

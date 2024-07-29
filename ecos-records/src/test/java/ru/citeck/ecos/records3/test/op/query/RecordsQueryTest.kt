@@ -51,9 +51,9 @@ class RecordsQueryTest {
                 }
             ).build()
 
-        val v0Query = Json.mapper.convert(query, ru.citeck.ecos.records2.request.query.RecordsQuery::class.java)!!
-        assertEquals(10, v0Query.maxItems)
-        assertEquals(20, v0Query.skipCount)
+        val v0Query = Json.mapper.convert(query, RecordsQuery::class.java)!!
+        assertEquals(10, v0Query.page.maxItems)
+        assertEquals(20, v0Query.page.skipCount)
     }
 
     @Test
@@ -71,7 +71,7 @@ class RecordsQueryTest {
     @Test
     fun strCollectionResultTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         fun createDao(srcId: String): RecordsDao = object : RecordsQueryDao, RecordAttsDao {
             override fun getId(): String {
                 return srcId

@@ -10,7 +10,7 @@ class BeanValueFactoryTest3 {
     @Test
     fun nonDefaultJsonTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val dto0 = TestDto(field1 = 12345)
         val value0 = records.getAtt(dto0, "?json")

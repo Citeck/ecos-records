@@ -23,7 +23,7 @@ class MutMetaMixinTest {
         val services = RecordsServiceFactory()
 
         val dao = TestRecordsDao()
-        services.recordsServiceV1.register(dao)
+        services.recordsService.register(dao)
 
         val metaById = mapOf(
             "test0" to MutMeta(
@@ -48,7 +48,7 @@ class MutMetaMixinTest {
             }
         )
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         RequestContext.doWithCtx(services) {
             metaById.keys.forEach { recId ->

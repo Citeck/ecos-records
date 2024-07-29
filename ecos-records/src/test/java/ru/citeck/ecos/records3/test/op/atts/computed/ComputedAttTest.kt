@@ -127,7 +127,7 @@ class ComputedAttTest {
         val type0Ref = EntityRef.create("test", type0Record.id)
         val type1Ref = EntityRef.create("test", type1Record.id)
 
-        services.recordsServiceV1.register(
+        services.recordsService.register(
             RecordsDaoBuilder.create("test")
                 .addRecord(type0Record.id, type0Record)
                 .addRecord(type1Record.id, type1Record)
@@ -136,49 +136,49 @@ class ComputedAttTest {
         //
         assertEquals(
             DataValue.create("{\"attForScript\":\"${type0Record.attForScript}\"}"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript2?json")
+            services.recordsService.getAtt(type0Ref, "attScript2?json")
         )
         //
 
         assertEquals(
             DataValue.create(type0Record.attAttributeValue),
-            services.recordsServiceV1.getAtt(type0Ref, "attAttribute")
+            services.recordsService.getAtt(type0Ref, "attAttribute")
         )
 
         assertEquals(
             DataValue.create(type0Record.attForScript),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript0")
+            services.recordsService.getAtt(type0Ref, "attScript0")
         )
         assertEquals(
             DataValue.create("{\"key\":\"${type0Record.attForScript}\"}"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript1?json")
+            services.recordsService.getAtt(type0Ref, "attScript1?json")
         )
         assertEquals(
             DataValue.create("{\"attForScript\":\"${type0Record.attForScript}\"}"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript2?json")
+            services.recordsService.getAtt(type0Ref, "attScript2?json")
         )
         assertEquals(
             type0Record.attForScript + "-postfix",
-            services.recordsServiceV1.getAtt(type0Ref, "attScript3").asText()
+            services.recordsService.getAtt(type0Ref, "attScript3").asText()
         )
         assertEquals(
             type0Record.attForScript + "-postfix",
-            services.recordsServiceV1.getAtt(type0Ref, "attScript4").asText()
+            services.recordsService.getAtt(type0Ref, "attScript4").asText()
         )
         assertEquals(
             DataValue.create(type0Record.attForScript),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript5")
+            services.recordsService.getAtt(type0Ref, "attScript5")
         )
         assertEquals(
             DataValue.create("[\"${type0Record.attForScript}\",\"def\"]"),
-            services.recordsServiceV1.getAtt(type0Ref, "attScript5[]")
+            services.recordsService.getAtt(type0Ref, "attScript5[]")
         )
     }
 
     @Test
     fun contextComputedAttTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val computedAttDef0 = RecordComputedAttValue.create()
             .withType(RecordComputedAttType.SCRIPT)
@@ -253,7 +253,7 @@ class ComputedAttTest {
         val currentYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.YEAR)
 
         listOf(computedAttDef1, computedAttDef2).forEach { compAtt ->
-            val records = RecordsServiceFactory().recordsServiceV1
+            val records = RecordsServiceFactory().recordsService
             val result = RequestContext.doWithAtts(mapOf("comp" to compAtt)) { _ ->
                 records.getAtt(null, "\$comp").asInt()
             }

@@ -13,7 +13,7 @@ class BeanValueFactoryExceptionTest {
     @Test
     fun exceptionTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val exception = assertThrows<RuntimeException> {
             records.getAtt(DtoTest(), "?str")
         }

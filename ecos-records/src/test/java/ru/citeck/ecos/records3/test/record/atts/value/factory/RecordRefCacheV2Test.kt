@@ -14,7 +14,7 @@ class RecordRefCacheV2Test {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val targetRec = Record(123)
         val targetRecRef = EntityRef.create("target", targetRec.getId())

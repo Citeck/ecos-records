@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.mixin
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProvider
 import ru.citeck.ecos.records3.utils.AttUtils

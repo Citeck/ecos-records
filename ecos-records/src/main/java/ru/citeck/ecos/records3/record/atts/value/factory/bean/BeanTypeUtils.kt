@@ -1,15 +1,14 @@
 package ru.citeck.ecos.records3.record.atts.value.factory.bean
 
-import org.apache.commons.beanutils.PropertyUtils
+import ru.citeck.beans.BeanUtils
+import ru.citeck.beans.desc.PropertyDesc
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.exception.JsonMapperException
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.factory.DataValueAttFactory
-import java.beans.PropertyDescriptor
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.full.*
@@ -98,13 +97,13 @@ object BeanTypeUtils {
 
     private fun getPropsPath(type: Class<*>): Map<String, String> {
 
-        val descriptors = PropertyUtils.getPropertyDescriptors(type)
+        val properties = BeanUtils.getProperties(type)
         val paths = HashMap<String, String>()
 
-        for (descriptor in descriptors) {
-            val attName = getAnnotatedWriteAttName(type, descriptor)
+        for (property in properties) {
+            val attName = getAnnotatedWriteAttName(type, property)
             if (attName == "...") {
-                getWriteAttNames(descriptor.propertyType).forEach { paths[it] = descriptor.name }
+                getWriteAttNames(property.getPropClass()).forEach { paths[it] = property.getName() }
             }
         }
 
@@ -113,39 +112,39 @@ object BeanTypeUtils {
 
     private fun getWriteAttNames(type: Class<*>): List<String> {
 
-        val descriptors = PropertyUtils.getPropertyDescriptors(type)
+        val properties = BeanUtils.getProperties(type)
         val names = ArrayList<String>()
 
-        for (descriptor in descriptors) {
-            descriptor.writeMethod ?: continue
-            names.add(getAnnotatedWriteAttName(type, descriptor) ?: descriptor.name)
+        for (property in properties) {
+            property.getWriteMethod() ?: continue
+            names.add(getAnnotatedWriteAttName(type, property) ?: property.getName())
         }
         return names
     }
 
     private fun getGetters(type: Class<*>): Map<String, (Any) -> Any?> {
 
-        val descriptors: Array<PropertyDescriptor> = PropertyUtils.getPropertyDescriptors(type)
+        val properties: List<PropertyDesc> = BeanUtils.getProperties(type)
         val getters = HashMap<String, (Any) -> Any?>()
 
-        for (descriptor in descriptors) {
+        for (property in properties) {
 
-            if (descriptor.name == "class") {
+            if (property.getName() == "class") {
                 continue
             }
 
-            val readMethod = descriptor.readMethod ?: continue
+            val readMethod = property.getReadMethod() ?: continue
             readMethod.isAccessible = true
 
             val getter: (Any) -> Any? = { bean -> readMethod.invoke(bean) }
 
-            var attAnnName: String? = getAnnotatedReadAttName(type, descriptor)
+            var attAnnName: String? = getAnnotatedReadAttName(type, property)
 
             if (attAnnName != null) {
 
                 if (attAnnName == "...") {
 
-                    getGetters(descriptor.propertyType).forEach { (k, innerGetter) ->
+                    getGetters(property.getPropClass()).forEach { (k, innerGetter) ->
                         if (!getters.containsKey(k)) {
                             getters[k] = {
                                 val innerValue = getter.invoke(it)
@@ -180,7 +179,7 @@ object BeanTypeUtils {
                 }
             } else {
 
-                getters[descriptor.name] = getter
+                getters[property.getName()] = getter
             }
         }
 
@@ -241,16 +240,14 @@ object BeanTypeUtils {
         return getters
     }
 
-    private fun getAnnotatedReadAttName(scope: Class<*>, descriptor: PropertyDescriptor): String? {
-        val method = descriptor.readMethod ?: return null
-        val attName: AttName? = getAnnotation(scope, method, descriptor.name, AttName::class.java)
-        return attName?.value ?: getAnnotation(scope, method, descriptor.name, MetaAtt::class.java)?.value
+    private fun getAnnotatedReadAttName(scope: Class<*>, descriptor: PropertyDesc): String? {
+        val method = descriptor.getReadMethod() ?: return null
+        return getAnnotation(scope, method, descriptor.getName(), AttName::class.java)?.value
     }
 
-    private fun getAnnotatedWriteAttName(scope: Class<*>, descriptor: PropertyDescriptor): String? {
-        val method = descriptor.writeMethod ?: return null
-        val attName: AttName? = getAnnotation(scope, method, descriptor.name, AttName::class.java)
-        return attName?.value ?: getAnnotation(scope, method, descriptor.name, MetaAtt::class.java)?.value
+    private fun getAnnotatedWriteAttName(scope: Class<*>, descriptor: PropertyDesc): String? {
+        val method = descriptor.getWriteMethod() ?: return null
+        return getAnnotation(scope, method, descriptor.getName(), AttName::class.java)?.value
     }
 
     private fun <T : Annotation> getAnnotation(

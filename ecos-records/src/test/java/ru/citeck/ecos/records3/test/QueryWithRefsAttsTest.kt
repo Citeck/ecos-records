@@ -17,7 +17,7 @@ class QueryWithRefsAttsTest {
         val app0 = appsFactory.createApp("app0")
         val app1 = appsFactory.createApp("app1")
 
-        val app0Records = app0.factory.recordsServiceV1
+        val app0Records = app0.factory.recordsService
 
         val app0dao0getAttsIds = mutableListOf<List<String>>()
         val app0dao1getAttsIds = mutableListOf<List<String>>()
@@ -35,12 +35,12 @@ class QueryWithRefsAttsTest {
 
         app0Records.register(app0dao0)
         app0Records.register(app0dao1)
-        app1.factory.recordsServiceV1.register(app1dao0)
+        app1.factory.recordsService.register(app1dao0)
 
         fun query(dao: TestDao, refs: List<Any>, att: String): List<String> {
             val records = when (dao.appName) {
-                app0.name -> app0.factory.recordsServiceV1
-                app1.name -> app1.factory.recordsServiceV1
+                app0.name -> app0.factory.recordsService
+                app1.name -> app1.factory.recordsService
                 else -> error("Unknown app: '${dao.appName}'")
             }
             return records.query(

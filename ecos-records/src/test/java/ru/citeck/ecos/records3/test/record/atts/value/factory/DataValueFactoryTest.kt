@@ -27,7 +27,7 @@ class DataValueFactoryTest {
                     .add("third")
             )
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val getAtt = { att: String -> records.getAtt(data, att).asJavaObj() }
 
         assertThat(getAtt("numStr?num")).isEqualTo(123.0)

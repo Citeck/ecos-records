@@ -18,7 +18,7 @@ class RecordsSourceTest {
             override fun getRecordAtts(recordId: String) = error("")
         }
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(recordsDaoOnlyWithAtts)
 
         assertThat(
@@ -69,7 +69,7 @@ class RecordsSourceTest {
             override fun getRecordAtts(recordId: String) = error("")
         }
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(recordsDaoWithClientMeta)
         records.register(recordsDaoWithoutClientMeta)
 

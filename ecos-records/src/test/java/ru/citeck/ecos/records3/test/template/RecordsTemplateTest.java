@@ -37,7 +37,7 @@ public class RecordsTemplateTest extends AbstractRecordsDao implements RecordsAt
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
         recordsTemplateService = factory.getRecordsTemplateService();
-        factory.getRecordsServiceV1().register(this);
+        factory.getRecordsService().register(this);
     }
 
     @Test

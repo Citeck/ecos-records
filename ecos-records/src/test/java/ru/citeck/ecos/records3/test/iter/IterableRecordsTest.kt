@@ -22,7 +22,7 @@ class IterableRecordsTest {
             withAttsToLoad(mapOf("aa" to "bb"))
             withPageSize(10)
         }
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val recs0 = IterableRecords(query.copy {}, config.copy {}, records)
         val recs1 = IterableRecords(query.copy {}, config.copy {}, records)

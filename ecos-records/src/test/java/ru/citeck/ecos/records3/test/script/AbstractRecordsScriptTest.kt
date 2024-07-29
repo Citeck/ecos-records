@@ -28,7 +28,7 @@ abstract class AbstractRecordsScriptTest {
     @BeforeEach
     fun init() {
         recordsServiceFactory = RecordsServiceFactory()
-        recordsService = recordsServiceFactory.recordsServiceV1
+        recordsService = recordsServiceFactory.recordsService
         rScript = RecordsScriptService(recordsServiceFactory)
 
         recordsService.register(InMemDataRecordsDao("dune"))

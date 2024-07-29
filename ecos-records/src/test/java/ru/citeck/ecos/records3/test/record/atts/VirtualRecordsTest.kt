@@ -14,7 +14,7 @@ class VirtualRecordsTest {
         val recordsDao = InMemRecordsDao<TestDto>("test")
         val services = RecordsServiceFactory()
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(recordsDao)
 
         val resolver = services.recordsResolver

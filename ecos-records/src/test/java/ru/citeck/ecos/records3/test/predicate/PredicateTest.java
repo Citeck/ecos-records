@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.test.predicate;
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -249,7 +249,7 @@ class PredicateTest {
         Json.getMapper().applyData(dto3, dto);
         assertEquals(optimizedPredicate, dto3.predicate);
 
-        String predicateFromRecordStr = services.getRecordsServiceV1().getAtt(dto, "predicate").asText();
+        String predicateFromRecordStr = services.getRecordsService().getAtt(dto, "predicate").asText();
         Predicate predicateFromRecord = Json.getMapper().read(predicateFromRecordStr, Predicate.class);
 
         assertEquals(optimizedPredicate, predicateFromRecord);

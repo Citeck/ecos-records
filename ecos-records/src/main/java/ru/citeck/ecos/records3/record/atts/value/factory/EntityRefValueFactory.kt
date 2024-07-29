@@ -63,7 +63,7 @@ class EntityRefValueFactory : AttValueFactory<EntityRef>, ServiceFactoryAware {
     override fun getValueTypes() = listOf(EntityRef::class.java)
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
-        this.recordsService = serviceFactory.recordsServiceV1
+        this.recordsService = serviceFactory.recordsService
         this.schemaWriter = serviceFactory.attSchemaWriter
     }
 

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test.record.atts.value
 
-import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
-import ecos.com.fasterxml.jackson210.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
@@ -15,7 +15,7 @@ class GetAsMlTextTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val data = mapOf(
             "str" to "string",
             "obj" to ObjectData.create("""{"ru":"Ru","en":"En"}"""),

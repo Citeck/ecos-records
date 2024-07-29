@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.resolver
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
@@ -31,8 +31,6 @@ import ru.citeck.ecos.records3.rest.v1.mutate.MutateBody
 import ru.citeck.ecos.records3.rest.v1.mutate.MutateResp
 import ru.citeck.ecos.records3.rest.v1.query.QueryBody
 import ru.citeck.ecos.records3.rest.v1.query.QueryResp
-import ru.citeck.ecos.records3.rest.v1.txn.TxnBody
-import ru.citeck.ecos.records3.rest.v1.txn.TxnResp
 import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -53,7 +51,6 @@ class RemoteRecordsResolver(
         const val QUERY_PATH: String = BASE_PATH + "query"
         const val MUTATE_PATH: String = BASE_PATH + "mutate"
         const val DELETE_PATH: String = BASE_PATH + "delete"
-        const val TXN_PATH: String = BASE_PATH + "txn"
 
         private const val ATTS_KEY = "attributes"
 
@@ -71,7 +68,6 @@ class RemoteRecordsResolver(
     private val legacyAttsWriter = AttSchemaLegacyWriter()
 
     private lateinit var recordsService: RecordsService
-    private val txnActionManager = services.txnActionManager
 
     private val sourceIdMeta: Cache<String, RecSrcMeta>
     private val webClient: EcosWebClientApi = services.getEcosWebAppApi()?.getWebClientApi()
@@ -250,17 +246,7 @@ class RemoteRecordsResolver(
                 mutateBody,
                 MutateResp::class,
                 context
-            ) { mutateResp ->
-                context.getTxnChangedRecords()?.addAll(
-                    mutateResp.txnChangedRecords.map {
-                        if (it.getAppName() == currentAppName || it.getAppName() == currentAppRef) {
-                            it.withoutAppName()
-                        } else {
-                            it.withDefaultAppName(appName)
-                        }
-                    }
-                )
-            }
+            ) { _ -> }
             if (mutateResp.records.size != atts.size) {
                 throw RecordsException(
                     "Incorrect " +
@@ -324,104 +310,6 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    fun commit(recordRefs: List<EntityRef>) {
-        completeTransaction(recordRefs, TxnBody.TxnAction.COMMIT)
-    }
-
-    fun rollback(recordRefs: List<EntityRef>) {
-        completeTransaction(recordRefs, TxnBody.TxnAction.ROLLBACK)
-    }
-
-    fun isSourceTransactional(sourceId: String): Boolean {
-
-        if (!sourceId.contains("/")) {
-            return false
-        }
-        val appNameAndSourceId = sourceId.split('/', limit = 2)
-        val sourceMetaId = appNameAndSourceId[0] + "/src@" + appNameAndSourceId[1]
-
-        return sourceIdMeta.get(sourceMetaId).isTransactional
-    }
-
-    private fun completeTransaction(recordRefs: List<EntityRef>, action: TxnBody.TxnAction) {
-
-        if (recordRefs.isEmpty()) {
-            return
-        }
-
-        val context = RequestContext.getCurrentNotNull()
-
-        var txnException: Exception? = null
-
-        RecordsUtils.groupRefBySource(recordRefs).forEach { (sourceId, refs) ->
-
-            val appName = sourceId.substringBefore("/", "")
-
-            if (appName.isNotBlank() && isSourceTransactional(sourceId)) {
-                val appRefs = refs.map { it.value }
-                try {
-                    commitImplInApp(appName, appRefs, action, context)
-                } catch (e: Exception) {
-                    log.error { "Exception while txn commit '${context.ctxData.txnId}'. Records: $appRefs" }
-                    // main transaction already completed, and we should
-                    // make as much remote commits or rollbacks as possible
-                    if (txnException == null) {
-                        txnException = e
-                    } else {
-                        txnException?.addSuppressed(e)
-                    }
-                }
-            }
-        }
-        val finalException = txnException
-        if (finalException != null) {
-            throw finalException
-        }
-    }
-
-    private fun commitImplInApp(
-        appName: String,
-        refs: List<EntityRef>,
-        action: TxnBody.TxnAction,
-        context: RequestContext
-    ) {
-
-        val body = TxnBody()
-        body.setRecords(refs.map { it.withoutAppName() })
-        body.setAction(action)
-        setContextProps(body, context)
-
-        var exception: Exception? = null
-        for (i in 1..4) {
-            try {
-                exchangeRemoteRequest(appName, TXN_PATH, TXN_VERSION, body, TxnResp::class, context)
-                if (exception != null) {
-                    log.info {
-                        "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
-                            "was completed successfully after ${i - 1} retry"
-                    }
-                    exception = null
-                }
-                break
-            } catch (e: Exception) {
-                exception = e
-                if (i == 4) {
-                    break
-                }
-                val sleepTime = i * 1000L
-                log.warn {
-                    "$action request with txn ${body.txnId} app $appName and records ${body.records} " +
-                        "failed with exception ${e::class.simpleName} " +
-                        "msg: ${e.message}. Retry sleep: ${sleepTime}ms"
-                }
-                Thread.sleep(sleepTime)
-            }
-        }
-        if (exception != null) {
-            throw exception
-        }
-    }
-
     private fun evalSourceIdMeta(sourceMetaId: String): RecSrcMeta {
         val atts = recordsService.getAtts(EntityRef.valueOf(sourceMetaId), RecSrcMetaAtts::class.java)
         return RecSrcMeta(atts.isTransactional ?: false)
@@ -431,7 +319,6 @@ class RemoteRecordsResolver(
         val ctxData = ctx.ctxData
         body.msgLevel = ctxData.msgLevel
         body.requestId = ctxData.requestId
-        body.txnId = ctxData.txnId
         body.sourceIdMapping = ctxData.sourceIdMapping
         body.setRequestTrace(ctxData.requestTrace)
     }
@@ -482,7 +369,6 @@ class RemoteRecordsResolver(
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)
-        txnActionManager.execute(result.txnActions, context)
 
         return result
     }

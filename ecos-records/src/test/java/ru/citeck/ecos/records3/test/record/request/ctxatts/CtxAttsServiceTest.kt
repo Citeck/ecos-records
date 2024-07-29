@@ -22,10 +22,10 @@ class CtxAttsServiceTest {
             override fun getOrder() = 1f
         })
 
-        val res = services.recordsServiceV1.getAtt("", "\$$key").asText()
+        val res = services.recordsService.getAtt("", "\$$key").asText()
         assertThat(res).isEqualTo("123")
 
-        val res2 = services.recordsServiceV1.getAtt("", "\$now|fmt('yyyy')").asInt()
+        val res2 = services.recordsService.getAtt("", "\$now|fmt('yyyy')").asInt()
         assertThat(res2).isEqualTo(LocalDate.now().year)
 
         fun createOverrideProv(order: Float): CtxAttsProvider {
@@ -40,13 +40,13 @@ class CtxAttsServiceTest {
         // this provider (0) will be less important than main (1)
         services.ctxAttsService.register(createOverrideProv(0f))
 
-        val res3 = services.recordsServiceV1.getAtt("", "\$$key").asText()
+        val res3 = services.recordsService.getAtt("", "\$$key").asText()
         assertThat(res3).isEqualTo("123")
 
         // this provider (5) will be more important than main (1)
         services.ctxAttsService.register(createOverrideProv(5f))
 
-        val res4 = services.recordsServiceV1.getAtt("", "\$$key").asText()
+        val res4 = services.recordsService.getAtt("", "\$$key").asText()
         assertThat(res4).isEqualTo("456")
     }
 }

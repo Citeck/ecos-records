@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.commons.utils.ScriptUtils
+import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 
@@ -46,7 +46,7 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
     @Test
     fun `create records via script`() {
         val created = createArrakis()
-        assertEquals(arrakisRef.toString(), created["impl"]["ref"].asText())
+        assertEquals(arrakisRef.toString(), created.asText())
     }
 
     @Test
@@ -239,7 +239,7 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
             arrakis.att("name", "$name");
             arrakis.att("temp", $DEFAULT_ARRAKIS_TEMP);
 
-            return arrakis.save();
+            return arrakis.save().getRef();
         """.trimIndent()
 
         return script.eval()
@@ -254,6 +254,6 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
             Pair("Records", rScript)
         )
 
-        return ScriptUtils.eval(this, scriptModel)
+        return ScriptUtils.execute(this, scriptModel)
     }
 }

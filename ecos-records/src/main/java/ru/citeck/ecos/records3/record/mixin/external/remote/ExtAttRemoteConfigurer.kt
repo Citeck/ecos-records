@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.record.mixin.external.remote
 
-import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
 import ru.citeck.ecos.records3.record.mixin.external.ExtAttHandlerContext
 import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinConfigurer
 import ru.citeck.ecos.records3.record.mixin.external.ExtMixinConfig
 import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.promise.Promises
 import ru.citeck.ecos.webapp.api.web.client.EcosWebClientApi
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean

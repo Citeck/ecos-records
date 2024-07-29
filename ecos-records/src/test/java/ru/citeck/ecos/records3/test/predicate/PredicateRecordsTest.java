@@ -31,7 +31,7 @@ public class PredicateRecordsTest {
     void init() {
 
         recordsServiceFactory = new RecordsServiceFactory();
-        recordsService = recordsServiceFactory.getRecordsServiceV1();
+        recordsService = recordsServiceFactory.getRecordsService();
 
         recordsService.register(RecordsDaoBuilder.create("test")
             .addRecord("aaa", new DataDto("str-value", 0))

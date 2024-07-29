@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.res
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.lang.Exception
 import java.lang.StringBuilder
 import java.util.*

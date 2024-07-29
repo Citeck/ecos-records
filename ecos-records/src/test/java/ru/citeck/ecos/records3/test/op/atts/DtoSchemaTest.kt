@@ -1,10 +1,10 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -52,7 +52,7 @@ class DtoSchemaTest {
             mapOf(Pair("one", "two")),
             hashMapOf(Pair("one", "two"))
         )
-        val valDtoValue2 = services.recordsServiceV1.getAtts(valDtoValue, ValDtoSchema::class.java)
+        val valDtoValue2 = services.recordsService.getAtts(valDtoValue, ValDtoSchema::class.java)
 
         assertEquals(valDtoValue, valDtoValue2)
 
@@ -60,7 +60,7 @@ class DtoSchemaTest {
         assertEquals("?id", attsMap3["id"])
 
         val valDtoWithDefault = ValDtoWithDefault()
-        val valDtoWithDefaultValue = services.recordsServiceV1.getAtts(valDtoWithDefault, ValDtoWithDefault::class.java)
+        val valDtoWithDefaultValue = services.recordsService.getAtts(valDtoWithDefault, ValDtoWithDefault::class.java)
         assertEquals(valDtoWithDefault, valDtoWithDefaultValue)
 
         val withDefaultSchema = services.dtoSchemaReader.read(ValDtoWithDefault::class.java)
@@ -81,7 +81,7 @@ class DtoSchemaTest {
     }
 
     class TestDtoWithMetaAttAndSet {
-        @MetaAtt("abc[]")
+        @AttName("abc[]")
         var attributes: Set<String>? = emptySet()
     }
 
@@ -107,7 +107,8 @@ class DtoSchemaTest {
         val hashMapTest: HashMap<String, Any>
     ) {
         enum class EnumClass {
-            FIRST, SECOND
+            FIRST,
+            SECOND
         }
     }
 

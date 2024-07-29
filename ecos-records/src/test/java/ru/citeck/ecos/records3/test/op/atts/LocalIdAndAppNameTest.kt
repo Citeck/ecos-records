@@ -11,7 +11,7 @@ class LocalIdAndAppNameTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val dto = TestDto1(EntityRef.create("aa", "bb", "cc"), "123")
 

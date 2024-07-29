@@ -25,7 +25,7 @@ class RawScalarTest {
         assertThat(arrValue.get(1).asText()).isEqualTo("two")
         data.set("arr", arrValue)
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val int = records.getAtt(data, "int?raw")
         assertThat(int.isInt()).isTrue()

@@ -17,7 +17,7 @@ class RegSourceIdTest {
                 return EcosWebAppApiMock(appName)
             }
         }
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(InMemDataRecordsDao("$appName/test"))
 
         val ref = records.create("test", mapOf("aa" to "bb"))

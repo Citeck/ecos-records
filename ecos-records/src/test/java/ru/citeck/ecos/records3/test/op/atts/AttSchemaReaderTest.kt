@@ -30,7 +30,7 @@ class AttSchemaReaderTest {
     fun partiallyIncorrectSchemaTest() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(
             RecordsDaoBuilder.create("test")
                 .addRecord("test", mapOf("att" to "value"))

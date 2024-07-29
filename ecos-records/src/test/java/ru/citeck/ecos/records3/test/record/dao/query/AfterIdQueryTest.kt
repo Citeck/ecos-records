@@ -1,13 +1,10 @@
 package ru.citeck.ecos.records3.test.record.dao.query
 
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField
-import ru.citeck.ecos.records2.request.query.RecordsQueryResult
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
@@ -25,14 +22,10 @@ class AfterIdQueryTest {
                 return recsQuery
             }
         }
-        val daoV0 = object : LocalRecordsDao(), LocalRecordsQueryWithMetaDao<Any> {
-            override fun queryLocalRecords(
-                recordsQuery: ru.citeck.ecos.records2.request.query.RecordsQuery,
-                field: MetaField
-            ): RecordsQueryResult<Any> {
-                val result = RecordsQueryResult<Any>()
-                result.addRecord(recordsQuery)
-                return result
+        val daoV0 = object : RecordsQueryDao {
+
+            override fun queryRecords(recsQuery: RecordsQuery): Any {
+                return listOf(recsQuery)
             }
             override fun getId(): String {
                 return "test-v0"
@@ -41,7 +34,7 @@ class AfterIdQueryTest {
         val factory = RecordsServiceFactory()
         factory.recordsService.register(daoV0)
 
-        val records = factory.recordsServiceV1
+        val records = factory.recordsService
         records.register(daoV1)
 
         val checkQuery = { query: RecordsQuery, expectedAfterId: Boolean ->
@@ -140,7 +133,7 @@ class AfterIdQueryTest {
         val factory = RecordsServiceFactory()
         val queries = mutableListOf<RecordsQuery>()
 
-        factory.recordsServiceV1.register(object : RecordsQueryDao {
+        factory.recordsService.register(object : RecordsQueryDao {
             override fun getId() = "test"
             override fun queryRecords(recsQuery: RecordsQuery): Any? {
                 queries.add(recsQuery)
@@ -157,7 +150,8 @@ class AfterIdQueryTest {
                         ObjectData.create()
                             .set("sourceId", "test")
                             .set("page", page)
-                    )
+                    ).getAsNotNull(ObjectNode::class.java),
+                version
             )
         }
 

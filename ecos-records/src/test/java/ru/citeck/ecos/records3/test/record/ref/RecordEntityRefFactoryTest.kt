@@ -16,7 +16,7 @@ class RecordEntityRefFactoryTest {
         assertThat(ref is EntityRef).isTrue
         assertThat(ref).isEqualTo(EntityRef.valueOf("app/src@id"))
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
 
         val recordRef = records.create("test", mapOf("att" to "value"))

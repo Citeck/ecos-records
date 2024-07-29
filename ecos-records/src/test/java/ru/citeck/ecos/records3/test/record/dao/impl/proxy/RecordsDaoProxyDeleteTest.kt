@@ -22,7 +22,7 @@ class RecordsDaoProxyDeleteTest {
     fun test() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val recordsMap = HashMap<String, ObjectData>()
         recordsMap["rec0"] = ObjectData.create("""{"aa":"bb"}""")

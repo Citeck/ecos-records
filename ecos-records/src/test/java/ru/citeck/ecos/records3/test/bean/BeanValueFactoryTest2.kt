@@ -20,7 +20,7 @@ class BeanValueFactoryTest2 {
 
         val services = RecordsServiceFactory()
 
-        services.recordsServiceV1.register(object : RecordsQueryDao, RecordAttsDao {
+        services.recordsService.register(object : RecordsQueryDao, RecordAttsDao {
             override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
                 return RecsQueryRes.of(TestClass(EntityRef.valueOf("test@test")))
             }
@@ -30,8 +30,8 @@ class BeanValueFactoryTest2 {
             override fun getId() = "test"
         })
 
-        assertEquals("test@test", services.recordsServiceV1.getAtt(EntityRef.valueOf("test@test"), "?id").asText())
-        val queryRecord = services.recordsServiceV1.query(
+        assertEquals("test@test", services.recordsService.getAtt(EntityRef.valueOf("test@test"), "?id").asText())
+        val queryRecord = services.recordsService.query(
             RecordsQuery.create {
                 sourceId = "test"
             },
@@ -48,7 +48,7 @@ class BeanValueFactoryTest2 {
         val map = mapOf(
             "field" to "value"
         )
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         assertThat(records.getAtt(map, "_has.field?bool").asBoolean()).isTrue
         assertThat(records.getAtt(map, "_has.field123?bool").asBoolean()).isFalse
@@ -58,7 +58,7 @@ class BeanValueFactoryTest2 {
     fun extensionTest() {
 
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
 
         val dto = ExtensionTest(ExtensionInnerTest("value0", 999))
 
@@ -78,7 +78,7 @@ class BeanValueFactoryTest2 {
     @Test
     fun testGetAs() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val bean = BeanWithStrFunctions()
         val getAtt = { arg: String -> records.getAtt(bean, arg) }
@@ -142,6 +142,7 @@ class BeanValueFactoryTest2 {
         fun getLabel(): MLText {
             return MLText("abcdef")
         }
+
         @AttName("_disp")
         fun getCustomDispName(): MLText {
             return MLText("abc")
@@ -155,6 +156,7 @@ class BeanValueFactoryTest2 {
         fun getLabel(): MLText {
             return MLText("abcdef")
         }
+
         @AttName("?disp")
         fun getCustomDispName(): MLText {
             return MLText("abc")

@@ -57,7 +57,7 @@ class SchemaTest {
         val edgeName = "cm:name"
         val innerInner = "att(n:\"title\"){disp}"
         val att = ".edge(n:\"$edgeName\"){$inner{$innerInner}}"
-        val multiplePostfix = if (multiple) { "[]" } else { "" }
+        val multiplePostfix = if (multiple) "[]" else ""
         assertAtt("_edge.$edgeName.$inner$multiplePostfix.title", att)
     }
 
@@ -68,7 +68,7 @@ class SchemaTest {
         assertEquals(1, inner1.size)
         assertEquals(1, inner1[0].inner.size)
         assertEquals(inner, inner1[0].inner[0].name)
-        val lastAtt = if (innerInner == "disp") { "" } else { "?$innerInner" }
+        val lastAtt = if (innerInner == "disp") "" else "?$innerInner"
         assertAtt("_edge.$edgeName.$inner$lastAtt", att)
     }
 

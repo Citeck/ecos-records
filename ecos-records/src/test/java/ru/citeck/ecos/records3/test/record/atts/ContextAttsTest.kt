@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records3.test.record.atts
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
@@ -28,7 +28,7 @@ class ContextAttsTest {
     fun testForEmptyValue() {
 
         val factory = RecordsServiceFactory()
-        val records = factory.recordsServiceV1
+        val records = factory.recordsService
 
         val attName = "attName"
         val ctxAttName = "ctxAttName"
@@ -115,7 +115,7 @@ class ContextAttsTest {
 
         val ctxAttValue = "ctx-att-value"
         RequestContext.doWithAtts(mapOf("ctxAtt" to ctxAttValue)) { _ ->
-            val records = localApp.factory.recordsServiceV1
+            val records = localApp.factory.recordsService
             assertThat(records.getAtt(localRecord, "\$ctxAtt").asText()).isEqualTo(ctxAttValue)
             assertThat(records.getAtt(remoteRecord, "\$ctxAtt").asText()).isEqualTo(ctxAttValue)
         }
@@ -156,7 +156,7 @@ class ContextAttsTest {
             }
         }.toList()
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         val atts = records.getAtts(recordsToGetAtts, listOf("field"))
 
         assertThat(getAttCallsCount).isEqualTo(recsCount)
@@ -220,7 +220,7 @@ class ContextAttsTest {
     @Test
     fun postProcTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         val currentYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.YEAR)
         val year1 = records.getAtt(null, "\$now|fmt('yyyy')").asInt()

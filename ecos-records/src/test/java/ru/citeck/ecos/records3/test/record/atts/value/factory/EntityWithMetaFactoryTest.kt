@@ -22,7 +22,7 @@ class EntityWithMetaFactoryTest {
             .build()
 
         val rec = EntityWithMeta(entity, meta)
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         assertThat(records.getAtt(rec, RecordConstants.ATT_CREATED).getAsInstant()).isEqualTo(meta.created)
         assertThat(records.getAtt(rec, RecordConstants.ATT_CREATOR + "?localId").asText()).isEqualTo("user-0")
         assertThat(records.getAtt(rec, RecordConstants.ATT_MODIFIED).getAsInstant()).isEqualTo(meta.modified)

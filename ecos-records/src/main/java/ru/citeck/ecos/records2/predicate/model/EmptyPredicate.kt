@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonProperty
 
 class EmptyPredicate : AttributePredicate {
 

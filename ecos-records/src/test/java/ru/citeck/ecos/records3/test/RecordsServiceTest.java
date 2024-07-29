@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.test;
 
-import ecos.com.fasterxml.jackson210.core.JsonProcessingException;
-import ecos.com.fasterxml.jackson210.databind.util.ISO8601Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
     @BeforeAll
     void init() {
         RecordsServiceFactory factory = new RecordsServiceFactory();
-        recordsService = factory.getRecordsServiceV1();
+        recordsService = factory.getRecordsService();
         recordsService.register(this);
     }
 
@@ -199,7 +199,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
     @Test
     void testDisplayName() {
 
-        DataValue dispValue = recordsService.getAtt(EntityRef.create(SOURCE_ID, "test"), ".disp");
+        DataValue dispValue = recordsService.getAtt(EntityRef.create(SOURCE_ID, "test"), "?disp");
 
         assertEquals(DataValue.create(PojoMeta.DISPLAY_NAME), dispValue);
     }
@@ -409,7 +409,7 @@ public class RecordsServiceTest extends AbstractRecordsDao
             journals.add(attributes);
         }
 
-        @AttName(".disp")
+        @AttName("?disp")
         public String getDisplay() {
             return DISPLAY_NAME;
         }

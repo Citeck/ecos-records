@@ -1,6 +1,6 @@
 package ru.citeck.ecos.records2.predicate.model
 
-import ecos.com.fasterxml.jackson210.annotation.JsonValue
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
  * This predicate used when predicate is null or not-parsable value.

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
-import ecos.com.fasterxml.jackson210.databind.JsonNode
-import ecos.com.fasterxml.jackson210.databind.node.*
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.*
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter

@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.atts.schema.read
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
@@ -35,7 +34,7 @@ class DtoSchemaReaderTest {
     @Test
     fun arrayTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
 
         val elements = listOf("abc", "def", 123, 456.1)
@@ -74,7 +73,7 @@ class DtoSchemaReaderTest {
     )
 
     class RefsDto(
-        val legacyRecordRef: RecordRef,
+        val legacyRecordRef: EntityRef,
         val entityRef: EntityRef
     )
 }

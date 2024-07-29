@@ -21,7 +21,7 @@ class InMemDataRecordsDaoTest {
     @Test
     fun testWithPredicates() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
 
         val ref0 = records.create("test", mapOf("abc" to "def"))
@@ -54,7 +54,7 @@ class InMemDataRecordsDaoTest {
     @Test
     fun testWithCopyAndUpdateById() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         records.register(InMemDataRecordsDao("test"))
         val res0 = records.create(
@@ -81,7 +81,7 @@ class InMemDataRecordsDaoTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao(ID))
 
         val rec0 = records.mutate(
@@ -144,7 +144,7 @@ class InMemDataRecordsDaoTest {
     @Test
     fun simpleSearchTest() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(InMemDataRecordsDao("test"))
 
         val refs = (0 until 300).map {
@@ -182,7 +182,7 @@ class InMemDataRecordsDaoTest {
     @Test
     fun sortByTest() {
         val services = RecordsServiceFactory()
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         val recordsDao = InMemDataRecordsDao("test")
         records.register(recordsDao)
 

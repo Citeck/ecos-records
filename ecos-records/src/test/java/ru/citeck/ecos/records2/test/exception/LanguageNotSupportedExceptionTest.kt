@@ -18,7 +18,7 @@ class LanguageNotSupportedExceptionTest {
             override fun queryRecords(recsQuery: RecordsQuery): Any? = null
             override fun getSupportedLanguages(): List<String> = listOf("predicate")
         }
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
         records.register(dao)
 
         assertThrows<LanguageNotSupportedException> {

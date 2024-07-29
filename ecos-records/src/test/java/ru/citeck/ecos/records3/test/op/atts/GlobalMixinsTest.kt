@@ -15,7 +15,7 @@ class GlobalMixinsTest {
         val services = RecordsServiceFactory()
         val dao = InMemDataRecordsDao("test")
 
-        val records = services.recordsServiceV1
+        val records = services.recordsService
         records.register(dao)
 
         val ref = records.create("test", mapOf("field" to "def"))

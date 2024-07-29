@@ -1,8 +1,7 @@
 package ru.citeck.ecos.records3.record.mixin.external
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.promise.Promises
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.source.dao.local.job.PeriodicJob
 import ru.citeck.ecos.records3.RecordsService
@@ -16,6 +15,7 @@ import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
+import ru.citeck.ecos.webapp.api.promise.Promises
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -107,7 +107,7 @@ class ExtAttMixinServiceImpl : ExtAttMixinService, ServiceFactoryAware {
         dtoSchemaReader = serviceFactory.dtoSchemaReader
         schemaReader = serviceFactory.attSchemaReader
         schemaWriter = serviceFactory.attSchemaWriter
-        recordsService = serviceFactory.recordsServiceV1
+        recordsService = serviceFactory.recordsService
         attSchemaResolver = serviceFactory.attSchemaResolver
         recordTypeService = serviceFactory.recordTypeService
 

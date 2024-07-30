@@ -38,7 +38,12 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1 to 2
+
+                // Note: API version 0 is unsupported. However, the EcosLegacyWebClient
+                // does not utilize the WebAPI if version 0 is not provided here.
+                // This is a temporary solution until all microservices are upgraded
+                // to Spring Boot 3+ and Java 21+.
+                override fun getApiVersion() = 0 to 2
                 override fun getPath() = RemoteRecordsResolver.QUERY_PATH
                 override fun isReadOnly(): Boolean = true
             }
@@ -52,7 +57,12 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1 to 1
+
+                // Note: API version 0 is unsupported. However, the EcosLegacyWebClient
+                // does not utilize the WebAPI if version 0 is not provided here.
+                // This is a temporary solution until all microservices are upgraded
+                // to Spring Boot 3+ and Java 21+.
+                override fun getApiVersion() = 0 to 1
                 override fun getPath() = RemoteRecordsResolver.MUTATE_PATH
                 override fun isReadOnly(): Boolean = false
             }
@@ -66,7 +76,12 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                     )
                     response.getBodyWriter().writeDto(result)
                 }
-                override fun getApiVersion() = 1 to 1
+
+                // Note: API version 0 is unsupported. However, the EcosLegacyWebClient
+                // does not utilize the WebAPI if version 0 is not provided here.
+                // This is a temporary solution until all microservices are upgraded
+                // to Spring Boot 3+ and Java 21+.
+                override fun getApiVersion() = 0 to 1
                 override fun getPath() = RemoteRecordsResolver.DELETE_PATH
                 override fun isReadOnly(): Boolean = false
             }
@@ -91,9 +106,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 val v1Body = mapper.convert(bodyData, queryType) ?: QueryBodyV1()
                 restHandlerV1.queryRecords(v1Body)
             }
-            else -> {
-                error("$UNKNOWN_BODY_VERSION_MSG: $version")
-            }
+            else -> error("$UNKNOWN_BODY_VERSION_MSG: $version")
         }
     }
 
@@ -104,9 +117,7 @@ class RestHandlerAdapter(services: RecordsServiceFactory) {
                 val v1Body = mapper.convert(body, DeleteBody::class.java) ?: DeleteBody()
                 restHandlerV1.deleteRecords(v1Body)
             }
-            else -> {
-                throw IllegalArgumentException("$UNKNOWN_BODY_VERSION_MSG: $version")
-            }
+            else -> error("$UNKNOWN_BODY_VERSION_MSG: $version")
         }
     }
 

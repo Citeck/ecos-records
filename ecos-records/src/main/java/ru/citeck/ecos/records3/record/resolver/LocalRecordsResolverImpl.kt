@@ -359,7 +359,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                 if (recordIds.size == records.size) {
                     // all records from single local source
                     return getAttsFromRecordsDao(
-                        sourceId,
+                        srcId,
                         recordsDao,
                         recordIds.map { it.value },
                         attributes,
@@ -368,7 +368,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
                     )
                 } else {
                     getAttsFromRecordsDao(
-                        sourceId,
+                        srcId,
                         recordsDao,
                         recordIds.map { it.value },
                         attributes,

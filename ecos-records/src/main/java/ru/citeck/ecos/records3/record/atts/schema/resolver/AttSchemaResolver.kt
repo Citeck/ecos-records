@@ -704,16 +704,22 @@ class AttSchemaResolver : ServiceFactoryAware {
                     }
                 } else if (id is EntityRef) {
                     id
-                } else if (id is DataValue) {
-                    EntityRef.create(ctxSourceId, id.asText())
-                } else if (id is String) {
-                    if (id.contains(EntityRef.SOURCE_ID_DELIMITER)) {
-                        EntityRef.valueOf(id)
-                    } else {
-                        EntityRef.create(ctxSourceId, id)
-                    }
                 } else {
-                    EntityRef.create(ctxSourceId, id.toString())
+                    var mutId = id
+                    if (mutId is DataValue) {
+                        mutId = mutId.asText()
+                    }
+                    if (mutId is String) {
+                        if (mutId.contains(EntityRef.SOURCE_ID_DELIMITER)) {
+                            EntityRef.valueOf(mutId)
+                        } else if (defaultValueRef.isNotEmpty()) {
+                            EntityRef.create(defaultValueRef.getAppName(), defaultValueRef.getSourceId(), mutId)
+                        } else {
+                            EntityRef.create(ctxSourceId, mutId)
+                        }
+                    } else {
+                        EntityRef.create(ctxSourceId, id.toString())
+                    }
                 }
                 if (ctxSourceId.isNotEmpty() &&
                     computedRef.getAppName().isEmpty() &&

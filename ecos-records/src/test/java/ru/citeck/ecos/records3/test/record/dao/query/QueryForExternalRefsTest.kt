@@ -13,7 +13,7 @@ class QueryForExternalRefsTest {
     @Test
     fun test() {
 
-        val records = RecordsServiceFactory().recordsServiceV1
+        val records = RecordsServiceFactory().recordsService
 
         records.register(
             RecordsDaoBuilder.create("main")

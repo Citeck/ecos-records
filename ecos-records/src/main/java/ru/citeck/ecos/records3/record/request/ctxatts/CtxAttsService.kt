@@ -3,12 +3,15 @@ package ru.citeck.ecos.records3.record.request.ctxatts
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 import kotlin.collections.LinkedHashMap
 
 class CtxAttsService(private val services: RecordsServiceFactory) {
 
     private var providers: List<CtxAttsProvider> = emptyList()
+
+    private val thisLock = ReentrantLock()
 
     init {
         register(services.ctxAttsProviders)
@@ -22,41 +25,57 @@ class CtxAttsService(private val services: RecordsServiceFactory) {
         return attributes
     }
 
-    @Synchronized
     fun register(provider: CtxAttsProvider) {
-        register(listOf(provider))
+        thisLock.lock()
+        try {
+            register(listOf(provider))
+        } finally {
+            thisLock.unlock()
+        }
     }
 
-    @Synchronized
     fun register(providers: List<CtxAttsProvider>) {
-        if (providers.isEmpty()) {
-            return
-        }
-        val newRegistry = ArrayList(this.providers)
-        for (provider in providers) {
-            if (provider is ServiceFactoryAware) {
-                provider.setRecordsServiceFactory(services)
+        thisLock.lock()
+        try {
+            if (providers.isEmpty()) {
+                return
             }
-            newRegistry.add(provider)
+            val newRegistry = ArrayList(this.providers)
+            for (provider in providers) {
+                if (provider is ServiceFactoryAware) {
+                    provider.setRecordsServiceFactory(services)
+                }
+                newRegistry.add(provider)
+            }
+            newRegistry.sortBy { it.getOrder() }
+            this.providers = newRegistry
+        } finally {
+            thisLock.unlock()
         }
-        newRegistry.sortBy { it.getOrder() }
-        this.providers = newRegistry
     }
 
-    @Synchronized
     fun unregister(provider: CtxAttsProvider) {
-        unregister(listOf(provider))
+        thisLock.lock()
+        try {
+            unregister(listOf(provider))
+        } finally {
+            thisLock.unlock()
+        }
     }
 
-    @Synchronized
     fun unregister(providers: List<CtxAttsProvider>) {
-        if (providers.isEmpty()) {
-            return
+        thisLock.lock()
+        try {
+            if (providers.isEmpty()) {
+                return
+            }
+            val newRegistry = ArrayList(this.providers)
+            val identitySet: MutableSet<CtxAttsProvider> = Collections.newSetFromMap(IdentityHashMap(providers.size))
+            identitySet.addAll(providers)
+            newRegistry.removeIf { identitySet.contains(it) }
+            this.providers = newRegistry
+        } finally {
+            thisLock.unlock()
         }
-        val newRegistry = ArrayList(this.providers)
-        val identitySet: MutableSet<CtxAttsProvider> = Collections.newSetFromMap(IdentityHashMap(providers.size))
-        identitySet.addAll(providers)
-        newRegistry.removeIf { identitySet.contains(it) }
-        this.providers = newRegistry
     }
 }

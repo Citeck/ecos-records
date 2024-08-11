@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.commons.utils.func.UncheckedBiFunction;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
@@ -18,6 +17,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
+import ru.citeck.ecos.webapp.api.func.UncheckedBiFunction;
 
 import java.util.Arrays;
 import java.util.Collection;

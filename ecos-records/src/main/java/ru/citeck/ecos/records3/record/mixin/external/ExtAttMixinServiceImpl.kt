@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -43,6 +44,9 @@ class ExtAttMixinServiceImpl : ExtAttMixinService, ServiceFactoryAware {
     private val configurersVersion = AtomicLong()
     private val externalAttsVersion = AtomicLong()
     private val nextLazyUpdateTimeMs = AtomicLong(-1)
+
+    private val thisLock = ReentrantLock()
+    private val externalAttsVersionLock = ReentrantLock()
 
     private lateinit var dtoSchemaReader: DtoSchemaReader
     private lateinit var schemaReader: AttSchemaReader
@@ -84,7 +88,8 @@ class ExtAttMixinServiceImpl : ExtAttMixinService, ServiceFactoryAware {
                 }
             }
         }
-        synchronized(externalAttsVersion) {
+        externalAttsVersionLock.lock()
+        try {
             wasUpdated?.set(true)
             this.externalAttsByType = newAttsByType
             this.nonLocalAttsByType = newNonLocalAttsByType
@@ -99,6 +104,8 @@ class ExtAttMixinServiceImpl : ExtAttMixinService, ServiceFactoryAware {
                 }
             }
             return externalAttsVersion.get()
+        } finally {
+            externalAttsVersionLock.unlock()
         }
     }
 
@@ -183,34 +190,41 @@ class ExtAttMixinServiceImpl : ExtAttMixinService, ServiceFactoryAware {
         } else {
             ExtAttMixinContextImpl(attributes)
         }
-        synchronized(externalAttsVersion) {
+        externalAttsVersionLock.lock()
+        try {
             if (extAttsVersion == externalAttsVersion.get()) {
                 cache[typeId] = Optional.ofNullable(newCtx)
             }
+        } finally {
+            externalAttsVersionLock.unlock()
         }
         return newCtx
     }
 
-    @Synchronized
     private fun fillTypeAtts(
         typeId: String,
         attsByType: Map<String, Map<String, ExtAttData>>,
         result: MutableMap<String, ExtAttData>,
         processedTypes: MutableSet<String> = HashSet()
     ) {
-        if (typeId.isEmpty()) {
-            return
+        thisLock.lock()
+        try {
+            if (typeId.isEmpty()) {
+                return
+            }
+            if (!processedTypes.add(typeId)) {
+                return
+            }
+            attsByType[typeId]?.forEach { (k, v) ->
+                result.putIfAbsent(k, v)
+            }
+            val recType = recordTypeService.getRecordType(
+                EntityRef.create(AppName.EMODEL, "type", typeId)
+            )
+            fillTypeAtts(recType.getParentId(), attsByType, result, processedTypes)
+        } finally {
+            thisLock.unlock()
         }
-        if (!processedTypes.add(typeId)) {
-            return
-        }
-        attsByType[typeId]?.forEach { (k, v) ->
-            result.putIfAbsent(k, v)
-        }
-        val recType = recordTypeService.getRecordType(
-            EntityRef.create(AppName.EMODEL, "type", typeId)
-        )
-        fillTypeAtts(recType.getParentId(), attsByType, result, processedTypes)
     }
 
     override fun register(mixin: ExtAttMixinConfigurer) {

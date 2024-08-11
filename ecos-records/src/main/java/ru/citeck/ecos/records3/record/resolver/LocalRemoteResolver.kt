@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.resolver
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
@@ -10,7 +11,6 @@ import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.RecordsServiceImpl
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -37,6 +37,8 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         private val REFS_CACHE_NOT_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache"
         private val REFS_CACHE_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-system-raw"
         private val REFS_CACHE_NOT_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-system-cache"
+
+        private val log = KotlinLogging.logger {}
     }
 
     private val emptyAttsMap = AttsMap(emptyMap<String, Any>())
@@ -480,7 +482,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 val parsedAtt = reader.read("", name)
                 recAtts[parsedAtt.name] = convertAssocValue(valueArg, assocsMapping)
             } catch (e: AttReadException) {
-                RecordsServiceImpl.log.error("Attribute read failed", e)
+                log.error(e) { "Attribute read failed" }
             }
         }
         record.setAtts(recAtts)

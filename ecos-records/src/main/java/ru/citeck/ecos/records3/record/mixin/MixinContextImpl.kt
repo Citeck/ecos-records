@@ -6,6 +6,7 @@ import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProvider
 import ru.citeck.ecos.records3.utils.AttUtils
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 
 class MixinContextImpl() : MixinContext {
 
@@ -20,6 +21,8 @@ class MixinContextImpl() : MixinContext {
     private val providers: MutableList<AttMixinsProvider> = CopyOnWriteArrayList()
 
     private val dirty = AtomicBoolean(true)
+
+    private val lock = ReentrantLock()
 
     constructor(vararg mixins: AttMixin) : this() {
         addMixins(mixins.toList())
@@ -45,82 +48,105 @@ class MixinContextImpl() : MixinContext {
         return null
     }
 
-    @Synchronized
     private fun updateMixins() {
-        if (!dirty.get()) {
-            return
+        lock.lock()
+        try {
+            if (!dirty.get()) {
+                return
+            }
+            updateMixinsImpl()
+            dirty.set(false)
+        } finally {
+            lock.unlock()
         }
-        updateMixinsImpl()
-        dirty.set(false)
     }
 
-    @Synchronized
     private fun updateMixinsImpl() {
+        lock.lock()
+        try {
+            val mixins = ArrayList(providers.flatMap { it.getMixins() })
+            mixins.addAll(this.mixins)
 
-        val mixins = ArrayList(providers.flatMap { it.getMixins() })
-        mixins.addAll(this.mixins)
+            val newExactMixins: MutableMap<String, MixinAttContext> = HashMap()
+            val newEndsWithMixins: MutableMap<String, MixinAttContext> = HashMap()
 
-        val newExactMixins: MutableMap<String, MixinAttContext> = HashMap()
-        val newEndsWithMixins: MutableMap<String, MixinAttContext> = HashMap()
+            for (mixin in mixins) {
 
-        for (mixin in mixins) {
+                mixin.getProvidedAtts().forEach { att ->
 
-            mixin.getProvidedAtts().forEach { att ->
+                    if (AttUtils.isValidComputedAtt(att, true)) {
 
-                if (AttUtils.isValidComputedAtt(att, true)) {
+                        val mixinAttCtx = MixinAttContext(mixin, att)
 
-                    val mixinAttCtx = MixinAttContext(mixin, att)
+                        if (att[0] == '*') {
 
-                    if (att[0] == '*') {
+                            newEndsWithMixins[att.substring(1)] = mixinAttCtx
+                        } else {
 
-                        newEndsWithMixins[att.substring(1)] = mixinAttCtx
-                    } else {
+                            newExactMixins[att] = mixinAttCtx
 
-                        newExactMixins[att] = mixinAttCtx
-
-                        val lastDotIdx = att.lastIndexOf('.')
-                        if (lastDotIdx == -1) {
-                            val scalar = ScalarType.getByMirrorAtt(att)
-                            if (scalar != null) {
-                                newExactMixins[scalar.schema] = mixinAttCtx
-                            }
-                        } else if (att.length > lastDotIdx + 1) {
-                            val scalar = ScalarType.getByMirrorAtt(att.substring(lastDotIdx + 1))
-                            if (scalar != null) {
-                                newExactMixins[att.substring(0, lastDotIdx) + scalar.schema] = mixinAttCtx
+                            val lastDotIdx = att.lastIndexOf('.')
+                            if (lastDotIdx == -1) {
+                                val scalar = ScalarType.getByMirrorAtt(att)
+                                if (scalar != null) {
+                                    newExactMixins[scalar.schema] = mixinAttCtx
+                                }
+                            } else if (att.length > lastDotIdx + 1) {
+                                val scalar = ScalarType.getByMirrorAtt(att.substring(lastDotIdx + 1))
+                                if (scalar != null) {
+                                    newExactMixins[att.substring(0, lastDotIdx) + scalar.schema] = mixinAttCtx
+                                }
                             }
                         }
+                    } else {
+                        log.warn { "Incorrect computed att: '$att'" }
                     }
-                } else {
-                    log.warn { "Incorrect computed att: '$att'" }
                 }
             }
+
+            this.exactMixins = newExactMixins
+            this.endsWithMixins = newEndsWithMixins
+        } finally {
+            lock.unlock()
         }
-
-        this.exactMixins = newExactMixins
-        this.endsWithMixins = newEndsWithMixins
     }
 
-    @Synchronized
     fun addMixin(mixin: AttMixin) {
-        addMixins(listOf(mixin))
+        lock.lock()
+        try {
+            addMixins(listOf(mixin))
+        } finally {
+            lock.unlock()
+        }
     }
 
-    @Synchronized
     fun addMixins(vararg mixins: AttMixin) {
-        addMixins(mixins.toList())
+        lock.lock()
+        try {
+            addMixins(mixins.toList())
+        } finally {
+            lock.unlock()
+        }
     }
 
-    @Synchronized
     fun addMixins(mixins: Iterable<AttMixin>) {
-        this.mixins.addAll(mixins)
-        dirty.set(true)
+        lock.lock()
+        try {
+            this.mixins.addAll(mixins)
+            dirty.set(true)
+        } finally {
+            lock.unlock()
+        }
     }
 
-    @Synchronized
     fun addMixinsProvider(provider: AttMixinsProvider) {
-        provider.onChanged { dirty.set(true) }
-        providers.add(provider)
-        dirty.set(true)
+        lock.lock()
+        try {
+            provider.onChanged { dirty.set(true) }
+            providers.add(provider)
+            dirty.set(true)
+        } finally {
+            lock.unlock()
+        }
     }
 }

@@ -10,6 +10,7 @@ import ru.citeck.ecos.webapp.api.promise.Promises
 import ru.citeck.ecos.webapp.api.web.client.EcosWebClientApi
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 
 class ExtAttRemoteConfigurer(
     private val registry: ExtAttRemoteRegistry,
@@ -60,20 +61,26 @@ class ExtAttRemoteConfigurer(
         private var future: CompletableFuture<Map<String, Map<String, Any?>>> = CompletableFuture.completedFuture(emptyMap())
         private var promise: Promise<Map<String, Map<String, Any?>>> = Promises.create(future)
 
-        @Synchronized
+        private val lock = ReentrantLock()
+
         fun eval(typeId: String, reqAtts: Map<String, Any?>, schemaAtt: SchemaAtt): Promise<Any?> {
-            attributes.computeIfAbsent(typeId) { ArrayList() }.add(
-                CalculateExtAttsWebExecutor.ReqAttData(reqAtts, schemaAtt)
-            )
-            if (flushed.compareAndSet(true, false)) {
-                future = CompletableFuture()
-                promise = Promises.create(future) { flush() }
+            lock.lock()
+            try {
+                attributes.computeIfAbsent(typeId) { ArrayList() }.add(
+                    CalculateExtAttsWebExecutor.ReqAttData(reqAtts, schemaAtt)
+                )
+                if (flushed.compareAndSet(true, false)) {
+                    future = CompletableFuture()
+                    promise = Promises.create(future) { flush() }
+                }
+                return promise.then { it[typeId]?.get(schemaAtt.name) }
+            } finally {
+                lock.unlock()
             }
-            return promise.then { it[typeId]?.get(schemaAtt.name) }
         }
 
-        @Synchronized
         private fun flush() {
+            lock.lock()
             try {
                 if (!flushed.compareAndSet(false, true)) {
                     return
@@ -136,6 +143,8 @@ class ExtAttRemoteConfigurer(
                     }
             } catch (e: Throwable) {
                 future.completeExceptionally(e)
+            } finally {
+                lock.unlock()
             }
         }
     }

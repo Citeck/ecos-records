@@ -7,12 +7,9 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.TmplUtils.applyAtts
 import ru.citeck.ecos.commons.utils.TmplUtils.getAtts
 import ru.citeck.ecos.records2.predicate.model.*
-import java.lang.IllegalAccessException
-import java.lang.NoSuchMethodException
 import java.lang.reflect.InvocationTargetException
 import java.util.*
 import java.util.function.Function
-import kotlin.jvm.JvmOverloads
 
 object PredicateUtils {
 
@@ -161,11 +158,12 @@ object PredicateUtils {
         try {
             BeanUtils.setProperty(dto, "predicate", filtered)
         } catch (e: IllegalAccessException) {
-            // do nothing
             return dto
         } catch (e: InvocationTargetException) {
             return dto
         } catch (e: NoSuchMethodException) {
+            return dto
+        } catch (e: RuntimeException) {
             return dto
         }
         return dto

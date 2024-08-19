@@ -88,6 +88,9 @@ class PredicateUtilsTest {
 
         dto = PredicateUtils.convertToDto(pred, PredDto.class, true);
         assertNull(dto.field3);
+
+        DtoWithoutPredicateField dto2 = PredicateUtils.convertToDto(pred, DtoWithoutPredicateField.class);
+        assertThat(dto2.field0).isEqualTo(dto.field0);
     }
 
     @Test
@@ -134,5 +137,10 @@ class PredicateUtilsTest {
         public void set__fieldWithPrefix(String value) {
             fieldWithPrefix = value;
         }
+    }
+
+    @Data
+    public static class DtoWithoutPredicateField {
+        private String field0;
     }
 }

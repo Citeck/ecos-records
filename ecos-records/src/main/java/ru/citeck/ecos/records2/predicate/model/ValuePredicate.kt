@@ -37,7 +37,7 @@ class ValuePredicate : AttributePredicate {
 
         @JvmStatic
         fun getTypes(): List<String> {
-            return Type.values().map { it.asString() }
+            return Type.entries.map { it.asString() }
         }
 
         @JvmStatic

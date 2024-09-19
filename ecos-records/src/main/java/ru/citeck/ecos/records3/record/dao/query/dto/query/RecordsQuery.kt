@@ -23,7 +23,8 @@ data class RecordsQuery(
     val page: QueryPage,
     val consistency: Consistency,
     val language: String,
-    val query: DataValue
+    val query: DataValue,
+    val workspaces: List<String>
 ) {
 
     companion object {
@@ -56,7 +57,7 @@ data class RecordsQuery(
         val result = getQueryOrNull(type)
         if (result == null) {
             log.warn { "Can't convert query to type $type. Query: $query" }
-            return type.newInstance()
+            return type.getDeclaredConstructor().newInstance()
         }
         return result
     }
@@ -110,6 +111,7 @@ data class RecordsQuery(
         var consistency: Consistency = Consistency.DEFAULT
         var language: String = ""
         var query: DataValue = DataValue.NULL
+        var workspaces: List<String> = emptyList()
 
         constructor(base: RecordsQuery) : this() {
             sourceId = base.sourceId
@@ -120,6 +122,7 @@ data class RecordsQuery(
             consistency = base.consistency
             language = base.language
             query = base.query
+            workspaces = base.workspaces
         }
 
         fun withSourceId(sourceId: String?): Builder {
@@ -191,6 +194,11 @@ data class RecordsQuery(
             return this
         }
 
+        fun withWorkspaces(workspaces: List<String>?): Builder {
+            this.workspaces = workspaces ?: emptyList()
+            return this
+        }
+
         fun build(): RecordsQuery {
             return RecordsQuery(
                 sourceId,
@@ -200,7 +208,8 @@ data class RecordsQuery(
                 page.build(),
                 consistency,
                 language,
-                query
+                query,
+                workspaces
             )
         }
     }

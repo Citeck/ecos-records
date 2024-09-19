@@ -17,12 +17,12 @@ object Predicates {
     }
 
     @JvmStatic
-    fun inVals(attribute: String?, values: Collection<String>): ValuePredicate {
+    fun inVals(attribute: String?, values: Collection<*>): ValuePredicate {
         return `in`(attribute, values)
     }
 
     @JvmStatic
-    fun `in`(attribute: String?, values: Collection<String>): ValuePredicate {
+    fun `in`(attribute: String?, values: Collection<*>): ValuePredicate {
         return ValuePredicate(attribute, ValuePredicate.Type.IN, ArrayList(values))
     }
 

@@ -24,6 +24,7 @@ object RecordConstants {
     const val ATT_ALIAS = "_alias"
 
     const val ATT_PARENT = "_parent"
+    const val ATT_WORKSPACE = "_workspace"
     const val ATT_PARENT_ATT = "_parentAtt"
     const val ATT_FORM_KEY = "_formKey"
     const val ATT_FORM_REF = "_formRef"

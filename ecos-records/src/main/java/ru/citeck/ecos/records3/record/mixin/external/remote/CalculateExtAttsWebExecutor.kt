@@ -69,7 +69,12 @@ class CalculateExtAttsWebExecutor(
                 )
             }
         }
-        Promises.all(promises).get(Duration.ofSeconds(10))
+        Promises.all(promises).get(Duration.ofSeconds(20))
+        promises.forEach {
+            if (!it.isDone()) {
+                it.cancel(true)
+            }
+        }
 
         return RespBodyDto(results)
     }

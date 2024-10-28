@@ -58,22 +58,24 @@ class ExtAttRemoteConfigurer(
         val flushed = AtomicBoolean(true)
         private var attributes = HashMap<String, MutableList<CalculateExtAttsWebExecutor.ReqAttData>>()
 
-        private var future: CompletableFuture<Map<String, Map<String, Any?>>> = CompletableFuture.completedFuture(emptyMap())
-        private var promise: Promise<Map<String, Map<String, Any?>>> = Promises.create(future)
+        private var future: CompletableFuture<Map<String, List<Map<String, Any?>>>> = CompletableFuture.completedFuture(emptyMap())
+        private var promise: Promise<Map<String, List<Map<String, Any?>>>> = Promises.create(future)
 
         private val lock = ReentrantLock()
 
         fun eval(typeId: String, reqAtts: Map<String, Any?>, schemaAtt: SchemaAtt): Promise<Any?> {
             lock.lock()
             try {
-                attributes.computeIfAbsent(typeId) { ArrayList() }.add(
+                val listOfDataToReq = attributes.computeIfAbsent(typeId) { ArrayList() }
+                listOfDataToReq.add(
                     CalculateExtAttsWebExecutor.ReqAttData(reqAtts, schemaAtt)
                 )
+                val reqDataIdx = listOfDataToReq.lastIndex
                 if (flushed.compareAndSet(true, false)) {
                     future = CompletableFuture()
                     promise = Promises.create(future) { flush() }
                 }
-                return promise.then { it[typeId]?.get(schemaAtt.name) }
+                return promise.then { it[typeId]?.get(reqDataIdx)?.get(schemaAtt.name) }
             } finally {
                 lock.unlock()
             }
@@ -129,13 +131,14 @@ class ExtAttRemoteConfigurer(
                         val resp = it.getBodyReader().readDto(
                             CalculateExtAttsWebExecutor.RespBodyDto::class.java
                         )
-                        val resultMap = HashMap<String, MutableMap<String, Any?>>()
+                        val resultMap = HashMap<String, List<Map<String, Any?>>>()
                         requestBody.attributes.forEachIndexed { typeIdx, reqData ->
                             val respData = resp.results[typeIdx]
-                            val typeAtts = resultMap.computeIfAbsent(reqData.typeId) { HashMap() }
+                            val typeAtts = ArrayList<Map<String, InnerAttValue>>()
                             reqData.atts.forEachIndexed { idx, attReqData ->
-                                typeAtts[attReqData.toLoad.name] = InnerAttValue(respData[idx])
+                                typeAtts.add(mapOf(attReqData.toLoad.name to InnerAttValue(respData[idx])))
                             }
+                            resultMap[reqData.typeId] = typeAtts
                         }
                         future.complete(resultMap)
                     }.catch {

@@ -415,7 +415,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             PredicateService.LANGUAGE_PREDICATE
         )
         if (!query.isPresent) {
-            log.error("Language " + distinctQuery.language + " is not supported by Distinct Query")
+            log.error { "Language " + distinctQuery.language + " is not supported by Distinct Query" }
             return emptyList()
         }
 

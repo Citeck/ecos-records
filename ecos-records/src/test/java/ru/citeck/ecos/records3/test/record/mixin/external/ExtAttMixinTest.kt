@@ -106,18 +106,27 @@ class ExtAttMixinTest {
             }
         })
 
-        val remoteAppsRegistryData = app1.factory.extAttMixinService
-            .getNonLocalAtts().values.flatMap { it.values }.map {
-                ExtAttRemoteRegistryData(it.typeId, it.priority, it.attribute, it.requiredAtts.values.toSet())
-            }
-
+        var updateRemoteData: () -> Unit = {}
         app0.factory.extAttMixinService.register(
             ExtAttRemoteConfigurer(
                 object : ExtAttRemoteRegistry {
                     override fun getRemoteData(): Map<String, List<ExtAttRemoteRegistryData>> {
-                        return mapOf(app1.name to remoteAppsRegistryData)
+                        return mapOf(
+                            app1.name to
+                                app1.factory.extAttMixinService
+                                    .getNonLocalAtts().values.flatMap { it.values }.map {
+                                        ExtAttRemoteRegistryData(
+                                            it.typeId,
+                                            it.priority,
+                                            it.attribute,
+                                            it.requiredAtts.values.toSet()
+                                        )
+                                    }
+                        )
                     }
-                    override fun onRemoteDataUpdated(action: () -> Unit) {}
+                    override fun onRemoteDataUpdated(action: () -> Unit) {
+                        updateRemoteData = action
+                    }
                 },
                 app0.factory.getEcosWebAppApi()!!.getWebClientApi()
             )
@@ -136,7 +145,7 @@ class ExtAttMixinTest {
         assertThat(app0Records.getAtt("test@rec-0", "attWithAttValue.inner").asText()).isEqualTo("abc-value-0")
 
         val attsRes = app0Records.getAtts(
-            "test@rec-0",
+            listOf("test@rec-0", "test@rec-111"),
             mapOf(
                 // _self to exclude cache
                 "evaluated" to "evaluated._self",
@@ -145,13 +154,60 @@ class ExtAttMixinTest {
                 "localAtt" to "localAtt._self",
                 "refValue" to "refValue.value"
             )
-        ).getAtts()
+        )
 
-        assertThat(attsRes["evaluated"].asText()).isEqualTo("prefix-value-0")
-        assertThat(attsRes["evaluatedWithDto"].asText()).isEqualTo("prefix2-value-0")
-        assertThat(attsRes["attWithAttValue.inner"].asText()).isEqualTo("abc-value-0")
-        assertThat(attsRes["localAtt"].asText()).isEqualTo("local-prefix-value-0")
-        assertThat(attsRes["refValue"].asText()).isEqualTo("value-111")
+        val rec0 = attsRes[0].getAtts()
+        assertThat(rec0["evaluated"].asText()).isEqualTo("prefix-value-0")
+        assertThat(rec0["evaluatedWithDto"].asText()).isEqualTo("prefix2-value-0")
+        assertThat(rec0["attWithAttValue.inner"].asText()).isEqualTo("abc-value-0")
+        assertThat(rec0["localAtt"].asText()).isEqualTo("local-prefix-value-0")
+        assertThat(rec0["refValue"].asText()).isEqualTo("value-111")
+
+        val rec1 = attsRes[1].getAtts()
+        assertThat(rec1["evaluated"].asText()).isEqualTo("prefix-value-111")
+        assertThat(rec1["evaluatedWithDto"].asText()).isEqualTo("prefix2-value-111")
+        assertThat(rec1["attWithAttValue.inner"].asText()).isEqualTo("abc-value-111")
+        assertThat(rec1["localAtt"].asText()).isEqualTo("local-prefix-value-111")
+        assertThat(rec1["refValue"].asText()).isEqualTo("value-111")
+
+        app1.factory.extAttMixinService.register(object : ExtAttMixinConfigurer {
+            override fun configure(settings: ExtMixinConfig) {
+
+                settings.setEcosType("test-type")
+
+                settings.addProvidedAtt("attWithId")
+                    .addRequiredAtts(mapOf("ref" to "?id"))
+                    .withHandler { "prefix-" + it["ref"].asText() }
+
+                settings.addProvidedAtt("attWithIdAndNullRes")
+                    .addRequiredAtts(mapOf("ref" to "?id"))
+                    .withHandler { null }
+            }
+        })
+
+        updateRemoteData()
+
+        val attsRes2 = app0Records.getAtts(
+            listOf("test@rec-0", "test@rec-111"),
+            mapOf(
+                // _self to exclude cache
+                "attWithId" to "attWithId._self",
+                "attWithIdAndNullRes" to "attWithIdAndNullRes._self",
+                "attWithIdAndNullRes2" to "attWithIdAndNullRes"
+            )
+        )
+
+        val rec00 = attsRes2[0].getAtts()
+        assertThat(rec00["attWithId"].asText()).isEqualTo("prefix-${app0.name}/test@rec-0")
+        assertThat(rec00["attWithIdAndNullRes"].asText()).isEmpty()
+        assertThat(rec00["attWithIdAndNullRes"].asJavaObj()).isNull()
+        assertThat(rec00["attWithIdAndNullRes2"].asJavaObj()).isNull()
+
+        val rec11 = attsRes2[1].getAtts()
+        assertThat(rec11["attWithId"].asText()).isEqualTo("prefix-${app0.name}/test@rec-111")
+        assertThat(rec11["attWithIdAndNullRes"].asText()).isEmpty()
+        assertThat(rec11["attWithIdAndNullRes"].asJavaObj()).isNull()
+        assertThat(rec11["attWithIdAndNullRes2"].asJavaObj()).isNull()
     }
 
     class MixinAttsTest(

@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
+import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttResType
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttType
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAttValue
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -14,6 +15,8 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.test.assertEquals
@@ -105,10 +108,38 @@ class ComputedAttTest {
                         )
                     )
                 )
+            },
+            RecordComputedAtt.create {
+                withId("attPersonValueRef")
+                withType(RecordComputedAttType.VALUE)
+                withResultType(RecordComputedAttResType.AUTHORITY)
+                withConfig(ObjectData.create().set("value", "emodel/person@system"))
+            },
+            RecordComputedAtt.create {
+                withId("attGroupValueRef")
+                withType(RecordComputedAttType.VALUE)
+                withResultType(RecordComputedAttResType.AUTHORITY)
+                withConfig(ObjectData.create().set("value", "emodel/authority-group@some-group"))
+            },
+            RecordComputedAtt.create {
+                withId("attPersonValueAuthName")
+                withType(RecordComputedAttType.VALUE)
+                withResultType(RecordComputedAttResType.AUTHORITY)
+                withConfig(ObjectData.create().set("value", "system"))
+            },
+            RecordComputedAtt.create {
+                withId("attGroupValueAuthName")
+                withType(RecordComputedAttType.VALUE)
+                withResultType(RecordComputedAttResType.AUTHORITY)
+                withConfig(ObjectData.create().set("value", "GROUP_some-group"))
             }
         )
 
-        val services = RecordsServiceFactory()
+        val services = object : RecordsServiceFactory() {
+            override fun getEcosWebAppApi(): EcosWebAppApi {
+                return EcosWebAppApiMock()
+            }
+        }
         services.setRecordTypeComponent(object : RecordTypeComponent {
             override fun getRecordType(typeRef: EntityRef): RecordTypeInfo? {
                 return if (typeRef == type0) {
@@ -173,6 +204,17 @@ class ComputedAttTest {
             DataValue.create("[\"${type0Record.attForScript}\",\"def\"]"),
             services.recordsService.getAtt(type0Ref, "attScript5[]")
         )
+
+        val records = services.recordsService
+        assertThat(records.getAtt(type0Ref, "attPersonValueRef?raw"))
+            .isEqualTo(DataValue.createStr("emodel/person@system"))
+        assertThat(records.getAtt(type0Ref, "attPersonValueAuthName?raw"))
+            .isEqualTo(DataValue.createStr("emodel/person@system"))
+
+        assertThat(records.getAtt(type0Ref, "attGroupValueRef?raw"))
+            .isEqualTo(DataValue.createStr("emodel/authority-group@some-group"))
+        assertThat(records.getAtt(type0Ref, "attGroupValueAuthName?raw"))
+            .isEqualTo(DataValue.createStr("emodel/authority-group@some-group"))
     }
 
     @Test

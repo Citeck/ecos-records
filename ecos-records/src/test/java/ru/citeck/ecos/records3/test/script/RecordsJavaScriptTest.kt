@@ -31,6 +31,16 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
         assertThat(result0.size()).isEqualTo(1)
         assertThat(result0[0].asText()).isEqualTo("dune@abcdef")
 
+        val result00 = """
+            return Records.queryOne({
+                sourceId: 'dune',
+                language: 'predicate',
+                query: {t: 'eq', a:'name', v: "abcdef" }
+            });
+        """.eval()
+        assertThat(result00.isTextual()).isTrue
+        assertThat(result00.asText()).isEqualTo("dune@abcdef")
+
         val result1 = """
             return Records.query({
                 sourceId: 'dune',
@@ -41,6 +51,16 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
         assertThat(result1.isArray()).isTrue
         assertThat(result1.size()).isEqualTo(1)
         assertThat(result1[0].asText()).isEqualTo("dune@abcdef")
+
+        val result11 = """
+            return Records.queryOne({
+                sourceId: 'dune',
+                language: 'predicate',
+                query: {t: 'eq', a:'name', v: "abcdef" }
+            }, null);
+        """.eval()
+        assertThat(result11.isTextual()).isTrue
+        assertThat(result11.asText()).isEqualTo("dune@abcdef")
     }
 
     @Test
@@ -229,6 +249,40 @@ class RecordsJavaScriptTest : AbstractRecordsScriptTest() {
         """.trimIndent().eval()
 
         assertEquals(2, queryResult["size"].asInt())
+    }
+
+    @Test
+    fun `query one test`() {
+        createArrakis(name = "custom-name")
+
+        val queryResult0 = """
+            return Records.queryOne(
+                {
+                    sourceId: "dune",
+                    language: "predicate",
+                    query: {t: "eq", a: "name", v: "custom-name"}
+                },
+                ["name"]
+            )
+        """.eval()
+
+        assertThat(queryResult0.isObject()).isTrue()
+        assertThat(queryResult0["name"].asText()).isEqualTo("custom-name")
+        assertThat(queryResult0["id"].asText()).isNotBlank()
+
+        val queryResult1 = """
+            return Records.queryOne(
+                {
+                    sourceId: "dune",
+                    language: "predicate",
+                    query: {t: "eq", a: "name", v: "custom-name"}
+                },
+                "name"
+            )
+        """.eval()
+
+        assertThat(queryResult1.isTextual()).isTrue()
+        assertThat(queryResult1.asText()).isEqualTo("custom-name")
     }
 
     private fun createArrakis(id: String = DEFAULT_ARRAKIS_ID, name: String = DEFAULT_ARRAKIS_NAME): DataValue {

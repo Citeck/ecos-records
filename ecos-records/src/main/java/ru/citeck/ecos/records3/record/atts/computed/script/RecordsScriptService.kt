@@ -37,7 +37,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         return AttValueScriptCtxImpl(ScriptRecord(recordRef), recordsService, implCreator)
     }
 
-    private fun getEmptyRes(): Any {
+    private fun getEmptyQueryRes(): Any {
         return linkedMapOf(
             Pair("hasMore", false),
             Pair("totalCount", 0),
@@ -47,10 +47,38 @@ class RecordsScriptService(services: RecordsServiceFactory) {
     }
 
     @Export
+    fun queryOne(query: Any?): String? {
+        val recsQuery = convertRecsQuery(query) ?: return null
+        return recordsService.queryOne(recsQuery)?.toString()
+    }
+
+    @Export
+    fun queryOne(query: Any?, attributes: Any?): Any? {
+
+        val atts = ComputedScriptUtils.toRecordAttsMap(attributes)
+            ?: return queryOne(query)
+
+        val recsQuery = convertRecsQuery(query) ?: return null
+        val resultAtts = recordsService.queryOne(recsQuery, atts.first) ?: return null
+        if (atts.second) {
+            val resAtts = resultAtts.getAtts()
+            if (resAtts.isEmpty()) {
+                return null
+            }
+            val value = resAtts[resAtts.fieldNamesList().first()]
+            return ScriptUtils.convertToScript(value)
+        }
+        val resAtts = resultAtts.getAtts().getData()
+        if (!resAtts.has("id")) {
+            resAtts["id"] = resultAtts.getId().toString()
+        }
+        return ScriptUtils.convertToScript(resAtts)
+    }
+
+    @Export
     fun query(query: Any?): Any {
 
-        val javaQuery = ScriptUtils.convertToJava(query)
-        val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return getEmptyRes()
+        val recsQuery = convertRecsQuery(query) ?: return getEmptyQueryRes()
 
         val result = recordsService.query(recsQuery)
         val flatResult = LinkedHashMap<String, Any?>()
@@ -69,8 +97,7 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         val atts = ComputedScriptUtils.toRecordAttsMap(attributes)
             ?: return query(query)
 
-        val javaQuery = ScriptUtils.convertToJava(query)
-        val recsQuery = Json.mapper.convert(javaQuery, RecordsQuery::class.java) ?: return getEmptyRes()
+        val recsQuery = convertRecsQuery(query) ?: return getEmptyQueryRes()
 
         val result = recordsService.query(recsQuery, atts.first)
         val flatResult = LinkedHashMap<String, Any?>()
@@ -87,6 +114,11 @@ class RecordsScriptService(services: RecordsServiceFactory) {
         flatResult["messages"] = ArrayList<Any?>(0)
 
         return ScriptUtils.convertToScript(flatResult) ?: error("Conversion error. Result: $flatResult")
+    }
+
+    private fun convertRecsQuery(query: Any?): RecordsQuery? {
+        val javaQuery = ScriptUtils.convertToJava(query)
+        return Json.mapper.convert(javaQuery, RecordsQuery::class.java)
     }
 
     inner class ScriptRecord(val recordRef: EntityRef) : AttValueCtx {

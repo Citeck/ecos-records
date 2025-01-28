@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.record.atts.value.impl
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class NullAttValue private constructor() : AttValue {
 
@@ -53,7 +53,7 @@ class NullAttValue private constructor() : AttValue {
         return null
     }
 
-    override fun getType(): RecordRef {
-        return RecordRef.EMPTY
+    override fun getType(): EntityRef {
+        return EntityRef.EMPTY
     }
 }

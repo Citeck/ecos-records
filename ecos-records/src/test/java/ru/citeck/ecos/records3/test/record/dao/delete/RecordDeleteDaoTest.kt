@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3.test.record.dao.delete
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.RecordMeta
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.delete.RecordsDelResult
 import ru.citeck.ecos.records2.request.delete.RecordsDeletion
 import ru.citeck.ecos.records2.request.mutation.RecordsMutResult
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordDeleteDaoTest {
 
@@ -42,12 +42,12 @@ class RecordDeleteDaoTest {
 
         services.recordsService.register(object : LocalRecordsDao(), MutableRecordsLocalDao<Any> {
             override fun delete(deletion: RecordsDeletion): RecordsDelResult {
-                deletion.records.forEach { deletedList.add(it.id) }
+                deletion.records.forEach { deletedList.add(it.getLocalId()) }
                 val result = RecordsDelResult()
                 result.records = deletion.records.map { RecordMeta(it) }
                 return result
             }
-            override fun getValuesToMutate(records: MutableList<RecordRef>): MutableList<Any> {
+            override fun getValuesToMutate(records: MutableList<EntityRef>): MutableList<Any> {
                 error("Not implemented")
             }
             override fun save(values: MutableList<Any>): RecordsMutResult {
@@ -63,10 +63,10 @@ class RecordDeleteDaoTest {
 
         deletedList.clear()
 
-        records.delete(RecordRef.valueOf("test-app/$sourceId@localId"))
+        records.delete(EntityRef.valueOf("test-app/$sourceId@localId"))
         assertThat(deletedList).containsExactly("localId")
 
-        records.delete(RecordRef.valueOf("$sourceId@localId2"))
+        records.delete(EntityRef.valueOf("$sourceId@localId2"))
         assertThat(deletedList).containsExactly("localId", "localId2")
     }
 }

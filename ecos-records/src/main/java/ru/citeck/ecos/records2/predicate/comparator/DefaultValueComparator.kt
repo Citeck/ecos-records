@@ -2,6 +2,7 @@ package ru.citeck.ecos.records2.predicate.comparator
 
 import ru.citeck.ecos.commons.data.DataValue
 import java.time.Instant
+import java.time.format.DateTimeParseException
 import kotlin.math.abs
 
 object DefaultValueComparator : ValueComparator {
@@ -21,6 +22,11 @@ object DefaultValueComparator : ValueComparator {
             val v0: Double = value0.doubleValue()
             val v1: Double = value1.doubleValue()
             return abs(v0 - v1) < DOUBLE_THRESHOLD
+        }
+        when (compareDateTime(value0, value1, CompareType.EQUALS, true)) {
+            CompareResult.TRUE -> return true
+            CompareResult.FALSE -> return false
+            CompareResult.UNKNOWN -> {}
         }
         if (value0.isTextual() && value1.isNumber() || value0.isNumber() && value1.isTextual()) {
             val v0 = toDouble(value0)
@@ -44,7 +50,15 @@ object DefaultValueComparator : ValueComparator {
             return false
         }
         if (value.isArray()) {
-            return value.any { isEquals(it, subValue) }
+            return if (subValue.isArray()) {
+                value.any { v ->
+                    subValue.any { sv ->
+                        isEquals(v, sv)
+                    }
+                }
+            } else {
+                value.any { isEquals(it, subValue) }
+            }
         }
         if (value.isObject() && subValue.isTextual()) {
             val subValStr = subValue.asText().lowercase()
@@ -109,7 +123,11 @@ object DefaultValueComparator : ValueComparator {
         if (value0.isNull() && value1.isNull()) {
             return inclusive
         }
-        var result = compareDouble(value0, value1, isGreater, inclusive)
+        val compareType = if (isGreater) { CompareType.GREATER } else { CompareType.LESS }
+        var result = compareDateTime(value0, value1, compareType, inclusive)
+        if (result == CompareResult.UNKNOWN) {
+            result = compareDouble(value0, value1, isGreater, inclusive)
+        }
         if (result == CompareResult.UNKNOWN) {
             val intRes = value0.asText().compareTo(value1.asText())
             result = if (intRes == 0) {
@@ -133,6 +151,48 @@ object DefaultValueComparator : ValueComparator {
             }
         }
         return result == CompareResult.TRUE
+    }
+
+    private fun compareDateTime(
+        value0: DataValue,
+        value1: DataValue,
+        type: CompareType,
+        inclusive: Boolean
+    ): CompareResult {
+
+        val date0 = parseDateTime(value0) ?: return CompareResult.UNKNOWN
+        val date1 = parseDateTime(value1) ?: return CompareResult.UNKNOWN
+
+        val compareRes = date0.compareTo(date1)
+
+        if (inclusive && compareRes == 0) {
+            return CompareResult.TRUE
+        }
+        val boolRes = when (type) {
+            CompareType.EQUALS -> compareRes == 0
+            CompareType.GREATER -> compareRes > 0
+            CompareType.LESS -> compareRes < 0
+        }
+        return if (boolRes) {
+            CompareResult.TRUE
+        } else {
+            CompareResult.FALSE
+        }
+    }
+
+    private fun parseDateTime(value: DataValue): Instant? {
+        if (!value.isTextual()) {
+            return null
+        }
+        val txt = value.asText()
+        if (!txt.contains('T') || !txt.endsWith('Z')) {
+            return null
+        }
+        return try {
+            Instant.parse(txt)
+        } catch (e: DateTimeParseException) {
+            return null
+        }
     }
 
     private fun compareDouble(
@@ -203,5 +263,9 @@ object DefaultValueComparator : ValueComparator {
 
     private enum class CompareResult {
         TRUE, FALSE, UNKNOWN
+    }
+
+    private enum class CompareType {
+        EQUALS, GREATER, LESS
     }
 }

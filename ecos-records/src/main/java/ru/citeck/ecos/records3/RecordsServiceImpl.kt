@@ -3,7 +3,6 @@ package ru.citeck.ecos.records3
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -21,8 +20,11 @@ import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.RecordRefUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
+import kotlin.system.measureTimeMillis
 
-class RecordsServiceImpl(private val services: RecordsServiceFactory) : AbstractRecordsService(), ServiceFactoryAware {
+open class RecordsServiceImpl(
+    private val services: RecordsServiceFactory
+) : AbstractRecordsService(), ServiceFactoryAware {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -35,10 +37,11 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
 
     /* QUERY */
 
-    override fun query(query: RecordsQuery): RecsQueryRes<RecordRef> {
+    override fun query(query: RecordsQuery): RecsQueryRes<EntityRef> {
         return handleRecordsQuery {
             val metaResult = recordsResolver.query(query, emptyMap<String, Any>(), true)
             metaResult.withRecords { it.getId() }
@@ -83,12 +86,12 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         }
     }
 
-    private fun tryToGetRecordRef(record: Any?): RecordRef {
-        record ?: return RecordRef.EMPTY
-        if (record is RecordRef) {
+    private fun tryToGetRecordRef(record: Any?): EntityRef {
+        record ?: return EntityRef.EMPTY
+        if (record is EntityRef) {
             return record
         }
-        return RecordRef.EMPTY
+        return EntityRef.EMPTY
     }
 
     override fun <T : Any> getAtts(records: Collection<*>, attributes: Class<T>): List<T> {
@@ -106,9 +109,9 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
 
     /* MUTATE */
 
-    override fun create(sourceIdOrType: String, attributes: Any): RecordRef {
+    override fun create(sourceIdOrType: String, attributes: Any): EntityRef {
         val sourceId = getSourceIdFromTypeOrSourceId(sourceIdOrType)
-        return mutate(RecordRef.valueOf(sourceId + RecordRef.SOURCE_DELIMITER), attributes)
+        return mutate(EntityRef.valueOf(sourceId + EntityRef.SOURCE_ID_DELIMITER), attributes)
     }
 
     private fun getSourceIdFromTypeOrSourceId(sourceIdOrType: String): String {
@@ -134,30 +137,39 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         rawAtts: Boolean
     ): List<RecordAtts> {
 
-        return RequestContext.doWithCtx(services) {
-            if (records.isEmpty()) {
-                emptyList()
-            } else {
-                val context = RequestContext.getCurrentNotNull()
-                if (context.ctxData.readOnly) {
-                    error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+        val mutateResult: List<RecordAtts>
+        val time = measureTimeMillis {
+            mutateResult = RequestContext.doWithCtx(services) {
+                if (records.isEmpty()) {
+                    emptyList()
+                } else {
+                    val context = RequestContext.getCurrentNotNull()
+                    if (context.ctxData.readOnly) {
+                        error("Mutation is not allowed in read-only mode. Records: " + records.map { it.getId() })
+                    }
+                    val txnChangedRecords = context.getTxnChangedRecords()
+                    val sourceIdMapping = context.ctxData.sourceIdMapping
+                    val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
+
+                    addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
+
+                    result.map { it.withDefaultAppName(currentAppName) }
                 }
-                val txnChangedRecords = context.getTxnChangedRecords()
-                val sourceIdMapping = context.ctxData.sourceIdMapping
-                val result = recordsResolver.mutateForAllApps(records.map { it.deepCopy() }, attsToLoad, rawAtts)
-
-                addTxnChangedRecords(txnChangedRecords, sourceIdMapping, result) { it.getId() }
-
-                result.map { it.withDefaultAppName(currentAppName) }
             }
         }
+
+        log.trace {
+            "Mutate records: ${records.map { it.withoutSensitiveData() }} in $time ms"
+        }
+
+        return mutateResult
     }
 
     private inline fun <T> addTxnChangedRecords(
-        txnChangedRecords: MutableSet<RecordRef>?,
+        txnChangedRecords: MutableSet<EntityRef>?,
         sourceIdMapping: Map<String, String>,
         records: List<T>,
-        crossinline getRef: (T) -> RecordRef
+        crossinline getRef: (T) -> EntityRef
     ) {
         if (isGatewayMode || txnChangedRecords == null) {
             return
@@ -168,15 +180,18 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
     }
 
     private fun addTxnChangedRecord(
-        txnChangedRecords: MutableSet<RecordRef>?,
+        txnChangedRecords: MutableSet<EntityRef>?,
         sourceIdMapping: Map<String, String>,
-        recordRef: RecordRef?
+        recordRef: EntityRef?
     ) {
 
-        if (isGatewayMode || txnChangedRecords == null || recordRef == null || RecordRef.isEmpty(recordRef)) {
+        if (isGatewayMode || txnChangedRecords == null || recordRef == null || EntityRef.isEmpty(recordRef)) {
             return
         }
-        val normalizedRef = if (recordRef.appName == currentAppName) {
+        val normalizedRef = if (
+            recordRef.getAppName() == currentAppName ||
+            recordRef.getAppName() == currentAppRef
+        ) {
             recordRef.withoutAppName()
         } else {
             recordRef
@@ -206,7 +221,7 @@ class RecordsServiceImpl(private val services: RecordsServiceFactory) : Abstract
         val txnChangedRecords = context.getTxnChangedRecords()
         val sourceIdMapping = context.ctxData.sourceIdMapping
 
-        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { RecordRef.valueOf(it) }
+        addTxnChangedRecords(txnChangedRecords, sourceIdMapping, records) { EntityRef.valueOf(it) }
 
         return status
     }

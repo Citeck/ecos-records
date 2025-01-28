@@ -9,7 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 data class RecordComputedAtt constructor(
     val id: String,
     val type: RecordComputedAttType,
-    val config: ObjectData
+    val config: ObjectData,
+    val resultType: RecordComputedAttResType
 ) {
     companion object {
 
@@ -44,11 +45,13 @@ data class RecordComputedAtt constructor(
         var id: String = ""
         var type: RecordComputedAttType = RecordComputedAttType.NONE
         var config: ObjectData = ObjectData.create()
+        var resultType: RecordComputedAttResType = RecordComputedAttResType.ANY
 
         constructor(base: RecordComputedAtt) : this() {
             this.id = base.id
             this.type = base.type
             this.config = base.config.deepCopy()
+            this.resultType = base.resultType
         }
 
         fun withId(id: String): Builder {
@@ -61,13 +64,18 @@ data class RecordComputedAtt constructor(
             return this
         }
 
+        fun withResultType(resultType: RecordComputedAttResType?): Builder {
+            this.resultType = resultType ?: RecordComputedAttResType.ANY
+            return this
+        }
+
         fun withConfig(config: ObjectData): Builder {
             this.config = config
             return this
         }
 
         fun build(): RecordComputedAtt {
-            return RecordComputedAtt(id, type, config)
+            return RecordComputedAtt(id, type, config, resultType)
         }
     }
 }

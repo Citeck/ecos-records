@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
@@ -79,6 +78,7 @@ class RemoteRecordsResolver(
         ?: error("EcosWebAppApi or EcosWebClientApi is null")
 
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
 
     init {
         sourceIdMeta = services.cacheManager.create(
@@ -142,7 +142,7 @@ class RemoteRecordsResolver(
         return RecordsUtils.attsWithDefaultApp(result, appName)
     }
 
-    fun getAtts(records: List<RecordRef>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
+    fun getAtts(records: List<EntityRef>, attributes: Map<String, *>, rawAtts: Boolean): List<RecordAtts> {
 
         val context: RequestContext = RequestContext.getCurrentNotNull()
         val result = ArrayList<ValWithIdx<RecordAtts>>()
@@ -158,13 +158,13 @@ class RemoteRecordsResolver(
 
             val recsAtts: List<RecordAtts> = getAttsForApp(
                 app,
-                refs.map { it.value.removeAppName() },
+                refs.map { it.value.withoutAppName() },
                 attributes,
                 rawAtts,
                 context
             )
             for (i in refs.indices) {
-                val ref: ValWithIdx<RecordRef> = refs[i]
+                val ref: ValWithIdx<EntityRef> = refs[i]
                 val atts: RecordAtts = recsAtts[i]
                 result.add(ValWithIdx(RecordAtts(atts, ref.value), ref.idx))
             }
@@ -175,7 +175,7 @@ class RemoteRecordsResolver(
 
     private fun getAttsForApp(
         appName: String,
-        records: List<RecordRef>,
+        records: List<EntityRef>,
         attributes: Map<String, *>,
         rawAtts: Boolean,
         context: RequestContext
@@ -250,7 +250,17 @@ class RemoteRecordsResolver(
                 mutateBody,
                 MutateResp::class,
                 context
-            )
+            ) { mutateResp ->
+                context.getTxnChangedRecords()?.addAll(
+                    mutateResp.txnChangedRecords.map {
+                        if (it.getAppName() == currentAppName || it.getAppName() == currentAppRef) {
+                            it.withoutAppName()
+                        } else {
+                            it.withDefaultAppName(appName)
+                        }
+                    }
+                )
+            }
             if (mutateResp.records.size != atts.size) {
                 throw RecordsException(
                     "Incorrect " +
@@ -264,15 +274,6 @@ class RemoteRecordsResolver(
                     val newAtts = recsAtts[i].withDefaultAppName(appName)
                     result.add(ValWithIdx(newAtts, refAtts.idx))
                 }
-                context.getTxnChangedRecords()?.addAll(
-                    mutateResp.txnChangedRecords.map {
-                        if (it.appName == currentAppName) {
-                            it.withoutAppName()
-                        } else {
-                            it
-                        }
-                    }
-                )
             }
         }
         result.sortBy { it.idx }
@@ -323,11 +324,11 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    fun commit(recordRefs: List<RecordRef>) {
+    fun commit(recordRefs: List<EntityRef>) {
         completeTransaction(recordRefs, TxnBody.TxnAction.COMMIT)
     }
 
-    fun rollback(recordRefs: List<RecordRef>) {
+    fun rollback(recordRefs: List<EntityRef>) {
         completeTransaction(recordRefs, TxnBody.TxnAction.ROLLBACK)
     }
 
@@ -342,7 +343,7 @@ class RemoteRecordsResolver(
         return sourceIdMeta.get(sourceMetaId).isTransactional
     }
 
-    private fun completeTransaction(recordRefs: List<RecordRef>, action: TxnBody.TxnAction) {
+    private fun completeTransaction(recordRefs: List<EntityRef>, action: TxnBody.TxnAction) {
 
         if (recordRefs.isEmpty()) {
             return
@@ -380,13 +381,13 @@ class RemoteRecordsResolver(
 
     private fun commitImplInApp(
         appName: String,
-        refs: List<RecordRef>,
+        refs: List<EntityRef>,
         action: TxnBody.TxnAction,
         context: RequestContext
     ) {
 
         val body = TxnBody()
-        body.setRecords(refs.map { it.removeAppName() })
+        body.setRecords(refs.map { it.withoutAppName() })
         body.setAction(action)
         setContextProps(body, context)
 
@@ -422,7 +423,7 @@ class RemoteRecordsResolver(
     }
 
     private fun evalSourceIdMeta(sourceMetaId: String): RecSrcMeta {
-        val atts = recordsService.getAtts(RecordRef.valueOf(sourceMetaId), RecSrcMetaAtts::class.java)
+        val atts = recordsService.getAtts(EntityRef.valueOf(sourceMetaId), RecSrcMetaAtts::class.java)
         return RecSrcMeta(atts.isTransactional ?: false)
     }
 
@@ -441,7 +442,8 @@ class RemoteRecordsResolver(
         version: Int,
         body: RequestBody,
         respType: KClass<T>,
-        context: RequestContext
+        context: RequestContext,
+        resultHandlerBeforeProcessing: (T) -> Unit = {}
     ): T {
 
         val convertedBody: Any = if (legacyApiMode && requestPath.contains("query")) {
@@ -476,6 +478,7 @@ class RemoteRecordsResolver(
             .version(version)
             .body { it.writeDto(convertedBody) }
             .executeSync { it.getBodyReader().readDto(respType.java) }
+        resultHandlerBeforeProcessing.invoke(result)
 
         throwErrorIfRequired(result.messages, context)
         context.addAllMsgs(result.messages)

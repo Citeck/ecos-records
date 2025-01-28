@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,9 +44,9 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
         assertNull(QueryContext.getCurrent());
 
         recordsService.getMeta(Arrays.asList(
-            RecordRef.create(SOURCE_ID, "1"),
-            RecordRef.create(SOURCE_ID, "2"),
-            RecordRef.create(SOURCE_ID, "3")
+            EntityRef.create(SOURCE_ID, "1"),
+            EntityRef.create(SOURCE_ID, "2"),
+            EntityRef.create(SOURCE_ID, "3")
         ), TestMeta.class);
 
         assertNull(QueryContext.getCurrent());
@@ -67,7 +67,7 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
 
         RequestContext.getCurrent().incrementCount("test");
         RequestContext.getCurrent().incrementCount("test");
@@ -88,9 +88,9 @@ public class QueryContextTest extends LocalRecordsDao implements LocalRecordsMet
 
     public class Record implements MetaValue {
 
-        private RecordRef id;
+        private EntityRef id;
 
-        Record(RecordRef id) {
+        Record(EntityRef id) {
             this.id = id;
         }
 

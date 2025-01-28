@@ -116,6 +116,11 @@ data class RequestCtxData(
             return this
         }
 
+        fun withoutSourceIdMapping(): Builder {
+            this.sourceIdMapping = this.sourceIdMapping.keys.associateWith { "" }
+            return this
+        }
+
         fun withSourceIdMapping(sourceIdMapping: Map<String, String>?): Builder {
             this.sourceIdMapping = sourceIdMapping ?: emptyMap()
             return this

@@ -1,5 +1,5 @@
 package ru.citeck.ecos.records3.record.atts.computed.script
 
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-typealias ValueScriptContextCreator = (ref: RecordRef) -> AttValueScriptCtx
+typealias ValueScriptContextCreator = (ref: EntityRef) -> AttValueScriptCtx

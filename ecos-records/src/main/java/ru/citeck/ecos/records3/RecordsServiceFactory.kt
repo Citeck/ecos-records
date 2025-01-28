@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.LibsUtils.isJacksonPresent
 import ru.citeck.ecos.commons.utils.ReflectUtils
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.records2.QueryContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorService
@@ -41,6 +42,8 @@ import ru.citeck.ecos.records3.record.atts.value.factory.time.OffsetDateTimeValu
 import ru.citeck.ecos.records3.record.dao.impl.api.RecordsApiRecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.group.RecordsGroupDao
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceRecordsDao
+import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinService
+import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinServiceImpl
 import ru.citeck.ecos.records3.record.mixin.provider.AttMixinsProviderImpl
 import ru.citeck.ecos.records3.record.mixin.provider.MutableAttMixinsProvider
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -49,6 +52,7 @@ import ru.citeck.ecos.records3.record.request.ctxatts.CtxAttsService
 import ru.citeck.ecos.records3.record.request.ctxatts.StdCtxAttsProvider
 import ru.citeck.ecos.records3.record.resolver.*
 import ru.citeck.ecos.records3.record.resolver.interceptor.AuditRecordsInterceptor
+import ru.citeck.ecos.records3.record.resolver.interceptor.obs.ObservableRecordsInterceptor
 import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
@@ -100,6 +104,8 @@ open class RecordsServiceFactory {
     val jobExecutor: JobExecutor by lazySingleton { createJobExecutor() }
     val txnActionManager: TxnActionManager by lazySingleton { createTxnActionManager() }
     val globalAttMixinsProvider: MutableAttMixinsProvider by lazySingleton { createGlobalAttMixinsProvider() }
+    val extAttMixinService: ExtAttMixinService by lazySingleton { createExternalAttMixinService() }
+
     val exceptionMessageExtractors: Map<Class<out Throwable>, ExceptionMessageExtractor<Throwable>> by lazySingleton {
         val extractors = ArrayList(createExceptionMessageExtractors())
         extractors.sortBy { it.getOrder() }
@@ -133,6 +139,7 @@ open class RecordsServiceFactory {
         if (auditInterceptor.isValid()) {
             resolver.addInterceptor(auditInterceptor)
         }
+        resolver.addInterceptor(ObservableRecordsInterceptor(this))
         resolver
     }
 
@@ -149,9 +156,7 @@ open class RecordsServiceFactory {
         }
     }
 
-    val webappProps by lazySingleton {
-        getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps.EMPTY
-    }
+    val webappProps by lazySingleton { evalWebAppProps() }
 
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
 
@@ -160,6 +165,8 @@ open class RecordsServiceFactory {
     private var tmpRecordsServiceV0: ru.citeck.ecos.records2.RecordsService? = null
 
     private var recordTypeComponent: RecordTypeComponent? = null
+
+    val micrometerContext: EcosMicrometerContext by lazy { createMicrometerContext() }
 
     init {
         RequestContext.setLastCreatedServices(this)
@@ -214,6 +221,10 @@ open class RecordsServiceFactory {
         )
     }
 
+    protected open fun createMicrometerContext(): EcosMicrometerContext {
+        return EcosMicrometerContext.NOOP
+    }
+
     protected open fun createRecordsResolver(): LocalRemoteResolver {
         return LocalRemoteResolver(this)
     }
@@ -245,7 +256,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createRecordsAttsService(): RecordAttsService {
-        return RecordAttsServiceImpl(this)
+        return RecordAttsServiceImpl()
     }
 
     protected open fun createPredicateService(): PredicateService {
@@ -287,7 +298,7 @@ open class RecordsServiceFactory {
         attValueFactories.add(instantValueFactory)
         attValueFactories.add(OffsetDateTimeValueFactory())
         attValueFactories.add(JsonNodeValueFactory())
-        attValueFactories.add(RecordRefValueFactory())
+        attValueFactories.add(EntityRefValueFactory())
         attValueFactories.add(EntityWithMetaValueFactory())
         if (isJacksonPresent()) {
             attValueFactories.add(JacksonJsonNodeValueFactory())
@@ -346,7 +357,7 @@ open class RecordsServiceFactory {
     }
 
     protected open fun createAttSchemaResolver(): AttSchemaResolver {
-        return AttSchemaResolver(this)
+        return AttSchemaResolver()
     }
 
     protected open fun getAttProcessors(): List<AttProcessor> {
@@ -393,6 +404,14 @@ open class RecordsServiceFactory {
 
     protected open fun createGlobalAttMixinsProvider(): MutableAttMixinsProvider {
         return AttMixinsProviderImpl()
+    }
+
+    protected open fun createExternalAttMixinService(): ExtAttMixinService {
+        return ExtAttMixinServiceImpl()
+    }
+
+    protected open fun evalWebAppProps(): EcosWebAppProps {
+        return getEcosWebAppApi()?.getProperties() ?: EcosWebAppProps.EMPTY
     }
 
     open fun getEcosWebAppApi(): EcosWebAppApi? {

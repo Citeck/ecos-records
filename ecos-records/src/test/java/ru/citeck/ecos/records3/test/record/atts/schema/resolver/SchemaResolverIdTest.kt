@@ -3,12 +3,12 @@ package ru.citeck.ecos.records3.test.record.atts.schema.resolver
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class SchemaResolverIdTest {
 
@@ -28,7 +28,10 @@ class SchemaResolverIdTest {
 
         records.register(recordsDao)
 
-        val id = records.getAtt(RecordRef.create("test", "some-id"), "?id").asText()
+        val id = records.getAtt(EntityRef.create("test", "some-id"), "?id").asText()
         assertThat(id).isEqualTo(services.webappProps.appName + "/test@some-id")
+
+        val id2 = records.getAtt("test@some-id", "id").asText()
+        assertThat(id2).isEqualTo("some-id")
     }
 }

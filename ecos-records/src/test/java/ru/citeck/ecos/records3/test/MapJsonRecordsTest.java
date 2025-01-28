@@ -7,11 +7,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ public class MapJsonRecordsTest extends AbstractRecordsDao
                                 implements RecordsAttsDao {
 
     private static final String SOURCE_ID = "test-source-id";
-    private static final RecordRef TEST_REF = RecordRef.create(SOURCE_ID, "TEST_REC_ID");
+    private static final EntityRef TEST_REF = EntityRef.create(SOURCE_ID, "TEST_REC_ID");
 
     private RecordsService recordsService;
 

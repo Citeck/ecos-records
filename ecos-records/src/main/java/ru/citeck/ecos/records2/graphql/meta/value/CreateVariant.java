@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 import lombok.Data;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.data.ObjectData;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 /**
  * @deprecated actual version of create variant model located in ecos-model-lib
@@ -14,14 +14,14 @@ public class CreateVariant {
 
     private MLText label;
     private String formKey;
-    private RecordRef formRef;
-    private RecordRef recordRef;
+    private EntityRef formRef;
+    private EntityRef recordRef;
     private ObjectData attributes = ObjectData.create();
 
     public CreateVariant() {
     }
 
-    public CreateVariant(RecordRef recordRef) {
+    public CreateVariant(EntityRef recordRef) {
         this.recordRef = recordRef;
     }
 

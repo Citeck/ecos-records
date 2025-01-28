@@ -1,14 +1,14 @@
 package ru.citeck.ecos.records3.record.atts.schema.resolver
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.mixin.EmptyMixinContext
 import ru.citeck.ecos.records3.record.mixin.MixinContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 data class ResolveArgs(
     val values: List<Any?>,
     val sourceId: String,
-    val valueRefs: List<RecordRef>,
+    val defaultValueRefs: List<EntityRef>,
     val attributes: List<SchemaAtt>,
     val mixinCtx: MixinContext,
     val rawAtts: Boolean
@@ -43,7 +43,7 @@ data class ResolveArgs(
 
         var values: List<Any?> = emptyList()
         var sourceId: String = ""
-        var valueRefs: List<RecordRef> = emptyList()
+        var defaultValueRefs: List<EntityRef> = emptyList()
         var attributes: List<SchemaAtt> = emptyList()
         var mixinCtx: MixinContext = EmptyMixinContext
         var rawAtts = false
@@ -51,7 +51,7 @@ data class ResolveArgs(
         constructor(base: ResolveArgs) : this() {
             values = ArrayList(base.values)
             sourceId = base.sourceId
-            valueRefs = ArrayList(base.valueRefs)
+            defaultValueRefs = ArrayList(base.defaultValueRefs)
             attributes = ArrayList(base.attributes)
             mixinCtx = base.mixinCtx
             rawAtts = base.rawAtts
@@ -67,8 +67,8 @@ data class ResolveArgs(
             return this
         }
 
-        fun withValueRefs(valueRefs: List<RecordRef>): Builder {
-            this.valueRefs = valueRefs
+        fun withDefaultValueRefs(defaultValueRefs: List<EntityRef>): Builder {
+            this.defaultValueRefs = defaultValueRefs
             return this
         }
 
@@ -92,10 +92,17 @@ data class ResolveArgs(
         }
 
         fun build(): ResolveArgs {
-            if (valueRefs.isNotEmpty() && valueRefs.size != values.size) {
-                throw RuntimeException("valueRefs should have same size with values")
+            if (defaultValueRefs.isNotEmpty() && defaultValueRefs.size != values.size) {
+                throw RuntimeException("defaultValueRefs should have same size with values")
             }
-            return ResolveArgs(values, sourceId, valueRefs, attributes, mixinCtx, rawAtts)
+            return ResolveArgs(
+                values = values,
+                sourceId = sourceId,
+                defaultValueRefs = defaultValueRefs,
+                attributes = attributes,
+                mixinCtx = mixinCtx,
+                rawAtts = rawAtts
+            )
         }
     }
 }

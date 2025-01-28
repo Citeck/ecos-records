@@ -7,10 +7,10 @@ import ecos.com.fasterxml.jackson210.databind.node.ObjectNode
 import ecos.com.fasterxml.jackson210.databind.node.TextNode
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.rest.v1.RequestBody
 import ru.citeck.ecos.records3.rest.v1.RestUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 
@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonInclude as JackJsonInclude
 @JackJsonInclude(JackJsonInclude.Include.NON_NULL)
 open class QueryBody : RequestBody() {
 
-    private var records: MutableList<RecordRef>? = null
+    private var records: MutableList<EntityRef>? = null
     private var query: RecordsQuery? = null
     var attributes: DataValue = DataValue.NULL
     var rawAtts = false
@@ -31,15 +31,15 @@ open class QueryBody : RequestBody() {
         return query
     }
 
-    fun setRecord(record: RecordRef) {
+    fun setRecord(record: EntityRef) {
         records = (records ?: ArrayList()).apply { add(record) }
     }
 
-    fun getRecords(): List<RecordRef>? {
+    fun getRecords(): List<EntityRef>? {
         return records
     }
 
-    fun setRecords(records: List<RecordRef>?) {
+    fun setRecords(records: List<EntityRef>?) {
         this.records = records?.let { ArrayList(it) }
     }
 

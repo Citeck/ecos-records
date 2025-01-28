@@ -1,20 +1,19 @@
 package ru.citeck.ecos.records2.meta
 
 import ru.citeck.ecos.commons.utils.TmplUtils
-import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordRef.Companion.isEmpty
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.RecordAttValueCtx
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordsTemplateService : ServiceFactoryAware {
 
     private lateinit var recordsService: RecordsService
 
-    fun <T> resolve(template: T, recordRef: RecordRef?): T {
-        return if (isEmpty(recordRef)) {
+    fun <T> resolve(template: T, recordRef: EntityRef?): T {
+        return if (EntityRef.isEmpty(recordRef)) {
             template
         } else {
             resolve(template, recordRef as Any?)

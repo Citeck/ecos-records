@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records2.source.dao.RecordsQueryDao;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsQueryWithMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +48,7 @@ class LocalRecordsTest {
     @Test
     void testRecordWithComplexSourceId() {
 
-        RecordRef ref = RecordRef.valueOf(RecordsSource.ID + "@first@second");
+        EntityRef ref = EntityRef.valueOf(RecordsSource.ID + "@first@second");
         RecordMeta meta = recordsService.getAttributes(ref, Collections.singleton("localId"));
 
         assertEquals(ref, meta.getId());
@@ -60,7 +60,7 @@ class LocalRecordsTest {
         RecordsQuery query = new RecordsQuery();
         query.setSourceId(RecordsWithMetaSource.ID);
 
-        RecordsQueryResult<RecordRef> result = recordsService.queryRecords(query);
+        RecordsQueryResult<EntityRef> result = recordsService.queryRecords(query);
 
         assertEquals(1, result.getRecords().size());
     }
@@ -84,8 +84,8 @@ class LocalRecordsTest {
 
         @NotNull
         @Override
-        public List<Meta> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
-            return records.stream().map(r -> new Meta(r.toString(), r.getId())).collect(Collectors.toList());
+        public List<Meta> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
+            return records.stream().map(r -> new Meta(r.toString(), r.getLocalId())).collect(Collectors.toList());
         }
 
         public static class Meta {

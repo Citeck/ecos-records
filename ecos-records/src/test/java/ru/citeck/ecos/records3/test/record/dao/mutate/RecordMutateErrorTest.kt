@@ -3,10 +3,10 @@ package ru.citeck.ecos.records3.test.record.dao.mutate
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import kotlin.test.assertEquals
@@ -39,16 +39,16 @@ class RecordMutateErrorTest {
         attributes.set("message", exceptionMessage)
 
         val runtimeEx = assertThrows<RuntimeException> {
-            records.mutate(RecordRef.valueOf("mut-error-test@Runtime"), attributes)
+            records.mutate(EntityRef.valueOf("mut-error-test@Runtime"), attributes)
         }
         assertEquals(exceptionMessage, runtimeEx.message)
 
         val illegalArgEx = assertThrows<IllegalArgumentException> {
-            records.mutate(RecordRef.valueOf("mut-error-test@IllegalArg"), attributes)
+            records.mutate(EntityRef.valueOf("mut-error-test@IllegalArg"), attributes)
         }
         assertEquals(exceptionMessage, illegalArgEx.message)
 
-        val withoutEx = records.mutate(RecordRef.valueOf("mut-error-test@"), attributes)
-        assertEquals(RecordRef.valueOf("mut-error-test@$exceptionMessage"), withoutEx)
+        val withoutEx = records.mutate(EntityRef.valueOf("mut-error-test@"), attributes)
+        assertEquals(EntityRef.valueOf("mut-error-test@$exceptionMessage"), withoutEx)
     }
 }

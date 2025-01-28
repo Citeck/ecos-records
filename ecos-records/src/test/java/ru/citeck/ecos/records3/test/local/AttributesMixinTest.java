@@ -9,7 +9,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
@@ -21,6 +20,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.mixin.AttMixin;
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,7 +87,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
         assertTrue(meta.getAtt(strAtt).isNull());
         assertTrue(meta.getAtt(intAtt).isNull());
 
-        meta = recordsService.getAtts(RecordRef.create(ID, REC_ID), mixinAtts);
+        meta = recordsService.getAtts(EntityRef.create(ID, REC_ID), mixinAtts);
 
         assertTrue(meta.getAtt(strAtt).isNull());
         assertTrue(meta.getAtt(intAtt).isNull());
@@ -117,11 +117,11 @@ public class AttributesMixinTest extends AbstractRecordsDao
         addAttributesMixin(mixinWithRecRef);
         checkValidComputedAttributes();
 
-        DataValue attValue = recordsService.getAtt(RecordRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
-        assertEquals(DataValue.create(RecordRef.create(ID, REC_META_VALUE_ID).toString()), attValue);
+        DataValue attValue = recordsService.getAtt(EntityRef.create(ID, REC_META_VALUE_ID), recordRefAttName);
+        assertEquals(DataValue.create(EntityRef.create(ID, REC_META_VALUE_ID).toString()), attValue);
 
         DataValue edgeTitle = recordsService.getAtt(
-            RecordRef.create(ID, REC_META_VALUE_ID),
+            EntityRef.create(ID, REC_META_VALUE_ID),
             "#" + recordRefAttName + "?title"
         );
         assertEquals(DataValue.create(recordRefAttTitle), edgeTitle);
@@ -145,7 +145,7 @@ public class AttributesMixinTest extends AbstractRecordsDao
             assertEquals(DataValue.create(strFieldValueWithPrefix), meta.getAtt(strAtt));
             assertEquals(DataValue.create((double) intFieldsSum), meta.getAtt(intAtt));
 
-            meta = recordsService.getAtts(RecordRef.create(ID, REC_ID), mixinAtts);
+            meta = recordsService.getAtts(EntityRef.create(ID, REC_ID), mixinAtts);
 
             assertEquals(DataValue.create(strFieldValueWithPrefix), meta.getAtt(strAtt));
             assertEquals(DataValue.create((double) intFieldsSum), meta.getAtt(intAtt));

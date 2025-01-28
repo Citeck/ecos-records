@@ -3,11 +3,11 @@ package ru.citeck.ecos.records2.predicate;
 import ru.citeck.ecos.commons.utils.MandatoryParam;
 import ru.citeck.ecos.records2.IterableRecords;
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.predicate.element.Elements;
 import ru.citeck.ecos.records2.request.query.RecordsQuery;
 import ru.citeck.ecos.records2.request.result.RecordsResult;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.function.Function;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 
 public class RecordElements implements Elements<RecordElement> {
 
-    private List<RecordRef> recordRefs;
+    private List<EntityRef> recordRefs;
     private final RecordsService recordsService;
     private RecordsQuery recordsQuery;
-    private Function<RecordRef, RecordRef> refsMapping;
+    private Function<EntityRef, EntityRef> refsMapping;
 
-    public RecordElements(RecordsService recordsService, List<RecordRef> recordRefs) {
+    public RecordElements(RecordsService recordsService, List<EntityRef> recordRefs) {
 
         MandatoryParam.check("recordRefs", recordRefs);
         MandatoryParam.check("recordsService", recordsService);
@@ -34,7 +34,7 @@ public class RecordElements implements Elements<RecordElement> {
     }
 
     public RecordElements(RecordsService recordsService, RecordsQuery recordsQuery,
-                          Function<RecordRef, RecordRef> refsMapping) {
+                          Function<EntityRef, EntityRef> refsMapping) {
 
         MandatoryParam.check("recordsQuery", recordsQuery);
         MandatoryParam.check("recordsService", recordsService);
@@ -53,11 +53,11 @@ public class RecordElements implements Elements<RecordElement> {
         }
     }
 
-    private List<RecordElement> getElements(List<RecordRef> refs, List<String> attributes) {
+    private List<RecordElement> getElements(List<EntityRef> refs, List<String> attributes) {
         return getElements(refs, RecordElement.getQueryAtts(attributes));
     }
 
-    private List<RecordElement> getElements(List<RecordRef> refs, Map<String, String> attributes) {
+    private List<RecordElement> getElements(List<EntityRef> refs, Map<String, String> attributes) {
 
         RecordsResult<RecordMeta> recordsMeta = recordsService.getAttributes(refs, attributes);
 
@@ -87,12 +87,12 @@ public class RecordElements implements Elements<RecordElement> {
 
         private List<RecordElement> records = null;
 
-        private final Iterator<RecordRef> refsIterator;
+        private final Iterator<EntityRef> refsIterator;
         private final Map<String, String> attributes;
 
         private int idx = -1;
 
-        RecordsIterator(Iterator<RecordRef> refsIterator, Map<String, String> attributes) {
+        RecordsIterator(Iterator<EntityRef> refsIterator, Map<String, String> attributes) {
             this.refsIterator = refsIterator;
             this.attributes = attributes;
         }
@@ -102,7 +102,7 @@ public class RecordElements implements Elements<RecordElement> {
             this.idx = 0;
             int iteratorIdx = 0;
 
-            List<RecordRef> recordRefs = new ArrayList<>();
+            List<EntityRef> recordRefs = new ArrayList<>();
 
             while (refsIterator.hasNext()) {
                 recordRefs.add(refsMapping.apply(refsIterator.next()));

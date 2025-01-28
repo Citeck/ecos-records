@@ -7,13 +7,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,14 +42,14 @@ public class BeanValueFactoryTest extends AbstractRecordsDao implements RecordsA
     @Test
     void test() {
 
-        RecordRef ref0 = RecordRef.create(ID, "0");
+        EntityRef ref0 = EntityRef.create(ID, "0");
 
         ValueDto0 dto0 = new ValueDto0();
 
         assertEquals(DataValue.createStr(dto0.getDisplayName()), recordsService.getAtt(ref0, ".disp"));
         assertEquals(DataValue.createStr(dto0.getStrValue()), recordsService.getAtt(ref0, ".str"));
 
-        RecordRef ref1 = RecordRef.create(ID, "1");
+        EntityRef ref1 = EntityRef.create(ID, "1");
 
         ValueDto1 dto1 = new ValueDto1();
 

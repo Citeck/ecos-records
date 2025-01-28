@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records2.predicate;
 
 import ru.citeck.ecos.records2.RecordMeta;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.predicate.element.Element;
 import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes;
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Deprecated
 public class RecordElement implements Element {
 
-    private final RecordRef recordRef;
+    private final EntityRef recordRef;
     private RecordsService recordsService;
     private RecordMeta meta;
 
@@ -27,12 +27,12 @@ public class RecordElement implements Element {
         this.recordRef = meta.getId();
     }
 
-    public RecordElement(RecordsService recordsService, RecordRef recordRef) {
+    public RecordElement(RecordsService recordsService, EntityRef recordRef) {
         this.recordRef = recordRef;
         this.recordsService = recordsService;
     }
 
-    public RecordRef getRecordRef() {
+    public EntityRef getRecordRef() {
         return recordRef;
     }
 

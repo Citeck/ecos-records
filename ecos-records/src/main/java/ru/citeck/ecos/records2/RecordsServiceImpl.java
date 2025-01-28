@@ -34,6 +34,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext;
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel;
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg;
 import ru.citeck.ecos.records3.utils.V1ConvUtils;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -60,7 +61,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public RecordsQueryResult<RecordRef> queryRecords(RecordsQuery query) {
+    public RecordsQueryResult<EntityRef> queryRecords(RecordsQuery query) {
         return handleRecordsQuery(() -> {
 
             ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery queryV1 =
@@ -71,9 +72,9 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
             RequestContext context = RequestContext.getCurrentNotNull();
 
-            RecsQueryRes<RecordRef> queryRes = recordsServiceV1.query(queryV1);
+            RecsQueryRes<EntityRef> queryRes = recordsServiceV1.query(queryV1);
 
-            RecordsQueryResult<RecordRef> result = new RecordsQueryResult<>();
+            RecordsQueryResult<EntityRef> result = new RecordsQueryResult<>();
             result.setRecords(queryRes.getRecords());
             result.setTotalCount(queryRes.getTotalCount());
             result.setHasMore(queryRes.getHasMore());
@@ -165,13 +166,13 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public DataValue getAtt(RecordRef record, String attribute) {
+    public DataValue getAtt(EntityRef record, String attribute) {
         return getAttribute(record, attribute);
     }
 
     @NotNull
     @Override
-    public DataValue getAttribute(RecordRef record, String attribute) {
+    public DataValue getAttribute(EntityRef record, String attribute) {
 
         if (record == null) {
             return DataValue.create(null);
@@ -187,7 +188,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getAttributes(Collection<RecordRef> records,
+    public RecordsResult<RecordMeta> getAttributes(Collection<EntityRef> records,
                                                    Map<String, String> attributes) {
 
         return getAttributesImpl(records, attributes, true);
@@ -195,12 +196,12 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public RecordsResult<RecordMeta> getRawAttributes(Collection<RecordRef> records, Map<String, String> attributes) {
+    public RecordsResult<RecordMeta> getRawAttributes(Collection<EntityRef> records, Map<String, String> attributes) {
         return getAttributesImpl(records, attributes, false);
     }
 
     @NotNull
-    private RecordsResult<RecordMeta> getAttributesImpl(Collection<RecordRef> records,
+    private RecordsResult<RecordMeta> getAttributesImpl(Collection<EntityRef> records,
                                                         Map<String, String> attributes,
                                                         boolean flatAttributes) {
 
@@ -239,7 +240,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public <T> T getMeta(@NotNull RecordRef recordRef, @NotNull Class<T> metaClass) {
+    public <T> T getMeta(@NotNull EntityRef recordRef, @NotNull Class<T> metaClass) {
 
         RecordsResult<T> meta = getMeta(Collections.singletonList(recordRef), metaClass);
         if (meta.getRecords().size() == 0) {
@@ -250,7 +251,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
 
     @NotNull
     @Override
-    public <T> RecordsResult<T> getMeta(@NotNull Collection<RecordRef> records, @NotNull Class<T> metaClass) {
+    public <T> RecordsResult<T> getMeta(@NotNull Collection<EntityRef> records, @NotNull Class<T> metaClass) {
 
         Map<String, String> attributes = attSchemaWriter.writeToMap(dtoSchemaReader.read(metaClass));
         if (attributes.isEmpty()) {
@@ -360,7 +361,7 @@ public class RecordsServiceImpl extends AbstractRecordsService implements Servic
             return res;
         }
 
-        List<RecordRef> mutateV1Res = recordsServiceV1.mutate(records);
+        List<EntityRef> mutateV1Res = recordsServiceV1.mutate(records);
         RecordsMutResult mutResult = new RecordsMutResult();
         mutResult.setRecords(mutateV1Res.stream()
             .map(RecordMeta::new)

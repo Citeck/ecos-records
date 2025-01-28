@@ -77,7 +77,7 @@ open class AuditRecordsInterceptor(services: RecordsServiceFactory) : LocalRecor
             val records = if (!actionResult.isCompletedExceptionally()) {
                 actionResult.getResult().getRecords().map {
                     var id = it.getId()
-                    if (id.sourceId.isEmpty()) {
+                    if (id.getSourceId().isEmpty()) {
                         id = id.withSourceId(queryArg.sourceId)
                     }
                     id.withDefaultAppName(currentAppName)

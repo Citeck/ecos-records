@@ -5,8 +5,6 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.ReflectUtils
-import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.value.factory.bean.BeanTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
@@ -21,8 +19,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryResDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 class RecsDaoConverter(
@@ -80,17 +77,17 @@ class RecsDaoConverter(
         val valueType = ReflectUtils.getGenericArg(dao::class.java, ValueMutateDao::class.java)
             ?: error("Generic type <T> is not found for class ${dao::class.java}")
 
-        val prepareArgument: (LocalRecordAtts) -> Any = when (valueType) {
-            RecordRef::class.java -> {
-                { it.id }
+        val prepareArgument: (LocalRecordAtts) -> Any = when {
+            EntityRef::class.java.isAssignableFrom(valueType) -> {
+                { EntityRef.create(dao.getId(), it.id) }
             }
-            LocalRecordAtts::class.java -> {
+            valueType == LocalRecordAtts::class.java -> {
                 { it }
             }
-            ObjectData::class.java -> {
+            valueType == ObjectData::class.java -> {
                 { it.attributes }
             }
-            DataValue::class.java -> {
+            valueType == DataValue::class.java -> {
                 { it.attributes.getData() }
             }
             else -> {
@@ -163,7 +160,7 @@ class RecsDaoConverter(
                     }
                     val resRecs = records.mapNotNull {
                         if (it is String) {
-                            RecordRef.valueOf(it).withDefault(
+                            EntityRef.valueOf(it).withDefault(
                                 appName = appName,
                                 sourceId = sourceId
                             )
@@ -200,8 +197,7 @@ class RecsDaoConverter(
                 return mapElements(
                     recordIds,
                     { dao.getRecordAtts(it) },
-                    { EmptyAttValue.INSTANCE },
-                    { _, _ -> ObjectData.create() }
+                    { EmptyAttValue.INSTANCE }
                 )
             }
             override fun getId(): String = dao.getId()
@@ -216,8 +212,7 @@ class RecsDaoConverter(
                 return mapElements(
                     recordIds,
                     { dao.delete(it) },
-                    { DelStatus.OK },
-                    { _, e -> throw e }
+                    { DelStatus.OK }
                 )
             }
 
@@ -229,7 +224,7 @@ class RecsDaoConverter(
 
         return object : RecordsMutateCrossSrcDao {
 
-            override fun mutate(records: List<LocalRecordAtts>): List<RecordRef> {
+            override fun mutate(records: List<LocalRecordAtts>): List<EntityRef> {
                 return records.map {
                     val record = dao.getRecToMutate(it.id)
 
@@ -237,7 +232,7 @@ class RecsDaoConverter(
                     ctx.applyData(record, it.attributes)
 
                     val resultId = dao.saveMutatedRec(record)
-                    RecordRef.create(dao.getId(), resultId)
+                    EntityRef.create(dao.getId(), resultId)
                 }
             }
 
@@ -248,26 +243,16 @@ class RecsDaoConverter(
     private fun <T, R> mapElements(
         input: List<T>,
         mapFunc: (T) -> R,
-        onEmpty: (T) -> R,
-        onError: (T, Throwable) -> R
+        onEmpty: (T) -> R
     ): List<R> {
 
         val result: MutableList<R> = ArrayList()
         for (value in input) {
-            try {
-                var res = mapFunc.invoke(value)
-                if (res == null) {
-                    res = onEmpty.invoke(value)
-                }
-                result.add(res)
-            } catch (e: Throwable) {
-                log.error("Mapping failed", e)
-                val context = RequestContext.getCurrentNotNull()
-                context.addMsg(MsgLevel.ERROR) {
-                    ErrorUtils.convertException(e, context.getServices())
-                }
-                result.add(onError.invoke(value, e))
+            var res = mapFunc.invoke(value)
+            if (res == null) {
+                res = onEmpty.invoke(value)
             }
+            result.add(res)
         }
         return result
     }

@@ -9,10 +9,10 @@ import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
-import ru.citeck.ecos.records2.RecordRef.Companion.valueOf
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.stream.Collectors
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -46,31 +46,31 @@ class ObjectDataAndDataValueTest : AbstractRecordsDao(), RecordsAttsDao {
     @Test
     fun test() {
 
-        var value = recordsService.getAtt(valueOf("test"), "data?json")
+        var value = recordsService.getAtt(EntityRef.valueOf("test"), "data?json")
         assertEquals("b", value.get("a").asText())
 
-        var value2 = recordsService.getAtt(valueOf("test"), "data.a?str")
+        var value2 = recordsService.getAtt(EntityRef.valueOf("test"), "data.a?str")
         assertEquals("b", value2.asText())
 
-        value = recordsService.getAtt(valueOf("test"), "dataValue?json")
+        value = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue?json")
         assertEquals("b", value.get("a").asText())
 
-        value2 = recordsService.getAtt(valueOf("test"), "dataValue.a?str")
+        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue.a?str")
         assertEquals("b", value2.asText())
 
-        value2 = recordsService.getAtt(valueOf("test"), "data.unknown?str")
+        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "data.unknown?str")
         assertEquals(DataValue.NULL, value2)
 
-        value2 = recordsService.getAtt(valueOf("test"), "dataValue.unknown?str")
+        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "dataValue.unknown?str")
         assertEquals(DataValue.NULL, value2)
 
-        value2 = recordsService.getAtt(valueOf("test"), "unknown?str")
+        value2 = recordsService.getAtt(EntityRef.valueOf("test"), "unknown?str")
         assertEquals(DataValue.NULL, value2)
     }
 
     @Test
     fun dtoTest() {
-        val dtoValue = recordsService.getAtts(valueOf("test"), TestDataMeta::class.java)
+        val dtoValue = recordsService.getAtts(EntityRef.valueOf("test"), TestDataMeta::class.java)
         val expected = TestDataMeta(TestData("test"))
         assertEquals(expected, dtoValue)
     }

@@ -3,18 +3,79 @@ package ru.citeck.ecos.records3.test.record.dao.impl.mem
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.mem.InMemDataRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.time.Instant
 
 class InMemDataRecordsDaoTest {
 
     companion object {
         private const val ID = "test-id"
+    }
+
+    @Test
+    fun testWithPredicates() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val ref0 = records.create("test", mapOf("abc" to "def"))
+        val ref1 = records.create("test", mapOf("abc" to "def"))
+
+        val baseQuery = RecordsQuery.create()
+            .withSourceId("test")
+            .withMaxItems(10)
+            .withQuery(Predicates.alwaysTrue())
+            .build()
+
+        val res0 = records.query(baseQuery).getRecords()
+
+        assertThat(res0).containsExactly(ref0, ref1)
+
+        assertThat(records.getAtt(ref0, "?id").asText()).isEqualTo(ref0.toString())
+        assertThat(records.getAtt(ref0, "id").asText()).isEqualTo(ref0.getLocalId())
+        assertThat(records.getAtt(ref0, "id?str").asText()).isEqualTo(ref0.getLocalId())
+        assertThat(records.getAtt(ref0, "id?raw").asText()).isEqualTo(ref0.getLocalId())
+
+        val res1 = records.query(
+            baseQuery.copy()
+                .withQuery(Predicates.notEq("id", ref0.getLocalId()))
+                .build()
+        ).getRecords()
+
+        assertThat(res1).containsExactly(ref1)
+    }
+
+    @Test
+    fun testWithCopyAndUpdateById() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+
+        records.register(InMemDataRecordsDao("test"))
+        val res0 = records.create(
+            "test",
+            mapOf(
+                "id" to "abc",
+                "name" to "ABC"
+            )
+        )
+        assertThat(res0.getLocalId()).isEqualTo("abc")
+        assertThat(records.getAtt(res0, "name").asText()).isEqualTo("ABC")
+
+        val res1 = records.mutate(
+            EntityRef.valueOf("test@"),
+            mapOf(
+                "id" to "abc",
+                "name" to "ABCDEF"
+            )
+        )
+        assertThat(res1).isEqualTo(res0)
+        assertThat(records.getAtt(res0, "name").asText()).isEqualTo("ABCDEF")
     }
 
     @Test
@@ -24,7 +85,7 @@ class InMemDataRecordsDaoTest {
         records.register(InMemDataRecordsDao(ID))
 
         val rec0 = records.mutate(
-            RecordRef.create(ID, ""),
+            EntityRef.create(ID, ""),
             ObjectData.create(
                 """
             {
@@ -35,7 +96,7 @@ class InMemDataRecordsDaoTest {
             )
         )
 
-        assertThat(rec0.id).isNotBlank
+        assertThat(rec0.getLocalId()).isNotBlank
         assertThat(records.getAtt(rec0, "field0").asText()).isEqualTo("value0")
         assertThat(records.getAtt(rec0, "field1").asText()).isEqualTo("value1")
 
@@ -51,7 +112,7 @@ class InMemDataRecordsDaoTest {
         val recordsToCreate = Array(10) { idx ->
             val data = ObjectData.create()
                 .set("idx", idx)
-            RecordAtts(RecordRef.create(ID, ""), data)
+            RecordAtts(EntityRef.create(ID, ""), data)
         }.toList()
 
         val recs = records.mutate(recordsToCreate)
@@ -81,6 +142,44 @@ class InMemDataRecordsDaoTest {
     }
 
     @Test
+    fun simpleSearchTest() {
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(InMemDataRecordsDao("test"))
+
+        val refs = (0 until 300).map {
+            val createdDate = Instant.ofEpochMilli(10000L * it)
+            val recordRef = records.create(
+                "test",
+                mapOf(
+                    "_created" to createdDate
+                )
+            )
+            recordRef to createdDate
+        }
+
+        val conditionValue = Instant.ofEpochMilli(10000L * 100)
+
+        val result = records.query(
+            RecordsQuery.create()
+                .withSourceId("test")
+                .withQuery(Predicates.gt("_created", conditionValue))
+                .withSortBy(SortBy("_created", true))
+                .withMaxItems(1000)
+                .build()
+        )
+
+        assertThat(result.getRecords()).hasSize(199)
+        assertThat(result.getRecords()).containsExactlyElementsOf(
+            refs.filter {
+                it.second.isAfter(conditionValue)
+            }.map {
+                it.first
+            }
+        )
+    }
+
+    @Test
     fun sortByTest() {
         val services = RecordsServiceFactory()
         val records = services.recordsServiceV1
@@ -101,7 +200,7 @@ class InMemDataRecordsDaoTest {
             withSourceId("test")
         }
         fun queryImpl(query: RecordsQuery): List<Int> {
-            return records.query(query).getRecords().map { it.id.toInt() }
+            return records.query(query).getRecords().map { it.getLocalId().toInt() }
         }
 
         val queryRes0 = queryImpl(query.copy { withQuery(Predicates.eq("num", 5)) })

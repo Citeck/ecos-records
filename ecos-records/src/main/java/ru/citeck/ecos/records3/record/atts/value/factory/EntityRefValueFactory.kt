@@ -1,26 +1,28 @@
 package ru.citeck.ecos.records3.record.atts.value.factory
 
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
 import ru.citeck.ecos.records3.record.atts.value.impl.InnerAttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
 import kotlin.collections.LinkedHashMap
 
-class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
+class EntityRefValueFactory : AttValueFactory<EntityRef>, ServiceFactoryAware {
 
     companion object {
         private val SCALARS_WITHOUT_LOADING = listOf(
             ScalarType.ID,
             ScalarType.LOCAL_ID,
+            ScalarType.APP_NAME,
             ScalarType.ASSOC,
             ScalarType.STR,
             ScalarType.RAW
@@ -29,29 +31,9 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
             *SCALARS_WITHOUT_LOADING.map { it.schema }.toTypedArray(),
             *SCALARS_WITHOUT_LOADING.map { it.mirrorAtt }.toTypedArray()
         )
-    }
 
-    private lateinit var recordsService: RecordsService
-    private lateinit var schemaWriter: AttSchemaWriter
-
-    override fun getValue(value: RecordRef): AttValue {
-        return RecordRefValue(value)
-    }
-
-    override fun getValueTypes() = listOf(RecordRef::class.java)
-
-    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
-        this.recordsService = serviceFactory.recordsServiceV1
-        this.schemaWriter = serviceFactory.attSchemaWriter
-    }
-
-    inner class RecordRefValue(private val ref: RecordRef) : AttValue, AttValueProxy {
-
-        private lateinit var innerAtts: InnerAttValue
-
-        override fun init(): Promise<Unit>? {
-
-            val innerSchema = AttContext.getCurrentSchemaAtt().inner
+        @JvmStatic
+        fun getAttsToLoad(innerSchema: List<SchemaAtt>, schemaWriter: AttSchemaWriter): Map<String, String> {
 
             val attsMap: MutableMap<String, String> = LinkedHashMap()
             val sb = StringBuilder()
@@ -66,8 +48,37 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
                     sb.setLength(0)
                 }
             }
-            val atts = if (attsMap.isNotEmpty()) {
-                loadRawAtts(attsMap).getAtts()
+
+            return attsMap
+        }
+    }
+
+    private lateinit var recordsService: RecordsService
+    private lateinit var schemaWriter: AttSchemaWriter
+
+    override fun getValue(value: EntityRef): AttValue {
+        return EntityRefValue(value)
+    }
+
+    override fun getValueTypes() = listOf(EntityRef::class.java)
+
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        this.recordsService = serviceFactory.recordsServiceV1
+        this.schemaWriter = serviceFactory.attSchemaWriter
+    }
+
+    inner class EntityRefValue(private val ref: EntityRef) : AttValue, AttValueProxy {
+
+        private lateinit var innerAtts: InnerAttValue
+
+        fun init(loadedAtts: ObjectData) {
+            innerAtts = InnerAttValue(loadedAtts.getData().asJson())
+        }
+
+        override fun init(): Promise<Unit>? {
+            val attsToLoad = getAttsToLoad(AttContext.getCurrentSchemaAtt().inner, schemaWriter)
+            val atts = if (attsToLoad.isNotEmpty()) {
+                loadRawAtts(attsToLoad).getAtts()
             } else {
                 ObjectData.create()
             }
@@ -79,7 +90,7 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
             return recordsService.getAtts(setOf(ref), attsMap, true)[0]
         }
 
-        override fun getId(): RecordRef {
+        override fun getId(): EntityRef {
             return ref
         }
 
@@ -119,19 +130,24 @@ class RecordRefValueFactory : AttValueFactory<RecordRef>, ServiceFactoryAware {
                     ScalarType.ASSOC,
                     ScalarType.STR,
                     ScalarType.RAW -> id
-                    ScalarType.LOCAL_ID -> id.id
+                    ScalarType.LOCAL_ID -> id.getLocalId()
+                    ScalarType.APP_NAME -> id.getAppName()
                     else -> null
                 }
             }
             return innerAtts.getAtt(name)
         }
 
-        override fun getType(): RecordRef {
+        override fun getType(): EntityRef {
             return innerAtts.type
         }
 
         override fun asRaw(): Any {
             return ref.toString()
+        }
+
+        fun getRef(): EntityRef {
+            return ref
         }
     }
 }

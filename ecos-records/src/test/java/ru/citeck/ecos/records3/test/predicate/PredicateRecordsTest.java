@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords;
@@ -15,6 +14,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -116,15 +116,15 @@ public class PredicateRecordsTest {
     void contextAttsTest() {
 
         Map<String, Object> ctxAtts = new HashMap<>();
-        ctxAtts.put("ctxatt", RecordRef.valueOf("test@ccc"));
+        ctxAtts.put("ctxatt", EntityRef.valueOf("test@ccc"));
 
         RequestContext.doWithCtxJ(recordsServiceFactory, b -> b.setCtxAtts(ctxAtts), ctx -> {
 
             assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str3-value")));
 
             Map<String, Object> newAtts = new HashMap<>();
-            newAtts.put("ctxatt", RecordRef.valueOf("test@aaa"));
-            newAtts.put("ctxatt2", RecordRef.valueOf("test@bbb"));
+            newAtts.put("ctxatt", EntityRef.valueOf("test@aaa"));
+            newAtts.put("ctxatt2", EntityRef.valueOf("test@bbb"));
 
             RequestContext.doWithAttsJ(newAtts, () -> {
                 assertTrue(check("aaa", Predicates.eq("$ctxatt.strField", "str-value")));
@@ -149,7 +149,7 @@ public class PredicateRecordsTest {
 
         PredicateRecords.PredicateCheckQuery checkQuery = new PredicateRecords.PredicateCheckQuery();
         checkQuery.setPredicates(predicates);
-        checkQuery.setRecords(id.stream().map(i -> RecordRef.valueOf("test@" + i)).collect(Collectors.toList()));
+        checkQuery.setRecords(id.stream().map(i -> EntityRef.valueOf("test@" + i)).collect(Collectors.toList()));
 
         RecordsQuery query = RecordsQuery.create()
             .withQuery(checkQuery)
@@ -161,7 +161,7 @@ public class PredicateRecordsTest {
 
     @Data
     public static class ResultDto {
-        private RecordRef record;
+        private EntityRef record;
         private List<Boolean> result;
     }
 

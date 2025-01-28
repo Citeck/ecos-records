@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.record.dao.query.SupportsQueryLanguages;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,10 +55,10 @@ public class RecordsSourceRecordsDaoTest extends AbstractRecordsDao implements R
 
     @Test
     public void test() {
-        SourceLangMetaInfo meta = recordsService.getAtts(RecordRef.create("source", "test"), SourceLangMetaInfo.class);
+        SourceLangMetaInfo meta = recordsService.getAtts(EntityRef.create("source", "test"), SourceLangMetaInfo.class);
         assertEquals(SUPPORTED_LANGUAGES, meta.getSupportedLanguages());
 
-        SourceFlagsMetaInfo meta2 = recordsService.getAtts(RecordRef.create("source", "meta"), SourceFlagsMetaInfo.class);
+        SourceFlagsMetaInfo meta2 = recordsService.getAtts(EntityRef.create("source", "meta"), SourceFlagsMetaInfo.class);
         assertEquals("meta", meta2.id);
         assertTrue(meta2.attsSupported);
         assertFalse(meta2.mutationSupported);

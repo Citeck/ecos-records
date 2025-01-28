@@ -150,7 +150,7 @@ public class RemoteSyncRecordsDao<T> extends InMemRecordsDao<T>
             Instant modified = Instant.parse(modifiedStr);
             T instance = dtoSchemaReader.instantiate(model, meta.getAtts());
 
-            setRecord(meta.getId().getId(), instance);
+            setRecord(meta.getId().getLocalId(), instance);
 
             if (modified.isAfter(lastModified)) {
                 lastModified = modified;

@@ -3,13 +3,13 @@ package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.dao.impl.proxy.DeleteProxyProcessor
 import ru.citeck.ecos.records3.record.dao.impl.proxy.ProxyProcContext
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordsDaoProxyDeleteTest {
 
@@ -55,17 +55,17 @@ class RecordsDaoProxyDeleteTest {
 
         records.register(RecordsDaoProxy(PROXY_ID, TARGET_ID, proc))
 
-        val proxyRec0Ref = RecordRef.create(PROXY_ID, "rec0")
-        val proxyRec1Ref = RecordRef.create(PROXY_ID, "rec1")
-        val proxyRec2Ref = RecordRef.create(PROXY_ID, "rec2")
+        val proxyRec0Ref = EntityRef.create(PROXY_ID, "rec0")
+        val proxyRec1Ref = EntityRef.create(PROXY_ID, "rec1")
+        val proxyRec2Ref = EntityRef.create(PROXY_ID, "rec2")
 
         assertThat(recordsMap).hasSize(3)
 
         records.delete(proxyRec0Ref)
 
         assertThat(recordsMap).hasSize(2)
-        assertThat(preDeleteList).containsExactly(listOf(proxyRec0Ref.id))
-        assertThat(postDeleteList).containsExactly(listOf(proxyRec0Ref.id))
+        assertThat(preDeleteList).containsExactly(listOf(proxyRec0Ref.getLocalId()))
+        assertThat(postDeleteList).containsExactly(listOf(proxyRec0Ref.getLocalId()))
 
         preDeleteList.clear()
         postDeleteList.clear()
@@ -74,7 +74,7 @@ class RecordsDaoProxyDeleteTest {
 
         assertThat(recordsMap).isEmpty()
 
-        assertThat(preDeleteList.flatten()).containsExactlyElementsOf(listOf(proxyRec1Ref, proxyRec2Ref).map { it.id })
-        assertThat(postDeleteList.flatten()).containsExactlyElementsOf(listOf(proxyRec1Ref, proxyRec2Ref).map { it.id })
+        assertThat(preDeleteList.flatten()).containsExactlyElementsOf(listOf(proxyRec1Ref, proxyRec2Ref).map { it.getLocalId() })
+        assertThat(postDeleteList.flatten()).containsExactlyElementsOf(listOf(proxyRec1Ref, proxyRec2Ref).map { it.getLocalId() })
     }
 }

@@ -4,12 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +35,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
     @Test
     void test() {
 
-        List<RecordRef> refs = Collections.singletonList(RecordRef.create("test", ""));
+        List<EntityRef> refs = Collections.singletonList(EntityRef.create("test", ""));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
             recordsService.getAttributes(refs, Collections.singleton("str"));
@@ -51,7 +51,7 @@ public class QueryExceptionTest extends LocalRecordsDao implements LocalRecordsM
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
         try {
             try {
                 throw new IllegalArgumentException(MSG);

@@ -6,12 +6,12 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.QueryContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaEdge
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records3.record.atts.utils.RecTypeUtils
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import com.fasterxml.jackson.databind.node.NullNode as JackNullNode
 
 /**
@@ -46,7 +46,7 @@ class MetaAttValue(private val attValue: AttValue) : MetaValue {
 
     override fun getId(): String? = attValue.id?.toString() ?: ""
 
-    override fun getLocalId(): String = RecordRef.valueOf(attValue.id?.toString() ?: "").id
+    override fun getLocalId(): String = EntityRef.valueOf(attValue.id?.toString() ?: "").getLocalId()
 
     override fun getAttribute(name: String, field: MetaField): Any? = attValue.getAtt(name)
 

@@ -13,6 +13,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
 import ru.citeck.ecos.records3.record.atts.schema.read.DtoSchemaReader;
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriter;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,22 +30,22 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, Servi
     private final Map<String, ParameterizedRecordEvaluator> evaluators = new ConcurrentHashMap<>();
 
     @Override
-    public boolean evaluate(RecordRef recordRef, RecordEvaluatorDto evaluator) {
+    public boolean evaluate(EntityRef recordRef, RecordEvaluatorDto evaluator) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
-        List<RecordRef> recordRefs = Collections.singletonList(recordRef);
+        List<EntityRef> recordRefs = Collections.singletonList(recordRef);
 
-        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
+        Map<EntityRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
         return evaluateResult.get(recordRef).get(0);
     }
 
     @Override
-    public Map<RecordRef, Boolean> evaluate(List<RecordRef> recordRefs, RecordEvaluatorDto evaluator) {
+    public Map<EntityRef, Boolean> evaluate(List<EntityRef> recordRefs, RecordEvaluatorDto evaluator) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
 
-        Map<RecordRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
-        Map<RecordRef, Boolean> result = new HashMap<>();
+        Map<EntityRef, List<Boolean>> evaluateResult = evaluate(recordRefs, evaluators);
+        Map<EntityRef, Boolean> result = new HashMap<>();
 
         evaluateResult.forEach((ref, b) -> result.put(ref, b.get(0)));
 
@@ -52,11 +53,11 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, Servi
     }
 
     @Override
-    public Map<RecordRef, List<Boolean>> evaluate(List<RecordRef> recordRefs,
+    public Map<EntityRef, List<Boolean>> evaluate(List<EntityRef> recordRefs,
                                                   List<RecordEvaluatorDto> evaluators) {
 
-        Map<RecordRef, List<EvalDetails>> details = evalWithDetails(recordRefs, evaluators);
-        Map<RecordRef, List<Boolean>> result = new HashMap<>();
+        Map<EntityRef, List<EvalDetails>> details = evalWithDetails(recordRefs, evaluators);
+        Map<EntityRef, List<Boolean>> result = new HashMap<>();
 
         details.forEach((k, v) -> {
             List<Boolean> resultsList = result.computeIfAbsent(k, kk -> new ArrayList<>());
@@ -67,24 +68,24 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, Servi
     }
 
     @Override
-    public EvalDetails evalWithDetails(RecordRef recordRef,
+    public EvalDetails evalWithDetails(EntityRef recordRef,
                                        RecordEvaluatorDto evaluator) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
-        List<RecordRef> recordRefs = Collections.singletonList(recordRef);
+        List<EntityRef> recordRefs = Collections.singletonList(recordRef);
 
-        Map<RecordRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators);
+        Map<EntityRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators);
         return evaluateResult.get(recordRef).get(0);
     }
 
     @Override
-    public Map<RecordRef, EvalDetails> evalWithDetails(List<RecordRef> recordRefs,
+    public Map<EntityRef, EvalDetails> evalWithDetails(List<EntityRef> recordRefs,
                                                        RecordEvaluatorDto evaluator) {
 
         List<RecordEvaluatorDto> evaluators = Collections.singletonList(evaluator);
 
-        Map<RecordRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators);
-        Map<RecordRef, EvalDetails> result = new HashMap<>();
+        Map<EntityRef, List<EvalDetails>> evaluateResult = evalWithDetails(recordRefs, evaluators);
+        Map<EntityRef, EvalDetails> result = new HashMap<>();
 
         evaluateResult.forEach((ref, b) -> result.put(ref, b.get(0)));
 
@@ -92,7 +93,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, Servi
     }
 
     @Override
-    public Map<RecordRef, List<EvalDetails>> evalWithDetails(List<RecordRef> recordRefs,
+    public Map<EntityRef, List<EvalDetails>> evalWithDetails(List<EntityRef> recordRefs,
                                                              List<RecordEvaluatorDto> evaluators) {
 
         List<Map<String, String>> metaAttributes = getRequiredMetaAttributes(evaluators);
@@ -107,7 +108,7 @@ public class RecordEvaluatorServiceImpl implements RecordEvaluatorService, Servi
             recordsMeta = recordRefs.stream().map(RecordAtts::new).collect(Collectors.toList());
         }
 
-        Map<RecordRef, List<EvalDetails>> evalResultsByRecord = new HashMap<>();
+        Map<EntityRef, List<EvalDetails>> evalResultsByRecord = new HashMap<>();
 
         for (int i = 0; i < recordRefs.size(); i++) {
             RecordAtts meta = recordsMeta.get(i);

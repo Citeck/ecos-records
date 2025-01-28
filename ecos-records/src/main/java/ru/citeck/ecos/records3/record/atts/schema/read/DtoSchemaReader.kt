@@ -13,7 +13,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.LibsUtils
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -35,7 +34,6 @@ import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.primaryConstructor
 
@@ -57,6 +55,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     private val attributesCache = ConcurrentHashMap<Class<*>, List<SchemaAtt>>()
     private val attSchemaReader = factory.attSchemaReader
     private val attProcReader = factory.attProcReader
+
+    private val REF_SCALAR_FIELD = ScalarField(EntityRef::class.java, ScalarType.ID)
 
     init {
         listOf(
@@ -85,7 +85,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             ScalarField(ArrayNode::class.java, ScalarType.JSON),
             ScalarField(ObjectData::class.java, ScalarType.JSON),
             ScalarField(DataValue::class.java, ScalarType.RAW),
-            ScalarField(RecordRef::class.java, ScalarType.ID),
             ScalarField(EntityRef::class.java, ScalarType.ID),
             ScalarField(MimeType::class.java, ScalarType.STR),
             ScalarField(Map::class.java, ScalarType.JSON),
@@ -182,7 +181,6 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
-            val scalarField = scalars[propType]
 
             getAttributeSchema(
                 attsClass,
@@ -190,7 +188,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 writeMethod,
                 descriptor.name,
                 isMultiple,
-                scalarField,
+                getScalarField(propType),
                 propType,
                 visited
             )?.let { attributes.add(it) }
@@ -229,26 +227,34 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 argType = arg.type.arguments[0].type?.classifier as? KClass<*>
                     ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
             }
-
             val javaClass = argType.java
-            var scalar = scalars[javaClass]
-            if (scalar == null && argType.isSubclassOf(Map::class)) {
-                scalar = scalars[Map::class.java]
-            }
-
             getAttributeSchema(
                 attsClass,
                 arg,
                 null,
                 paramName,
                 multiple,
-                scalar,
+                getScalarField(javaClass),
                 javaClass,
                 visited
             )?.let { atts.add(it) }
         }
 
         return atts
+    }
+
+    private fun getScalarField(clazz: Class<*>): ScalarField<Any>? {
+        val res = if (EntityRef::class.java.isAssignableFrom(clazz)) {
+            REF_SCALAR_FIELD
+        } else {
+            var scalar = scalars[clazz]
+            if (scalar == null && Map::class.java.isAssignableFrom(clazz)) {
+                scalar = scalars[Map::class.java]
+            }
+            scalar
+        }
+        @Suppress("UNCHECKED_CAST")
+        return res as ScalarField<Any>?
     }
 
     private fun getAttributeSchema(

@@ -95,12 +95,13 @@ object PredicateUtils {
     @JvmStatic
     @JvmOverloads
     fun mapValuePredicates(
-        predicate: Predicate,
+        predicate: Predicate?,
         mapFunc: Function<ValuePredicate, Predicate?>,
         onlyAnd: Boolean,
-        optimize: Boolean = true
+        optimize: Boolean = true,
+        filterEmptyComposite: Boolean = true
     ): Predicate? {
-        return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, optimize)
+        return mapValuePredicatesImpl(predicate, mapFunc, onlyAnd, optimize, filterEmptyComposite)
     }
 
     @JvmStatic
@@ -109,9 +110,10 @@ object PredicateUtils {
         predicate: Predicate?,
         mapFunc: Function<AttributePredicate, Predicate?>,
         onlyAnd: Boolean,
-        optimize: Boolean = true
+        optimize: Boolean = true,
+        filterEmptyComposite: Boolean = true
     ): Predicate? {
-        return mapAttributePredicatesImpl(predicate, mapFunc, onlyAnd, optimize)
+        return mapAttributePredicatesImpl(predicate, mapFunc, onlyAnd, optimize, filterEmptyComposite)
     }
 
     @JvmStatic
@@ -173,7 +175,8 @@ object PredicateUtils {
         predicate: Predicate?,
         mapFunc: Function<ValuePredicate, Predicate?>,
         onlyAnd: Boolean,
-        optimize: Boolean = true
+        optimize: Boolean = true,
+        filterEmptyComposite: Boolean = true
     ): Predicate? {
         return mapAttributePredicatesImpl(
             predicate,
@@ -183,7 +186,7 @@ object PredicateUtils {
                 }
                 pred
             },
-            onlyAnd, optimize
+            onlyAnd, optimize, filterEmptyComposite
         )
     }
 
@@ -191,7 +194,8 @@ object PredicateUtils {
         predicate: Predicate?,
         mapFunc: Function<AttributePredicate, Predicate?>,
         onlyAnd: Boolean,
-        optimize: Boolean = true
+        optimize: Boolean = true,
+        filterEmptyComposite: Boolean = true
     ): Predicate? {
         if (predicate == null) {
             return null
@@ -225,10 +229,19 @@ object PredicateUtils {
                     mappedPredicates.add(mappedPred)
                 }
             }
-            if (mappedPredicates.isEmpty()) {
+            if (filterEmptyComposite && mappedPredicates.isEmpty()) {
                 return null
-            } else if (optimize && mappedPredicates.size == 1) {
-                return mappedPredicates[0]
+            }
+            if (optimize) {
+                if (mappedPredicates.isEmpty()) {
+                    return if (isAnd) {
+                        Predicates.alwaysTrue()
+                    } else {
+                        Predicates.alwaysFalse()
+                    }
+                } else if (mappedPredicates.size == 1) {
+                    return mappedPredicates[0]
+                }
             }
             when (predicate) {
                 is AndPredicate -> Predicates.and(mappedPredicates)

@@ -5,13 +5,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.commons.data.DataValue;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,25 +35,25 @@ public class MetaNumberTest extends LocalRecordsDao
 
     @Test
     public void test() {
-        DataValue value = recordsService.getAttribute(RecordRef.create("test", ""), "double1_000_000_000");
+        DataValue value = recordsService.getAttribute(EntityRef.create("test", ""), "double1_000_000_000");
         String strValue = value.asText();
         assertEquals("1000000000", strValue);
-        value = recordsService.getAttribute(RecordRef.create("test", ""), "double2_000_000_000\\.0123458");
+        value = recordsService.getAttribute(EntityRef.create("test", ""), "double2_000_000_000\\.0123458");
         strValue = value.asText();
         assertEquals("2000000000.0123458", strValue);
     }
 
     @NotNull
     @Override
-    public List<Object> getLocalRecordsMeta(@NotNull List<RecordRef> records, @NotNull MetaField metaField) {
+    public List<Object> getLocalRecordsMeta(@NotNull List<EntityRef> records, @NotNull MetaField metaField) {
         return records.stream().map(TestValue::new).collect(Collectors.toList());
     }
 
     class TestValue implements MetaValue {
 
-        private RecordRef ref;
+        private EntityRef ref;
 
-        public TestValue(RecordRef ref) {
+        public TestValue(EntityRef ref) {
             this.ref = ref;
         }
 

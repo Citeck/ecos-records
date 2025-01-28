@@ -6,17 +6,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.request.RequestContext;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.records3.record.request.RequestCtxData;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,14 +42,37 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
     }
 
     @Test
+    void srcIdMappingTest() {
+
+        Map<String, String> sourceIdMapping0 = Collections.singletonMap("first", "second");
+        Map<String, String> sourceIdMapping1 = Collections.singletonMap("third", "fourth");
+
+        RequestContext.doWithCtxJ((b0) -> b0.withSourceIdMapping(sourceIdMapping0), (c0) -> {
+            assertThat(c0.ctxData.getSourceIdMapping()).isEqualTo(sourceIdMapping0);
+            RequestContext.doWithCtxJ((b1) -> b1.withSourceIdMapping(sourceIdMapping1), (c1) -> {
+                Map<String, String> fullMapping = new HashMap<>(sourceIdMapping0);
+                fullMapping.putAll(sourceIdMapping1);
+                assertThat(c1.ctxData.getSourceIdMapping()).isEqualTo(fullMapping);
+                return null;
+            });
+            assertThat(c0.ctxData.getSourceIdMapping()).isEqualTo(sourceIdMapping0);
+            RequestContext.doWithCtxJ(RequestCtxData.Builder::withoutSourceIdMapping, (c1) -> {
+                assertThat(c1.ctxData.getSourceIdMapping()).isEmpty();
+                return null;
+            });
+            return null;
+        });
+    }
+
+    @Test
     void test() {
 
         assertNull(RequestContext.getCurrent());
 
         recordsService.getAtts(Arrays.asList(
-            RecordRef.create(SOURCE_ID, "1"),
-            RecordRef.create(SOURCE_ID, "2"),
-            RecordRef.create(SOURCE_ID, "3")
+            EntityRef.create(SOURCE_ID, "1"),
+            EntityRef.create(SOURCE_ID, "2"),
+            EntityRef.create(SOURCE_ID, "3")
         ), TestMeta.class);
 
         assertNull(RequestContext.getCurrent());
@@ -90,10 +114,10 @@ public class RequestContextTest extends AbstractRecordsDao implements RecordsAtt
 
     public class Record implements AttValue {
 
-        private RecordRef id;
+        private EntityRef id;
 
         Record(String id) {
-            this.id = RecordRef.valueOf(id);
+            this.id = EntityRef.valueOf(id);
             RequestContext.getCurrentNotNull().getList("testList").add(this);
         }
 

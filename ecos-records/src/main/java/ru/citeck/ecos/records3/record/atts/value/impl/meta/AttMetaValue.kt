@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.record.atts.value.impl.meta
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue
 import ru.citeck.ecos.records2.graphql.meta.value.field.AttMetaField
 import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.utils.AttUtils
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 /**
  * Adapter MetaValue -> AttValue
@@ -63,7 +63,7 @@ class AttMetaValue(private val metaValue: MetaValue) : AttValue {
         return metaValue.getAs(type, AttMetaField)
     }
 
-    override fun getType(): RecordRef {
+    override fun getType(): EntityRef {
         return metaValue.recordType
     }
 }

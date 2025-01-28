@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class PredicateFilterTest {
 
@@ -97,7 +97,7 @@ class PredicateFilterTest {
             mapOf(
                 "aa" to "bb",
                 "num" to 10,
-                "ref" to RecordRef.create("app", "src", "id")
+                "ref" to EntityRef.create("app", "src", "id")
             )
         )
 

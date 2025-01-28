@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -119,6 +119,6 @@ class DtoSchemaTest {
     )
 
     class DtoSchema2(
-        var id: RecordRef
+        var id: EntityRef
     )
 }

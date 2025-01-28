@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.request.mutation.RecordsMutation;
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao;
 import ru.citeck.ecos.records2.source.dao.local.MutableRecordsLocalDao;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -182,9 +183,9 @@ public class RecordsMutationTest extends LocalRecordsDao
 
     @NotNull
     @Override
-    public List<TestDto> getValuesToMutate(@NotNull List<RecordRef> records) {
+    public List<TestDto> getValuesToMutate(@NotNull List<EntityRef> records) {
         return records.stream().map(r -> {
-            RecordRef ref = RecordRef.create(getId(), r);
+            EntityRef ref = r.withSourceId(getId());
             TestDto testDto = valuesToMutate.get(ref);
             return testDto == null ? new TestDto(RecordRef.valueOf(ref + "-new")) : new TestDto(testDto);
         }).collect(Collectors.toList());

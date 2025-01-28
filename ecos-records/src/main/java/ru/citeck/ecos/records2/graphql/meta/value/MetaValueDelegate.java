@@ -3,7 +3,7 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 /**
  * @deprecated -> AttValueDelegate
@@ -89,7 +89,7 @@ public class MetaValueDelegate implements MetaValue {
     }
 
     @Override
-    public RecordRef getRecordType() {
+    public EntityRef getRecordType() {
         return impl.getRecordType();
     }
 }

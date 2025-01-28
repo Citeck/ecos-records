@@ -7,9 +7,10 @@ import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.serialization.annotation.IncludeNonDefault
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import com.fasterxml.jackson.annotation.JsonIgnore as JackJsonIgnore
 import com.fasterxml.jackson.annotation.JsonSetter as JackJsonSetter
@@ -47,7 +48,12 @@ data class RecordsQuery(
     }
 
     fun <T : Any> getQueryOrNull(type: Class<T>): T? {
-        return Json.mapper.convert(query, type)
+        return if (type == Predicate::class.java && query.isEmpty()) {
+            @Suppress("UNCHECKED_CAST")
+            Predicates.alwaysTrue() as? T
+        } else {
+            Json.mapper.convert(query, type)
+        }
     }
 
     fun <T : Any> getQuery(type: Class<T>): T {
@@ -57,6 +63,20 @@ data class RecordsQuery(
             return type.newInstance()
         }
         return result
+    }
+
+    /**
+     * Returns predicate defined in query.
+     * Works as getQuery(Predicate::class.java) except that when language is not empty and not 'predicate', then
+     * result will be Predicates.alwaysFalse().
+     */
+    @JsonIgnore
+    @JackJsonIgnore
+    fun getPredicate(): Predicate {
+        if (language.isNotBlank() && language != PredicateService.LANGUAGE_PREDICATE) {
+            return Predicates.alwaysFalse()
+        }
+        return getQuery(Predicate::class.java)
     }
 
     @JsonIgnore
@@ -150,7 +170,7 @@ data class RecordsQuery(
             return this
         }
 
-        fun withAfterId(afterId: RecordRef?): Builder {
+        fun withAfterId(afterId: EntityRef?): Builder {
             this.page.withAfterId(afterId)
             return this
         }

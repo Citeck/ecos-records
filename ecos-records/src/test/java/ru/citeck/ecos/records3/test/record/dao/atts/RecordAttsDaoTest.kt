@@ -2,8 +2,8 @@ package ru.citeck.ecos.records3.test.record.dao.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField
 import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDao
@@ -11,10 +11,53 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.*
 
 class RecordAttsDaoTest {
+
+    @Test
+    fun unorderedAttsTest() {
+
+        data class Record(
+            val id: String,
+            val value: String
+        )
+
+        val records = RecordsServiceFactory().recordsServiceV1
+        records.register(object : RecordsAttsDao, RecordsQueryDao {
+            override fun getId(): String {
+                return "test"
+            }
+            override fun queryRecords(recsQuery: RecordsQuery): Any? {
+                return recsQuery.getQuery(DataValue::class.java)["refs"].asList(EntityRef::class.java)
+            }
+            override fun getRecordsAtts(recordIds: List<String>): List<*> {
+                return recordIds.shuffled(Random(12346789L)).map { Record(it, "$it-value") }
+            }
+        })
+
+        val recordIds = (0 until 10).map { "test@record-$it" }
+
+        val getAttsRes = records.getAtts(recordIds, listOf("value"))
+        val getAttsResult = getAttsRes.map { it["value"].asText() }
+
+        assertThat(getAttsResult).containsExactlyElementsOf(recordIds.map { "${it.substringAfter('@')}-value" })
+
+        val queryRes = records.query(
+            RecordsQuery.create {
+                withSourceId("test")
+                withQuery(DataValue.createObj().set("refs", recordIds))
+            },
+            listOf("value")
+        ).getRecords().map { it["value"].asText() }
+
+        assertThat(queryRes).containsExactlyElementsOf(recordIds.map { "${it.substringAfter('@')}-value" })
+    }
 
     @Test
     fun test() {
@@ -51,7 +94,7 @@ class RecordAttsDaoTest {
         // atts with legacy dao
 
         services.recordsService.register(object : LocalRecordsDao(), LocalRecordsMetaDao<Any> {
-            override fun getLocalRecordsMeta(records: MutableList<RecordRef>, metaField: MetaField): List<Any> {
+            override fun getLocalRecordsMeta(records: MutableList<EntityRef>, metaField: MetaField): List<Any> {
                 return records.map { ObjectData.create("""{"test":"value"}""") }
             }
             override fun getId() = "legacy-dao"
@@ -63,11 +106,11 @@ class RecordAttsDaoTest {
     private fun attsTest(sourceId: String, records: RecordsService) {
 
         if (!sourceId.contains('/')) {
-            val res = records.getAtt(RecordRef.valueOf("test-app/$sourceId@localId"), "test").asText()
+            val res = records.getAtt(EntityRef.valueOf("test-app/$sourceId@localId"), "test").asText()
             assertThat(res).isEqualTo("value")
         }
 
-        val res = records.getAtt(RecordRef.valueOf("$sourceId@localId2"), "test").asText()
+        val res = records.getAtt(EntityRef.valueOf("$sourceId@localId2"), "test").asText()
         assertThat(res).isEqualTo("value")
     }
 

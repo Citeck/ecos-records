@@ -2,7 +2,6 @@ package ru.citeck.ecos.records3.test.record.resolver
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -74,12 +73,12 @@ class LocalRecordsInterceptorTest {
                 rawAtts: Boolean,
                 chain: MutateRecordInterceptorsChain
             ): RecordAtts {
-                mutateCalls.add(RecordAtts(RecordRef.create(sourceId, record.id), record.attributes))
+                mutateCalls.add(RecordAtts(EntityRef.create(sourceId, record.id), record.attributes))
                 return chain.invoke(sourceId, record, attsToLoad, rawAtts)
             }
 
             override fun deleteRecords(sourceId: String, recordIds: List<String>, chain: DeleteRecordsInterceptorsChain): List<DelStatus> {
-                deleteCalls.add(recordIds.map { RecordRef.create(sourceId, it) })
+                deleteCalls.add(recordIds.map { EntityRef.create(sourceId, it) })
                 return chain.invoke(sourceId, recordIds)
             }
         })
@@ -97,7 +96,7 @@ class LocalRecordsInterceptorTest {
         assertThat(queryResult.getRecords()).hasSize(2)
         assertThat(queryResult.getRecords()).containsExactlyInAnyOrderElementsOf(
             listOf("test", "test2").map {
-                RecordRef.create("test", it)
+                EntityRef.create("test", it)
             }
         )
         assertThat(getRecordAttsCalls).isEmpty()
@@ -109,7 +108,7 @@ class LocalRecordsInterceptorTest {
         assertThat(getAttRes).isEqualTo("abc")
 
         assertThat(getRecordAttsCalls).hasSize(1)
-        assertThat(getRecordAttsCalls).containsExactly(listOf(RecordRef.valueOf("test@test")))
+        assertThat(getRecordAttsCalls).containsExactly(listOf(EntityRef.valueOf("test@test")))
 
         try {
             records.delete("test@test")

@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName;
@@ -16,6 +15,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.AttEdge;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +58,7 @@ public class MetaEdgeTest extends AbstractRecordsDao
     void test() {
 
         String att = ".edge(n:\"" + EDGE_FIELD_NAME + "\"){name,distinct{str,disp},options{str,disp},javaClass,editorKey,type,isAssoc,createVariants{json},unreadable}";
-        List<RecordRef> records = Collections.singletonList(RecordRef.create(SOURCE_ID, "test"));
+        List<EntityRef> records = Collections.singletonList(EntityRef.create(SOURCE_ID, "test"));
         List<RecordAtts> result = recordsService.getAtts(records, Collections.singletonMap("edge", att));
 
         RecordAtts meta = result.get(0);
@@ -143,7 +143,7 @@ public class MetaEdgeTest extends AbstractRecordsDao
         static {
             CREATE_VARIANT = ObjectData.create();
             CREATE_VARIANT.set("label", "Create Label");
-            CREATE_VARIANT.set("recordRef", RecordRef.valueOf("1231231@213123"));
+            CREATE_VARIANT.set("recordRef", EntityRef.valueOf("1231231@213123"));
         }
 
         static List<?> distinctVariants = Arrays.asList(

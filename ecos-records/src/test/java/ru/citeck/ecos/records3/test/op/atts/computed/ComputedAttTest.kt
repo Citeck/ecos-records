@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
@@ -16,82 +15,97 @@ import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.*
 import kotlin.test.assertEquals
 
 class ComputedAttTest {
 
     companion object {
-        val type0 = RecordRef.valueOf("type0")
-        val type1 = RecordRef.valueOf("type1")
+        val type0 = EntityRef.valueOf("type0")
+        val type1 = EntityRef.valueOf("type1")
     }
 
     @Test
     fun test() {
 
         val type0Atts = listOf(
-            RecordComputedAtt(
-                "attAttribute",
-                type = RecordComputedAttType.ATTRIBUTE,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("attribute", "attAttributeValue")
+            RecordComputedAtt.create {
+                withId("attAttribute")
+                withType(RecordComputedAttType.ATTRIBUTE)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("attribute", "attAttributeValue")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript0",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return value.load('attForScript');")
+            },
+            RecordComputedAtt.create {
+                withId("attScript0")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return value.load('attForScript');")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript1",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return value.load({'key':'attForScript'});")
+            },
+            RecordComputedAtt.create {
+                withId("attScript1")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return value.load({'key':'attForScript'});")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript2",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return value.load(['attForScript']);")
+            },
+            RecordComputedAtt.create {
+                withId("attScript2")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return value.load(['attForScript']);")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript3",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return value.load('attForScript') + '-postfix';")
+            },
+            RecordComputedAtt.create {
+                withId("attScript3")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return value.load('attForScript') + '-postfix';")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript4",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return value.load('attForScript') + '-postfix';")
+            },
+            RecordComputedAtt.create {
+                withId("attScript4")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return value.load('attForScript') + '-postfix';")
+                        )
                     )
                 )
-            ),
-            RecordComputedAtt(
-                "attScript5",
-                type = RecordComputedAttType.SCRIPT,
-                config = ObjectData.create(
-                    mapOf(
-                        Pair("fn", "return [value.load('attForScript'), 'def'];")
+            },
+            RecordComputedAtt.create {
+                withId("attScript5")
+                withType(RecordComputedAttType.SCRIPT)
+                withConfig(
+                    ObjectData.create(
+                        mapOf(
+                            Pair("fn", "return [value.load('attForScript'), 'def'];")
+                        )
                     )
                 )
-            )
+            }
         )
 
         val services = RecordsServiceFactory()
@@ -110,8 +124,8 @@ class ComputedAttTest {
         val type0Record = RecordValue("type0Record", type0, "first", "second")
         val type1Record = RecordValue("type1Record", type1, "third", "fourth")
 
-        val type0Ref = RecordRef.create("test", type0Record.id)
-        val type1Ref = RecordRef.create("test", type1Record.id)
+        val type0Ref = EntityRef.create("test", type0Record.id)
+        val type1Ref = EntityRef.create("test", type1Record.id)
 
         services.recordsServiceV1.register(
             RecordsDaoBuilder.create("test")
@@ -126,9 +140,15 @@ class ComputedAttTest {
         )
         //
 
-        assertEquals(DataValue.create(type0Record.attAttributeValue), services.recordsServiceV1.getAtt(type0Ref, "attAttribute"))
+        assertEquals(
+            DataValue.create(type0Record.attAttributeValue),
+            services.recordsServiceV1.getAtt(type0Ref, "attAttribute")
+        )
 
-        assertEquals(DataValue.create(type0Record.attForScript), services.recordsServiceV1.getAtt(type0Ref, "attScript0"))
+        assertEquals(
+            DataValue.create(type0Record.attForScript),
+            services.recordsServiceV1.getAtt(type0Ref, "attScript0")
+        )
         assertEquals(
             DataValue.create("{\"key\":\"${type0Record.attForScript}\"}"),
             services.recordsServiceV1.getAtt(type0Ref, "attScript1?json")
@@ -213,15 +233,43 @@ class ComputedAttTest {
         }
     }
 
+    @Test
+    fun testWithPostProc() {
+
+        val computedAttDef1 = RecordComputedAttValue.create()
+            .withType(RecordComputedAttType.TEMPLATE)
+            .withConfig(
+                ObjectData.create("""{ "template": "${"$"}{${"$"}now|fmt('yyyy')}" }""")
+            )
+            .build()
+
+        val computedAttDef2 = RecordComputedAttValue.create()
+            .withType(RecordComputedAttType.TEMPLATE)
+            .withConfig(
+                ObjectData.create("""{ "template": "${"$"}{${"$"}now|fmt('yyyy')!'1234'}" }""")
+            )
+            .build()
+
+        val currentYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.YEAR)
+
+        listOf(computedAttDef1, computedAttDef2).forEach { compAtt ->
+            val records = RecordsServiceFactory().recordsServiceV1
+            val result = RequestContext.doWithAtts(mapOf("comp" to compAtt)) { _ ->
+                records.getAtt(null, "\$comp").asInt()
+            }
+            assertThat(result).isEqualTo(currentYear)
+        }
+    }
+
     data class RecordValue(
         val id: String,
-        private val type: RecordRef,
+        private val type: EntityRef,
         val attAttributeValue: String,
         val attForScript: String
     ) {
 
         @AttName("_type")
-        fun getType(): RecordRef {
+        fun getType(): EntityRef {
             return type
         }
     }

@@ -2,10 +2,8 @@ package ru.citeck.ecos.records3.test.predicate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.commons.data.DataValue;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.meta.RecordsTemplateService;
 import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
@@ -15,6 +13,7 @@ import ru.citeck.ecos.records2.predicate.PredicateService;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -212,7 +211,7 @@ public class PredicateMatchTest implements Element, ElementAttributes {
 
         Predicate resolvedFilter = recordsTemplateService.resolve(
             predicate,
-            RecordRef.create("meta", "")
+            EntityRef.create("meta", "")
         );
 
         assertTrue(service.isMatch(atts, resolvedFilter));
@@ -264,10 +263,10 @@ public class PredicateMatchTest implements Element, ElementAttributes {
             "    \"val\": \"test comment\"\n" +
             "}", Predicate.class);
 
-        RecordAttsElement element = RecordAttsElement.create(new RecordAtts(RecordRef.EMPTY, atts));
+        RecordAttsElement element = RecordAttsElement.create(new RecordAtts(EntityRef.EMPTY, atts));
         Predicate resolvedFilter = recordsTemplateService.resolve(
             predicate,
-            RecordRef.create("meta", "")
+            EntityRef.create("meta", "")
         );
 
         assertTrue(service.isMatch(element, resolvedFilter));

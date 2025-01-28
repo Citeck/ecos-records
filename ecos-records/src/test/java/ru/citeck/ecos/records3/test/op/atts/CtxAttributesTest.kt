@@ -2,10 +2,10 @@ package ru.citeck.ecos.records3.test.op.atts
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,7 +31,7 @@ class CtxAttributesTest {
         )
 
         val nowYearValue = services.recordsServiceV1.getAtt(
-            RecordRef.valueOf("test@record"), "\$now|fmt('yyyy')"
+            EntityRef.valueOf("test@record"), "\$now|fmt('yyyy')"
         ).asText()
 
         assertEquals(Calendar.getInstance().get(Calendar.YEAR).toString(), nowYearValue)
@@ -39,10 +39,10 @@ class CtxAttributesTest {
         val (nowYearValue2, aaValue) = RequestContext.doWithCtx(services, { it.withCtxAtts(mapOf("aa" to "bb")) }) {
             Pair(
                 services.recordsServiceV1.getAtt(
-                    RecordRef.valueOf("test@record"), "\$now|fmt('yyyy')"
+                    EntityRef.valueOf("test@record"), "\$now|fmt('yyyy')"
                 ).asText(),
                 services.recordsServiceV1.getAtt(
-                    RecordRef.valueOf("test@record"), "\$aa"
+                    EntityRef.valueOf("test@record"), "\$aa"
                 ).asText()
             )
         }
@@ -51,7 +51,7 @@ class CtxAttributesTest {
         assertEquals("bb", aaValue)
 
         val nowMonthValue = services.recordsServiceV1.getAtt(
-            RecordRef.valueOf("test@record"), "\$now|fmt('MM')"
+            EntityRef.valueOf("test@record"), "\$now|fmt('MM')"
         ).asText()
 
         val expectedMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(Calendar.MONTH) + 1
@@ -67,7 +67,7 @@ class CtxAttributesTest {
         // context attributes should be disabled for inner values
         assertTrue(
             services.recordsServiceV1.getAtt(
-                RecordRef.valueOf("test@record"), "inner.\$now|fmt('MM')"
+                EntityRef.valueOf("test@record"), "inner.\$now|fmt('MM')"
             ).isNull()
         )
     }
@@ -75,14 +75,14 @@ class CtxAttributesTest {
     @Test
     fun strTest() {
         val records = RecordsServiceFactory().recordsServiceV1
-        val value = records.getAtt(RecordRef.create("meta", ""), "\$str.some-constant")
+        val value = records.getAtt(EntityRef.create("meta", ""), "\$str.some-constant")
         assertThat(value.asText()).isEqualTo("some-constant")
     }
 
     @Test
     fun recTest() {
         val records = RecordsServiceFactory().recordsServiceV1
-        val value = records.getAtt(RecordRef.create("meta", ""), "\$ref.meta@.time")
+        val value = records.getAtt(EntityRef.create("meta", ""), "\$ref.meta@.time")
         assertThat(value.asText()).isNotBlank()
     }
 }

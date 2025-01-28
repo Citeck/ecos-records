@@ -11,7 +11,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize as JackJsonDese
 @JackJsonDeserialize(builder = RecordComputedAttValue.Builder::class)
 data class RecordComputedAttValue(
     val type: RecordComputedAttType,
-    val config: ObjectData
+    val config: ObjectData,
+    val resultType: RecordComputedAttResType
 ) {
     companion object {
 
@@ -45,10 +46,12 @@ data class RecordComputedAttValue(
 
         var type: RecordComputedAttType = RecordComputedAttType.NONE
         var config: ObjectData = ObjectData.create()
+        var resultType: RecordComputedAttResType = RecordComputedAttResType.ANY
 
         constructor(base: RecordComputedAttValue) : this() {
             this.type = base.type
             this.config = base.config.deepCopy()
+            this.resultType = base.resultType
         }
 
         fun withType(type: RecordComputedAttType): Builder {
@@ -61,8 +64,13 @@ data class RecordComputedAttValue(
             return this
         }
 
+        fun withResultType(resultType: RecordComputedAttResType): Builder {
+            this.resultType = resultType
+            return this
+        }
+
         fun build(): RecordComputedAttValue {
-            return RecordComputedAttValue(type, config)
+            return RecordComputedAttValue(type, config, resultType)
         }
     }
 }

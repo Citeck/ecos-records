@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
@@ -12,6 +11,7 @@ import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,7 +24,7 @@ public class MetaFieldTest extends AbstractRecordsDao
                            implements RecordsAttsDao, AttValue {
 
     private static final String SOURCE_ID = "test-source";
-    private static final RecordRef RECORD_REF = RecordRef.create(SOURCE_ID, "test");
+    private static final EntityRef RECORD_REF = EntityRef.create(SOURCE_ID, "test");
 
     private RecordsService recordsService;
 

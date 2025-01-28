@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluator;
 import ru.citeck.ecos.records2.evaluator.RecordEvaluatorDto;
@@ -17,6 +16,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,9 +51,9 @@ public class EvaluatorsTest extends AbstractRecordsDao implements RecordsAttsDao
         RecordEvaluatorDto evaluatorDto = new RecordEvaluatorDto();
         evaluatorDto.setType(ID);
 
-        RecordRef meta0Ref = RecordRef.create(ID, "Meta0");
-        RecordRef meta1Ref = RecordRef.create(ID, "Meta1");
-        RecordRef unknownRef = RecordRef.create("", "unknown");
+        EntityRef meta0Ref = EntityRef.create(ID, "Meta0");
+        EntityRef meta1Ref = EntityRef.create(ID, "Meta1");
+        EntityRef unknownRef = EntityRef.create("", "unknown");
 
         assertTrue(evaluatorsService.evaluate(meta0Ref, evaluatorDto));
         assertFalse(evaluatorsService.evaluate(meta1Ref, evaluatorDto));

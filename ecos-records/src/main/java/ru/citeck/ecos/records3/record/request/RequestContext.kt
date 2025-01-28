@@ -7,12 +7,12 @@ import ru.citeck.ecos.commons.utils.func.UncheckedSupplier
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.func.UncheckedRunnable
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.request.error.RecordsError
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.request.msg.MsgType
 import ru.citeck.ecos.records3.record.request.msg.ReqMsg
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -302,7 +302,7 @@ class RequestContext {
         if (txnId == null || ctxData.readOnly) {
             return
         }
-        val mutRecords = getMap<UUID, Set<RecordRef>>(TXN_MUT_RECORDS_KEY)
+        val mutRecords = getMap<UUID, Set<EntityRef>>(TXN_MUT_RECORDS_KEY)
         val txnRecords = mutRecords[txnId] ?: emptySet()
 
         val beforeCommitActions = getList<OrderedAction>(BEFORE_COMMIT_ACTIONS_KEY)
@@ -403,9 +403,9 @@ class RequestContext {
         }
     }
 
-    fun getTxnChangedRecords(): MutableSet<RecordRef>? {
+    fun getTxnChangedRecords(): MutableSet<EntityRef>? {
         val txnId = ctxData.txnId ?: return null
-        return getMap<UUID, MutableSet<RecordRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
+        return getMap<UUID, MutableSet<EntityRef>>(TXN_MUT_RECORDS_KEY).computeIfAbsent(txnId) { LinkedHashSet() }
     }
 
     fun <T : Any> doWithVar(key: String, data: Any?, action: () -> T?): T? {

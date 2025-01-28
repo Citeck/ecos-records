@@ -2,12 +2,12 @@ package ru.citeck.ecos.records2.graphql.meta.value;
 
 import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.QueryContext;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records2.graphql.meta.value.impl.MetaAttValue;
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttValueUtils;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ public class MetaValuesConverter {
 
     public MetaValue toMetaValue(Object value) {
 
-        if (value == null || value instanceof RecordRef && RecordRef.isEmpty((RecordRef) value)) {
+        if (value == null || value instanceof EntityRef && EntityRef.isEmpty((EntityRef) value)) {
             return null;
         }
         if (value instanceof MetaValue) {

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsService;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
@@ -14,6 +13,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +49,7 @@ class LocalRecordsTest {
     @Test
     void testRecordWithComplexSourceId() {
 
-        RecordRef ref = RecordRef.valueOf(RecordsSource.ID + "@first@second");
+        EntityRef ref = EntityRef.valueOf(RecordsSource.ID + "@first@second");
         RecordAtts meta = recordsService.getAtts(ref, Collections.singleton("localId"));
 
         assertEquals(ref, meta.getId());
@@ -62,7 +62,7 @@ class LocalRecordsTest {
             .withSourceId(RecordsWithMetaSource.ID)
             .build();
 
-        RecsQueryRes<RecordRef> result = recordsService.query(query);
+        RecsQueryRes<EntityRef> result = recordsService.query(query);
 
         assertEquals(1, result.getRecords().size());
     }
@@ -98,7 +98,7 @@ class LocalRecordsTest {
         @Override
         public List<Meta> getRecordsAtts(@NotNull List<String> records) {
             return records.stream()
-                .map(r -> new Meta(r, r))
+                .map(r -> new Meta(ID + '@' + r, r))
                 .collect(Collectors.toList());
         }
 

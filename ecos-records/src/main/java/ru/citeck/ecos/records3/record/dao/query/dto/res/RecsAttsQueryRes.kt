@@ -1,7 +1,7 @@
 package ru.citeck.ecos.records3.record.dao.query.dto.res
 
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 /**
  * Used to deserialize query result with RecordAtts.
@@ -14,7 +14,7 @@ class RecsAttsQueryRes : RecsQueryRes<RecordAtts> {
 
     fun addSourceId(sourceId: String): RecsAttsQueryRes {
         for (record in getRecords()) {
-            record.setId(RecordRef.create(sourceId, record.getId().toString()))
+            record.setId(EntityRef.create(sourceId, record.getId().toString()))
         }
         return this
     }

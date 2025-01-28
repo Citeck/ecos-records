@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records2.source.dao.local.meta;
 
 import org.jetbrains.annotations.NotNull;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao;
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue;
 import ru.citeck.ecos.records3.record.atts.value.AttValue;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -122,7 +122,7 @@ public class MetaRecordsDao extends AbstractRecordsDao implements RecordsAttsDao
 
         @Override
         public Object getAtt(@NotNull String name) {
-            return RecordRef.valueOf(name);
+            return EntityRef.valueOf(name);
         }
     }
 

@@ -7,13 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import ru.citeck.ecos.records2.RecordMeta;
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao;
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts;
-import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.RecordElement;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery;
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes;
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.util.*;
 
@@ -53,7 +53,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
                 checkResult.add(predicateService.isMatch(element, resolved));
             }
 
-            RecordRef recordRef = query.getRecords().get(idx++);
+            EntityRef recordRef = query.getRecords().get(idx++);
             queryResult.addRecord(new PredicateCheckResult(recordRef, checkResult));
         }
 
@@ -63,7 +63,7 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
     @Data
     @RequiredArgsConstructor
     public static class PredicateCheckResult {
-        private final RecordRef record;
+        private final EntityRef record;
         private final List<Boolean> result;
     }
 
@@ -71,11 +71,11 @@ public class PredicateRecords extends AbstractRecordsDao implements RecordsQuery
     public static class PredicateCheckQuery {
 
         @NotNull
-        private List<RecordRef> records = Collections.emptyList();
+        private List<EntityRef> records = Collections.emptyList();
         @NotNull
         private List<Predicate> predicates = Collections.emptyList();
 
-        public void setRecord(RecordRef recordRef) {
+        public void setRecord(EntityRef recordRef) {
             records = Collections.singletonList(recordRef);
         }
 

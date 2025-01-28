@@ -5,7 +5,6 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
@@ -48,8 +47,12 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private val typeService = services.recordTypeService
 
     private val currentAppName = services.webappProps.appName
+    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
     private val defaultAppName = services.properties.defaultApp
+
     private val currentAppSourceIdPrefix = "$currentAppName/"
+    private val currentAppSourceIdInstancePrefix = "$currentAppRef/"
+
     private val isGatewayMode = services.webappProps.gatewayMode
     private val legacyApiMode = services.properties.legacyApiMode
 
@@ -77,7 +80,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         }
         val records = rawRecords.map {
             if (it is String) {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             } else {
                 it
             }
@@ -99,31 +102,26 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         }
 
         val recordObjs = ArrayList<ValWithIdx<Any?>>()
-        val recordRefs = ArrayList<ValWithIdx<RecordRef>>()
+        val recordRefs = ArrayList<ValWithIdx<EntityRef>>()
 
         for ((idx, rec) in records.withIndex()) {
-            val fixedRef = if (rec is EntityRef && rec !is RecordRef) {
-                RecordRef.create(rec.getAppName(), rec.getSourceId(), rec.getLocalId())
-            } else {
-                rec
-            }
-            if (fixedRef is RecordRef) {
-                val virtualRec = virtualRecords[fixedRef.withDefaultAppName(currentAppName)]
+            if (rec is EntityRef) {
+                val virtualRec = virtualRecords[rec.withDefaultAppName(currentAppName)]
                 if (virtualRec != null) {
                     recordObjs.add(ValWithIdx(virtualRec, idx))
                 } else {
-                    if (RecordRef.isNotEmpty(fixedRef) || local.hasDaoWithEmptyId()) {
-                        if (virtualRecords.contains(fixedRef)) {
-                            recordObjs.add(ValWithIdx(fixedRef, idx))
+                    if (EntityRef.isNotEmpty(rec) || local.hasDaoWithEmptyId()) {
+                        if (virtualRecords.containsKey(rec)) {
+                            recordObjs.add(ValWithIdx(rec, idx))
                         } else {
-                            recordRefs.add(ValWithIdx(fixedRef, idx))
+                            recordRefs.add(ValWithIdx(rec, idx))
                         }
                     } else {
                         recordObjs.add(ValWithIdx(NullAttValue.INSTANCE, idx))
                     }
                 }
             } else {
-                recordObjs.add(ValWithIdx(fixedRef, idx))
+                recordObjs.add(ValWithIdx(rec, idx))
             }
         }
 
@@ -166,7 +164,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private fun loadAttsForRefsWithCache(
         context: RequestContext,
         sourceId: String,
-        recs: List<ValWithIdx<RecordRef>>,
+        recs: List<ValWithIdx<EntityRef>>,
         attsMap: AttsMap,
         rawAtts: Boolean
     ): List<ValWithIdx<RecordAtts>> {
@@ -188,8 +186,8 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 REFS_CACHE_NOT_RAW_KEY
             }
         }
-        val recordsCache: MutableMap<RecordRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
-        val cachedAttsWithAliases: MutableMap<String, String> = HashMap(
+        val recordsCache: MutableMap<EntityRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
+        val possibleCachedAttsWithAliases: MutableMap<String, String> = HashMap(
             attsMap.getAttributes().entries.mapNotNull {
                 val value = it.value
                 if (value !is String) {
@@ -200,18 +198,38 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             }.toMap()
         )
 
-        if (cachedAttsWithAliases.isEmpty()) {
+        if (possibleCachedAttsWithAliases.isEmpty()) {
             return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
         }
 
-        val cacheByRecord = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
-        val cachedAttValues = recs.map { HashMap<String, DataValue>() }
+        val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
+        val recordsAttValuesFromCache = recs.map { HashMap<String, DataValue>() }
+
+        // cache won't be used if one of requested records doesn't have
+        // cached value for attribute. So if we call
+        // getAtts(rec0, atts)
+        // getAtts(rec0, atts)
+        // getAtts(rec0, atts)
+        // then cache will work, but if we call
+        // getAtts(listOf(rec0, rec1), atts)
+        // then attributes for rec0 will be loaded again and next calls
+        // getAtts(listOf(rec0, rec1), atts)
+        // getAtts(listOf(rec0), atts)
+        // getAtts(listOf(rec1), atts)
+        // will return values from cache.
+        // This limitation can be overcome when we
+        // implement the ability to specify different attributes
+        // for different records in one query.
+
+        // one set for all records to exclude unnecessary instantiations
+        // this set used in array as empty set for each record
         val notCachedAtts = hashSetOf<String>()
 
-        for ((idx, cache) in cacheByRecord.withIndex()) {
-            val cachedRecordAttValues = cachedAttValues[idx]
+        // clan possible cached attributes when attribute is not cached for any record
+        for ((idx, cache) in cacheForRecords.withIndex()) {
+            val recordAttValuesFromCache = recordsAttValuesFromCache[idx]
             notCachedAtts.clear()
-            cachedAttsWithAliases.forEach { (alias, attribute) ->
+            possibleCachedAttsWithAliases.forEach { (alias, attribute) ->
                 // context attributes should not be cached
                 val valueFromCache = if (!attribute.startsWith("$")) {
                     cache[attribute]
@@ -221,32 +239,37 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 if (valueFromCache == null) {
                     notCachedAtts.add(alias)
                 } else {
-                    cachedRecordAttValues[alias] = valueFromCache
+                    recordAttValuesFromCache[alias] = valueFromCache
                 }
             }
-            notCachedAtts.forEach { cachedAttsWithAliases.remove(it) }
-            if (cachedAttsWithAliases.isNotEmpty()) {
+            notCachedAtts.forEach { possibleCachedAttsWithAliases.remove(it) }
+            if (possibleCachedAttsWithAliases.isEmpty()) {
+                // We don't have cached attributes. Next iterations are not required
                 break
             }
         }
 
-        val attsToLoad = if (cachedAttsWithAliases.isEmpty()) {
+        val attsToLoad = if (possibleCachedAttsWithAliases.isEmpty()) {
             attsMap.getAttributes()
         } else {
-            attsMap.getAttributes().filter { cachedAttsWithAliases[it.key] == null }.toMap()
+            attsMap.getAttributes().filter { possibleCachedAttsWithAliases[it.key] == null }.toMap()
         }
 
         val loadedAtts = loadAttsForRefs(context, sourceId, recs, AttsMap(attsToLoad), rawAtts)
         loadedAtts.forEachIndexed { idx, recordAttsWithIdx ->
 
             val recAtts = recordAttsWithIdx.value
-            val recCache = cacheByRecord[idx]
+            val recCache = cacheForRecords[idx]
 
-            recAtts.getAtts().forEach { key, value ->
-                recCache[key] = value
+            val attsByAlias = attsMap.getAttributes()
+            recAtts.getAtts().forEach { alias, value ->
+                val loadedAtt = attsByAlias[alias]
+                if (loadedAtt is String && loadedAtt.isNotBlank()) {
+                    recCache[loadedAtt] = value
+                }
             }
 
-            val cachedRecordAttValues = cachedAttValues[idx]
+            val cachedRecordAttValues = recordsAttValuesFromCache[idx]
             cachedRecordAttValues.forEach { (alias, value) ->
                 recAtts.setAtt(alias, value)
             }
@@ -257,7 +280,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     private fun loadAttsForRefs(
         context: RequestContext,
         sourceId: String,
-        recs: List<ValWithIdx<RecordRef>>,
+        recs: List<ValWithIdx<EntityRef>>,
         attsMap: AttsMap,
         rawAtts: Boolean
     ): List<ValWithIdx<RecordAtts>> {
@@ -269,13 +292,13 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             return recs.map { ValWithIdx(RecordAtts(it.value), it.idx) }
         }
 
-        val refs: List<RecordRef> = recs.map { it.value }
+        val refs: List<EntityRef> = recs.map { it.value }
 
         val remote = this.remote
         val atts: List<RecordAtts> = if (remote != null && (isGatewayMode || isRemoteSourceId(sourceId))) {
             remote.getAtts(refs, attsMap.getAttributes(), rawAtts)
         } else {
-            local.getRecordsAtts(getLocalSourceId(sourceId), refs.map { it.id }, attsMap.getParsedAtts(), rawAtts)
+            local.getRecordsAtts(getLocalSourceId(sourceId), refs.map { it.getLocalId() }, attsMap.getParsedAtts(), rawAtts)
         }
         return if (atts.size != refs.size) {
             context.addMsg(MsgLevel.ERROR) {
@@ -298,7 +321,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val recsAttsToLoad = ArrayList<Map<String, *>>()
 
         val allRecsAfterMutate = ArrayList<ValWithIdx<RecordAtts>>()
-        val refsByAliases = HashMap<String, RecordRef>()
+        val refsByAliases = HashMap<String, EntityRef>()
 
         var appToMutate = ""
 
@@ -310,7 +333,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             recsToMutate.reverse()
             recsAttsToLoad.reverse()
             val recsAfterMutate = mutateForApp(
-                appToMutate == currentAppName,
+                appToMutate == currentAppName || appToMutate == currentAppRef,
                 recsToMutate.map { it.value },
                 recsAttsToLoad,
                 rawAtts
@@ -338,7 +361,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 recsAttsToLoad.add(attsToLoad.getOrNull(i) ?: emptyMap<String, Any>())
                 // we should not batch local records for correct
                 // working of convertAssocValues function
-                if (appToMutate == currentAppName) {
+                if (appToMutate == currentAppName || appToMutate == currentAppRef) {
                     flushRecords()
                 }
             } else {
@@ -383,7 +406,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 result.add(
                     local.mutateRecord(
                         sourceId,
-                        LocalRecordAtts(record.getId().id, record.getAtts()),
+                        LocalRecordAtts(record.getId().getLocalId(), record.getAtts()),
                         attsToLoadForRecord,
                         rawAtts
                     )
@@ -395,10 +418,10 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     }
 
     private fun getLocalSourceId(ref: EntityRef): String {
-        val app = ref.getAppName()
+        val appName = ref.getAppName()
         val srcId = ref.getSourceId()
-        return if (app.isNotBlank() && app != currentAppName) {
-            app + EntityRef.APP_NAME_DELIMITER + srcId
+        return if (appName.isNotBlank() && appName != currentAppName && appName != currentAppRef) {
+            appName + EntityRef.APP_NAME_DELIMITER + srcId
         } else {
             srcId
         }
@@ -411,22 +434,25 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         if (sourceId.startsWith(currentAppSourceIdPrefix)) {
             return sourceId.substring(currentAppSourceIdPrefix.length)
         }
+        if (sourceId.startsWith(currentAppSourceIdInstancePrefix)) {
+            return sourceId.substring(currentAppSourceIdInstancePrefix.length)
+        }
         return sourceId
     }
 
-    private fun getTargetAppName(ref: RecordRef): String {
-        return if (ref.appName.isEmpty()) {
+    private fun getTargetAppName(ref: EntityRef): String {
+        return if (ref.getAppName().isEmpty()) {
             if (isGatewayMode) {
                 defaultAppName
             } else {
                 currentAppName
             }
         } else {
-            val sourceId = ref.appName + RecordRef.APP_NAME_DELIMITER + ref.sourceId
+            val sourceId = ref.getAppName() + EntityRef.APP_NAME_DELIMITER + ref.getSourceId()
             if (local.containsDao(sourceId)) {
                 currentAppName
             } else {
-                ref.appName
+                ref.getAppName()
             }
         }
     }
@@ -445,7 +471,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         return ""
     }
 
-    private fun convertAssocValues(record: RecordAtts, assocsMapping: Map<String, RecordRef>) {
+    private fun convertAssocValues(record: RecordAtts, assocsMapping: Map<String, EntityRef>) {
 
         val recAtts = ObjectData.create()
 
@@ -460,7 +486,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         record.setAtts(recAtts)
     }
 
-    private fun convertAssocValue(value: DataValue, mapping: Map<String, RecordRef>): DataValue {
+    private fun convertAssocValue(value: DataValue, mapping: Map<String, EntityRef>): DataValue {
         if (mapping.isEmpty()) {
             return value
         }
@@ -536,11 +562,11 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         return local.isSourceTransactional(getLocalSourceId(sourceId))
     }
 
-    fun commit(recordRefs: List<RecordRef>) {
+    fun commit(recordRefs: List<EntityRef>) {
         commit(recordRefs, false)
     }
 
-    fun commit(recordRefs: List<RecordRef>, skipRemote: Boolean) {
+    fun commit(recordRefs: List<EntityRef>, skipRemote: Boolean) {
         doWithGroupOfRemoteOrLocalInAnyOrder(recordRefs) { refs, isRemote ->
             if (isRemote) {
                 if (!skipRemote) {
@@ -548,7 +574,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 }
             } else {
                 doWithGroupsInSameOrder(recordRefs, { r0, r1, _, _ ->
-                    r0.appName == r1.appName && r0.sourceId == r1.sourceId
+                    r0.getAppName() == r1.getAppName() && r0.getSourceId() == r1.getSourceId()
                 }) { groupedRefs, _ ->
                     local.commit(getLocalSourceId(groupedRefs[0]), groupedRefs.map { it.getLocalId() })
                     emptyList<Unit>()
@@ -557,11 +583,11 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         }
     }
 
-    fun rollback(recordRefs: List<RecordRef>) {
+    fun rollback(recordRefs: List<EntityRef>) {
         return rollback(recordRefs, false)
     }
 
-    fun rollback(recordRefs: List<RecordRef>, skipRemote: Boolean) {
+    fun rollback(recordRefs: List<EntityRef>, skipRemote: Boolean) {
         doWithGroupOfRemoteOrLocalInAnyOrder(recordRefs) { refs, isRemote ->
             if (isRemote) {
                 if (!skipRemote) {
@@ -569,7 +595,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
                 }
             } else {
                 doWithGroupsInSameOrder(recordRefs, { r0, r1, _, _ ->
-                    r0.appName == r1.appName && r0.sourceId == r1.sourceId
+                    r0.getAppName() == r1.getAppName() && r0.getSourceId() == r1.getSourceId()
                 }) { groupedRefs, _ ->
 
                     local.rollback(
@@ -583,8 +609,8 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     }
 
     private fun doWithGroupOfRemoteOrLocalInAnyOrder(
-        recordRefs: List<RecordRef>,
-        action: (List<RecordRef>, Boolean) -> Unit
+        recordRefs: List<EntityRef>,
+        action: (List<EntityRef>, Boolean) -> Unit
     ) {
         if (recordRefs.isEmpty()) {
             return
@@ -593,8 +619,8 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             action.invoke(recordRefs, false)
             return
         }
-        val remoteRecs = mutableListOf<RecordRef>()
-        val localRecs = mutableListOf<RecordRef>()
+        val remoteRecs = mutableListOf<EntityRef>()
+        val localRecs = mutableListOf<EntityRef>()
         recordRefs.forEach {
             if (isRemoteRef(it)) {
                 remoteRecs.add(it)
@@ -637,7 +663,9 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         return if (local.containsDao(getLocalSourceId(sourceId))) {
             false
         } else {
-            sourceId.contains("/") && !sourceId.startsWith(currentAppSourceIdPrefix)
+            sourceId.contains("/") &&
+                !sourceId.startsWith(currentAppSourceIdPrefix) &&
+                !sourceId.startsWith(currentAppSourceIdInstancePrefix)
         }
     }
 
@@ -718,7 +746,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
     }
 
     fun containsVirtualRecord(ref: EntityRef): Boolean {
-        return virtualRecords.contains(ref.withDefaultAppName(currentAppName))
+        return virtualRecords.containsKey(ref.withDefaultAppName(currentAppName))
     }
 
     fun registerVirtualRecord(ref: EntityRef, value: Any) {

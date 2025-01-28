@@ -85,7 +85,7 @@ public class RecordsUtils {
 
     public static List<EntityRef> toLocalRecords(Collection<EntityRef> records) {
         return records.stream()
-                      .map(r -> EntityRef.valueOf(r.getLocalId()))
+                      .map(r -> EntityRef.EMPTY.withId(r.getLocalId()))
                       .collect(Collectors.toList());
     }
 

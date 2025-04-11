@@ -4,6 +4,7 @@ import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueProxy
@@ -173,7 +174,9 @@ open class RecordsDaoProxy(
         val result = LinkedHashMap<String, String>()
 
         schemaAtts.forEach { att ->
-            result[att.getAliasForValue()] = writer.write(att)
+            if (att.name != ScalarType.ID_SCHEMA) {
+                result[att.getAliasForValue()] = writer.write(att)
+            }
         }
 
         return result

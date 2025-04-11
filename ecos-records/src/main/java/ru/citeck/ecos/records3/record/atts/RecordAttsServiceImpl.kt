@@ -52,8 +52,15 @@ class RecordAttsServiceImpl : RecordAttsService, ServiceFactoryAware {
                         .withInner(flatAtts)
                         .build()
                 )
-                attContext.setAttPath("")
+            } else {
+                attContext.setSchemaAtt(
+                    SchemaAtt.create()
+                        .withName(SchemaAtt.ROOT_NAME)
+                        .withInner(AttContext.EMPTY)
+                        .build()
+                )
             }
+            attContext.setAttPath("")
             try {
                 action.invoke(atts)
             } finally {

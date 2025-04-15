@@ -14,6 +14,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
         private val strCtxAtt = AttFuncValue { it }
         private val refCtxAtt = AttFuncValue { EntityRef.valueOf(it) }
+        private val numCtxAtt = AttFuncValue { it.toDouble() }
         private val authCtxAtt = AuthContextValue()
     }
 
@@ -23,6 +24,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
         attributes["now"] = { Instant.now() }
         attributes["str"] = strCtxAtt
+        attributes["num"] = numCtxAtt
         attributes["ref"] = refCtxAtt
         attributes["auth"] = authCtxAtt
 

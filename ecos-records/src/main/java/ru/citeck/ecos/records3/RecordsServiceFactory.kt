@@ -312,7 +312,8 @@ open class RecordsServiceFactory {
             AttYamlProcessor(),
             AttPlusProcessor(),
             AttUpperCaseProcessor(),
-            AttLowerCaseProcessor()
+            AttLowerCaseProcessor(),
+            *AttCompareProc.getProcessors().toTypedArray()
         )
     }
 

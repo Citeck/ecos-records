@@ -116,7 +116,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
     private fun getProcessor(type: String): AttProcessor? {
         val proc: AttProcessor? = processors[type]
         if (proc == null) {
-            log.error("Attribute processor doesn't found for type '$type'")
+            log.error { "Attribute processor doesn't found for type '$type'" }
         }
         return proc
     }

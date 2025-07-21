@@ -22,13 +22,15 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.read.proc.AttWithProc
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.mime.MimeType
-import java.lang.reflect.*
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
-import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
@@ -107,7 +109,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     }
 
     private fun getAttributes(attsClass: Class<*>, visited: MutableSet<Class<*>>?): List<SchemaAtt> {
-        val isRoot = visited == null || visited.isEmpty()
+        val isRoot = visited.isNullOrEmpty()
         var attributes = attributesCache[attsClass]
         if (attributes == null) {
             attributes = getAttributesImpl(attsClass, visited ?: HashSet())
@@ -244,18 +246,12 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return res as ScalarField<Any>?
     }
 
-    private fun getAttributeSchema(
-        scope: Class<*>,
-        argument: KParameter?,
-        writeMethod: Method?,
-        fieldName: String,
-        multiple: Boolean,
-        scalarField: ScalarField<*>?,
+    private fun getInnerAttsForProp(
+        visited: MutableSet<Class<*>>,
         propType: Class<*>,
-        visited: MutableSet<Class<*>>
-    ): SchemaAtt? {
-
-        val innerAtts = if (scalarField == null) {
+        scalarField: ScalarField<*>?
+    ): List<SchemaAtt> {
+        return if (scalarField == null) {
             if (propType.isEnum) {
                 mutableListOf(
                     SchemaAtt.create()
@@ -272,6 +268,19 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     .build()
             )
         }
+    }
+
+    private fun getAttributeSchema(
+        scope: Class<*>,
+        argument: KParameter?,
+        writeMethod: Method?,
+        fieldName: String,
+        multiple: Boolean,
+        scalarField: ScalarField<*>?,
+        propType: Class<*>,
+        visited: MutableSet<Class<*>>
+    ): SchemaAtt? {
+
         var attNameValue: String? = null
         val attName: AttName? = getAnnotation(argument, writeMethod, scope, fieldName, AttName::class.java)
         if (attName != null) {
@@ -288,7 +297,19 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
             val attWithProc: AttWithProc = attProcReader.read(attNameValue ?: "")
             processors = attWithProc.processors
             attNameValue = attWithProc.attribute.trim()
-            val schemaAtt: SchemaAtt = attSchemaReader.readInner(fieldName, attNameValue, processors, innerAtts)
+
+            val innerProps = if (attNameValue.endsWith("}") && !attNameValue.startsWith(".")) {
+                emptyList()
+            } else {
+                getInnerAttsForProp(visited, propType, scalarField)
+            }
+
+            val schemaAtt: SchemaAtt = attSchemaReader.readInner(
+                fieldName,
+                attNameValue,
+                processors,
+                innerProps
+            )
             att = schemaAtt.copy()
             if (multiple && !schemaAtt.multiple) {
                 var innerAtt = schemaAtt
@@ -317,7 +338,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     .withMultiple(multiple)
                     .withAlias(fieldName)
                     .withName(fieldName)
-                    .withInner(innerAtts)
+                    .withInner(getInnerAttsForProp(visited, propType, scalarField))
             }
         }
         return att.build()

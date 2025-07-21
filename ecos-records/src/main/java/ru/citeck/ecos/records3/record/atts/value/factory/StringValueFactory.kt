@@ -7,6 +7,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.NumberFormatException
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("unused")
 class StringValueFactory : AttValueFactory<String> {
 
     companion object {
@@ -60,7 +61,7 @@ class StringValueFactory : AttValueFactory<String> {
     fun addConverter(type: String, converter: (String) -> Any?) {
         val currentConverter = converters[type]
         if (currentConverter != null) {
-            log.warn("Converter with type $type ($currentConverter) will be replaced by $converter")
+            log.warn { "Converter with type $type ($currentConverter) will be replaced by $converter" }
         }
         converters[type] = converter
     }

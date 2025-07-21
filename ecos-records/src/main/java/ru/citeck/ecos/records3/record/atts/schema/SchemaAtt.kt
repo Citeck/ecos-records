@@ -6,6 +6,7 @@ import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.exception.AttSchemaException
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaWriterV2
 
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 @JsonDeserialize(builder = SchemaAtt.Builder::class)
 data class SchemaAtt(
     val alias: String,
@@ -87,6 +88,32 @@ data class SchemaAtt(
 
     override fun toString(): String {
         return AttSchemaWriterV2.INSTANCE.write(this)
+    }
+
+    override fun equals(other: Any?): Boolean {
+
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
+        other as SchemaAtt
+
+        return multiple == other.multiple &&
+            alias == other.alias &&
+            name == other.name &&
+            inner == other.inner &&
+            processors == other.processors
+    }
+
+    override fun hashCode(): Int {
+        var result = multiple.hashCode()
+        result = 31 * result + alias.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + inner.hashCode()
+        result = 31 * result + processors.hashCode()
+        return result
     }
 
     class Builder() {

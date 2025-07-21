@@ -58,6 +58,6 @@ class AttCompareProc private constructor(
         LE,
         LIKE,
         IN,
-        CONTAINS;
+        CONTAINS
     }
 }

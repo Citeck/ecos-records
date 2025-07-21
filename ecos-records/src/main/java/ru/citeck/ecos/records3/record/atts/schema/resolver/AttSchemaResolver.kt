@@ -53,6 +53,7 @@ import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
 
+@Suppress("SameParameterValue")
 class AttSchemaResolver : ServiceFactoryAware {
 
     companion object {
@@ -531,7 +532,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                     } catch (e: Exception) {
                         val msg = "Resolving error. Path: $attPath. Att: $computedAtt"
                         context.reqContext.addMsg(MsgLevel.ERROR) { msg }
-                        log.error(msg, e)
+                        log.error(e) { msg }
                         null
                     } finally {
                         disabledComputedPaths.remove(attPath)
@@ -560,7 +561,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                         } catch (e: Exception) {
                             val msg = "Resolving error. Path: $attPath"
                             context.reqContext.addMsg(MsgLevel.ERROR) { msg }
-                            log.error(msg, e)
+                            log.error(e) { msg }
                             null
                         } finally {
                             disabledMixinPaths.remove(attPath)
@@ -771,8 +772,8 @@ class AttSchemaResolver : ServiceFactoryAware {
             val schemaAtt = attContext.getSchemaAtt()
             val name = schemaAtt.name
 
-            if (log.isTraceEnabled) {
-                log.trace("Resolve $schemaAtt")
+            if (log.isTraceEnabled()) {
+                log.trace { "Resolve $schemaAtt" }
             }
 
             val res: Any? = try {
@@ -796,8 +797,8 @@ class AttSchemaResolver : ServiceFactoryAware {
                 null
             }
 
-            if (log.isTraceEnabled) {
-                log.trace("Result: $res")
+            if (log.isTraceEnabled()) {
+                log.trace { "Result: $res" }
             }
             return res
         }
@@ -825,6 +826,7 @@ class AttSchemaResolver : ServiceFactoryAware {
             return if (scalarType != null) {
                 getScalar(scalarType, attribute)
             } else {
+                @Suppress("DEPRECATION")
                 when (attribute) {
                     RecordConstants.ATT_TYPE,
                     RecordConstants.ATT_ECOS_TYPE -> typeRefValue
@@ -1034,7 +1036,7 @@ class AttSchemaResolver : ServiceFactoryAware {
                     }
                 }
             } catch (e: Exception) {
-                log.error("Computed atts resolving error", e)
+                log.error(e) { "Computed atts resolving error" }
             }
             return computedAtts
         }

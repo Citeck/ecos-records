@@ -20,6 +20,7 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
+@Suppress("unused")
 class RequestContext {
 
     companion object {
@@ -272,10 +273,10 @@ class RequestContext {
 
         var value = ctxVars.computeIfAbsent(key) { newValue.invoke() }
         if (!type.isInstance(value)) {
-            log.warn(
+            log.warn {
                 "Context data with the key '" + key + "' is not an instance of a " + type + ". " +
                     "Data will be overridden. Current data: " + value
-            )
+            }
             value = newValue.invoke()
             ctxVars[key] = value
         }

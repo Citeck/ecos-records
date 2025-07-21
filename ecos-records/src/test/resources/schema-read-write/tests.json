@@ -1,6 +1,47 @@
 {
   "tests": [
     {
+      "att": "record.nestedProjects[]{projectRef:?id!'',workspaceRef:assoc_src_workspaceManagedBy?id}!",
+      "expAfterWrite": "record.nestedProjects[]{projectRef:?id|or(''),workspaceRef:assoc_src_workspaceManagedBy?id}|or([])",
+      "exp": {
+        "name": "record",
+        "inner": [
+          {
+            "alias": "",
+            "name": "nestedProjects",
+            "multiple": true,
+            "inner": [
+              {
+                "alias": "projectRef",
+                "name": "?id",
+                "processors": [
+                  {
+                    "type": "or",
+                    "arguments": [""]
+                  }
+                ]
+              },
+              {
+                "alias": "workspaceRef",
+                "name": "assoc_src_workspaceManagedBy",
+                "inner": [
+                  {
+                    "name": "?id"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "processors": [
+          {
+            "type": "or",
+            "arguments": [[]]
+          }
+        ]
+      }
+    },
+    {
       "att": "a{b\\:c:def}",
       "expAfterWrite": "a{b\\:c:def}",
       "exp": {

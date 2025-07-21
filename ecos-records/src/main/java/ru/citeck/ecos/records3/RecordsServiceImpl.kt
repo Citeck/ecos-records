@@ -34,9 +34,7 @@ open class RecordsServiceImpl(
     private lateinit var attSchemaWriter: AttSchemaWriter
     private lateinit var recordTypeService: RecordTypeService
 
-    private val isGatewayMode = services.webappProps.gatewayMode
     private val currentAppName = services.webappProps.appName
-    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
 
     /* QUERY */
 
@@ -97,7 +95,7 @@ open class RecordsServiceImpl(
 
         val schema = dtoSchemaReader.read(attributes)
         if (schema.isEmpty()) {
-            log.warn("Attributes is empty. Query will return empty meta. AttsClass: $attributes")
+            log.warn { "Attributes is empty. Query will return empty meta. AttsClass: $attributes" }
         }
         val attsValues = getAtts(records, attSchemaWriter.writeToMap(schema))
         return attsValues.map {

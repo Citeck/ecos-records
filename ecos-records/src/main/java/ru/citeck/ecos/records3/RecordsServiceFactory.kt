@@ -137,8 +137,6 @@ open class RecordsServiceFactory {
 
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
 
-    private var tmpRecordsService: RecordsService? = null
-
     private var recordTypeComponent: RecordTypeComponent? = null
 
     val micrometerContext: EcosMicrometerContext by lazy { createMicrometerContext() }
@@ -200,7 +198,7 @@ open class RecordsServiceFactory {
             check(!webappProps.gatewayMode) {
                 "WebAppContext should not be null in gateway mode! Props: $properties"
             }
-            log.trace("EcosWebAppApi does not exists. Remote records requests wont be allowed")
+            log.trace { "EcosWebAppApi does not exists. Remote records requests wont be allowed" }
             null
         }
     }

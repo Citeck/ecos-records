@@ -5,6 +5,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttEdge
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.func.UncheckedSupplier
 
+@Suppress("unused")
 open class SimpleAttEdge : AttEdge {
 
     companion object {
@@ -36,7 +37,7 @@ open class SimpleAttEdge : AttEdge {
             getValueFunc != null -> getValueFunc.get()
             scope != null -> scope.getAtt(name)
             else -> {
-                log.warn("Scope and getValueFunc is null")
+                log.warn { "Scope and getValueFunc is null" }
                 null
             }
         }

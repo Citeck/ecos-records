@@ -4,9 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import java.time.Duration
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 class AttInverseProcessorTest {
 

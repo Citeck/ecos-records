@@ -15,7 +15,7 @@ import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 
-class AttSchemaReader(private val services: RecordsServiceFactory) {
+class AttSchemaReader(services: RecordsServiceFactory) {
 
     companion object {
 
@@ -30,7 +30,7 @@ class AttSchemaReader(private val services: RecordsServiceFactory) {
         private val GQL_EDGE_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "edge"))
         private val GQL_AS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT_WITH_INNER, "as"))
         private val GQL_HAS_PATTERN = Pattern.compile(String.format(GQL_ONE_ARG_ATT, "has"))
-        private val GQL_SIMPLE_AS_PATTERN = Pattern.compile("\\?as\\((n:)?[\\'\"](.+?)[\\'\"]\\)")
+        private val GQL_SIMPLE_AS_PATTERN = Pattern.compile("\\?as\\((n:)?['\"](.+?)['\"]\\)")
 
         private val FIXED_ROOT_ATTS_MAPPING = mapOf(
             Pair(".type{id}", "_type?id"),
@@ -73,9 +73,9 @@ class AttSchemaReader(private val services: RecordsServiceFactory) {
             } catch (e: AttSchemaException) {
                 schemaAtts.add(ATT_NULL.withAlias(key))
                 val message = e.message ?: "Error while attribute reading. Alias: '$key' Attribute: '$value'"
-                if (log.isWarnEnabled) {
+                if (log.isWarnEnabled()) {
                     log.warn { message }
-                } else if (log.isDebugEnabled) {
+                } else if (log.isDebugEnabled()) {
                     log.trace(e) { message }
                 }
             }

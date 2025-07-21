@@ -42,7 +42,11 @@ class AttProcReader {
             if (!AttStrUtils.isInQuotes(orElsePart)) {
                 if (orElsePart.isEmpty()) {
                     orElsePart = if (beforeOrElsePart.endsWith("}")) {
-                        "{}"
+                        if (AttStrUtils.indexOf(beforeOrElsePart, "[]") != -1) {
+                            "[]"
+                        } else {
+                            "{}"
+                        }
                     } else if (beforeOrElsePart.contains("[]")) {
                         "[]"
                     } else {

@@ -85,7 +85,7 @@ class BeanTypeContext(
                 if (getAttMethod != null) {
                     return getAttMethod.invoke(bean, name)
                 } else {
-                    log.trace("Property not found: " + name + " in type " + bean.javaClass)
+                    log.trace { "Property not found: " + name + " in type " + bean.javaClass }
                 }
                 null
             }

@@ -26,9 +26,9 @@ class MLTextValueFactory : AttValueFactory<MLText> {
             }
             val locale = if (name.contains("_")) {
                 val countryAndLang = name.split("_")
-                Locale(countryAndLang[0], countryAndLang[1])
+                Locale.of(countryAndLang[0], countryAndLang[1])
             } else {
-                Locale(name)
+                Locale.of(name)
             }
             return if (closest) {
                 value.getClosestValue(locale)
@@ -42,7 +42,7 @@ class MLTextValueFactory : AttValueFactory<MLText> {
         }
 
         override fun has(name: String): Boolean {
-            return value.has(Locale(name))
+            return value.has(Locale.of(name))
         }
 
         override fun getAs(type: String): Any? {

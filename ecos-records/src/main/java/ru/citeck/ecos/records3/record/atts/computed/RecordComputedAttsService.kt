@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.computed
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -185,7 +186,11 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
         if (value == null) {
             return null
         }
-        return if (value is Collection<*>) {
+        return if (value is ArrayNode) {
+            value.mapNotNull { convertResult(it, action) }
+        } else if (value is DataValue && value.isArray()) {
+            value.mapNotNull { convertResult(it, action) }
+        } else if (value is Collection<*>) {
             value.mapNotNull { convertResult(it, action) }
         } else {
             action.invoke(value)

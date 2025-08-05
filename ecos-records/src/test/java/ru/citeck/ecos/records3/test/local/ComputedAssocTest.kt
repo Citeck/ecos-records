@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.test.local
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.computed.RecordComputedAtt
@@ -57,6 +58,15 @@ class ComputedAssocTest {
                         )
                         withType(RecordComputedAttType.SCRIPT)
                         withResultType(RecordComputedAttResType.AUTHORITY)
+                    },
+                    RecordComputedAtt.create {
+                        withId("authorities-array")
+                        withConfig(
+                            ObjectData.create()
+                                .set("fn", "return ['emodel/person@admin','emodel/person@fet'];")
+                        )
+                        withType(RecordComputedAttType.SCRIPT)
+                        withResultType(RecordComputedAttResType.AUTHORITY)
                     }
                 )
             }
@@ -97,5 +107,8 @@ class ComputedAssocTest {
         assertThat(result1.asText()).isEqualTo("")
         val result2 = records.getAtt(ref1, "authority-admin?str")
         assertThat(result2.asText()).isEqualTo("emodel/person@admin")
+
+        val result3 = records.getAtt(ref1, "authorities-array[]?localId")
+        assertThat(result3).isEqualTo(DataValue.createArr().add("admin").add("fet"))
     }
 }

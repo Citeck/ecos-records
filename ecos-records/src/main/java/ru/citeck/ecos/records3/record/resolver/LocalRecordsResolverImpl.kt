@@ -19,7 +19,7 @@ import ru.citeck.ecos.records2.querylang.QueryWithLang
 import ru.citeck.ecos.records2.request.query.lang.DistinctQuery
 import ru.citeck.ecos.records2.source.dao.local.job.Job
 import ru.citeck.ecos.records2.source.dao.local.job.JobsProvider
-import ru.citeck.ecos.records2.source.info.ColumnsSourceId
+import ru.citeck.ecos.records3.record.dao.annotation.ColumnsSourceId
 import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsServiceFactory

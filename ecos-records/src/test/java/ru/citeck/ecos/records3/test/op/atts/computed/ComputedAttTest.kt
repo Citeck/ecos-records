@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.op.atts.computed
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
@@ -19,7 +20,6 @@ import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
-import kotlin.test.assertEquals
 
 class ComputedAttTest {
 

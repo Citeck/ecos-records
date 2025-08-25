@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.record.atts.schema.resolver
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -10,7 +11,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 class SchemaResolverLocalIdTest {
 

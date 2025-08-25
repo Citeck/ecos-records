@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.test.op.atts
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.value.factory.*
 import ru.citeck.ecos.records3.record.atts.value.factory.time.DateValueFactory
 import java.util.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ValuesConverterTest {
 

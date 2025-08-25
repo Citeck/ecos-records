@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
@@ -8,7 +9,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 class AttSchemaReaderTest {
 

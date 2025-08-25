@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.op.atts.computed
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
@@ -12,7 +13,6 @@ import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeInfoAdapter
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 class ComputedQueryTest {
 

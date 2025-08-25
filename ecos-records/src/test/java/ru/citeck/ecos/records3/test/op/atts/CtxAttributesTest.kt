@@ -1,14 +1,14 @@
 package ru.citeck.ecos.records3.test.op.atts
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class CtxAttributesTest {
 

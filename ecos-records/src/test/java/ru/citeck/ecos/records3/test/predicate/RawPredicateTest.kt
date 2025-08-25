@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.test.predicate
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import kotlin.test.assertEquals
 
 class RawPredicateTest {
 

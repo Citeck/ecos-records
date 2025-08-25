@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records2.test.local
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
@@ -7,7 +8,6 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.promise.Promise
-import kotlin.test.assertEquals
 
 class LocalInitWithMetaFieldTest : RecordAttsDao {
 

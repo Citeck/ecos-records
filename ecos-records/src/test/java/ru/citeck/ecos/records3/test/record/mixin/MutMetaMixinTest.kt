@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.record.mixin
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.RecordConstants
@@ -13,7 +14,6 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
-import kotlin.test.assertEquals
 
 class MutMetaMixinTest {
 

@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.test.script
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RecordsJavaScriptTest : AbstractRecordsScriptTest() {

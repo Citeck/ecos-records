@@ -1,12 +1,12 @@
 package ru.citeck.ecos.records3.test.predicate.comparator
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records2.predicate.comparator.DefaultValueComparator
 import java.time.Instant
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class PredicateComparatorTest {
 

@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records3.test.op.delete
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -9,8 +11,6 @@ import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
 import ru.citeck.ecos.records3.record.dao.delete.RecordsDeleteDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateWithAnyResDao
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class DeleteTest {
 

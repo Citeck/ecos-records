@@ -1,9 +1,9 @@
 package ru.citeck.ecos.records3.test.op.atts
 
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import kotlin.test.assertTrue
 
 class AutoAliasTest {
 

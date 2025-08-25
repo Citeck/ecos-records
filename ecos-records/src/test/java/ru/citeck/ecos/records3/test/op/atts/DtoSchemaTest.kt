@@ -1,13 +1,13 @@
 package ru.citeck.ecos.records3.test.op.atts
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class DtoSchemaTest {
 

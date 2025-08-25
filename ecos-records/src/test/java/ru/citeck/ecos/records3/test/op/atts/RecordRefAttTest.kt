@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.op.atts
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -9,7 +10,6 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 class RecordRefAttTest {
 

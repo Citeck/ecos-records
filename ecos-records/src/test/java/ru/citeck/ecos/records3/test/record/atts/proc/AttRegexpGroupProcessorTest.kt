@@ -1,8 +1,8 @@
 package ru.citeck.ecos.records3.test.record.atts.proc
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class AttRegexpGroupProcessorTest {
 

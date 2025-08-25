@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.test.record.dao.mutate
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.data.ObjectData
@@ -9,7 +10,6 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
-import kotlin.test.assertEquals
 
 class RecordMutateErrorTest {
 

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.records3.test.record.dao.impl.proxy
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -23,7 +24,6 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.mixin.AttMixin
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import kotlin.test.assertEquals
 
 class RecordsDaoProxyAttsTest {
 
@@ -240,7 +240,7 @@ class RecordsDaoProxyAttsTest {
         expectedRecordsAtts.forEach { rec ->
             problemAtts.addAll(atts.filter { !nullable.contains(it) && rec.get(it).isNull() })
         }
-        assertEquals(hashSetOf(), problemAtts)
+        assertEquals(hashSetOf<Any>(), problemAtts)
     }
 
     class ValueDto {

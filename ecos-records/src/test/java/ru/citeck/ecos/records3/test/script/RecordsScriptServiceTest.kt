@@ -1,11 +1,11 @@
 package ru.citeck.ecos.records3.test.script
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.commons.utils.script.ScriptUtils
 import ru.citeck.ecos.records3.record.atts.computed.script.AttValueScriptCtx
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RecordsScriptServiceTest : AbstractRecordsScriptTest() {

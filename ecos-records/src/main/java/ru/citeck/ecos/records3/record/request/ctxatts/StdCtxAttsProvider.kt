@@ -2,6 +2,7 @@ package ru.citeck.ecos.records3.record.request.ctxatts
 
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.schema.read.ParseUtils
 import ru.citeck.ecos.records3.record.atts.value.impl.AttFuncValue
 import ru.citeck.ecos.records3.record.atts.value.impl.auth.AuthContextValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -14,7 +15,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
         private val strCtxAtt = AttFuncValue { it }
         private val refCtxAtt = AttFuncValue { EntityRef.valueOf(it) }
-        private val numCtxAtt = AttFuncValue { it.toDouble() }
+        private val numCtxAtt = AttFuncValue { ParseUtils.parseNumValue(it) }
         private val authCtxAtt = AuthContextValue()
     }
 

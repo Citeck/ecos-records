@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records3.record.atts.proc.AttOrElseProcessor
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.records3.record.atts.schema.read.ParseUtils
 import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 import java.util.*
 import java.util.regex.Matcher
@@ -55,7 +56,7 @@ class AttProcReader {
                             when (beforeOrElsePart.substring(scalarDelimIdx)) {
                                 ScalarType.JSON_SCHEMA -> "{}"
                                 ScalarType.BOOL_SCHEMA -> "false"
-                                ScalarType.NUM_SCHEMA -> "0"
+                                ScalarType.NUM_SCHEMA -> "0.0"
                                 else -> "''"
                             }
                         } else {
@@ -126,7 +127,7 @@ class AttProcReader {
                     it == "true" -> DataValue.TRUE
                     it == "false" -> DataValue.FALSE
                     it[0] == '[' || it[0] == '{' -> DataValue.create(it)
-                    Character.isDigit(it[0]) -> DataValue.create(it.toDouble())
+                    ParseUtils.isNumValue(it) -> ParseUtils.parseNumValue(it)
                     else -> DataValue.createStr(AttStrUtils.removeQuotes(it))
                 }
             }

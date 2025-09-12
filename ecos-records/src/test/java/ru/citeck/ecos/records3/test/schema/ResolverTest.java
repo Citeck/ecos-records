@@ -88,9 +88,10 @@ public class ResolverTest {
 
         TestClass dto = new TestClass();
 
-        testAtt(dto, "number22!13", 13.0);
+        testAtt(dto, "number22!13", 13);
+        testAtt(dto, "number22!13.0", 13.0);
         testAtt(dto, "number?num!13", 11.0);
-        testAtt(dto, "number22?num|or(13)", 13.0);
+        testAtt(dto, "number22?num|or(13)", 13);
 
         testAtt(dto, "inner.unknown!inner.innerBoolField23?bool!false", false);
 

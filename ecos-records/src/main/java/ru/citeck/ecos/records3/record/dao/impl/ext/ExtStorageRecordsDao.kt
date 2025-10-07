@@ -2,7 +2,9 @@ package ru.citeck.ecos.records3.record.dao.impl.ext
 
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -21,6 +23,7 @@ open class ExtStorageRecordsDao<T : Any>(
 
     private val idField: String = config.sourceId
     private val storageField: ExtStorage<T> = config.storage
+    private val workspaceScoped = config.workspaceScoped
 
     private val getRefByIdImpl: (String) -> EntityRef = if (idField.contains("/")) {
         val appNameAndSrcId = this.idField.split("/");
@@ -38,7 +41,6 @@ open class ExtStorageRecordsDao<T : Any>(
                 override fun getAtt(path: String, value: AttValueCtx): Any {
                     return recordsType
                 }
-
                 override fun getProvidedAtts(): Collection<String> {
                     return mixinAtts
                 }
@@ -56,7 +58,7 @@ open class ExtStorageRecordsDao<T : Any>(
         if (recsQuery.language.isEmpty()) {
             return getSortedValues(
                 getAllRefs(),
-                VoidPredicate.INSTANCE,
+                getPredicateWithWorkspacesFilter(VoidPredicate.INSTANCE, recsQuery.workspaces),
                 recsQuery.sortBy,
                 page.skipCount,
                 page.maxItems
@@ -68,7 +70,13 @@ open class ExtStorageRecordsDao<T : Any>(
 
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
-        val allRecords = getSortedValues(getAllRefs(), predicate, recsQuery.sortBy, 0, -1)
+        val allRecords = getSortedValues(
+            getAllRefs(),
+            getPredicateWithWorkspacesFilter(predicate, recsQuery.workspaces),
+            recsQuery.sortBy,
+            0,
+            -1
+        )
         val result = RecsQueryRes<Any>()
         result.setTotalCount((allRecords.size).toLong())
         result.setHasMore(allRecords.size > (page.maxItems + page.skipCount))
@@ -82,6 +90,21 @@ open class ExtStorageRecordsDao<T : Any>(
         }
         result.setRecords(resRecords)
         return result
+    }
+
+    private fun getPredicateWithWorkspacesFilter(predicate: Predicate, workspaces: List<String>): Predicate {
+        if (!workspaceScoped || workspaces.isEmpty()) {
+            return predicate
+        }
+        val fixedWorkspaces = workspaces.mapTo(HashSet()) {
+            if (isWorkspaceWithGlobalArtifacts(it)) "" else it
+        }
+        val workspacesCondition = Predicates.inVals("workspace", fixedWorkspaces)
+        return if (PredicateUtils.isAlwaysTrue(predicate)) {
+            workspacesCondition
+        } else {
+            Predicates.and(predicate, workspacesCondition)
+        }
     }
 
     fun getAllRefs(): List<EntityRef> {
@@ -107,5 +130,11 @@ open class ExtStorageRecordsDao<T : Any>(
 
     override fun getId(): String {
         return idField
+    }
+
+    private fun isWorkspaceWithGlobalArtifacts(workspace: String?): Boolean {
+        return workspace.isNullOrBlank() ||
+            workspace == "default" ||
+            workspace.startsWith("admin$")
     }
 }

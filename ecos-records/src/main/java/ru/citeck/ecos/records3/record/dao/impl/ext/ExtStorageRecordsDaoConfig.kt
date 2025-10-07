@@ -3,7 +3,8 @@ package ru.citeck.ecos.records3.record.dao.impl.ext
 class ExtStorageRecordsDaoConfig<T : Any>(
     val sourceId: String,
     val storage: ExtStorage<T>,
-    val ecosType: String
+    val ecosType: String,
+    val workspaceScoped: Boolean
 ) {
     companion object {
         @JvmStatic
@@ -17,6 +18,7 @@ class ExtStorageRecordsDaoConfig<T : Any>(
     ) {
         private var sourceId: String = ""
         private var ecosType: String = ""
+        private var workspaceScoped: Boolean = false
 
         fun withSourceId(sourceId: String?): Builder<T> {
             this.sourceId = sourceId ?: ""
@@ -28,11 +30,16 @@ class ExtStorageRecordsDaoConfig<T : Any>(
             return this
         }
 
+        fun withWorkspaceScoped(workspaceScoped: Boolean?): Builder<T> {
+            this.workspaceScoped = workspaceScoped ?: false
+            return this
+        }
+
         fun build(): ExtStorageRecordsDaoConfig<T> {
             if (sourceId.isBlank()) {
                 error("sourceId is blank")
             }
-            return ExtStorageRecordsDaoConfig(sourceId, storage, ecosType)
+            return ExtStorageRecordsDaoConfig(sourceId, storage, ecosType, workspaceScoped)
         }
     }
 }

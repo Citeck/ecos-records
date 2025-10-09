@@ -7,6 +7,10 @@ class ReadOnlyMapExtStorage<T : Any>(private val map: Map<String, T>) : ExtStora
 
     private val readOnlyView = Collections.unmodifiableMap(map)
 
+    override fun getByIds(ids: List<String>): List<T?> {
+        return ids.map { map[it] }
+    }
+
     override fun getById(id: String): T? {
         return map[id]
     }

@@ -50,6 +50,7 @@ import ru.citeck.ecos.records3.record.type.RecordTypeComponent
 import ru.citeck.ecos.records3.record.type.RecordTypeInfo
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
+import ru.citeck.ecos.records3.workspace.RecordsWorkspaceService
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
@@ -76,6 +77,7 @@ open class RecordsServiceFactory {
     val attValuesConverter: AttValuesConverter by lazySingleton { createAttValuesConverter() }
     val recordsTemplateService: RecordsTemplateService by lazySingleton { createRecordsTemplateService() }
     val recordTypeService: RecordTypeService by lazySingleton { createRecordTypeService() }
+    val recordsWorkspaceService: RecordsWorkspaceService by lazySingleton { createRecordsWorkspaceService() }
     val attProcService: AttProcService by lazySingleton { createAttProcService() }
     val attSchemaReader: AttSchemaReader by lazySingleton { createAttSchemaReader() }
     val attSchemaWriter: AttSchemaWriter by lazySingleton { createAttSchemaWriter() }
@@ -138,6 +140,7 @@ open class RecordsServiceFactory {
     val defaultRecordsDao: List<*> by lazySingleton { createDefaultRecordsDao() }
 
     private var recordTypeComponent: RecordTypeComponent? = null
+    private var customRecordsWorkspaceService: RecordsWorkspaceService? = null
 
     val micrometerContext: EcosMicrometerContext by lazy { createMicrometerContext() }
 
@@ -163,6 +166,17 @@ open class RecordsServiceFactory {
                     return RecordTypeInfo.EMPTY
                 }
                 return recordTypeComponent?.getRecordType(typeRef) ?: RecordTypeInfo.EMPTY
+            }
+        }
+    }
+
+    protected open fun createRecordsWorkspaceService(): RecordsWorkspaceService {
+        return object : RecordsWorkspaceService {
+            override fun getUserWorkspaces(user: String): Set<String> {
+                return customRecordsWorkspaceService?.getUserWorkspaces(user) ?: emptySet()
+            }
+            override fun isWorkspaceWithGlobalEntities(workspace: String?): Boolean {
+                return workspace.isNullOrBlank() || workspace == "default"
             }
         }
     }
@@ -353,6 +367,10 @@ open class RecordsServiceFactory {
 
     fun setRecordTypeComponent(recordTypeComponent: RecordTypeComponent) {
         this.recordTypeComponent = recordTypeComponent
+    }
+
+    fun setCustomRecordsWorkspaceService(recordsWorkspaceService: RecordsWorkspaceService) {
+        this.customRecordsWorkspaceService = recordsWorkspaceService
     }
 
     private fun <T> lazySingleton(initializer: () -> T): Lazy<T> {

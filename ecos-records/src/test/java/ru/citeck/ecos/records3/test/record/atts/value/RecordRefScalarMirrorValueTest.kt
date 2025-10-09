@@ -23,6 +23,7 @@ class RecordRefScalarMirrorValueTest {
 
         checkAtt("ref?disp", "abc", records)
         checkAtt("ref._disp", "abc", records)
+        checkAtt("ref?localSrcId", "test", records)
     }
 
     fun checkAtt(att: String, expected: String, records: RecordsService) {

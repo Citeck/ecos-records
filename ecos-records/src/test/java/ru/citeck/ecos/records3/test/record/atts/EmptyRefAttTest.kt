@@ -39,9 +39,15 @@ class EmptyRefAttTest {
 
         compareStrAtt("emptyRef?id", "")
         compareStrAtt("emptyStr?id", "")
+        compareStrAtt("emptyRef.id", "")
         compareStrAtt("refWithoutApp?id", APP_NAME + "/" + value.refWithoutApp)
         compareStrAtt("refWithOtherApp?id", value.refWithOtherApp.toString())
         compareStrAtt("refWithApp?id", value.refWithApp.toString())
+        compareStrAtt("nonExistingRef.id", "")
+        compareStrAtt("nonExistingRef?id", value.nonExistingRef.toString())
+        compareStrAtt("nonExistingRef?localId", value.nonExistingRef.getLocalId())
+        compareStrAtt("nonExistingRef?localSrcId", value.nonExistingRef.getSourceId())
+        compareStrAtt("nonExistingRef?appName", value.nonExistingRef.getAppName())
     }
 
     class RecordValue(
@@ -50,5 +56,6 @@ class EmptyRefAttTest {
         val refWithoutApp: EntityRef = EntityRef.create("source-id", "local-id"),
         val refWithOtherApp: EntityRef = EntityRef.create("otherApp", "source-id", "local-id"),
         val refWithApp: EntityRef = EntityRef.create(APP_NAME, "source-id", "local-id"),
+        val nonExistingRef: EntityRef = EntityRef.create(APP_NAME, "source-id", "non-existing-id"),
     )
 }

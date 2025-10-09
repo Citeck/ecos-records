@@ -23,6 +23,7 @@ class EntityRefValueFactory : AttValueFactory<EntityRef>, ServiceFactoryAware {
             ScalarType.ID,
             ScalarType.LOCAL_ID,
             ScalarType.APP_NAME,
+            ScalarType.LOCAL_SRC_ID,
             ScalarType.ASSOC,
             ScalarType.STR,
             ScalarType.RAW
@@ -132,6 +133,7 @@ class EntityRefValueFactory : AttValueFactory<EntityRef>, ServiceFactoryAware {
                     ScalarType.RAW -> id
                     ScalarType.LOCAL_ID -> id.getLocalId()
                     ScalarType.APP_NAME -> id.getAppName()
+                    ScalarType.LOCAL_SRC_ID -> id.getSourceId()
                     else -> null
                 }
             }

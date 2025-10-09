@@ -64,6 +64,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         private val ID_SCALARS = setOf(
             ScalarType.LOCAL_ID,
             ScalarType.APP_NAME,
+            ScalarType.LOCAL_SRC_ID,
             ScalarType.ID,
             ScalarType.ASSOC
         )
@@ -807,12 +808,13 @@ class AttSchemaResolver : ServiceFactoryAware {
             if (RecordConstants.ATT_NULL == attribute) {
                 return null
             }
-            val isLocalIdOrAppNameSchema = attribute == ScalarType.LOCAL_ID.schema ||
-                attribute == ScalarType.APP_NAME.schema
-            // special case for ?localId and ?appName because it is not equal to any other scalars
-            if (value is AttValueProxy && (isLocalIdOrAppNameSchema || !attribute.startsWith('?'))) {
+            val isSchemaOfRefScalar = attribute == ScalarType.LOCAL_ID.schema ||
+                attribute == ScalarType.APP_NAME.schema ||
+                attribute == ScalarType.LOCAL_SRC_ID.schema
+            // special case for ?localId ?localSrcId and ?appName because it is not equal to any other scalars
+            if (value is AttValueProxy && (isSchemaOfRefScalar || !attribute.startsWith('?'))) {
                 val res = value.getAtt(attribute)
-                return if (isLocalIdOrAppNameSchema) {
+                return if (isSchemaOfRefScalar) {
                     when (res) {
                         is String -> res
                         is AttValue -> res.asText()
@@ -858,6 +860,8 @@ class AttSchemaResolver : ServiceFactoryAware {
         fun getRawRef() = computedRawRef
 
         fun getAppName() = getRef().getAppName().ifBlank { resolver?.currentAppName ?: "" }
+
+        fun getLocalSrcId() = getRef().getSourceId()
 
         fun getLocalId() = getRawRef().getLocalId()
 
@@ -907,6 +911,7 @@ class AttSchemaResolver : ServiceFactoryAware {
 
                 ScalarType.LOCAL_ID -> getLocalId()
                 ScalarType.APP_NAME -> getAppName()
+                ScalarType.LOCAL_SRC_ID -> getLocalSrcId()
                 ScalarType.NUM -> value.asDouble()
                 ScalarType.BOOL -> value.asBoolean()
                 ScalarType.JSON -> {

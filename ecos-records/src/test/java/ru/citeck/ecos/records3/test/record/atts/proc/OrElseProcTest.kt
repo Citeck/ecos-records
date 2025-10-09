@@ -25,7 +25,8 @@ class OrElseProcTest {
             ScalarType.DISP,
             ScalarType.ASSOC,
             ScalarType.LOCAL_ID,
-            ScalarType.APP_NAME
+            ScalarType.APP_NAME,
+            ScalarType.LOCAL_SRC_ID
         ).forEach {
             assertThat(records.getAtt(null, "abc${it.schema}!"))
                 .describedAs(it.schema)

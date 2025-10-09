@@ -1,29 +1,45 @@
 package ru.citeck.ecos.records3.record.dao.impl.ext
 
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
+import ru.citeck.ecos.records3.record.atts.value.AttValuesConverter
+import ru.citeck.ecos.records3.record.atts.value.impl.AttValueDelegate
+import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
-import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.mixin.AttMixin
+import ru.citeck.ecos.records3.workspace.RecordsWorkspaceService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 open class ExtStorageRecordsDao<T : Any>(
     config: ExtStorageRecordsDaoConfig<T>
-) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao {
+) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+
+    companion object {
+        private const val DEFAULT_WS = ""
+        private const val ATT_WORKSPACE = "workspace"
+    }
 
     private val idField: String = config.sourceId
     private val storageField: ExtStorage<T> = config.storage
     private val workspaceScoped = config.workspaceScoped
+    private lateinit var workspaceService: RecordsWorkspaceService
+
+    private lateinit var attValuesConverter: AttValuesConverter
 
     private val getRefByIdImpl: (String) -> EntityRef = if (idField.contains("/")) {
         val appNameAndSrcId = this.idField.split("/");
@@ -48,8 +64,25 @@ open class ExtStorageRecordsDao<T : Any>(
         }
     }
 
-    override fun getRecordAtts(recordId: String): T? {
-        return storageField.getById(recordId)
+    override fun getRecordsAtts(recordIds: List<String>): List<*> {
+        val records = storageField.getByIds(recordIds)
+        if (!workspaceScoped) {
+            return records
+        }
+        val userWorkspaces = workspaceService.getUserWorkspaces(AuthContext.getCurrentUser())
+        val attValues = records.map { toWsScopedRecord(it) }
+        if (AuthContext.isRunAsSystem()) {
+            return attValues
+        }
+        val workspaces = recordsService.getAtts(attValues, listOf(ATT_WORKSPACE))
+        return records.mapIndexed { index, record ->
+            val recWs = workspaces[index].getAtt(ATT_WORKSPACE).asText()
+            if (recWs.isBlank() || userWorkspaces.contains(recWs)) {
+                record
+            } else {
+                null
+            }
+        }
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
@@ -93,11 +126,31 @@ open class ExtStorageRecordsDao<T : Any>(
     }
 
     private fun getPredicateWithWorkspacesFilter(predicate: Predicate, workspaces: List<String>): Predicate {
-        if (!workspaceScoped || workspaces.isEmpty()) {
+        if (!workspaceScoped) {
             return predicate
         }
-        val fixedWorkspaces = workspaces.mapTo(HashSet()) {
-            if (isWorkspaceWithGlobalArtifacts(it)) "" else it
+        val fixedWorkspaces = if (workspaces.isEmpty()) {
+            if (AuthContext.isRunAsSystem()) {
+                return predicate
+            } else {
+                val userWorkspaces = HashSet(workspaceService.getUserWorkspaces(AuthContext.getCurrentUser()))
+                userWorkspaces.add(DEFAULT_WS)
+                userWorkspaces
+            }
+        } else {
+            var queryWorkspaces = workspaces.mapTo(HashSet()) {
+                if (workspaceService.isWorkspaceWithGlobalEntities(it)) DEFAULT_WS else it
+            }
+            if (AuthContext.isNotRunAsSystem()) {
+                val currentUserWorkspaces = workspaceService.getUserWorkspaces(AuthContext.getCurrentUser())
+                queryWorkspaces = queryWorkspaces.filterTo(HashSet()) {
+                    it == DEFAULT_WS || currentUserWorkspaces.contains(it)
+                }
+                if (queryWorkspaces.isEmpty()) {
+                    return Predicates.alwaysFalse()
+                }
+            }
+            queryWorkspaces
         }
         val workspacesCondition = Predicates.inVals("workspace", fixedWorkspaces)
         return if (PredicateUtils.isAlwaysTrue(predicate)) {
@@ -122,6 +175,9 @@ open class ExtStorageRecordsDao<T : Any>(
         skip: Int,
         max: Int
     ): List<EntityRef> {
+        if (PredicateUtils.isAlwaysFalse(predicate)) {
+            return emptyList()
+        }
         val notEmptySorting = sorting.ifEmpty {
             listOf(SortBy(RecordConstants.ATT_CREATED, false))
         }
@@ -132,9 +188,34 @@ open class ExtStorageRecordsDao<T : Any>(
         return idField
     }
 
-    private fun isWorkspaceWithGlobalArtifacts(workspace: String?): Boolean {
-        return workspace.isNullOrBlank() ||
-            workspace == "default" ||
-            workspace.startsWith("admin$")
+    override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
+        super.setRecordsServiceFactory(serviceFactory)
+        workspaceService = serviceFactory.recordsWorkspaceService
+        attValuesConverter = serviceFactory.attValuesConverter
+    }
+
+    private fun toWsScopedRecord(value: T?): Any {
+        value ?: return EmptyAttValue.INSTANCE
+        if (!workspaceScoped) {
+            return value
+        }
+        return WsScopedRecord(attValuesConverter.toAttValue(value) ?: EmptyAttValue.INSTANCE)
+    }
+
+    class WsScopedRecord(value: AttValue) : AttValueDelegate(value) {
+        override fun getAtt(name: String): Any? {
+            if (name == RecordConstants.ATT_WORKSPACE) {
+                var wsIdRaw = super.getAtt(ATT_WORKSPACE)
+                if (wsIdRaw is DataValue) {
+                    wsIdRaw = wsIdRaw.asJavaObj()
+                }
+                return if (wsIdRaw !is String || wsIdRaw.isBlank()) {
+                    null
+                } else {
+                    EntityRef.create(AppName.EMODEL, "workspace", wsIdRaw)
+                }
+            }
+            return super.getAtt(name)
+        }
     }
 }

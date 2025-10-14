@@ -15,6 +15,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.proc.AttOrElseProcessor
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
@@ -31,6 +32,7 @@ import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
+import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
@@ -154,6 +156,8 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         val properties: List<PropertyDesc> = BeanUtils.getProperties(attsClass)
         val attributes: MutableList<SchemaAtt> = ArrayList()
 
+        val isKotlinClass = isKotlinClass(attsClass.kotlin)
+
         for (property in properties) {
 
             val writeMethod = property.getWriteMethod() ?: continue
@@ -170,6 +174,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
+            val notNullable = isKotlinClass && !property.getPropType().isMarkedNullable
 
             getAttributeSchema(
                 attsClass,
@@ -177,6 +182,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 writeMethod,
                 property.getName(),
                 isMultiple,
+                notNullable,
                 getScalarField(propType),
                 propType,
                 visited
@@ -193,6 +199,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     private fun readFromConstructor(attsClass: Class<*>, visited: MutableSet<Class<*>>): List<SchemaAtt> {
 
         val kotlinClass = attsClass.kotlin
+        val isKotlinClass = isKotlinClass(kotlinClass)
 
         val constructor = kotlinClass.primaryConstructor
             ?: kotlinClass.constructors.firstOrNull() ?: error("Constructor is null. Type: $attsClass")
@@ -216,6 +223,9 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 argType = arg.type.arguments[0].type?.classifier as? KClass<*>
                     ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
             }
+
+            val notNullable = isKotlinClass && !arg.type.isMarkedNullable
+
             val javaClass = argType.java
             getAttributeSchema(
                 attsClass,
@@ -223,6 +233,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 null,
                 paramName,
                 multiple,
+                notNullable,
                 getScalarField(javaClass),
                 javaClass,
                 visited
@@ -276,6 +287,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         writeMethod: Method?,
         fieldName: String,
         multiple: Boolean,
+        notNullable: Boolean,
         scalarField: ScalarField<*>?,
         propType: Class<*>,
         visited: MutableSet<Class<*>>
@@ -341,7 +353,51 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     .withInner(getInnerAttsForProp(visited, propType, scalarField))
             }
         }
+        if (notNullable && att.processors.none { it.type == AttOrElseProcessor.TYPE }) {
+            val defaultValue = getDefaultValueFor(att)
+            val newProcessors = ArrayList(att.processors)
+            newProcessors.add(AttProcDef(AttOrElseProcessor.TYPE, listOf(defaultValue)))
+            att.withProcessors(newProcessors)
+        }
         return att.build()
+    }
+
+    private fun isKotlinClass(clazz: KClass<*>): Boolean {
+        return clazz.java.isAnnotationPresent(Metadata::class.java)
+    }
+
+    private fun getDefaultValueFor(attribute: SchemaAtt.Builder): DataValue {
+        return if (attribute.multiple) {
+            DataValue.createArr()
+        } else if (attribute.inner.size > 1) {
+            DataValue.createObj()
+        } else if (attribute.inner.size == 1) {
+            getDefaultValueFor(attribute.inner[0])
+        } else {
+            getDefaultValueForScalar(attribute.name)
+        }
+    }
+
+    private fun getDefaultValueFor(attribute: SchemaAtt): DataValue {
+        return if (attribute.multiple) {
+            DataValue.createArr()
+        } else if (attribute.inner.size > 1) {
+            DataValue.createObj()
+        } else if (attribute.inner.size == 1) {
+            getDefaultValueFor(attribute.inner[0])
+        } else {
+            getDefaultValueForScalar(attribute.name)
+        }
+    }
+
+    private fun getDefaultValueForScalar(name: String): DataValue {
+        val scalarType = ScalarType.getBySchema(name) ?: return DataValue.createStr("")
+        return when (scalarType) {
+            ScalarType.NUM -> DataValue.createAsIs(0.0)
+            ScalarType.BOOL -> DataValue.FALSE
+            ScalarType.JSON, ScalarType.RAW -> DataValue.createObj()
+            else -> DataValue.createStr("")
+        }
     }
 
     private fun <T : Annotation> getAnnotation(

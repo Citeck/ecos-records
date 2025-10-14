@@ -57,7 +57,7 @@ class DtoSchemaTest {
         assertEquals(valDtoValue, valDtoValue2)
 
         val attsMap3 = services.attSchemaWriter.writeToMap(services.dtoSchemaReader.read(DtoSchema2::class.java))
-        assertEquals("?id", attsMap3["id"])
+        assertEquals("?id|or('')", attsMap3["id"])
 
         val valDtoWithDefault = ValDtoWithDefault()
         val valDtoWithDefaultValue = services.recordsService.getAtts(valDtoWithDefault, ValDtoWithDefault::class.java)
@@ -97,14 +97,14 @@ class DtoSchemaTest {
     )
 
     data class ValDtoSchema(
-        val id: String,
-        val strField: String,
-        val strFieldList: List<String>,
-        val strFieldSet: Set<String>,
-        val enumTest: EnumClass,
-        val enumListTest: List<EnumClass>,
-        val mapTest: Map<String, Any>,
-        val hashMapTest: HashMap<String, Any>
+        val id: String?,
+        val strField: String?,
+        val strFieldList: List<String>?,
+        val strFieldSet: Set<String>?,
+        val enumTest: EnumClass?,
+        val enumListTest: List<EnumClass>?,
+        val mapTest: Map<String, Any>?,
+        val hashMapTest: HashMap<String, Any>?
     ) {
         enum class EnumClass {
             FIRST,
@@ -113,10 +113,10 @@ class DtoSchemaTest {
     }
 
     class DtoSchema(
-        var id: String,
-        var strField: String,
-        var strFieldList: List<String>,
-        var strFieldSet: Set<String>
+        var id: String?,
+        var strField: String?,
+        var strFieldList: List<String>?,
+        var strFieldSet: Set<String>?
     )
 
     class DtoSchema2(

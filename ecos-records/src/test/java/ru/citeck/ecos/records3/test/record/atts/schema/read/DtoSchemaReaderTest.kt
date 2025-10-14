@@ -24,9 +24,9 @@ class DtoSchemaReaderTest {
 
         assertThat(schemaByAlias["array"].toString()).isEqualTo("array[]?raw")
         assertThat(schemaByAlias["annotatedArray"].toString()).isEqualTo("array[]?raw")
-        assertThat(schemaByAlias["annotatedArray2"].toString()).isEqualTo("array[]?raw")
+        assertThat(schemaByAlias["annotatedArray2"].toString()).isEqualTo("array[]?raw|or([])")
         assertThat(schemaByAlias["annotatedArray3"].toString()).isEqualTo("array[]{id,_null}")
-        assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw")
+        assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw|or({})")
         assertThat(schemaByAlias["complexAtt"]).isEqualTo(
             SchemaAtt.create()
                 .withAlias("complexAtt")
@@ -66,6 +66,11 @@ class DtoSchemaReaderTest {
                             listOf(
                                 SchemaAtt.create()
                                     .withName("projectRef")
+                                    .withInner(SchemaAtt.create().withName("?id"))
+                                    .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
+                                    .build(),
+                                SchemaAtt.create()
+                                    .withName("nullableProjectRef")
                                     .withInner(SchemaAtt.create().withName("?id"))
                                     .build(),
                                 SchemaAtt.create()
@@ -114,14 +119,107 @@ class DtoSchemaReaderTest {
         assertThat(atts.single).isEqualTo(DataValue.create(elements[0]))
     }
 
+    @Test
+    fun nullabilityTest() {
+
+        val services = RecordsServiceFactory()
+        val schemaReader = services.dtoSchemaReader
+
+        val schema = schemaReader.read(NullabilityTest::class.java)
+
+        val attsByName = schema.associateBy { it.getAliasForValue() }
+
+        val nullableWithAttName = attsByName["nullableWithAttName"]
+        assertThat(nullableWithAttName).isEqualTo(
+            SchemaAtt.create()
+                .withName("customAtt0")
+                .withAlias("nullableWithAttName")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .build()
+        )
+
+        val notNullableWithAttName = attsByName["notNullableWithAttName"]
+        assertThat(notNullableWithAttName).isEqualTo(
+            SchemaAtt.create()
+                .withAlias("notNullableWithAttName")
+                .withName("customAtt1")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
+                .build()
+        )
+
+        val nullableArrWithAttName = attsByName["nullableArrWithAttName"]
+        assertThat(nullableArrWithAttName).isEqualTo(
+            SchemaAtt.create()
+                .withAlias("nullableArrWithAttName")
+                .withName("customAtt0")
+                .withMultiple(true)
+                .withInner(SchemaAtt.create().withName("?str"))
+                .build()
+        )
+
+        val notNullableArrWithAttName = attsByName["notNullableArrWithAttName"]
+        assertThat(notNullableArrWithAttName).isEqualTo(
+            SchemaAtt.create()
+                .withAlias("notNullableArrWithAttName")
+                .withName("customAtt1")
+                .withMultiple(true)
+                .withInner(SchemaAtt.create().withName("?str"))
+                .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createArr()))))
+                .build()
+        )
+
+        val nullableWithoutAttName = attsByName["nullableWithoutAttName"]
+        assertThat(nullableWithoutAttName).isEqualTo(
+            SchemaAtt.create()
+                .withName("nullableWithoutAttName")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .build()
+        )
+
+        val notNullableWithoutAttName = attsByName["notNullableWithoutAttName"]
+        assertThat(notNullableWithoutAttName).isEqualTo(
+            SchemaAtt.create()
+                .withName("notNullableWithoutAttName")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
+                .build()
+        )
+
+        val attWithOrProc = attsByName["attWithOrProc"]
+        assertThat(attWithOrProc).isEqualTo(
+            SchemaAtt.create()
+                .withAlias("attWithOrProc")
+                .withName("customAtt3")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
+                .build()
+        )
+    }
+
+    class NullabilityTest(
+        @AttName("customAtt0")
+        val nullableWithAttName: String?,
+        @AttName("customAtt1")
+        val notNullableWithAttName: String,
+        @AttName("customAtt0[]?str")
+        val nullableArrWithAttName: String?,
+        @AttName("customAtt1[]?str")
+        val notNullableArrWithAttName: String,
+        val nullableWithoutAttName: String?,
+        val notNullableWithoutAttName: String,
+        @AttName("customAtt3!")
+        val attWithOrProc: String
+    )
+
     class AttsDto(
-        val array: List<DataValue>,
+        val array: List<DataValue>?,
         @AttName("array")
-        val annotatedArray: List<DataValue>,
+        val annotatedArray: List<DataValue>?,
         @AttName("array[]")
         val annotatedArray2: List<DataValue>,
         @AttName("array[]{id,_null}")
-        val annotatedArray3: List<DataValue>,
+        val annotatedArray3: List<DataValue>?,
         @AttName("array")
         val single: DataValue,
         @AttName("record.nestedProjects[]{projectRef:?id!'',workspaceRef:assoc_src_workspaceManagedBy?id!}!")
@@ -132,12 +230,13 @@ class DtoSchemaReaderTest {
 
     class NestedAtts(
         val projectRef: EntityRef,
+        val nullableProjectRef: EntityRef?,
         @AttName("assoc_src_workspaceManagedBy?id!")
         val workspaceRef: EntityRef,
     )
 
     class RefsDto(
-        val legacyRecordRef: EntityRef,
-        val entityRef: EntityRef
+        val legacyRecordRef: EntityRef?,
+        val entityRef: EntityRef?
     )
 }

@@ -7,6 +7,7 @@ import java.util.*
 class AttOrElseProcessor : AttProcessor {
 
     companion object {
+        const val TYPE = "or"
         const val ATT_PREFIX: String = "a:"
     }
 
@@ -54,5 +55,5 @@ class AttOrElseProcessor : AttProcessor {
         return attsToLoad
     }
 
-    override fun getType(): String = "or"
+    override fun getType() = TYPE
 }

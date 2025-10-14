@@ -123,7 +123,11 @@ class AttSchemaReader(services: RecordsServiceFactory) {
     fun read(alias: String, attribute: String): SchemaAtt {
 
         if (isBlank(attribute)) {
-            throw AttReadException(alias, attribute, "Empty attribute")
+            return if (alias.isEmpty()) {
+                AttSchemaReaderV2.NULL_ATT
+            } else {
+                AttSchemaReaderV2.NULL_ATT.copy().withAlias(alias).build()
+            }
         }
 
         val fixedAtt = FIXED_ROOT_ATTS_MAPPING[attribute] ?: attribute

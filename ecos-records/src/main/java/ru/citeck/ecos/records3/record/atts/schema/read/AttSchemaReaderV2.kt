@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
@@ -9,10 +10,15 @@ import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
 class AttSchemaReaderV2(services: RecordsServiceFactory) {
 
     companion object {
-        private val SCALAR_ATTS_LIST = ScalarType.values().associate {
+        private val SCALAR_ATTS_LIST = ScalarType.entries.associate {
             it.schema to listOf(SchemaAtt.create().withName(it.schema).build())
         }
         private val ID_SCALAR_ATT = SCALAR_ATTS_LIST[ScalarType.ID.schema]!!.first()
+
+        val NULL_ATT = SchemaAtt.create()
+            .withName(RecordConstants.ATT_NULL)
+            .withInner(SCALAR_ATTS_LIST[ScalarType.DISP_SCHEMA]!!)
+            .build()
     }
 
     private val procReader = services.attProcReader
@@ -20,7 +26,11 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
     fun read(alias: String, attToRead: String): SchemaAtt {
 
         if (attToRead.isBlank()) {
-            throw AttReadException(alias, attToRead, "Attribute is blank")
+            return if (alias.isEmpty()) {
+                NULL_ATT
+            } else {
+                NULL_ATT.copy().withAlias(alias).build()
+            }
         }
 
         if (attToRead == ScalarType.ID.schema && alias == ScalarType.ID.schema) {
@@ -134,7 +144,7 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
 
     private fun readInnerAtts(innerAttsStr: String): List<SchemaAtt> {
 
-        return split(innerAttsStr, ',').map {
+        return split(innerAttsStr, ',').mapNotNull {
 
             val aliasDelimIdx = AttStrUtils.indexOf(it, ':')
             val dotIdx = AttStrUtils.indexOf(it, '.')
@@ -159,7 +169,11 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
                         attWithoutEscapedDots.substring(escapedDotsIdx + 1)
                     escapedDotsIdx = AttStrUtils.indexOf(attWithoutEscapedDots, "\\:")
                 }
-                read("", attWithoutEscapedDots)
+                if (attWithoutEscapedDots.isBlank()) {
+                    null
+                } else {
+                    read("", attWithoutEscapedDots)
+                }
             } else {
                 var alias = it.substring(0, aliasDelimIdx).trim()
                 if (alias.contains("\\")) {

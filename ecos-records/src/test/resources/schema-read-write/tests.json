@@ -42,6 +42,22 @@
       }
     },
     {
+      "att": "",
+      "expAfterWrite": "_null",
+      "exp": {
+        "name": "_null",
+        "inner": [ { "name": "?disp" } ]
+      }
+    },
+    {
+      "att": "_null",
+      "expAfterWrite": "_null",
+      "exp": {
+        "name": "_null",
+        "inner": [ { "name": "?disp" } ]
+      }
+    },
+    {
       "att": "a{b\\:c:def}",
       "expAfterWrite": "a{b\\:c:def}",
       "exp": {

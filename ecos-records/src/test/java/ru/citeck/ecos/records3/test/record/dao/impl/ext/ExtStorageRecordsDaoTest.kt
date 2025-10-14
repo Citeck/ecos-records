@@ -53,16 +53,18 @@ class ExtStorageRecordsDaoTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = [
-        "false, 'user0',  'rec1;rec2;rec3;rec4;rec5', ''",
-        "false, 'user1',  'rec1;rec2;rec3;rec4;rec5', ''",
-        "false, 'user2',  'rec1;rec2;rec3;rec4;rec5', ''",
-        "false, 'system', 'rec1;rec2;rec3;rec4;rec5', ''",
-        "true,  'user0', 'rec1;rec2;rec5',            'rec3;rec4'",
-        "true,  'user1', 'rec1;rec2;rec3;rec5',       'rec4'",
-        "true,  'user2', 'rec5',                      'rec1;rec2;rec3;rec4'",
-        "true, 'system', 'rec1;rec2;rec3;rec4;rec5',  ''"
-    ])
+    @CsvSource(
+        value = [
+            "false, 'user0',  'rec1;rec2;rec3;rec4;rec5', ''",
+            "false, 'user1',  'rec1;rec2;rec3;rec4;rec5', ''",
+            "false, 'user2',  'rec1;rec2;rec3;rec4;rec5', ''",
+            "false, 'system', 'rec1;rec2;rec3;rec4;rec5', ''",
+            "true,  'user0', 'rec1;rec2;rec5',            'rec3;rec4'",
+            "true,  'user1', 'rec1;rec2;rec3;rec5',       'rec4'",
+            "true,  'user2', 'rec5',                      'rec1;rec2;rec3;rec4'",
+            "true, 'system', 'rec1;rec2;rec3;rec4;rec5',  ''"
+        ]
+    )
     fun testWithWorkspaces(workspaceScoped: Boolean, user: String, allowedRecs: String, disallowedRecs: String) {
 
         val recordsMap = mapOf(

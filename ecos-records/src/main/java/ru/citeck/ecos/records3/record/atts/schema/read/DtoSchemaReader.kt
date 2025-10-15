@@ -35,6 +35,7 @@ import java.util.function.Consumer
 import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
+import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.primaryConstructor
@@ -51,6 +52,10 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     .withName(ScalarType.STR.schema)
             )
             .build()
+
+        private val TYPES_WITH_ACCEPTED_NULL_VALUE = setOf(
+            DataValue::class
+        )
     }
 
     private val scalars = ConcurrentHashMap<Class<*>, ScalarField<*>>()
@@ -174,7 +179,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
-            val notNullable = isKotlinClass && !property.getPropType().isMarkedNullable
+            val notNullable = isKotlinClass && !isNullValueAcceptedForType(property.getPropType())
 
             getAttributeSchema(
                 attsClass,
@@ -224,7 +229,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
             }
 
-            val notNullable = isKotlinClass && !arg.type.isMarkedNullable
+            val notNullable = isKotlinClass && !isNullValueAcceptedForType(arg.type)
 
             val javaClass = argType.java
             getAttributeSchema(
@@ -241,6 +246,14 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         }
 
         return atts
+    }
+
+    private fun isNullValueAcceptedForType(type: KType): Boolean {
+        if (type.isMarkedNullable) {
+            return true
+        }
+        val clazz = type.classifier as? KClass<*> ?: return false
+        return TYPES_WITH_ACCEPTED_NULL_VALUE.contains(clazz)
     }
 
     private fun getScalarField(clazz: Class<*>): ScalarField<Any>? {

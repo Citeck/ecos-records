@@ -26,7 +26,7 @@ class DtoSchemaReaderTest {
         assertThat(schemaByAlias["annotatedArray"].toString()).isEqualTo("array[]?raw")
         assertThat(schemaByAlias["annotatedArray2"].toString()).isEqualTo("array[]?raw|or([])")
         assertThat(schemaByAlias["annotatedArray3"].toString()).isEqualTo("array[]{id,_null}")
-        assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw|or({})")
+        assertThat(schemaByAlias["single"].toString()).isEqualTo("array?raw")
         assertThat(schemaByAlias["complexAtt"]).isEqualTo(
             SchemaAtt.create()
                 .withAlias("complexAtt")
@@ -195,7 +195,37 @@ class DtoSchemaReaderTest {
                 .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
                 .build()
         )
+
+        val dataValue = attsByName["dataValue"]
+        assertThat(dataValue).isEqualTo(
+            SchemaAtt.create()
+                .withName("dataValue")
+                .withInner(SchemaAtt.create().withName("?raw"))
+                .build()
+        )
     }
+
+    @Test
+    fun notNullButButWithNullSupportTest() {
+
+        val services = RecordsServiceFactory()
+        val schemaReader = services.dtoSchemaReader
+
+        val schema = schemaReader.read(NotNullButButWithNullSupportTest::class.java)
+
+        for (att in schema) {
+            assertThat(att.processors).isEmpty()
+        }
+
+        val srcInst = NotNullButButWithNullSupportTest(DataValue.NULL)
+        val tgtInst = services.recordsService.getAtts(srcInst, NotNullButButWithNullSupportTest::class.java)
+
+        assertThat(tgtInst).isEqualTo(srcInst)
+    }
+
+    data class NotNullButButWithNullSupportTest(
+        val dataValue: DataValue
+    )
 
     class NullabilityTest(
         @AttName("customAtt0")
@@ -209,7 +239,8 @@ class DtoSchemaReaderTest {
         val nullableWithoutAttName: String?,
         val notNullableWithoutAttName: String,
         @AttName("customAtt3!")
-        val attWithOrProc: String
+        val attWithOrProc: String,
+        val dataValue: DataValue
     )
 
     class AttsDto(

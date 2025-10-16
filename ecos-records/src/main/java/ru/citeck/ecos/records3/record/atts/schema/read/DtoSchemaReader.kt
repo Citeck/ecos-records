@@ -1,7 +1,9 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -33,7 +35,9 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
@@ -162,6 +166,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         val attributes: MutableList<SchemaAtt> = ArrayList()
 
         val isKotlinClass = isKotlinClass(attsClass.kotlin)
+        val nullablePropsFromBuilder = getNullablePropsFromBuilder(attsClass.kotlin)
 
         for (property in properties) {
 
@@ -179,7 +184,9 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                 }
                 isMultiple = true
             }
-            val notNullable = isKotlinClass && !isNullValueAcceptedForType(property.getPropType())
+            val notNullable = isKotlinClass &&
+                !isNullValueAcceptedForType(property.getPropType()) &&
+                !nullablePropsFromBuilder.contains(property.getName())
 
             getAttributeSchema(
                 attsClass,
@@ -205,6 +212,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
         val kotlinClass = attsClass.kotlin
         val isKotlinClass = isKotlinClass(kotlinClass)
+        val nullablePropsFromBuilder = getNullablePropsFromBuilder(kotlinClass)
 
         val constructor = kotlinClass.primaryConstructor
             ?: kotlinClass.constructors.firstOrNull() ?: error("Constructor is null. Type: $attsClass")
@@ -229,7 +237,9 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
                     ?: error("Incorrect collection arg: ${arg.type.arguments[0]}")
             }
 
-            val notNullable = isKotlinClass && !isNullValueAcceptedForType(arg.type)
+            val notNullable = isKotlinClass &&
+                !isNullValueAcceptedForType(arg.type) &&
+                !nullablePropsFromBuilder.contains(arg.name)
 
             val javaClass = argType.java
             getAttributeSchema(
@@ -248,11 +258,36 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
         return atts
     }
 
+    private fun getNullablePropsFromBuilder(container: KClass<*>): Set<String> {
+        val jsonDeserialize = container.findAnnotation<JsonDeserialize>() ?: return emptySet()
+        val result = HashSet<String>()
+        jsonDeserialize.builder.members.forEach {
+            if (it is KFunction<*> && it.name.startsWith("with") && it.parameters.size == 2) {
+                if (isNullValueAcceptedForType(it.parameters[1].type)) {
+                    val propName = it.name.substring("with".length)
+                    result.add(propName[0].lowercase() + propName.substring(1))
+                }
+            }
+        }
+        return result
+    }
+
     private fun isNullValueAcceptedForType(type: KType): Boolean {
         if (type.isMarkedNullable) {
             return true
         }
         val clazz = type.classifier as? KClass<*> ?: return false
+        if (clazz.java.isEnum) {
+            val enumConstants = clazz.java.enumConstants ?: emptyArray()
+            return enumConstants.none {
+                val enumName = (it as? Enum<*>)?.name ?: ""
+                if (enumName.isBlank()) {
+                    false
+                } else {
+                    clazz.java.getField(enumName).getAnnotation(JsonEnumDefaultValue::class.java) != null
+                }
+            }
+        }
         return TYPES_WITH_ACCEPTED_NULL_VALUE.contains(clazz)
     }
 

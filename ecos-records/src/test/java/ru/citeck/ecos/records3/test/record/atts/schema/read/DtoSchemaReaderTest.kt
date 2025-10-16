@@ -1,5 +1,7 @@
 package ru.citeck.ecos.records3.test.record.atts.schema.read
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
@@ -203,6 +205,136 @@ class DtoSchemaReaderTest {
                 .withInner(SchemaAtt.create().withName("?raw"))
                 .build()
         )
+
+        val enumWithDefault = attsByName["enumWithDefault"]
+        assertThat(enumWithDefault).isEqualTo(
+            SchemaAtt.create()
+                .withName("enumWithDefault")
+                .withInner(SchemaAtt.create().withName("?str"))
+                .withProcessors(listOf(AttProcDef("or", listOf(DataValue.createStr("")))))
+                .build()
+        )
+
+        val enumWithoutDefault = attsByName["enumWithoutDefault"]
+        assertThat(enumWithoutDefault).isEqualTo(
+            SchemaAtt.create()
+                .withName("enumWithoutDefault")
+                .withInner(SchemaAtt.create().withName("?str"))
+                .build()
+        )
+    }
+
+    class NullabilityTest(
+        @AttName("customAtt0")
+        val nullableWithAttName: String?,
+        @AttName("customAtt1")
+        val notNullableWithAttName: String,
+        @AttName("customAtt0[]?str")
+        val nullableArrWithAttName: String?,
+        @AttName("customAtt1[]?str")
+        val notNullableArrWithAttName: String,
+        val nullableWithoutAttName: String?,
+        val notNullableWithoutAttName: String,
+        @AttName("customAtt3!")
+        val attWithOrProc: String,
+        val dataValue: DataValue,
+        val enumWithDefault: EnumWithDefault,
+        val enumWithoutDefault: EnumWithoutDefault
+    )
+
+    enum class EnumWithDefault {
+        @JsonEnumDefaultValue DEFAULT,
+        SECOND
+    }
+
+    enum class EnumWithoutDefault {
+        FIRST,
+        SECOND
+    }
+
+    @Test
+    fun nullabilityWithBuilderTest() {
+
+        val services = RecordsServiceFactory()
+        val schemaReader = services.dtoSchemaReader
+
+        val attsByName = schemaReader.read(NullabilityWithBuilderTest::class.java)
+            .associateBy { it.getAliasForValue() }
+
+        val enumWithDefault = attsByName["enumWithDefault"]
+        assertThat(enumWithDefault).isEqualTo(
+            SchemaAtt.create()
+                .withName("enumWithDefault")
+                .withInner(SchemaAtt.create().withName("?str"))
+                .build()
+        )
+
+        val enumWithoutDefault = attsByName["enumWithoutDefault"]
+        assertThat(enumWithoutDefault).isEqualTo(
+            SchemaAtt.create()
+                .withName("enumWithoutDefault")
+                .withInner(SchemaAtt.create().withName("?str"))
+                .build()
+        )
+
+        val text = attsByName["text"]
+        assertThat(text).isEqualTo(
+            SchemaAtt.create()
+                .withName("text")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .build()
+        )
+
+        val text2 = attsByName["text2"]
+        assertThat(text2).isEqualTo(
+            SchemaAtt.create()
+                .withName("text2")
+                .withInner(SchemaAtt.create().withName("?disp"))
+                .build()
+        )
+    }
+
+    @JsonDeserialize(builder = NullabilityWithBuilderTest.Builder::class)
+    class NullabilityWithBuilderTest(
+        val enumWithDefault: EnumWithDefault,
+        val enumWithoutDefault: EnumWithoutDefault,
+        val text: String,
+        val text2: String
+    ) {
+
+        class Builder {
+
+            var text: String = ""
+            var text2: String = ""
+            var enumWithDefault: EnumWithDefault = EnumWithDefault.DEFAULT
+            var enumWithoutDefault: EnumWithoutDefault = EnumWithoutDefault.FIRST
+
+            fun withText(text: String?): Builder {
+                this.text = text ?: ""
+                return this
+            }
+
+            fun withText2(text: String?) {
+                this.text2 = text ?: ""
+            }
+
+            fun withEnumWithDefault(enumWithDefault: EnumWithDefault?): Builder {
+                this.enumWithDefault = enumWithDefault ?: EnumWithDefault.DEFAULT
+                return this
+            }
+
+            fun withEnumWithoutDefault(enumWithoutDefault: EnumWithoutDefault?): Builder {
+                this.enumWithoutDefault = enumWithoutDefault ?: EnumWithoutDefault.FIRST
+                return this
+            }
+
+            fun with(a: String) {}
+            fun withA(b: String) {}
+
+            fun build(): NullabilityWithBuilderTest {
+                return NullabilityWithBuilderTest(enumWithDefault, enumWithoutDefault, text, text2)
+            }
+        }
     }
 
     @Test
@@ -224,22 +356,6 @@ class DtoSchemaReaderTest {
     }
 
     data class NotNullButButWithNullSupportTest(
-        val dataValue: DataValue
-    )
-
-    class NullabilityTest(
-        @AttName("customAtt0")
-        val nullableWithAttName: String?,
-        @AttName("customAtt1")
-        val notNullableWithAttName: String,
-        @AttName("customAtt0[]?str")
-        val nullableArrWithAttName: String?,
-        @AttName("customAtt1[]?str")
-        val notNullableArrWithAttName: String,
-        val nullableWithoutAttName: String?,
-        val notNullableWithoutAttName: String,
-        @AttName("customAtt3!")
-        val attWithOrProc: String,
         val dataValue: DataValue
     )
 

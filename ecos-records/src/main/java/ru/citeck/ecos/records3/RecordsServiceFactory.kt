@@ -176,7 +176,8 @@ open class RecordsServiceFactory {
                 return customRecordsWorkspaceService?.getUserWorkspaces(user) ?: emptySet()
             }
             override fun isWorkspaceWithGlobalEntities(workspace: String?): Boolean {
-                return workspace.isNullOrBlank() || workspace == "default"
+                return customRecordsWorkspaceService?.isWorkspaceWithGlobalEntities(workspace)
+                    ?: workspace.isNullOrBlank() || workspace == "default" || (workspace ?: "").startsWith("admin$")
             }
         }
     }

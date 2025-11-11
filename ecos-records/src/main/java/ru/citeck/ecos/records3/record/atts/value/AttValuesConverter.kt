@@ -9,6 +9,7 @@ import ru.citeck.ecos.webapp.api.mime.MimeType
 class AttValuesConverter(private val services: RecordsServiceFactory) {
 
     private val factoriesByType = HashMap<Class<out AttValueFactory<*>>, AttValueFactory<*>>()
+    private val factoriesByInterface = HashMap<Class<*>, AttValueFactory<Any>>()
 
     private val valueFactories: Map<Class<*>, AttValueFactory<Any>> by lazy {
         val valueFactories: MutableMap<Class<*>, AttValueFactory<Any>> = LinkedHashMap()
@@ -16,7 +17,11 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         for (valueFactory in factoriesList) {
             for (type in valueFactory.getValueTypes()) {
                 @Suppress("UNCHECKED_CAST")
-                valueFactories[type] = valueFactory as AttValueFactory<Any>
+                val factory = valueFactory as AttValueFactory<Any>
+                valueFactories[type] = factory
+                if (type.isInterface) {
+                    factoriesByInterface[type] = factory
+                }
             }
             factoriesByType[valueFactory::class.java] = valueFactory
         }
@@ -61,8 +66,33 @@ class AttValuesConverter(private val services: RecordsServiceFactory) {
         }
 
         val factory: AttValueFactory<Any> = valueFactories[valueClazz]
-            ?: (valueFactories[Any::class.java] ?: error("Factory can't be resolved for value: $valueToConvert"))
+            ?: findFactoryForInterfaces(valueClazz)
+            ?: valueFactories[Any::class.java]
+            ?: error("Factory can't be resolved for value: $valueToConvert")
 
         return factory.getValue(valueToConvert)
+    }
+
+    private fun findFactoryForInterfaces(clazz: Class<*>): AttValueFactory<Any>? {
+        val interfaces = getAllInterfaces(clazz)
+        for (iface in interfaces) {
+            factoriesByInterface[iface]?.let { return it }
+        }
+        return null
+    }
+
+    private fun getAllInterfaces(clazz: Class<*>): Set<Class<*>> {
+        val result = mutableSetOf<Class<*>>()
+        collectInterfaces(clazz, result)
+        return result
+    }
+
+    private fun collectInterfaces(clazz: Class<*>, result: MutableSet<Class<*>>) {
+        for (iface in clazz.interfaces) {
+            if (result.add(iface)) {
+                collectInterfaces(iface, result)
+            }
+        }
+        clazz.superclass?.let { collectInterfaces(it, result) }
     }
 }

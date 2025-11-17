@@ -7,7 +7,9 @@ import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.data.AuthData
 import ru.citeck.ecos.context.lib.auth.data.SimpleAuthData
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.impl.ext.ExtStorageRecordsDao
@@ -86,6 +88,30 @@ class ExtStorageRecordsDaoTest {
             }
             override fun getUserWorkspaces(user: String): Set<String> {
                 return userWorkspaces[user] ?: emptySet()
+            }
+            override fun getUserOrWsSystemUserWorkspaces(auth: AuthData): Set<String> {
+                return getUserWorkspaces(auth.getUser())
+            }
+            override fun buildAvailableWorkspacesPredicate(auth: AuthData, queriedWorkspaces: List<String>): Predicate {
+                val allowedWorkspaces = getAvailableWorkspacesToQuery(auth, queriedWorkspaces) ?: return Predicates.alwaysFalse()
+                return if (allowedWorkspaces.isEmpty()) {
+                    Predicates.alwaysTrue()
+                } else {
+                    Predicates.inVals("workspace", allowedWorkspaces)
+                }
+            }
+            override fun getAvailableWorkspacesToQuery(auth: AuthData, queriedWorkspaces: List<String>): Set<String>? {
+                val fixedWs = queriedWorkspaces.mapTo(LinkedHashSet()) {
+                    if (it == "default") "" else it
+                }
+                if (AuthContext.isRunAsSystem()) {
+                    return fixedWs
+                }
+                val authUserWorkspaces = userWorkspaces[auth.getUser()] ?: emptySet()
+                if (fixedWs.isEmpty()) {
+                    return setOf(*authUserWorkspaces.toTypedArray(), "")
+                }
+                return fixedWs.filter { it == "" || authUserWorkspaces.contains(it) }.toSet().ifEmpty { null }
             }
         }
         val serviceFactory = RecordsServiceFactory()

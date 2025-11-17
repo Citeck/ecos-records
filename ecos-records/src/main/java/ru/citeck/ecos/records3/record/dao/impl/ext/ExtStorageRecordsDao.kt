@@ -30,7 +30,6 @@ open class ExtStorageRecordsDao<T : Any>(
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
-        private const val DEFAULT_WS = ""
         private const val ATT_WORKSPACE = "workspace"
     }
 
@@ -69,11 +68,13 @@ open class ExtStorageRecordsDao<T : Any>(
         if (!workspaceScoped) {
             return records
         }
-        val userWorkspaces = workspaceService.getUserWorkspaces(AuthContext.getCurrentUser())
         val attValues = records.map { toWsScopedRecord(it) }
         if (AuthContext.isRunAsSystem()) {
             return attValues
         }
+        val userWorkspaces = workspaceService.getUserOrWsSystemUserWorkspaces(
+            AuthContext.getCurrentRunAsAuth()
+        ) ?: return emptyList<Any>()
         val workspaces = recordsService.getAtts(attValues, listOf(ATT_WORKSPACE))
         return records.mapIndexed { index, record ->
             val recWs = workspaces[index].getAtt(ATT_WORKSPACE).asText()
@@ -129,30 +130,16 @@ open class ExtStorageRecordsDao<T : Any>(
         if (!workspaceScoped) {
             return predicate
         }
-        val fixedWorkspaces = if (workspaces.isEmpty()) {
-            if (AuthContext.isRunAsSystem()) {
-                return predicate
-            } else {
-                val userWorkspaces = HashSet(workspaceService.getUserWorkspaces(AuthContext.getCurrentUser()))
-                userWorkspaces.add(DEFAULT_WS)
-                userWorkspaces
-            }
-        } else {
-            var queryWorkspaces = workspaces.mapTo(HashSet()) {
-                if (workspaceService.isWorkspaceWithGlobalEntities(it)) DEFAULT_WS else it
-            }
-            if (AuthContext.isNotRunAsSystem()) {
-                val currentUserWorkspaces = workspaceService.getUserWorkspaces(AuthContext.getCurrentUser())
-                queryWorkspaces = queryWorkspaces.filterTo(HashSet()) {
-                    it == DEFAULT_WS || currentUserWorkspaces.contains(it)
-                }
-                if (queryWorkspaces.isEmpty()) {
-                    return Predicates.alwaysFalse()
-                }
-            }
-            queryWorkspaces
+        val workspacesCondition = workspaceService.buildAvailableWorkspacesPredicate(
+            AuthContext.getCurrentRunAsAuth(),
+            workspaces
+        )
+        if (PredicateUtils.isAlwaysFalse(workspacesCondition)) {
+            return workspacesCondition
         }
-        val workspacesCondition = Predicates.inVals("workspace", fixedWorkspaces)
+        if (PredicateUtils.isAlwaysTrue(workspacesCondition)) {
+            return predicate
+        }
         return if (PredicateUtils.isAlwaysTrue(predicate)) {
             workspacesCondition
         } else {

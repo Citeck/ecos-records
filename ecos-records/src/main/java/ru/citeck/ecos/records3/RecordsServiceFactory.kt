@@ -2,12 +2,16 @@ package ru.citeck.ecos.records3
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.utils.ReflectUtils
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.data.AuthData
 import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateServiceImpl
 import ru.citeck.ecos.records2.predicate.api.records.PredicateRecords
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.querylang.QueryLangService
 import ru.citeck.ecos.records2.querylang.QueryLangServiceImpl
 import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
@@ -172,6 +176,28 @@ open class RecordsServiceFactory {
 
     protected open fun createRecordsWorkspaceService(): RecordsWorkspaceService {
         return object : RecordsWorkspaceService {
+            override fun getUserOrWsSystemUserWorkspaces(auth: AuthData): Set<String>? {
+                val service = customRecordsWorkspaceService
+                return if (service != null) {
+                    service.getUserOrWsSystemUserWorkspaces(auth)
+                } else {
+                    emptySet()
+                }
+            }
+            override fun buildAvailableWorkspacesPredicate(auth: AuthData, queriedWorkspaces: List<String>): Predicate {
+                val service = customRecordsWorkspaceService
+                return service?.buildAvailableWorkspacesPredicate(auth, queriedWorkspaces) ?: Predicates.alwaysTrue()
+            }
+            override fun getAvailableWorkspacesToQuery(auth: AuthData, queriedWorkspaces: List<String>): Set<String>? {
+                val service = customRecordsWorkspaceService
+                return if (service != null) {
+                    service.getAvailableWorkspacesToQuery(auth, queriedWorkspaces)
+                } else if (AuthContext.isRunAsSystem()) {
+                    queriedWorkspaces.toSet()
+                } else {
+                    emptySet()
+                }
+            }
             override fun getUserWorkspaces(user: String): Set<String> {
                 return customRecordsWorkspaceService?.getUserWorkspaces(user) ?: emptySet()
             }

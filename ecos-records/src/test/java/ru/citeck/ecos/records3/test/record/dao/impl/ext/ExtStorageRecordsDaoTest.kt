@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.AuthData
 import ru.citeck.ecos.context.lib.auth.data.SimpleAuthData
@@ -38,6 +39,10 @@ class ExtStorageRecordsDaoTest {
 
         assertThat(records.getAtt("test@abc", "?str").asText()).isEqualTo("def")
         assertThat(records.getAtt("test@abcdef", "?str").asText()).isEqualTo("hij")
+
+        assertThat(records.getAtt("test@abcdef", "permissions._has.Write?bool")).isEqualTo(DataValue.FALSE)
+        assertThat(records.getAtt("test@abcdef", "permissions._has.Read?bool")).isEqualTo(DataValue.TRUE)
+        assertThat(records.getAtt("test@abcdef", "permissions._has.Other?bool")).isEqualTo(DataValue.FALSE)
 
         val queryRes = RecordsQuery.create()
             .withQuery(

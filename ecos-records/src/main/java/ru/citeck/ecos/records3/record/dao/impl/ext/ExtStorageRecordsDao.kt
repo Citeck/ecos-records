@@ -64,11 +64,11 @@ open class ExtStorageRecordsDao<T : Any>(
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<*> {
-        val records = storageField.getByIds(recordIds)
+        val attValues = storageField.getByIds(recordIds)
+            .map { toWsScopedRecord(it) }
         if (!workspaceScoped) {
-            return records
+            return attValues
         }
-        val attValues = records.map { toWsScopedRecord(it) }
         if (AuthContext.isRunAsSystem()) {
             return attValues
         }
@@ -76,10 +76,10 @@ open class ExtStorageRecordsDao<T : Any>(
             AuthContext.getCurrentRunAsAuth()
         ) ?: return emptyList<Any>()
         val workspaces = recordsService.getAtts(attValues, listOf(ATT_WORKSPACE))
-        return records.mapIndexed { index, record ->
+        return attValues.mapIndexed { index, attValue ->
             val recWs = workspaces[index].getAtt(ATT_WORKSPACE).asText()
             if (recWs.isBlank() || userWorkspaces.contains(recWs)) {
-                record
+                attValue
             } else {
                 null
             }
@@ -111,7 +111,7 @@ open class ExtStorageRecordsDao<T : Any>(
             0,
             -1
         )
-        val result = RecsQueryRes<Any>()
+        val result = RecsQueryRes<EntityRef>()
         result.setTotalCount((allRecords.size).toLong())
         result.setHasMore(allRecords.size > (page.maxItems + page.skipCount))
 
@@ -183,15 +183,12 @@ open class ExtStorageRecordsDao<T : Any>(
 
     private fun toWsScopedRecord(value: T?): Any {
         value ?: return EmptyAttValue.INSTANCE
-        if (!workspaceScoped) {
-            return value
-        }
-        return WsScopedRecord(attValuesConverter.toAttValue(value) ?: EmptyAttValue.INSTANCE)
+        return ExtStorageRecord(attValuesConverter.toAttValue(value) ?: EmptyAttValue.INSTANCE)
     }
 
-    class WsScopedRecord(value: AttValue) : AttValueDelegate(value) {
+    inner class ExtStorageRecord(value: AttValue) : AttValueDelegate(value) {
         override fun getAtt(name: String): Any? {
-            if (name == RecordConstants.ATT_WORKSPACE) {
+            if (workspaceScoped && name == RecordConstants.ATT_WORKSPACE) {
                 var wsIdRaw = super.getAtt(ATT_WORKSPACE)
                 if (wsIdRaw is DataValue) {
                     wsIdRaw = wsIdRaw.asJavaObj()
@@ -202,7 +199,17 @@ open class ExtStorageRecordsDao<T : Any>(
                     EntityRef.create(AppName.EMODEL, "workspace", wsIdRaw)
                 }
             }
-            return super.getAtt(name)
+            val superValue = super.getAtt(name)
+            if ((name == "permissions" || name == "_permissions") && superValue == null) {
+                return PermissionsValue()
+            }
+            return superValue
+        }
+    }
+
+    private class PermissionsValue : AttValue {
+        override fun has(name: String): Boolean {
+            return "read".equals(name, ignoreCase = true)
         }
     }
 }

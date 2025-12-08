@@ -10,6 +10,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.AuthData
 import ru.citeck.ecos.context.lib.auth.data.SimpleAuthData
+import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -44,19 +45,33 @@ class ExtStorageRecordsDaoTest {
         assertThat(records.getAtt("test@abcdef", "permissions._has.Read?bool")).isEqualTo(DataValue.TRUE)
         assertThat(records.getAtt("test@abcdef", "permissions._has.Other?bool")).isEqualTo(DataValue.FALSE)
 
-        val queryRes = RecordsQuery.create()
-            .withQuery(
-                Predicates.and(
-                    Predicates.contains("?str", "def"),
-                    Predicates.eq("_type", "emodel/type@customType")
-                )
+        listOf(true, false).forEach { predWithData ->
+            val predicate = Predicates.and(
+                Predicates.contains("?str", "def"),
+                Predicates.eq("_type", "emodel/type@customType")
             )
-            .withSourceId("test")
-            .build()
+            val query: Any = if (predWithData) {
+                DataValue.createObj()
+                    .set("predicate", predicate)
+                    .set("data", DataValue.createObj().set("abc", "def"))
+            } else {
+                predicate
+            }
 
-        val queryResult = records.query(queryRes)
-        assertThat(queryResult.getRecords()).hasSize(1)
-        assertThat(queryResult.getRecords()[0].toString()).isEqualTo("test@def")
+            val queryRes = RecordsQuery.create()
+                .withQuery(query)
+                .withLanguage(if (predWithData) {
+                    PredicateService.LANGUAGE_PREDICATE_WITH_DATA
+                } else {
+                    PredicateService.LANGUAGE_PREDICATE
+                })
+                .withSourceId("test")
+                .build()
+
+            val queryResult = records.query(queryRes)
+            assertThat(queryResult.getRecords()).hasSize(1)
+            assertThat(queryResult.getRecords()[0].toString()).isEqualTo("test@def")
+        }
     }
 
     @ParameterizedTest

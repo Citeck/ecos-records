@@ -10,6 +10,7 @@ interface PredicateService {
 
     companion object {
         const val LANGUAGE_PREDICATE = "predicate"
+        const val LANGUAGE_PREDICATE_WITH_DATA = "predicate-with-data"
     }
 
     fun isMatch(element: Any?, predicate: Predicate): Boolean

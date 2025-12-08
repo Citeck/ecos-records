@@ -98,11 +98,17 @@ open class ExtStorageRecordsDao<T : Any>(
                 page.maxItems
             )
         }
-        if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE) {
+        if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE &&
+            recsQuery.language != PredicateService.LANGUAGE_PREDICATE_WITH_DATA) {
+
             return null
         }
 
-        val predicate = recsQuery.getQuery(Predicate::class.java)
+        val predicate = if (recsQuery.language == PredicateService.LANGUAGE_PREDICATE_WITH_DATA) {
+            recsQuery.query["predicate"].getAsNotNull(Predicate::class.java)
+        } else {
+            recsQuery.getQuery(Predicate::class.java)
+        }
 
         val allRecords = getSortedValues(
             getAllRefs(),

@@ -60,11 +60,13 @@ class ExtStorageRecordsDaoTest {
 
             val queryRes = RecordsQuery.create()
                 .withQuery(query)
-                .withLanguage(if (predWithData) {
-                    PredicateService.LANGUAGE_PREDICATE_WITH_DATA
-                } else {
-                    PredicateService.LANGUAGE_PREDICATE
-                })
+                .withLanguage(
+                    if (predWithData) {
+                        PredicateService.LANGUAGE_PREDICATE_WITH_DATA
+                    } else {
+                        PredicateService.LANGUAGE_PREDICATE
+                    }
+                )
                 .withSourceId("test")
                 .build()
 

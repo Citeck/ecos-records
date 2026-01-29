@@ -99,7 +99,8 @@ open class ExtStorageRecordsDao<T : Any>(
             )
         }
         if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE &&
-            recsQuery.language != PredicateService.LANGUAGE_PREDICATE_WITH_DATA) {
+            recsQuery.language != PredicateService.LANGUAGE_PREDICATE_WITH_DATA
+        ) {
 
             return null
         }

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
@@ -19,9 +20,18 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
             .withName(RecordConstants.ATT_NULL)
             .withInner(SCALAR_ATTS_LIST[ScalarType.DISP_SCHEMA]!!)
             .build()
+
+        private const val CACHE_MAX_SIZE = 2000L
+        private const val CACHE_MAX_KEY_LENGTH = 256
     }
 
     private val procReader = services.attProcReader
+
+    private data class CacheKey(val alias: String, val attToRead: String)
+
+    private val parseCache = Caffeine.newBuilder()
+        .maximumSize(CACHE_MAX_SIZE)
+        .build<CacheKey, SchemaAtt>()
 
     fun read(alias: String, attToRead: String): SchemaAtt {
 
@@ -36,6 +46,23 @@ class AttSchemaReaderV2(services: RecordsServiceFactory) {
         if (attToRead == ScalarType.ID.schema && alias == ScalarType.ID.schema) {
             return ID_SCALAR_ATT
         }
+
+        val keyLength = alias.length + attToRead.length
+        if (keyLength > CACHE_MAX_KEY_LENGTH) {
+            return readInternal(alias, attToRead)
+        }
+
+        val cacheKey = CacheKey(alias, attToRead)
+
+        // Don't use cache.get() with loader due to recursive calls in readInnerAtts
+        parseCache.getIfPresent(cacheKey)?.let { return it }
+        val result = readInternal(alias, attToRead)
+        parseCache.put(cacheKey, result)
+
+        return result
+    }
+
+    private fun readInternal(alias: String, attToRead: String): SchemaAtt {
 
         val attWithProc = procReader.read(attToRead.trim())
         val attribute = attWithProc.attribute

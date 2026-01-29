@@ -149,34 +149,37 @@ public class AttStrUtils {
 
     public static int indexOf(String str, String subString, int fromIdx) {
 
-        if (subString.length() > 1 && hasOpenContextChar(subString) && !subString.equals("[]")) {
+        int strLen = str.length();
+        int subLen = subString.length();
+
+        if (subLen == 0 || fromIdx > strLen - subLen) {
+            return -1;
+        }
+
+        if (subLen > 1 && hasOpenContextChar(subString) && !subString.equals("[]")) {
             return -1;
         }
 
         char openContextChar = ' ';
         int openCounter = 0;
-        for (int idx = fromIdx; idx <= (str.length() - subString.length()); idx++) {
+        int maxIdx = strLen - subLen;
+
+        for (int idx = fromIdx; idx <= maxIdx; idx++) {
 
             char currentChar = str.charAt(idx);
+
             if (openContextChar != ' ') {
                 if (currentChar == openContextChar
                     && (currentChar == '(' || currentChar == '{' || currentChar == '[')) {
-
                     openCounter++;
                 }
                 if (isCloseContextChar(openContextChar, currentChar)) {
-                    int slashes = 0;
-                    int backIdx = idx;
-                    while (--backIdx > 0 && str.charAt(backIdx) == '\\') {
-                        slashes++;
-                    }
-                    if (slashes % 2 == 1) {
-                        continue;
-                    }
-                    if (--openCounter == 0) {
-                        openContextChar = ' ';
-                        if (containsAt(str, idx, subString)) {
-                            return idx;
+                    if (!isEscapedAtIdx(str, idx)) {
+                        if (--openCounter == 0) {
+                            openContextChar = ' ';
+                            if (containsAt(str, idx, subString)) {
+                                return idx;
+                            }
                         }
                     }
                 }
@@ -184,12 +187,24 @@ public class AttStrUtils {
             }
             if (containsAt(str, idx, subString)) {
                 return idx;
-            } else if (isOpenContextChar(currentChar)) {
+            }
+            if (isOpenContextChar(currentChar)) {
                 openContextChar = currentChar;
-                openCounter++;
+                openCounter = 1;
             }
         }
         return -1;
+    }
+
+    private static boolean isEscapedAtIdx(String str, int idx) {
+        if (idx <= 0) return false;
+        int backSlashes = 0;
+        int backIdx = idx - 1;
+        while (backIdx >= 0 && str.charAt(backIdx) == '\\') {
+            backSlashes++;
+            backIdx--;
+        }
+        return (backSlashes & 1) == 1;
     }
 
     public static int getLastNonWhitespaceCharIdx(String str) {
@@ -204,10 +219,12 @@ public class AttStrUtils {
     }
 
     private static boolean containsAt(String str, int idx, String subString) {
-        if (str.length() < idx + subString.length()) {
-            return false;
+        if (subString.length() == 1) {
+            char ch = subString.charAt(0);
+            if (str.charAt(idx) != ch) return false;
+            return idx == 0 || str.charAt(idx - 1) != '\\' || !isEscapedAtIdx(str, idx);
         }
-        if (subString.length() == 1 && idx > 0 && str.charAt(idx - 1) == '\\') {
+        if (str.length() < idx + subString.length()) {
             return false;
         }
         for (int i = 0; i < subString.length(); i++) {
@@ -232,19 +249,13 @@ public class AttStrUtils {
     }
 
     private static boolean isCloseContextChar(char openChar, char ch) {
-        if (openChar == '\'' || openChar == '"') {
-            return ch == openChar;
-        }
-        if (openChar == '(') {
-            return ch == ')';
-        }
-        if (openChar == '{') {
-            return ch == '}';
-        }
-        if (openChar == '[') {
-            return ch == ']';
-        }
-        return false;
+        return switch (openChar) {
+            case '\'', '"' -> ch == openChar;
+            case '(' -> ch == ')';
+            case '{' -> ch == '}';
+            case '[' -> ch == ']';
+            default -> false;
+        };
     }
 
     private static boolean isEscapedChar(String value, int idx) {

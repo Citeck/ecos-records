@@ -1,5 +1,6 @@
 package ru.citeck.ecos.records3.record.atts.schema.read.proc
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.StringUtils.isBlank
 import ru.citeck.ecos.records3.record.atts.proc.AttOrElseProcessor
@@ -7,19 +8,27 @@ import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.read.ParseUtils
 import ru.citeck.ecos.records3.record.atts.schema.utils.AttStrUtils
-import java.util.*
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import kotlin.math.min
 
 class AttProcReader {
 
     companion object {
-        private val PROCESSOR_PATTERN = Pattern.compile("(.+?)\\((.*)\\)")
+        private const val CACHE_MAX_SIZE = 1000L
+        private const val CACHE_MAX_KEY_LENGTH = 256
     }
 
-    fun read(attribute: String): AttWithProc {
+    private val cache = Caffeine.newBuilder()
+        .maximumSize(CACHE_MAX_SIZE)
+        .build<String, AttWithProc>()
 
+    fun read(attribute: String): AttWithProc {
+        if (attribute.length > CACHE_MAX_KEY_LENGTH) {
+            return readInternal(attribute)
+        }
+        return cache.get(attribute) { readInternal(it) }
+    }
+
+    private fun readInternal(attribute: String): AttWithProc {
         val processors: List<AttProcDef>
         var att = attribute
         var orElseDelimIdx = AttStrUtils.indexOf(att, '!')
@@ -101,16 +110,34 @@ class AttProcReader {
         if (isBlank(processorStr)) {
             return emptyList()
         }
-        val result: MutableList<AttProcDef> = ArrayList()
+        val result = ArrayList<AttProcDef>()
         for (proc in AttStrUtils.split(processorStr, '|')) {
-            val matcher: Matcher = PROCESSOR_PATTERN.matcher(proc)
-            if (matcher.matches()) {
-                val type = matcher.group(1).trim { it <= ' ' }
-                val args = parseArgs(matcher.group(2).trim { it <= ' ' })
-                result.add(AttProcDef(type, args))
+            val trimmedProc = proc.trim()
+            val parsed = parseProcessor(trimmedProc)
+            if (parsed != null) {
+                result.add(parsed)
             }
         }
         return result
+    }
+
+    /**
+     * Parses processor like "name(arg1, arg2)" without using regex
+     */
+    private fun parseProcessor(proc: String): AttProcDef? {
+        val openParen = proc.indexOf('(')
+        if (openParen == -1) return null
+
+        val closeParen = proc.lastIndexOf(')')
+        if (closeParen == -1 || closeParen < openParen) return null
+
+        val type = proc.substring(0, openParen).trim()
+        if (type.isEmpty()) return null
+
+        val argsStr = proc.substring(openParen + 1, closeParen).trim()
+        val args = parseArgs(argsStr)
+
+        return AttProcDef(type, args)
     }
 
     private fun parseArgs(argsStr: String): List<DataValue> {

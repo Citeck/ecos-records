@@ -165,7 +165,7 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
                         }
                         is Map<*, *> -> Json.mapper.convert(it, MLText::class.java)
                         is ObjectData -> Json.mapper.convert(it.getData(), MLText::class.java)
-                        else -> MLText(resType.toString())
+                        else -> MLText(it.toString())
                     }
                 }
             }
@@ -174,7 +174,7 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
                     when (it) {
                         is String -> it
                         is DataValue -> it.asText()
-                        else -> resType.toString()
+                        else -> it.toString()
                     }
                 }
             }

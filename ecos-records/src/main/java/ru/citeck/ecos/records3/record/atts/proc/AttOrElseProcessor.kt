@@ -34,8 +34,8 @@ class AttOrElseProcessor : AttProcessor {
             } else {
                 orElseAtt
             }
-            if (value.isNotNull() && (!value.isTextual() || value.asText().isNotEmpty())) {
-                return value
+            if (newValue.isNotNull() && (!newValue.isTextual() || newValue.asText().isNotEmpty())) {
+                return newValue
             }
         }
         return newValue

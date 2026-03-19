@@ -18,7 +18,6 @@ import ru.citeck.ecos.records2.source.dao.local.job.JobExecutor
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProvider
 import ru.citeck.ecos.records2.source.dao.local.meta.MetaRecordsDaoAttsProviderImpl
-import ru.citeck.ecos.records3.cache.CacheManager
 import ru.citeck.ecos.records3.exception.ExceptionMessageExtractor
 import ru.citeck.ecos.records3.record.atts.RecordAttsService
 import ru.citeck.ecos.records3.record.atts.RecordAttsServiceImpl
@@ -111,8 +110,6 @@ open class RecordsServiceFactory {
         }
         result
     }
-
-    internal val cacheManager: CacheManager by lazySingleton { CacheManager(this) }
 
     val attValueFactories: List<AttValueFactory<*>> by lazySingleton { createAttValueFactories() }
 

@@ -160,6 +160,6 @@ abstract class AbstractRecordsService : RecordsService {
         if (result.size != 1) {
             log.warn { "Unexpected result. Expected 1 record, but found " + result.size }
         }
-        return result[0]
+        return if (result.isEmpty()) DelStatus.OK else result[0]
     }
 }

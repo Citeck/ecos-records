@@ -30,7 +30,7 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
 
             val dateTime = try {
                 ZonedDateTime.parse(DateTimeAttProcUtils.normalizeDateTimeValue(value.asText()))
-            } catch (e: DateTimeParseException) {
+            } catch (_: DateTimeParseException) {
                 return value
             }
             val formatter = SimpleDateFormat(args.format, args.locale)
@@ -41,9 +41,11 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
                 if (offsetInMinutes == 0L) {
                     UTC_TIMEZONE
                 } else {
-                    val hours = (offsetInMinutes / 60).toString().padStart(2, '0')
-                    val minutes = (offsetInMinutes % 60).toString().padStart(2, '0')
-                    TimeZone.getTimeZone("GMT+$hours:$minutes")
+                    val sign = if (offsetInMinutes < 0) "-" else "+"
+                    val absMinutes = kotlin.math.abs(offsetInMinutes)
+                    val hours = (absMinutes / 60).toString().padStart(2, '0')
+                    val minutes = (absMinutes % 60).toString().padStart(2, '0')
+                    TimeZone.getTimeZone("GMT$sign$hours:$minutes")
                 }
             }
 
@@ -78,7 +80,7 @@ class AttFormatProcessor : AbstractAttProcessor<AttFormatProcessor.Args>() {
                 locale = if (localeStr == DEFAULT_VALUE) {
                     Locale.getDefault()
                 } else {
-                    Locale(localeStr)
+                    Locale.of(localeStr)
                 }
             }
         }

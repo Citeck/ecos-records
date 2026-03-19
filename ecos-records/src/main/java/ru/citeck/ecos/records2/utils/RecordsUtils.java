@@ -97,7 +97,7 @@ public class RecordsUtils {
                       .map(rec -> {
                           EntityRef ref = rec.getId();
                           if (ref.getAppName().isEmpty() && ref.getSourceId().isEmpty()) {
-                              new RecordAtts(EntityRef.valueOf(sourceId + "@" + ref), rec.getAtts());
+                              return new RecordAtts(EntityRef.valueOf(sourceId + "@" + ref), rec.getAtts());
                           }
                           return rec;
                       })

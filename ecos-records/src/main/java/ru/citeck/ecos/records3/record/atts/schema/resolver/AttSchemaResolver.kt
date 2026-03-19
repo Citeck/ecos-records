@@ -170,8 +170,8 @@ class AttSchemaResolver : ServiceFactoryAware {
         )
         if (attsToLoad.isNotEmpty()) {
             val resolvedAtts = recordsService.getAtts(refs, attsToLoad, true)
-            for (idx in refsIdx) {
-                (attValues[idx] as? EntityRefValueFactory.EntityRefValue)?.init(resolvedAtts[idx].getAtts())
+            for ((resolvedIdx, attValueIdx) in refsIdx.withIndex()) {
+                (attValues[attValueIdx] as? EntityRefValueFactory.EntityRefValue)?.init(resolvedAtts[resolvedIdx].getAtts())
             }
         } else {
             val emptyAtts = ObjectData.create()
@@ -1019,7 +1019,7 @@ class AttSchemaResolver : ServiceFactoryAware {
             val computedAtts = HashMap<String, RecordComputedAtt>()
             parent?.computedAtts?.forEach { (id, att) ->
                 val dotIdx: Int = AttStrUtils.indexOf(id, ".")
-                if (dotIdx > 0 && dotIdx < id.length + 1) {
+                if (dotIdx > 0 && dotIdx < id.length - 1) {
                     computedAtts[id.substring(dotIdx + 1)] = att
                 }
             }

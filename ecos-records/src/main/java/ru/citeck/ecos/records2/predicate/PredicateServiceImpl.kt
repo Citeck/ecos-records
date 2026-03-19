@@ -152,7 +152,7 @@ open class PredicateServiceImpl : PredicateService, ServiceFactoryAware {
         skip: Int,
         max: Int
     ): List<T> {
-        return filterAndSort(elements, predicate, sorting, skip, max)
+        return filterAndSort(elements, predicate, sorting, skip, max, DefaultValueComparator)
     }
 
     override fun <T : Element> filterAndSort(

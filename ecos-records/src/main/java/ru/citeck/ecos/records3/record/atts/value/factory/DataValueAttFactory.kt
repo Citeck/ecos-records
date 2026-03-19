@@ -86,7 +86,7 @@ class DataValueAttFactory : AttValueFactory<DataValue> {
             if (value.isBoolean()) {
                 return value.asBoolean()
             } else if (value.isTextual()) {
-                return value.asText() == true.toString()
+                return value.asText().equals("true", ignoreCase = true)
             }
             return null
         }

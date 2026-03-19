@@ -49,7 +49,7 @@ object BeanTypeUtils {
         if (Map::class.java.isAssignableFrom(type)) {
             return { bean -> Json.mapper.toNonDefaultData(bean).toString() }
         }
-        if (type.isAssignableFrom(DataValue::class.java)) {
+        if (DataValue::class.java.isAssignableFrom(type)) {
             return { bean: Any ->
                 if (bean is DataValue) {
                     DataValueAttFactory.getAsText(bean)
@@ -59,7 +59,7 @@ object BeanTypeUtils {
             }
         }
         val packageName = type.`package`.name
-        if (type.isAssignableFrom(ObjectData::class.java) ||
+        if (ObjectData::class.java.isAssignableFrom(type) ||
             packageName.startsWith("java.") ||
             packageName.startsWith("javax.") ||
             type.isEnum

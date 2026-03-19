@@ -7,16 +7,13 @@ import java.util.*
 
 class DoubleValueFactory : AttValueFactory<Double> {
 
-    private val format = DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH))
-    init {
-        format.maximumFractionDigits = 340
-    }
-
     override fun getValue(value: Double): AttValue {
 
         return object : AttValue {
 
             override fun asText(): String? {
+                val format = DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH))
+                format.maximumFractionDigits = 340
                 return format.format(value)
             }
 

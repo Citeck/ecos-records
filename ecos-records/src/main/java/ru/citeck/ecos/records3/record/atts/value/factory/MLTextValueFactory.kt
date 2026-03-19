@@ -24,12 +24,7 @@ class MLTextValueFactory : AttValueFactory<MLText> {
             if (name == "exact") {
                 return Value(value, false)
             }
-            val locale = if (name.contains("_")) {
-                val countryAndLang = name.split("_")
-                Locale.of(countryAndLang[0], countryAndLang[1])
-            } else {
-                Locale.of(name)
-            }
+            val locale = Locale.forLanguageTag(name.replace('_', '-'))
             return if (closest) {
                 value.getClosestValue(locale)
             } else {

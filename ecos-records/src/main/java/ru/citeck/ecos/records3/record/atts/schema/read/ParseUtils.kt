@@ -52,7 +52,7 @@ object ParseUtils {
                 }
                 var res = value.substring(currentIdx).toLong(radix)
                 if (negative && res != 0L) {
-                    res = res.inv()
+                    res = -res
                 }
                 return res
             }

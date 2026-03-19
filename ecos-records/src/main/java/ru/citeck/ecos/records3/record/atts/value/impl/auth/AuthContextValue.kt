@@ -11,11 +11,14 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 class AuthContextValue : AttValue {
 
     override fun getAtt(name: String): Any? {
-        when (name) {
+        return when (name) {
             "full" -> AuthAttValue(AuthContext.getCurrentFullAuth())
             "runAs" -> AuthAttValue(AuthContext.getCurrentRunAsAuth())
+            "isRunAsSystem" -> AuthContext.isRunAsSystem()
+            "isRunAsAdmin" -> AuthContext.isRunAsAdmin()
+            "isRunAsSystemOrAdmin" -> AuthContext.isRunAsSystemOrAdmin()
+            else -> AuthAttValue(AuthContext.getCurrentFullAuth()).getAtt(name)
         }
-        return AuthAttValue(AuthContext.getCurrentFullAuth()).getAtt(name)
     }
 
     override fun has(name: String): Boolean {

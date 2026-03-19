@@ -35,14 +35,14 @@ class BeanValueFactory : AttValueFactory<Any> {
             if (typeCtx.hasProperty(ScalarType.NUM.schema)) {
                 return getAttWithType(ScalarType.NUM.schema, Double::class.java)
             }
-            return asText()?.toDouble()
+            return asText()?.toDoubleOrNull()
         }
 
         override fun asBoolean(): Boolean? {
             if (typeCtx.hasProperty(ScalarType.BOOL.schema)) {
                 return getAttWithType(ScalarType.BOOL.schema, Boolean::class.java)
             }
-            return asText()?.toBoolean()
+            return asText()?.toBooleanStrictOrNull()
         }
 
         override fun getType(): Any? {

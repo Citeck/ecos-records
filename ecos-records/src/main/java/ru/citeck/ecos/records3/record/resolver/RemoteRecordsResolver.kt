@@ -9,12 +9,9 @@ import ru.citeck.ecos.records2.utils.RecordsUtils
 import ru.citeck.ecos.records2.utils.ValWithIdx
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records3.cache.Cache
-import ru.citeck.ecos.records3.cache.CacheConfig
 import ru.citeck.ecos.records3.exception.RecordsException
 import ru.citeck.ecos.records3.exception.RemoteRecordsException
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.write.AttSchemaLegacyWriter
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.source.RecordsSourceMeta
@@ -35,7 +32,6 @@ import ru.citeck.ecos.records3.rest.v2.query.QueryBodyV2
 import ru.citeck.ecos.records3.security.HasSensitiveData
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.web.client.EcosWebClientApi
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
@@ -69,23 +65,10 @@ class RemoteRecordsResolver(
 
     private lateinit var recordsService: RecordsService
 
-    private val sourceIdMeta: Cache<String, RecSrcMeta>
     private val webClient: EcosWebClientApi = services.getEcosWebAppApi()?.getWebClientApi()
         ?: error("EcosWebAppApi or EcosWebClientApi is null")
 
     private val currentAppName = services.webappProps.appName
-    private val currentAppRef = currentAppName + ":" + services.webappProps.appInstanceId
-
-    init {
-        sourceIdMeta = services.cacheManager.create(
-            CacheConfig(
-                key = "remote-source-id-meta",
-                expireAfterWrite = TimeUnit.MINUTES.toMillis(1),
-                maxItems = 200
-            ),
-            RecSrcMeta(false)
-        ) { k -> evalSourceIdMeta(k) }
-    }
 
     fun query(
         query: RecordsQuery,
@@ -177,7 +160,8 @@ class RemoteRecordsResolver(
         context: RequestContext
     ): List<RecordAtts> {
 
-        val queryBody = if (webClient.getApiVersion(appName, QUERY_PATH, 2) == 2) {
+        val apiVersion = webClient.getApiVersion(appName, QUERY_PATH, 2)
+        val queryBody = if (apiVersion == 2) {
             QueryBodyV2()
         } else {
             QueryBody()
@@ -190,7 +174,7 @@ class RemoteRecordsResolver(
         val queryResp = exchangeRemoteRequest(
             appName,
             QUERY_PATH,
-            QUERY_VERSION,
+            apiVersion,
             queryBody,
             QueryResp::class,
             context
@@ -310,11 +294,6 @@ class RemoteRecordsResolver(
         return result.map { it.value }
     }
 
-    private fun evalSourceIdMeta(sourceMetaId: String): RecSrcMeta {
-        val atts = recordsService.getAtts(EntityRef.valueOf(sourceMetaId), RecSrcMetaAtts::class.java)
-        return RecSrcMeta(atts.isTransactional ?: false)
-    }
-
     private fun setContextProps(body: RequestBody, ctx: RequestContext) {
         val ctxData = ctx.ctxData
         body.msgLevel = ctxData.msgLevel
@@ -411,13 +390,4 @@ class RemoteRecordsResolver(
     fun setRecordsService(recordsService: RecordsService) {
         this.recordsService = recordsService
     }
-
-    private data class RecSrcMeta(
-        val isTransactional: Boolean
-    )
-
-    data class RecSrcMetaAtts(
-        @AttName("features.transactional")
-        val isTransactional: Boolean?
-    )
 }

@@ -109,7 +109,7 @@ object AttBitsProcessors {
             if (args.bitsCount == 0 || numValue == 0L) {
                 return numValue
             }
-            return operation.apply(value.asLong(), args.bitsCount)
+            return operation.apply(numValue, args.bitsCount)
         }
 
         override fun parseArgs(args: List<DataValue>): Args {

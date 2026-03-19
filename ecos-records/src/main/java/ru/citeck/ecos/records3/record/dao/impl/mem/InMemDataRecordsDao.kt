@@ -91,6 +91,9 @@ open class InMemDataRecordsDao(
             }
             val newId = targetId.ifEmpty { srcId }
             records[newId] = mutRec
+            if (newId != srcId) {
+                records.remove(srcId)
+            }
             newId
         }
     }

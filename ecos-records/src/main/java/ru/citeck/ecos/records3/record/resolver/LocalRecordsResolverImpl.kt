@@ -49,6 +49,7 @@ import ru.citeck.ecos.records3.record.mixin.MixinContext
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.interceptor.*
+import ru.citeck.ecos.records3.record.resolver.interceptor.obs.LocalRecordsObsCtx
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -83,6 +84,7 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
 
     private val queryLangService = services.queryLangService
     private val recordsAttsService = services.recordsAttsService
+    private val micrometerContext = services.micrometerContext
     private lateinit var recordsTemplateService: RecordsTemplateService
 
     private val queryAutoGroupingEnabled = services.properties.queryAutoGroupingEnabled
@@ -260,7 +262,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
             ?: throw LanguageNotSupportedException(sourceId, extQuery.language)
 
         val queryStartMs = System.currentTimeMillis()
-        val queryRes = dao.second.queryRecords(query)
+        val queryRes = micrometerContext.createObs(
+            LocalRecordsObsCtx.DaoQuery(sourceId, query)
+        ).observe { dao.second.queryRecords(query) }
         context.addMsg(MsgLevel.DEBUG) {
             "$DEBUG_QUERY_TIME: '${System.currentTimeMillis() - queryStartMs}'"
         }
@@ -673,7 +677,9 @@ open class LocalRecordsResolverImpl(private val services: RecordsServiceFactory)
         context: RequestContext
     ): List<RecordAtts> {
 
-        var recAtts = recordsDao.second.getRecordsAtts(recs)
+        var recAtts = micrometerContext.createObs(
+            LocalRecordsObsCtx.DaoGetAtts(sourceId, recs)
+        ).observe { recordsDao.second.getRecordsAtts(recs) }
         if (recAtts == null) {
             recAtts = ArrayList<Any>()
             for (ignored in recs) {

@@ -67,7 +67,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
     private val attSchemaReader = factory.attSchemaReader
     private val attProcReader = factory.attProcReader
 
-    private val REF_SCALAR_FIELD = ScalarField(EntityRef::class.java, ScalarType.ID)
+    private val refScalarField = ScalarField(EntityRef::class.java, ScalarType.ID)
 
     init {
         listOf(
@@ -293,7 +293,7 @@ class DtoSchemaReader(factory: RecordsServiceFactory) {
 
     private fun getScalarField(clazz: Class<*>): ScalarField<Any>? {
         val res = if (EntityRef::class.java.isAssignableFrom(clazz)) {
-            REF_SCALAR_FIELD
+            refScalarField
         } else {
             var scalar = scalars[clazz]
             if (scalar == null && Map::class.java.isAssignableFrom(clazz)) {

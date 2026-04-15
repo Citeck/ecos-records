@@ -9,6 +9,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.exception.JsonMapperException
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
@@ -39,6 +40,7 @@ import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinContext
 import ru.citeck.ecos.records3.record.mixin.external.ExtAttMixinService
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
+import ru.citeck.ecos.records3.record.resolver.interceptor.obs.LocalRecordsObsCtx
 import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.utils.AttUtils
 import ru.citeck.ecos.records3.utils.RecordRefUtils
@@ -82,6 +84,8 @@ class AttSchemaResolver : ServiceFactoryAware {
 
     private lateinit var recordTypeService: RecordTypeService
 
+    private lateinit var micrometerContext: EcosMicrometerContext
+
     private lateinit var currentAppName: String
 
     override fun setRecordsServiceFactory(serviceFactory: RecordsServiceFactory) {
@@ -95,6 +99,7 @@ class AttSchemaResolver : ServiceFactoryAware {
         this.computedAttsService = serviceFactory.recordComputedAttsService
         this.recordTypeService = serviceFactory.recordTypeService
         this.extAttMixinService = serviceFactory.extAttMixinService
+        this.micrometerContext = serviceFactory.micrometerContext
         this.currentAppName = serviceFactory.getEcosWebAppApi()?.getProperties()?.appName ?: ""
     }
 
@@ -169,7 +174,9 @@ class AttSchemaResolver : ServiceFactoryAware {
             attSchemaWriter
         )
         if (attsToLoad.isNotEmpty()) {
-            val resolvedAtts = recordsService.getAtts(refs, attsToLoad, true)
+            val resolvedAtts = micrometerContext.createObs(
+                LocalRecordsObsCtx.RefsPreload(refs, attsToLoad)
+            ).observe { recordsService.getAtts(refs, attsToLoad, true) }
             for ((resolvedIdx, attValueIdx) in refsIdx.withIndex()) {
                 (attValues[attValueIdx] as? EntityRefValueFactory.EntityRefValue)?.init(resolvedAtts[resolvedIdx].getAtts())
             }
@@ -517,15 +524,19 @@ class AttSchemaResolver : ServiceFactoryAware {
                     attValue = try {
                         val valueCtx = getContextForDynamicAtt(value, computedAtt.id)
                         if (valueCtx != null) {
-                            withoutSourceIdMapping(context) {
-                                computedAttsService.compute(
-                                    AttValueResolveCtx(
-                                        currentValuePath,
-                                        context,
-                                        valueCtx
-                                    ),
-                                    computedAtt
-                                )
+                            micrometerContext.createObs(
+                                LocalRecordsObsCtx.ComputedAtt(computedAtt.id, computedAtt.type, attPath)
+                            ).observe {
+                                withoutSourceIdMapping(context) {
+                                    computedAttsService.compute(
+                                        AttValueResolveCtx(
+                                            currentValuePath,
+                                            context,
+                                            valueCtx
+                                        ),
+                                        computedAtt
+                                    )
+                                }
                             }
                         } else {
                             log.debug { "Value context is not found for attribute $computedAtt" }
@@ -548,15 +559,19 @@ class AttSchemaResolver : ServiceFactoryAware {
                             if (mixinValueCtx == null) {
                                 null
                             } else {
-                                withoutSourceIdMapping(context) {
-                                    mixinAttCtx.mixin.getAtt(
-                                        mixinAttCtx.path,
-                                        AttValueResolveCtx(
-                                            currentValuePath,
-                                            context,
-                                            mixinValueCtx
+                                micrometerContext.createObs(
+                                    LocalRecordsObsCtx.Mixin(mixinAttCtx.path, mixinAttCtx.mixin::class.java.name)
+                                ).observe {
+                                    withoutSourceIdMapping(context) {
+                                        mixinAttCtx.mixin.getAtt(
+                                            mixinAttCtx.path,
+                                            AttValueResolveCtx(
+                                                currentValuePath,
+                                                context,
+                                                mixinValueCtx
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             }
                         } catch (e: Exception) {
@@ -575,15 +590,19 @@ class AttSchemaResolver : ServiceFactoryAware {
 
             if (attValue is RecordComputedAttValue) {
                 val notNullAttValue = attValue
-                attValue = withoutSourceIdMapping(context) {
-                    computedAttsService.compute(
-                        AttValueResolveCtx(
-                            currentValuePath,
-                            context,
-                            value
-                        ),
-                        notNullAttValue
-                    )
+                attValue = micrometerContext.createObs(
+                    LocalRecordsObsCtx.ComputedAtt("<inline>", notNullAttValue.type, attPath)
+                ).observe {
+                    withoutSourceIdMapping(context) {
+                        computedAttsService.compute(
+                            AttValueResolveCtx(
+                                currentValuePath,
+                                context,
+                                value
+                            ),
+                            notNullAttValue
+                        )
+                    }
                 }
             } else if (attValue is Function0<*>) {
                 attValue = attValue.invoke()

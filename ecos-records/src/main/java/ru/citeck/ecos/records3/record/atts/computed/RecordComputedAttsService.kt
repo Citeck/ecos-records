@@ -31,6 +31,7 @@ class RecordComputedAttsService(services: RecordsServiceFactory) {
     private val scriptExecutor by lazy {
         ScriptUtils.getExecutor(ScriptUtils.LANG_JS, "records")
             .addBinding("Records", recordsScriptService)
+            .setMicrometerContext(services.micrometerContext)
     }
 
     fun compute(value: Any, att: RecordComputedAtt, orElse: () -> Any? = { null }): Any? {

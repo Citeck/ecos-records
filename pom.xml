@@ -18,9 +18,9 @@
 
     <properties>
 
-        <revision>3.77.1</revision>
+        <revision>3.77.2</revision>
 
-        <ecos.commons.version>3.7.0</ecos.commons.version>
+        <ecos.commons.version>3.8.7</ecos.commons.version>
         <ecos.test-commons.version>1.13.0</ecos.test-commons.version>
 
     </properties>

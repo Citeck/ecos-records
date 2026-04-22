@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class EmptyPredicate extends AttributePredicate {
 
@@ -35,6 +36,11 @@ public class EmptyPredicate extends AttributePredicate {
     }
 
     @Override
+    public String toString() {
+        return "EMPTY:'" + getAttribute() + "'";
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -42,11 +48,12 @@ public class EmptyPredicate extends AttributePredicate {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return super.equals(o);
+        EmptyPredicate that = (EmptyPredicate) o;
+        return Objects.equals(getAttribute(), that.getAttribute());
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(getAttribute());
     }
 }

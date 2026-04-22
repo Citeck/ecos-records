@@ -5,6 +5,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AndPredicate extends ComposedPredicate {
@@ -54,11 +55,12 @@ public class AndPredicate extends ComposedPredicate {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return super.equals(o);
+        AndPredicate that = (AndPredicate) o;
+        return Objects.equals(getPredicates(), that.getPredicates());
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(getPredicates());
     }
 }

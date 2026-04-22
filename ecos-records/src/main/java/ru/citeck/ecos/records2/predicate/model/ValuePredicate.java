@@ -6,6 +6,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonValue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ValuePredicate extends AttributePredicate {
@@ -112,5 +113,20 @@ public class ValuePredicate extends AttributePredicate {
         return new ValuePredicate(attribute, Type.LE, value);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
+        ValuePredicate that = (ValuePredicate) o;
+        return Objects.equals(getAttribute(), that.getAttribute())
+            && Objects.equals(value, that.value)
+            && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAttribute(), value, type);
+    }
 }

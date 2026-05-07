@@ -16,6 +16,8 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.read.AttReadException
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
+import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -25,6 +27,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.utils.AttUtils
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
@@ -33,10 +36,8 @@ import kotlin.collections.HashMap
 class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware {
 
     companion object {
-        private val REFS_CACHE_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-raw"
-        private val REFS_CACHE_NOT_RAW_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache"
-        private val REFS_CACHE_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-cache-system-raw"
-        private val REFS_CACHE_NOT_RAW_SYSTEM_KEY = "${LocalRemoteResolver::class.simpleName}-refs-system-cache"
+        private object AttsCacheTxnKey
+        private const val ATTS_CACHE_REQ_KEY = "LocalRemoteResolver-atts-cache"
 
         private val log = KotlinLogging.logger {}
     }
@@ -80,13 +81,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         if (rawRecords.isEmpty()) {
             return emptyList()
         }
-        val records = rawRecords.map {
-            if (it is String) {
-                EntityRef.valueOf(it)
-            } else {
-                it
-            }
-        }
+        val records = rawRecords.map { extractEntityRefOrKeep(it) }
 
         val attsMap = AttsMap(attributes)
         val context: RequestContext = RequestContext.getCurrentNotNull()
@@ -171,24 +166,8 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         rawAtts: Boolean
     ): List<ValWithIdx<RecordAtts>> {
 
-        if (!context.ctxData.readOnly) {
-            return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
-        }
-
-        val cacheKey = if (rawAtts) {
-            if (AuthContext.isRunAsSystem()) {
-                REFS_CACHE_RAW_SYSTEM_KEY
-            } else {
-                REFS_CACHE_RAW_KEY
-            }
-        } else {
-            if (AuthContext.isRunAsSystem()) {
-                REFS_CACHE_NOT_RAW_SYSTEM_KEY
-            } else {
-                REFS_CACHE_NOT_RAW_KEY
-            }
-        }
-        val recordsCache: MutableMap<EntityRef, MutableMap<String, DataValue>> = context.getReadOnlyCache(cacheKey)
+        val recordsCache = getOrCreateAttsCache(context, rawAtts)
+            ?: return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
         val possibleCachedAttsWithAliases: MutableMap<String, String> = HashMap(
             attsMap.getAttributes().entries.mapNotNull {
                 val value = it.value
@@ -204,7 +183,7 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
         }
 
-        val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { HashMap() } }
+        val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { ConcurrentHashMap() } }
         val recordsAttValuesFromCache = recs.map { HashMap<String, DataValue>() }
 
         // cache won't be used if one of requested records doesn't have
@@ -568,6 +547,68 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val result = ArrayList(local.getSourcesInfo())
         result.addAll(remote?.getSourcesInfo() ?: emptyList())
         return result
+    }
+
+    /**
+     * Returns the per-(rawAtts × runAsUser) cache slot for read-only attribute fetches.
+     * Prefers TxnContext (shared across the whole transaction), falls back to RequestContext
+     * for flows that don't run inside a managed transaction (e.g. unit tests, standalone use).
+     * Returns null if neither scope is read-only — caller must skip caching.
+     */
+    private fun getOrCreateAttsCache(
+        context: RequestContext,
+        rawAtts: Boolean
+    ): MutableMap<EntityRef, MutableMap<String, DataValue>>? {
+        val bucketKey = AttsCacheBucketKey(rawAtts, AuthContext.getCurrentRunAsUser())
+        val txn = TxnContext.getTxnOrNull()
+        if (txn != null && txn.isReadOnly()) {
+            val buckets = txn.getData(AttsCacheTxnKey) {
+                ConcurrentHashMap<AttsCacheBucketKey, MutableMap<EntityRef, MutableMap<String, DataValue>>>()
+            }
+            return buckets.computeIfAbsent(bucketKey) { ConcurrentHashMap() }
+        }
+        if (!context.ctxData.readOnly) {
+            return null
+        }
+        val buckets: MutableMap<AttsCacheBucketKey, MutableMap<EntityRef, MutableMap<String, DataValue>>> =
+            context.getReadOnlyCache(ATTS_CACHE_REQ_KEY)
+        return buckets.getOrPut(bucketKey) { HashMap() }
+    }
+
+    private data class AttsCacheBucketKey(
+        val rawAtts: Boolean,
+        val runAsUser: String
+    )
+
+    /**
+     * Normalizes wrapped record values to EntityRef so cached DAO results can be reused.
+     * Inspired by RoleService.getEntityRefForRecord. Differs in one detail: when the
+     * extracted ref has no sourceId (synthetic UUID auto-generated for a virtual AttValue
+     * without explicit getId), we keep the original wrapper so it falls through to
+     * recordObjs / custom AttValue resolution instead of being routed to a non-existent
+     * DAO. The two helpers are not interchangeable.
+     */
+    private fun extractEntityRefOrKeep(rec: Any?): Any? {
+        val ref = when (rec) {
+            is EntityRef -> return rec
+            is String -> return EntityRef.valueOf(rec)
+            is AttValueCtx -> try {
+                rec.getRef()
+            } catch (_: Exception) {
+                null
+            }
+            is AttValue -> try {
+                rec.id
+            } catch (_: Exception) {
+                null
+            }
+            else -> null
+        }
+        return if (ref is EntityRef && ref.getSourceId().isNotEmpty()) {
+            ref
+        } else {
+            rec
+        }
     }
 
     private fun isRemoteRef(ref: EntityRef?): Boolean {

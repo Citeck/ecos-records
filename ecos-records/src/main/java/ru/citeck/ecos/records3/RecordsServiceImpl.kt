@@ -3,6 +3,7 @@ package ru.citeck.ecos.records3
 import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records2.ServiceFactoryAware
 import ru.citeck.ecos.records2.request.error.ErrorUtils
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -17,7 +18,9 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.record.request.msg.MsgLevel
 import ru.citeck.ecos.records3.record.resolver.LocalRemoteResolver
 import ru.citeck.ecos.records3.record.type.RecordTypeService
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
 
@@ -27,6 +30,8 @@ open class RecordsServiceImpl(
 
     companion object {
         val log = KotlinLogging.logger {}
+
+        private object QueryCacheTxnKey
     }
 
     private lateinit var recordsResolver: LocalRemoteResolver
@@ -40,7 +45,7 @@ open class RecordsServiceImpl(
 
     override fun query(query: RecordsQuery): RecsQueryRes<EntityRef> {
         return handleRecordsQuery {
-            val metaResult = recordsResolver.query(query, emptyMap<String, Any>(), true)
+            val metaResult = resolverQueryCached(query, emptyMap<String, Any>(), true)
             metaResult.withRecords { it.getId() }
         }
     }
@@ -55,8 +60,41 @@ open class RecordsServiceImpl(
     }
 
     override fun query(query: RecordsQuery, attributes: Map<String, *>, rawAtts: Boolean): RecsQueryRes<RecordAtts> {
-        return handleRecordsQuery { recordsResolver.query(query, attributes, rawAtts) }
+        return handleRecordsQuery { resolverQueryCached(query, attributes, rawAtts) }
     }
+
+    private fun resolverQueryCached(
+        query: RecordsQuery,
+        attributes: Map<String, *>,
+        rawAtts: Boolean
+    ): RecsQueryRes<RecordAtts> {
+        val txn = TxnContext.getTxnOrNull()
+        if (txn == null || !txn.isReadOnly()) {
+            return recordsResolver.query(query, attributes, rawAtts)
+        }
+        val cache = txn.getData(QueryCacheTxnKey) {
+            ConcurrentHashMap<QueryCacheKey, RecsQueryRes<RecordAtts>>()
+        }
+        val key = QueryCacheKey(
+            query = query,
+            attributes = attributes,
+            rawAtts = rawAtts,
+            runAsUser = AuthContext.getCurrentRunAsUser()
+        )
+        val cached = cache.computeIfAbsent(key) {
+            recordsResolver.query(query, attributes, rawAtts)
+        }
+        // RecsQueryRes is mutable (setRecords/merge/addRecord); hand each caller
+        // its own wrapper so a downstream mutation can't poison the cached entry.
+        return RecsQueryRes(cached)
+    }
+
+    private data class QueryCacheKey(
+        val query: RecordsQuery,
+        val attributes: Map<String, *>,
+        val rawAtts: Boolean,
+        val runAsUser: String
+    )
 
     /* ATTRIBUTES */
 

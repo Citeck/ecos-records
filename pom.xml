@@ -18,10 +18,11 @@
 
     <properties>
 
-        <revision>3.77.2</revision>
+        <revision>3.78.0</revision>
 
         <ecos.commons.version>3.8.7</ecos.commons.version>
         <ecos.test-commons.version>1.13.0</ecos.test-commons.version>
+        <ecos.txn-lib.version>1.4.5</ecos.txn-lib.version>
 
     </properties>
 
@@ -38,6 +39,13 @@
             <groupId>ru.citeck.ecos.commons</groupId>
             <artifactId>ecos-commons-deps</artifactId>
             <version>${ecos.commons.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.txn</groupId>
+            <artifactId>ecos-txn-lib</artifactId>
+            <version>${ecos.txn-lib.version}</version>
             <scope>provided</scope>
         </dependency>
 

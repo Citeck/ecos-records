@@ -77,7 +77,7 @@ open class RecordsServiceImpl(
         }
         val key = QueryCacheKey(
             query = query,
-            attributes = attributes,
+            attributes = HashMap(attributes),
             rawAtts = rawAtts,
             runAsUser = AuthContext.getCurrentRunAsUser()
         )

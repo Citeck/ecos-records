@@ -16,8 +16,6 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.SchemaAtt
 import ru.citeck.ecos.records3.record.atts.schema.read.AttReadException
 import ru.citeck.ecos.records3.record.atts.schema.read.AttSchemaReader
-import ru.citeck.ecos.records3.record.atts.value.AttValue
-import ru.citeck.ecos.records3.record.atts.value.AttValueCtx
 import ru.citeck.ecos.records3.record.atts.value.impl.NullAttValue
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -81,7 +79,13 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         if (rawRecords.isEmpty()) {
             return emptyList()
         }
-        val records = rawRecords.map { extractEntityRefOrKeep(it) }
+        val records = rawRecords.map {
+            if (it is String) {
+                EntityRef.valueOf(it)
+            } else {
+                it
+            }
+        }
 
         val attsMap = AttsMap(attributes)
         val context: RequestContext = RequestContext.getCurrentNotNull()
@@ -579,37 +583,6 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
         val rawAtts: Boolean,
         val runAsUser: String
     )
-
-    /**
-     * Normalizes wrapped record values to EntityRef so cached DAO results can be reused.
-     * Inspired by RoleService.getEntityRefForRecord. Differs in one detail: when the
-     * extracted ref has no sourceId (synthetic UUID auto-generated for a virtual AttValue
-     * without explicit getId), we keep the original wrapper so it falls through to
-     * recordObjs / custom AttValue resolution instead of being routed to a non-existent
-     * DAO. The two helpers are not interchangeable.
-     */
-    private fun extractEntityRefOrKeep(rec: Any?): Any? {
-        val ref = when (rec) {
-            is EntityRef -> return rec
-            is String -> return EntityRef.valueOf(rec)
-            is AttValueCtx -> try {
-                rec.getRef()
-            } catch (_: Exception) {
-                null
-            }
-            is AttValue -> try {
-                rec.id
-            } catch (_: Exception) {
-                null
-            }
-            else -> null
-        }
-        return if (ref is EntityRef && ref.getSourceId().isNotEmpty()) {
-            ref
-        } else {
-            rec
-        }
-    }
 
     private fun isRemoteRef(ref: EntityRef?): Boolean {
         return ref != null &&

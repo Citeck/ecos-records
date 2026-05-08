@@ -81,8 +81,17 @@ open class RecordsServiceImpl(
             rawAtts = rawAtts,
             runAsUser = AuthContext.getCurrentRunAsUser()
         )
-        val cached = cache.computeIfAbsent(key) {
-            recordsResolver.query(query, attributes, rawAtts)
+        // NB: don't use computeIfAbsent — the resolver call below can recursively run
+        // another query (e.g. through a JS permission cascade) which re-enters this same
+        // method, and ConcurrentHashMap forbids recursive updates inside a compute lambda
+        // (throws "Recursive update" since Java 9). Check-then-put tolerates the rare race
+        // where two callers compute the same key in parallel: the last writer wins and we
+        // pay one extra resolver call. Within a single (single-threaded) txn this race
+        // doesn't occur in practice.
+        var cached = cache[key]
+        if (cached == null) {
+            cached = recordsResolver.query(query, attributes, rawAtts)
+            cache[key] = cached
         }
         // RecsQueryRes is mutable (setRecords/merge/addRecord); hand each caller
         // its own wrapper so a downstream mutation can't poison the cached entry.

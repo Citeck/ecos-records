@@ -94,6 +94,36 @@ class QueryTxnCacheTest : TxnCacheTestBase() {
         assertThat(dao.queryCalls).isEqualTo(2)
     }
 
+    @Test
+    fun nestedQueryWithSameKeyDoesNotTriggerRecursiveUpdateOnCache() {
+        // Regression: a query whose handler triggers another query for the SAME key (or any
+        // key colliding into the same ConcurrentHashMap bin) must not hit the JDK's
+        // "Recursive update" guard inside computeIfAbsent. Production stacks show this when
+        // a permission cascade nested in the resolver call recurses back into RecordsService.
+        // Using the same query+atts is the most direct way to guarantee the bin collision.
+        val factory = object : RecordsServiceFactory() {
+            override fun getEcosWebAppApi(): EcosWebAppApi = webAppApi
+        }
+        val q = RecordsQuery.create().withSourceId("recursive-src").build()
+        val callCount = java.util.concurrent.atomic.AtomicInteger()
+        val dao = object : RecordsQueryDao {
+            override fun getId() = "recursive-src"
+            override fun queryRecords(recsQuery: RecordsQuery): Any {
+                if (callCount.getAndIncrement() == 0) {
+                    // Re-enter the same cached key while the outer call is still in flight.
+                    factory.recordsService.query(q, listOf("k"))
+                }
+                return emptyList<String>()
+            }
+        }
+        factory.recordsService.register(dao)
+
+        TxnContext.doInTxn(readOnly = true) {
+            factory.recordsService.query(q, listOf("k"))
+        }
+        // Reaches here only if no "Recursive update" was thrown from the cache.
+    }
+
     private class CountingQueryDao : RecordsQueryDao, RecordsAttsDao {
 
         var queryCalls = 0

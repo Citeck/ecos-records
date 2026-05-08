@@ -187,7 +187,18 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             return loadAttsForRefs(context, sourceId, recs, attsMap, rawAtts)
         }
 
-        val cacheForRecords = recs.map { recordsCache.computeIfAbsent(it.value) { ConcurrentHashMap() } }
+        // check-then-put rather than computeIfAbsent: ConcurrentHashMap throws "Recursive
+        // update" when a nested call (e.g. permission cascade re-entering this method)
+        // hits a colliding bin. The lambda body here is trivial, but the JDK's bin-level
+        // ReservationNode check fires regardless of lambda contents.
+        val cacheForRecords = recs.map { rec ->
+            var cache = recordsCache[rec.value]
+            if (cache == null) {
+                cache = ConcurrentHashMap<String, DataValue>()
+                recordsCache[rec.value] = cache
+            }
+            cache
+        }
         val recordsAttValuesFromCache = recs.map { HashMap<String, DataValue>() }
 
         // cache won't be used if one of requested records doesn't have
@@ -569,7 +580,10 @@ class LocalRemoteResolver(services: RecordsServiceFactory) : ServiceFactoryAware
             val buckets = txn.getData(AttsCacheTxnKey) {
                 ConcurrentHashMap<AttsCacheBucketKey, MutableMap<EntityRef, MutableMap<String, DataValue>>>()
             }
-            return buckets.computeIfAbsent(bucketKey) { ConcurrentHashMap() }
+            // check-then-put — see note in loadAttsForRefsWithCache about ConcurrentHashMap
+            // "Recursive update" under nested calls.
+            return buckets[bucketKey]
+                ?: ConcurrentHashMap<EntityRef, MutableMap<String, DataValue>>().also { buckets[bucketKey] = it }
         }
         if (!context.ctxData.readOnly) {
             return null

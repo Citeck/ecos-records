@@ -55,6 +55,7 @@ import ru.citeck.ecos.records3.record.type.RecordTypeService
 import ru.citeck.ecos.records3.rest.RestHandlerAdapter
 import ru.citeck.ecos.records3.workspace.RecordsWorkspaceService
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
 import java.util.*
@@ -261,6 +262,10 @@ open class RecordsServiceFactory {
         return AttValuesConverter(this)
     }
 
+    private fun getAuthApi(): EcosAuthoritiesApi? {
+        return getEcosWebAppApi()?.getAuthoritiesApi()
+    }
+
     protected open fun createAttValueFactories(): List<AttValueFactory<*>> {
 
         val attValueFactories: MutableList<AttValueFactory<*>> = ArrayList()
@@ -268,7 +273,12 @@ open class RecordsServiceFactory {
         val doubleValueFactory = DoubleValueFactory()
         val floatValueFactory = FloatValueFactory()
         val booleanValueFactory = BooleanValueFactory()
+
         val stringValueFactory = StringValueFactory()
+        stringValueFactory.addConverter("personRef") { getAuthApi()?.getPersonRef(it) }
+        stringValueFactory.addConverter("authorityGroupRef") { getAuthApi()?.getGroupRef(it) }
+        stringValueFactory.addConverter("authorityRef") { getAuthApi()?.getAuthorityRef(it) }
+
         val integerValueFactory = IntegerValueFactory()
         val longValueFactory = LongValueFactory()
 

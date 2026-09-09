@@ -8,6 +8,7 @@ import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
 import java.util.*
 
 class CtxAttributesTest {
@@ -89,5 +90,27 @@ class CtxAttributesTest {
         val records = RecordsServiceFactory().recordsService
         val value = records.getAtt(EntityRef.create("meta", ""), "\$ref.meta@.time")
         assertThat(value.asText()).isNotBlank()
+    }
+
+    @Test
+    fun webUrlTest() {
+
+        // web url should always end with '/'
+        assertEquals("http://localhost/", getWebUrlCtxAtt("http://localhost"))
+        assertEquals("https://example.com/path/", getWebUrlCtxAtt("https://example.com/path/"))
+        assertEquals("", getWebUrlCtxAtt(""))
+
+        // default properties
+        val records = RecordsServiceFactory().recordsService
+        assertEquals("http://localhost/", records.getAtt(EntityRef.create("meta", ""), "\$webUrl").asText())
+    }
+
+    private fun getWebUrlCtxAtt(webUrl: String): String {
+        val services = object : RecordsServiceFactory() {
+            override fun evalWebAppProps(): EcosWebAppProps {
+                return EcosWebAppProps.create("test-app", "test-app-inst", false, webUrl)
+            }
+        }
+        return services.recordsService.getAtt(EntityRef.create("meta", ""), "\$webUrl").asText()
     }
 }

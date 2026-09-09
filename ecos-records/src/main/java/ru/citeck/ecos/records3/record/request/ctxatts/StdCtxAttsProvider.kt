@@ -20,6 +20,7 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
     }
 
     private val props = services.webappProps
+    private val webUrl = normalizeWebUrl(props.webUrl)
 
     override fun fillContextAtts(attributes: MutableMap<String, Any?>) {
 
@@ -31,10 +32,22 @@ class StdCtxAttsProvider(services: RecordsServiceFactory) : CtxAttsProvider {
 
         attributes["appName"] = props.appName
         attributes["appInstanceId"] = props.appInstanceId
+        attributes["webUrl"] = webUrl
 
         val user = AuthContext.getCurrentUser()
         if (user.isNotBlank()) {
             attributes["user"] = EntityRef.create("emodel", "person", user)
+        }
+    }
+
+    /**
+     * Web url always ends with '/' to allow templates like '{{$webUrl}}v2/dashboard'
+     */
+    private fun normalizeWebUrl(webUrl: String): String {
+        return if (webUrl.isEmpty() || webUrl.endsWith("/")) {
+            webUrl
+        } else {
+            "$webUrl/"
         }
     }
 

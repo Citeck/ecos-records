@@ -104,8 +104,16 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
             return resultData
         }
 
+        // attributes loaded for processors may have their own processors
+        // and should be evaluated before processors of the result attributes
         processors.forEach { (att, attProcessors) ->
-            if (attProcessors.isNotEmpty()) {
+            if (attProcessors.isNotEmpty() && att.startsWith(PROC_ATT_ALIAS_PREFIX)) {
+                val procAtt = att.substring(PROC_ATT_ALIAS_PREFIX.length)
+                procData[procAtt] = process(procData, DataValue.create(procData[procAtt]), attProcessors)
+            }
+        }
+        processors.forEach { (att, attProcessors) ->
+            if (attProcessors.isNotEmpty() && !att.startsWith(PROC_ATT_ALIAS_PREFIX)) {
                 val value: DataValue = DataValue.create(resultData[att])
                 resultData[att] = process(procData, value, attProcessors)
             }

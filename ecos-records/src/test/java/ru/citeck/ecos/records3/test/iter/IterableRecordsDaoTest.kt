@@ -17,6 +17,47 @@ import java.time.Instant
 
 class IterableRecordsDaoTest {
 
+    @ValueSource(ints = [1, 2, 3, 5, 100])
+    @ParameterizedTest
+    fun `timestamp bucket transitions retain every record`(pageSize: Int) {
+        val records = RecordsServiceFactory().recordsService
+        val builder = RecordsDaoBuilder.create("ties")
+        val expected = (0 until 14).map { index ->
+            val bucket = when (index) {
+                in 0..1 -> 0
+                in 2..7 -> 1
+                else -> 2
+            }
+            builder.addRecord(
+                "record-${index.toString().padStart(2, '0')}",
+                ObjectData.create()
+                    .set(RecordConstants.ATT_CREATED, Instant.parse("2026-01-01T00:00:00Z").plusSeconds(bucket.toLong()))
+                    .set("index", index)
+            )
+            index
+        }
+        records.register(builder.build())
+        listOf(true, false).forEach { ascending ->
+            val query = RecordsQuery.create {
+                withSourceId("ties")
+                withQuery(VoidPredicate.INSTANCE)
+                withMaxItems(-1)
+                withSortBy(listOf(SortBy(RecordConstants.ATT_CREATED, ascending), SortBy("index", ascending)))
+            }
+            val actual = IterableRecords(
+                query,
+                IterableRecordsConfig.create {
+                    withPageSize(pageSize)
+                    withAttsToLoad(mapOf("index" to "index?num"))
+                },
+                records
+            ).map {
+                it.getAtt("index").asInt()
+            }
+            assertThat(actual).isEqualTo(if (ascending) expected else expected.reversed())
+        }
+    }
+
     @ValueSource(ints = [2, 10, 13, 50, 55, 1000])
     @ParameterizedTest
     fun test(batchSize: Int) {

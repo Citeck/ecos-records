@@ -105,7 +105,11 @@ class IterableRecords(
             } ?: SortBy(attribute, false)
 
             query = baseQuery.copy()
-                .withSortBy(pageSort)
+                .withSortBy(
+                    listOf(pageSort) + baseQuery.sortBy.filter {
+                        it.attribute != attribute
+                    }
+                )
                 .withMaxItems(config.pageSize)
                 .build()
 
@@ -171,7 +175,7 @@ class IterableRecords(
                 if (this.lastValue == lastValue) {
                     skipCount += records.size
                 } else if (firstValue == lastValue) {
-                    skipCount += records.size
+                    skipCount = records.size
                 } else {
                     // we add last element to page.skipCount to allow search by query (>= or <=) lastValue
                     skipCount = 1

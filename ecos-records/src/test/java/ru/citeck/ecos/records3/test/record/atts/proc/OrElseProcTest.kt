@@ -3,13 +3,67 @@ package ru.citeck.ecos.records3.test.record.atts.proc
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records3.record.atts.proc.AttProcDef
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class OrElseProcTest {
+
+    @Test
+    fun preserveDisplayNameStringWithFallback() {
+        val records = RecordsServiceFactory().recordsService
+        listOf("{\"ru\":\"Название процесса\"}", "[1,2]", "true", "123", "null").forEach { name ->
+            val record = object : AttValue {
+                override fun getDisplayName(): Any = MLText(name)
+            }
+            val result = records.getAtt(record, "?disp!_type?disp!?localId")
+            assertThat(result).describedAs(name).isEqualTo(DataValue.createStr(name))
+        }
+    }
+
+    @Test
+    fun preserveStringInProcessedFallbackAttribute() {
+        val service = RecordsServiceFactory().attProcService
+        val name = "{\"ru\":\"Название процесса\"}"
+        val result = service.applyProcessors(
+            mapOf("displayName" to null, "__proc_att_fallback" to name),
+            linkedMapOf(
+                "__proc_att_fallback" to listOf(AttProcDef("or", listOf(DataValue.createStr("unused")))),
+                "displayName" to listOf(AttProcDef("or", listOf(DataValue.createStr("a:fallback"))))
+            )
+        )
+        assertThat(result["displayName"]).isEqualTo(DataValue.createStr(name))
+    }
+
+    @Test
+    fun preserveBinaryValueWithFallback() {
+        val bytes = "{\"ru\":\"Название процесса\"}".toByteArray()
+        val result = RecordsServiceFactory().attProcService.applyProcessors(
+            mapOf("value" to bytes),
+            mapOf("value" to listOf(AttProcDef("or", listOf(DataValue.createStr("unused")))))
+        )
+        assertThat(result["value"]).isEqualTo(DataValue.createAsIs(bytes))
+    }
+
+    @Test
+    fun preserveRawValuesWithFallback() {
+        val records = RecordsServiceFactory().recordsService
+        listOf(
+            DataValue.createObj().set("ru", "Название процесса"),
+            DataValue.createArr().add(1),
+            DataValue.TRUE,
+            DataValue.create(123)
+        ).forEach { value ->
+            val attribute = if (value.isArray()) "value[]?raw!'unused'" else "value?raw!'unused'"
+            assertThat(records.getAtt(ObjectData.create().set("value", value), attribute))
+                .isEqualTo(value)
+        }
+    }
 
     @Test
     fun autoOrElseTest() {

@@ -114,7 +114,7 @@ class AttProcService(serviceFactory: RecordsServiceFactory) {
         }
         processors.forEach { (att, attProcessors) ->
             if (attProcessors.isNotEmpty() && !att.startsWith(PROC_ATT_ALIAS_PREFIX)) {
-                val value: DataValue = DataValue.create(resultData[att])
+                val value = DataValue.createAsIs(resultData[att])
                 resultData[att] = process(procData, value, attProcessors)
             }
         }
